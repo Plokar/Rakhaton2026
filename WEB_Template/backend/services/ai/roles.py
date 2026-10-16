@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional
@@ -82,6 +83,9 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
     system = (f"{ROLE_PROMPT}\n\nTvoje role: {cfg['title']}. Zaměř se na: {cfg['focus']}.\n"
               + (f"Otázka posouzení: {question}\n" if question else "Posouzení role (assessment) nevyplňuj.\n")
               + "\n" + prompt_rules())
+    # RECIST extrakce běží souběžně s pohledem radiologa (NFR-1), ne až po něm.
+    recist_pool = ThreadPoolExecutor(max_workers=1) if role == "radiologist" else None
+    recist_future = recist_pool.submit(recist_claim, context, provider, log_call) if recist_pool else None
     result = provider.generate(context.render(), system_prompt=system, response_schema=RoleViewOutput,
                                temperature=0.1)
     log_call(f"brief.role.{role}", result)
@@ -92,8 +96,9 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
              for i, item in enumerate((output or {}).get("items") or [], 1) if item.get("text", "").strip()]
     if not items:
         items = _fallback_items(role, cfg, context, data)
-    if role == "radiologist":
-        recist = recist_claim(context, provider, log_call)
+    if recist_future:
+        recist = recist_future.result()
+        recist_pool.shutdown()
         if recist:
             items.append(recist)
 

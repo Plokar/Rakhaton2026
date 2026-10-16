@@ -15,6 +15,8 @@ RECIST_PROMPT = """Z dodaných radiologických popisů vytěž pouze výslovně 
 lézí (SLD, v mm). Nevypočítávej součet z jednotlivých ložisek a neodhaduj chybějící hodnoty.
 Ke každému součtu vrať datum vyšetření, SLD a přesné Evidence ID zdroje z hranatých závorek.
 Vrať jen zprávy s explicitním součtem SLD; neuváděj závěr PR/SD/PD, ten se počítá deterministicky.
+Do new_lesions uveď jen zprávy po prvním měření, které výslovně popisují novou metastázu nebo ložisko
+v orgánu, kde dříve nebylo (ne ložisko jen lépe zobrazené jinou modalitou). Když si nejsi jistý, nech prázdné.
 """
 
 
@@ -24,8 +26,14 @@ class SldMeasurement(BaseModel):
     citation: str = Field(description="Evidence ID radiologické zprávy, např. P03-img01")
 
 
+class NewLesion(BaseModel):
+    citation: str = Field(description="Evidence ID zprávy, která novou lézi popisuje, např. P02-img05")
+    description: str = Field(description="Krátký popis nové léze ze zprávy")
+
+
 class SldExtraction(BaseModel):
     measurements: list[SldMeasurement] = Field(default_factory=list)
+    new_lesions: list[NewLesion] = Field(default_factory=list)
 
 
 _EXPLICIT_SLD = re.compile(
@@ -93,16 +101,22 @@ def recist_claim(context: PatientContext, provider: BaseAIProvider,
     if len(measurements) < 2:
         measurements = _reported_totals(resources)
 
-    evaluated = evaluate_sld(measurements)
+    first_date = min((m["date"] for m in measurements), default="")
+    dates = {item["citation"]: item["date"] for item in resources}
+    new_lesions = [n["citation"] for n in (output or {}).get("new_lesions") or []
+                   if n.get("citation") in dates and n["citation"] in context.allowed_ids
+                   and dates[n["citation"]] > first_date]
+    evaluated = evaluate_sld(measurements, new_lesions=bool(new_lesions))
     if not evaluated:
         return None
     baseline, current, nadir = evaluated["baseline"], evaluated["current"], evaluated["nadir"]
     change = evaluated["change_from_baseline_pct"]
-    citations = list(dict.fromkeys([baseline["citation"], nadir["citation"], current["citation"]]))
+    citations = list(dict.fromkeys([baseline["citation"], nadir["citation"], current["citation"], *new_lesions]))
+    new_text = f" (nová léze: {', '.join(dict.fromkeys(new_lesions))})" if new_lesions else ""
     text = (
         f"RECIST 1.1, cílové léze: SLD {baseline['sld_mm']:g} → {current['sld_mm']:g} mm "
-        f"({change:+.0f} % od baseline), nadir {nadir['sld_mm']:g} mm; odpověď {evaluated['response']}. "
-        "Jde o předběžné hodnocení cílových lézí; nové a necílové léze potvrzuje radiolog."
+        f"({change:+.0f} % od baseline), nadir {nadir['sld_mm']:g} mm; odpověď {evaluated['response']}{new_text}. "
+        "Jde o předběžné hodnocení; nové a necílové léze potvrzuje radiolog."
     )
     # Text i citace sestavuje kód z ověřených měření, ne LLM: vektorovou kontrolu přeskočí (`_computed`).
     # Procento je odvozené (ve zdroji není), grounding ho nekontroluje (`_derived`).

@@ -107,3 +107,13 @@ def test_sections_generated_in_parallel(guidelines):
     started = time.monotonic()
     brief_for("P03", guidelines, SlowProvider())                   # 8 volání LLM po 0,3 s
     assert time.monotonic() - started < 1.5
+
+
+def test_radiologist_recist_new_lesion_from_llm_is_pd(guidelines):
+    """P02: extrakraniálně nadir, ale nové mozkové metastázy (P02-img05) = PD (dev GT)."""
+    provider = MockAIProvider(responses={"SldExtraction": {
+        "measurements": [], "new_lesions": [{"citation": "P02-img05", "description": "2 metastázy mozku"}]}})
+    radiologist = role_sections(brief_for("P02", guidelines, provider, roles=["radiologist"]))["radiologist"]
+    recist = next(item for item in radiologist["items"] if item["id"] == "radiologist-recist")
+    assert "odpověď PD (nová léze: P02-img05)" in recist["text"]
+    assert "P02-img05" in recist["citations"] and recist["verification"] == "verified"

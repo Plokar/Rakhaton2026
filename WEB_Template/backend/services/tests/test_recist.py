@@ -29,3 +29,7 @@ def test_evaluate_sld_requires_two_measurements():
 
 def test_evaluate_sld_rejects_zero_baseline():
     assert evaluate_sld(measurements(0, 20)) is None
+
+
+def test_new_lesion_is_progression_regardless_of_sld():
+    assert evaluate_sld(measurements(100, 46), new_lesions=True)["response"] == "PD"

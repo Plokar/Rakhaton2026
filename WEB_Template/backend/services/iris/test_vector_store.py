@@ -1,4 +1,5 @@
 """Vektorové tabulky MDT.* proti in-memory IRIS SQL (``fake_iris``). Proti IRIS: test_vector_store_integration.py."""
+import base64
 from io import StringIO
 
 import pytest
@@ -154,3 +155,58 @@ def test_search_iris_command(indexed):
     out = StringIO()
     call_command('search_iris', 'hrudník nebyl požadován', patient='P03', stdout=out)
     assert out.getvalue().splitlines()[0].split()[1] == '[P03-img03#1]'
+
+
+class SpyProvider(MockAIProvider):
+    """Mock, který si pamatuje, co šlo do embedding API."""
+
+    def __init__(self):
+        super().__init__()
+        self.sent: list[str] = []
+
+    def embed(self, texts, task_type='RETRIEVAL_DOCUMENT', model=None, dim=None):
+        self.sent += list(texts)
+        return super().embed(texts, task_type, model, dim)
+
+
+def test_embedding_input_is_pseudonymized_but_iris_keeps_original(fake_iris, dataset_root):
+    """NFR-3: jména pacienta a lékařů, RČ, telefon… do embedding API nejdou; v IRIS zůstává originál (offsety)."""
+    vs.ensure_schema()
+    resources = ingest.load_patient(dataset_root, 'P03')
+    patient = next(r for r in resources if r['resourceType'] == 'Patient')
+    patient['name'] = [{'text': 'Jan Novák', 'given': ['Jan'], 'family': 'Novák'}]
+    doc = next(r for r in resources if r['id'] == 'P03-doc02')
+    doc['content'][0]['attachment']['data'] = base64.b64encode(
+        'Pacient Jan Novák, RČ 590101/1234, tel. 603 123 456.\n\nZávěr: bez nálezu.'.encode()).decode()
+    spy = SpyProvider()
+    indexing.index_patient('P03', resources, provider=spy)
+    sent = next(t for t in spy.sent if 'Závěr' not in t and 'P03' in t and '[telefon]' in t)
+    assert 'Novák' not in sent and '[RČ]' in sent
+    stored = next(r for r in fake_iris.rows('MDT.EvidenceChunk') if r['EvidenceId'] == 'P03-doc02#1')
+    assert 'Jan Novák' in stored['Text']
+    vs.search_evidence('P03', 'volat 603 123 456', provider=spy)
+    assert spy.sent[-1] == 'volat [telefon]'
+
+
+def test_ingest_if_empty_skips_loaded_data_and_rebuilds_for_new_model(fake_fhir, fake_iris, dataset_root, monkeypatch):
+    call_command('ingest_dataset', patients='P03', dataset_dir=str(dataset_root), stdout=StringIO())
+    puts = len([r for r in fake_fhir.requests if r[0] == 'POST'])
+    rows = len(fake_iris.rows('MDT.EvidenceChunk'))
+
+    out = StringIO()
+    call_command('ingest_dataset', '--if-empty', patients='P03', dataset_dir=str(dataset_root), stdout=out)
+    assert 'už v IRIS je, přeskakuji' in out.getvalue() and 'Vektory (mock:hashed@1536) už v IRIS jsou' in out.getvalue()
+    assert len([r for r in fake_fhir.requests if r[0] == 'POST']) == puts          # nic se neposlalo
+
+    monkeypatch.setattr('services.ai_service.get_ai_provider', lambda *a, **k: OtherModel())
+    out = StringIO()
+    call_command('ingest_dataset', '--if-empty', patients='P03', dataset_dir=str(dataset_root), stdout=out)
+    assert 'MDT.EvidenceChunk P03: 85 odstavců' in out.getvalue()                    # nový model → přepočítat
+    assert {r['EmbeddingModel'] for r in fake_iris.rows('MDT.EvidenceChunk')} == {'jiny:hashed@1536'}
+    assert len(fake_iris.rows('MDT.EvidenceChunk')) == rows
+
+
+def test_ingest_if_empty_loads_missing_fhir(fake_fhir, fake_iris, dataset_root):
+    out = StringIO()
+    call_command('ingest_dataset', '--if-empty', patients='P03', dataset_dir=str(dataset_root), stdout=out)
+    assert 'nahráno a ověřeno' in out.getvalue() and 'Patient/P03' in fake_fhir.store

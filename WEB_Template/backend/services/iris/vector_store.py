@@ -8,13 +8,17 @@ aktuálního modelu: vektory z mocku a z Gemini se nikdy nesmíchají. Po změn�
 ``EMBEDDING_MODEL`` je potřeba reindex (``ingest_dataset --skip-fhir``).
 
 SQL podle AGENTS.md: parametry přes ``?``, ``SELECT TOP n``, spojení vždy zavřít (``db.connect``).
+
+Každý text, který jde do embedding API (odstavce, dotazy, tvrzení), projde pseudonymizací (NFR-3,
+``services/ai/pseudonymize.py``); v IRIS zůstává originál (offsety pro zvýraznění v UI).
 """
 import logging
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Sequence
 
 from services import ai_service
+from services.ai.pseudonymize import pseudonymize_text
 from services.fhir.ids import parse_evidence_id
 from services.iris import db
 
@@ -104,9 +108,11 @@ def _vector_param(vector: Sequence[float]) -> str:
     return str([float(x) for x in vector])          # TO_VECTOR přijímá "[0.1, 0.2, …]"
 
 
-def embed(texts: Sequence[str], task_type: str, provider=None) -> list[list[float]]:
+def embed(texts: Sequence[str], task_type: str, provider=None,
+          prepare: Callable[[str], str] = pseudonymize_text) -> list[list[float]]:
+    """Embeddingy přes provider (T-012). ``prepare`` = pseudonymizace před odesláním (NFR-3)."""
     provider = provider or ai_service.get_ai_provider()
-    return provider.embed(list(texts), task_type=task_type) if texts else []
+    return provider.embed([prepare(t) for t in texts], task_type=task_type) if texts else []
 
 
 # ── Spojení a schéma ──────────────────────────────────────────────────────────
@@ -170,10 +176,11 @@ def _embedding_text(row) -> str:
     return f'{title}: {row.Text}' if title else row.Text
 
 
-def _replace(name: str, rows: list, delete_where: str, delete_params: list, provider=None) -> int:
+def _replace(name: str, rows: list, delete_where: str, delete_params: list, provider=None,
+             prepare: Callable[[str], str] = pseudonymize_text) -> int:
     """Smaže řádky podle ``delete_where`` a vloží ``rows`` s embeddingy (RETRIEVAL_DOCUMENT)."""
     provider = provider or ai_service.get_ai_provider()
-    vectors = embed([_embedding_text(r) for r in rows], ai_service.TASK_RETRIEVAL_DOCUMENT, provider)
+    vectors = embed([_embedding_text(r) for r in rows], ai_service.TASK_RETRIEVAL_DOCUMENT, provider, prepare)
     model_id = embedding_model_id(provider)
     cls = _COLUMNS[name][0]
     cols = [f.name for f in fields(cls)]
@@ -189,11 +196,17 @@ def _replace(name: str, rows: list, delete_where: str, delete_params: list, prov
     return len(rows)
 
 
-def replace_evidence(patient_id: str, chunks: list[EvidenceChunk], provider=None) -> int:
-    """Všechny odstavce pacienta znovu (smaže staré, i z jiného modelu)."""
+def replace_evidence(patient_id: str, chunks: list[EvidenceChunk], provider=None,
+                     pseudonymizer: Callable[[str], str] | None = None) -> int:
+    """Všechny odstavce pacienta znovu (smaže staré, i z jiného modelu).
+
+    ``pseudonymizer`` = ``Pseudonymizer`` se jmény pacienta a lékařů (``indexing.index_patient``);
+    bez něj jen vzory (RČ, e-mail, telefon, datum narození).
+    """
     if any(c.PatientId != patient_id for c in chunks):
         raise ValueError(f'Chunky musí patřit pacientovi {patient_id}')
-    return _replace('EvidenceChunk', chunks, 'PatientId = ?', [patient_id], provider)
+    return _replace('EvidenceChunk', chunks, 'PatientId = ?', [patient_id], provider,
+                    pseudonymizer or pseudonymize_text)
 
 
 def replace_guidelines(guideline_set: str, passages: list[GuidelineChunk], provider=None) -> int:

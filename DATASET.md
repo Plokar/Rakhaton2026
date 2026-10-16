@@ -289,8 +289,17 @@ def to_transaction(bundle: dict) -> dict:
   python manage.py ingest_dataset --bundle-type batch   # když IRIS transakci odmítne: chyby po resources
   python manage.py ingest_dataset --skip-fhir           # jen vektory MDT.* znovu (např. po přepnutí na Gemini)
   python manage.py ingest_dataset --skip-vectors        # jen FHIR, bez embeddingů
+  python manage.py ingest_dataset --if-empty            # pro start kontejneru: nahraje jen to, co v IRIS chybí
   python manage.py search_iris "neuropatie" --patient P03            # ruční kontrola vektorového hledání
+  python manage.py iris_check                           # filtruje IRIS opravdu podle search parametrů? (T-313)
   ```
+- **`--if-empty`:** FHIR část přeskočí, když je v IRIS každý resource datasetu (kontrola `_id`). Vektory přeskočí, když jich pro aktuální model embeddingů není méně, než vznikne z datasetu. Po přepnutí na Gemini nebo po nové verzi katalogu se tedy přepočítají samy. Bezpečné volat při každém startu backendu.
+- **Ověření celé DATA lane na živém IRIS (jeden příkaz, dev stack běží):**
+
+  ```bash
+  docker compose -f docker-compose.dev.yml exec backend sh -c "python manage.py ingest_dataset && python manage.py iris_check && pytest -m integration services/fhir services/iris"
+  ```
+- **Bez Dockeru (jen testy, IRIS se nahradí in-memory fake serverem):** `python3 -m venv .venv && .venv/bin/pip install -r WEB_Template/backend/requirements-dev.txt`, pak v `WEB_Template/backend`: `AI_PROVIDER=mock ../../.venv/bin/pytest services`. Dataset se najde sám v checkoutu. Testy s Postgres (`apps/`) potřebují DB.
 - Kroky 5 a 6 (vektory, T-102 a T-203) dělá stejný příkaz po FHIR části: odstavce pacientů čte zpět z IRIS FHIR a čísluje je `services/ai/text.py`, guidelines bere z markdownu a kritéria studií z `Group.characteristic`. Výsledek: 665 odstavců, 42 pasáží a 45 kritérií v 6 studiích. Detail a API jsou v [ARCHITEKTURA §4.5](ARCHITEKTURA.md#45-vektorové-tabulky-iris-sql-namespace-fhirserver).
 - Entries v transakci jsou seřazené tak, aby odkazované resources byly před těmi, které na ně odkazují (`order_by_references`), a mají `fullUrl` `https://rakathon.example.org/fhir/Type/id`.
 - Kontrola počtů: každý resource přes `GET Type?_id=…&_summary=count` (přesně) a pacientské typy přes `?patient=Pxx` (aspoň tolik, víc je v pořádku, protože aplikace zapisuje `Pxx-mdtNN…`).

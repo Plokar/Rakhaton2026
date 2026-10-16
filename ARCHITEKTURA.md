@@ -531,6 +531,7 @@ ORDER BY Score DESC
 
 - **Implementace (T-102, T-203):** tabulky a dotazy `services/iris/vector_store.py`, plnění `services/iris/indexing.py`, příkazy `ingest_dataset` (FHIR + vektory) a `search_iris` (ruční ověření).
   - Řádky: `MDT.EvidenceChunk` 665 (555 odstavců zpráv a nálezů + 81 sekcí záznamů MDT + 29 odstavců nominací; P03 má 85), `MDT.GuidelineChunk` 42 + 13 `EXT-…` (T-504), `MDT.TrialCriterion` 45 kritérií v 6 studiích.
+  - **Pseudonymizace embeddingů (NFR-3):** každý text, který jde do embedding API (odstavce, dotazy, tvrzení pro grounding), projde `services/ai/pseudonymize.py`. U odstavců pacienta se nahrazují i jména pacienta a lékařů (stejně jako v context builderu). V IRIS zůstává originál, protože na něm stojí offsety pro zvýraznění.
   - **Schéma se doplňuje samo:** `ensure_schema()` (volá ho `ingest_dataset`) založí chybějící tabulky a chybějící sloupce přidá přes `ALTER TABLE … ADD` (např. `Url` z T-504), data zůstanou. Zahodit a založit znovu: `--recreate-vector-tables`.
   - **`EmbeddingModel`:** hledá se jen mezi řádky aktuálního modelu (`provider:model@dim`), takže se vektory z mocku a z Gemini nikdy nesmíchají. Po přepnutí `AI_PROVIDER` nebo `EMBEDDING_MODEL` je potřeba reindex: `ingest_dataset --skip-fhir`. Dokud neproběhne, hledání vrací prázdný seznam a loguje varování.
   - **API pro ostatní úkoly:**
@@ -803,7 +804,7 @@ Model ID se mohou měnit. Před použitím ověřit na [ai.google.dev/gemini-api
 **Pseudonymizace** (`services/ai/pseudonymize.py`):
 
 - dataset PII neobsahuje (pacient = ID, lékaři = kódy `LEK-…`), pipeline ale stavíme jako pro reálná data;
-- jméno, rodné číslo, adresa a kontakty se do LLM **nikdy** neposílají;
+- jméno, rodné číslo, adresa a kontakty se do LLM **nikdy** neposílají (ani do embedding API, §4.5);
 - místo data narození se posílá věk;
 - lékaři jsou zastoupeni kódem a odborností.
 

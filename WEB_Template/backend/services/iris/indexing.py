@@ -17,9 +17,11 @@ from pathlib import Path
 from typing import Iterable
 
 from services.ai.guidelines import parse_guidelines
+from services.ai.pseudonymize import Pseudonymizer
 from services.ai.text import resource_paragraphs
 from services.fhir import client as fhir
 from services.fhir.ids import parse_evidence_id
+from services.fhir.ingest import references
 from services.iris import vector_store as vs
 from services.rules.guideline_sets import GUIDELINE_SET_ORDER, ICD10_PREFIX_TO_SET
 
@@ -81,14 +83,33 @@ def evidence_chunks(patient_id: str, resources: Iterable[dict]) -> list[vs.Evide
 
 
 def patient_resources_from_fhir(patient_id: str) -> list[dict]:
-    return [r for rs in fhir.patient_everything(patient_id).values() for r in rs]
+    """Pacient z IRIS + odkazovaní lékaři (jejich jména potřebuje pseudonymizace)."""
+    resources = [r for rs in fhir.patient_everything(patient_id).values() for r in rs]
+    ids = sorted({ref.split('/', 1)[1] for r in resources for ref in references(r) if ref.startswith('Practitioner/')})
+    for i in range(0, len(ids), 50):
+        resources += fhir.search('Practitioner', _id=','.join(ids[i:i + 50]))
+    return resources
+
+
+def pseudonymizer_for(resources: Iterable[dict]) -> Pseudonymizer:
+    """Jména pacienta a lékařů → jejich ID, stejně jako context builder (NFR-3)."""
+    pseudo = Pseudonymizer()
+    for r in resources:
+        if r.get('resourceType') in ('Patient', 'Practitioner'):
+            for name in r.get('name', []):
+                pseudo.add_name(name.get('text'), r['id'])
+                pseudo.add_name(' '.join(name.get('given', []) + [name.get('family', '')]).strip(), r['id'])
+    return pseudo
 
 
 def index_patient(patient_id: str, resources: Iterable[dict] | None = None, provider=None) -> int:
-    """Přepočítá ``MDT.EvidenceChunk`` pacienta. Bez ``resources`` čte aktuální stav z IRIS FHIR."""
-    if resources is None:
-        resources = patient_resources_from_fhir(patient_id)
-    return vs.replace_evidence(patient_id, evidence_chunks(patient_id, resources), provider)
+    """Přepočítá ``MDT.EvidenceChunk`` pacienta. Bez ``resources`` čte aktuální stav z IRIS FHIR.
+
+    Do embedding API jde pseudonymizovaný text, v IRIS zůstává originál.
+    """
+    resources = list(resources) if resources is not None else patient_resources_from_fhir(patient_id)
+    return vs.replace_evidence(patient_id, evidence_chunks(patient_id, resources), provider,
+                               pseudonymizer_for(resources))
 
 
 # ── T-203: guidelines a kritéria studií ───────────────────────────────────────

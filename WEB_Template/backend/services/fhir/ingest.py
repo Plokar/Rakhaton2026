@@ -278,6 +278,11 @@ def verify(resources: list[dict], label: str, patient_id: str | None = None) -> 
     return checks
 
 
+def is_loaded(report: 'IngestReport') -> bool:
+    """Je v IRIS každý resource z ``collect`` (kontrola přes ``_id``)? Pro ``ingest_dataset --if-empty``."""
+    return all(c.ok for part in report.parts for c in verify(part.resources, part.label))
+
+
 def id_index_mismatches(resources: list[dict]) -> list[str]:
     """Resources, jejichž ID neodpovídá konvenci v ``ids.resource_type_for_id`` (= nový nález v datech)."""
     return [key(r) for r in resources if resource_type_for_id(r['id']) != r['resourceType']]

@@ -23,6 +23,10 @@ class Command(BaseCommand):
         parser.add_argument('--skip-fhir', action='store_true', help='FHIR přeskočit (data už v IRIS jsou), jen vektory')
         parser.add_argument('--skip-vectors', action='store_true', help='bez vektorových tabulek (bez embeddingů)')
         parser.add_argument(
+            '--if-empty', action='store_true',
+            help='pro start kontejneru: FHIR jen když v IRIS něco chybí, vektory jen když chybí pro aktuální model',
+        )
+        parser.add_argument(
             '--recreate-vector-tables', action='store_true',
             help='zahodit a založit tabulky MDT.* znovu (např. po změně EMBEDDING_DIM)',
         )
@@ -33,14 +37,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **opts):
         offline = opts['dry_run']
+        self.if_empty = opts['if_empty'] and not offline
         try:
             root = ingest.dataset_dir(opts['dataset_dir'])
             patients = [p.strip() for p in opts['patients'].split(',')] if opts['patients'] else None
-            if offline or opts['skip_fhir']:
-                report = ingest.collect(root, patients)
-            else:
+            skip_fhir = opts['skip_fhir']
+            report = ingest.collect(root, patients)
+            if self.if_empty and not skip_fhir and ingest.is_loaded(report):
+                self.stdout.write(f'FHIR: všech {report.unique_resources} resources už v IRIS je, přeskakuji (--if-empty).')
+                skip_fhir = True
+            if not (offline or skip_fhir):
                 report = ingest.ingest(root, patients, opts['bundle_type'], log=self.stdout.write)
-            self._fhir_summary(report, sent=not (offline or opts['skip_fhir']))
+            self._fhir_summary(report, sent=not (offline or skip_fhir))
             if report.errors:
                 raise CommandError(f'FHIR ingest skončil s {len(report.errors)} chybami (viz výše).')
             if not opts['skip_vectors']:
@@ -75,24 +83,33 @@ class Command(BaseCommand):
 
     # ── vektory ──
     def _vectors(self, root, report, offline, recreate):
-        patients = [p.label for p in report.parts if re.fullmatch(r'P\d{2}', p.label)]
+        patients = [p for p in report.parts if re.fullmatch(r'P\d{2}', p.label)]
+        studies = next((p.resources for p in report.parts if p.label == 'studie'), [])
         guidelines = indexing.guideline_chunks(root)
         for warning in indexing.guideline_count_warnings(guidelines):
             self.stdout.write(self.style.WARNING(f'⚠ {warning}'))
         guidelines += indexing.external_chunks()        # EXT-… pro semafor (T-504, D-016)
-
+        paragraphs = {p.label: len(indexing.evidence_chunks(p.label, p.resources)) for p in patients}
+        expected = {                                    # kolik řádků z datasetu vznikne (zápisy aplikace přidají další)
+            f'{vs.SCHEMA}.EvidenceChunk': sum(paragraphs.values()),
+            f'{vs.SCHEMA}.GuidelineChunk': len(guidelines),
+            f'{vs.SCHEMA}.TrialCriterion': len(indexing.trial_criteria(studies)),
+        }
         if offline:
-            studies = next((p.resources for p in report.parts if p.label == 'studie'), [])
-            paragraphs = {p.label: len(indexing.evidence_chunks(p.label, p.resources)) for p in report.parts
-                          if p.label in patients}
             self.stdout.write(
                 f'Vektory (nic neodesláno): odstavce {paragraphs} = {sum(paragraphs.values())}, '
                 f'guidelines {len(guidelines)} (z toho EXT {sum(g.GuidelineSet == "EXT" for g in guidelines)}), '
-                f'kritéria studií {len(indexing.trial_criteria(studies))}.'
+                f'kritéria studií {expected[f"{vs.SCHEMA}.TrialCriterion"]}.'
             )
             return
 
         provider = ai_service.get_ai_provider()
+        model = vs.embedding_model_id(provider)
+        if self.if_empty:
+            have = {table: by_model.get(model, 0) for table, by_model in vs.counts().items()}
+            if all(have.get(table, 0) >= n for table, n in expected.items()):
+                self.stdout.write(f'Vektory ({model}) už v IRIS jsou, přeskakuji (--if-empty): {have}')
+                return
         if provider.is_mock:
             self.stdout.write(self.style.WARNING(
                 '⚠ AI_PROVIDER=mock: vektory jsou hashované (jen lexikální podobnost). Pro Gemini nastav '
@@ -100,15 +117,14 @@ class Command(BaseCommand):
             ))
         changes = vs.ensure_schema(recreate)
         if changes:
-            self.stdout.write(f'Schéma MDT.*: založeno / doplněno {", ".join(changes)}')
-        for pid in patients:
-            n = indexing.index_patient(pid, provider=provider)       # čte z IRIS FHIR
-            self.stdout.write(f'  MDT.EvidenceChunk {pid}: {n} odstavců')
+            self.stdout.write(f'Schéma {vs.SCHEMA}.*: založeno / doplněno {", ".join(changes)}')
+        for part in patients:
+            n = indexing.index_patient(part.label, provider=provider)       # čte z IRIS FHIR
+            self.stdout.write(f'  MDT.EvidenceChunk {part.label}: {n} odstavců')
         per_set = indexing.index_guidelines(guidelines, provider)
         self.stdout.write(f'  MDT.GuidelineChunk: {per_set}')
         criteria = indexing.trial_criteria(indexing.trial_resources_from_fhir())
         per_study = indexing.index_trials(criteria, provider)
         self.stdout.write(f'  MDT.TrialCriterion: {sum(per_study.values())} kritérií ve {len(per_study)} studiích')
-        model = vs.embedding_model_id(provider)
         totals = {table: by_model.get(model, 0) for table, by_model in vs.counts().items()}
         self.stdout.write(self.style.SUCCESS(f'Vektory ({model}): {totals}'))

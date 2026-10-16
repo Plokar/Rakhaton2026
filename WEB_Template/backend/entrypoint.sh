@@ -45,6 +45,12 @@ echo "🔄 Running database migrations..."
 python manage.py migrate --noinput
 echo "✅ Migrations complete"
 
+# ── IRIS FHIR server (idempotentní, ARCH §4.2) ───────────────────────────────
+if [ -n "${IRIS_HOST}" ]; then
+  echo "🏥 IRIS init (namespace FHIRSERVER, /fhir/r4)..."
+  python manage.py iris_init || echo "⚠️  iris_init selhal, backend běží dál (ručně: python manage.py iris_init)"
+fi
+
 # ── Static files (only in production) ────────────────────────────────────────
 if [ "${DJANGO_DEBUG}" != "True" ]; then
   echo "📁 Collecting static files..."

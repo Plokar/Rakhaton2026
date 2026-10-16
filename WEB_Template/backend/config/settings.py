@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'apps.ws',               # WebSocket consumers
     'apps.items',            # Example domain module
     'apps.projects',         # Hackathon projects, tasks, notifs, storage, AI
+    'apps.copilot',          # MDT Copilot (iris_init, ingest, AI orchestrace)
 ]
 
 MIDDLEWARE = [

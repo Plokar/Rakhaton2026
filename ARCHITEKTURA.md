@@ -405,7 +405,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 
 | Věc | Hodnota (dev) |
 |---|---|
-| Image | `intersystems/irishealth-community:latest-cd` → **zafixovat konkrétní tag**, až ho stáhneme (`docker image inspect`) |
+| Image | `intersystems/irishealth-community:2026.2` (= `latest-cd` k 16. 10.), `WEB_Template/iris/Dockerfile` |
 | `merge.cpf` | `[Actions] ModifyService:Name=%Service_CallIn,Enabled=1,AutheEnabled=48` |
 | Superserver (DB-API) | `iris:1972` (lokálně `localhost:1972`) |
 | Web (FHIR, portal) | `http://iris:52773` (lokálně `http://localhost:52773`) |
@@ -422,7 +422,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 2. `HS.FHIRServer.Installer.InstallNamespace()`;
 3. `InstallInstance("/fhir/r4", "HS.FHIRServer.Storage.JsonAdvSQL.InteractionsStrategy", "hl7.fhir.r4.core@4.0.1")`.
 
-Command musí být idempotentní (`ExistsByUrl`). **Nenahrávat** Synthea data z kitu, nahrává se náš dataset (`ingest_dataset`).
+Command musí být idempotentní (`ExistsByUrl`). **Nenahrávat** Synthea data z kitu, nahrává se náš dataset (`ingest_dataset`). Spouští ho `entrypoint.sh` při každém startu backendu (když je nastavené `IRIS_HOST`). První běh trvá cca 2 min, další pár sekund.
 
 ### 4.3 FHIR datový model
 
@@ -1293,7 +1293,7 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
 # celý stack (Next.js, Django, Postgres, Redis, Mailhog, Traefik) + IRIS (po T-002)
 cd WEB_Template
 .\dev.ps1 up                       # nebo: make dev
-docker compose -f docker-compose.dev.yml exec backend python manage.py iris_init
+docker compose -f docker-compose.dev.yml exec backend python manage.py iris_init   # spouští i entrypoint, ručně jen při chybě
 docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_dataset          # celý dataset
 docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_dataset --patients P03 --skip-vectors   # rychle, bez Gemini
 ```

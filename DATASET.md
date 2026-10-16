@@ -306,6 +306,7 @@ def to_transaction(bundle: dict) -> dict:
 | **Prázdný string** (FHIR zakazuje `""`) | `QuestionnaireResponse/P03-prom02` → item `bolest-misto` → `answer[0].valueString = ""` | odstranit prázdné hodnoty; když je `answer` prázdný, odstranit `answer` (item bez odpovědi je validní) |
 | Bundle `type: collection` | všechny bundly | převést na `transaction` ([§6.1](#61-postup-python-managepy-ingest_dataset-úkol-t-101)) |
 | `meta.tag` `fiktivni-data` na úrovni Bundle | všechny bundly | zkopírovat do `meta.tag` každého resource, aby šlo fiktivní data v IRIS filtrovat (`_tag`) |
+| **`Observation.derivedFrom` → `DiagnosticReport`** (R4 povoluje jen DocumentReference, ImagingStudy, Media, QuestionnaireResponse, Observation, MolecularSequence); IRIS vrací 400 | 44× `bm` / `tnm` Observation (P01 10, P02 5, P03 5, P04 5, P05 10, P06 9), např. `P01-bm01` → `P01-pat01` (zjištěno 16. 10. 20:12, Q15) | návrh: odkaz přesunout do extension `https://rakathon.example.org/fhir/StructureDefinition/derived-from` (`valueReference`), ostatní `derivedFrom` beze změny; dohledatelnost citací zůstane (resolver čte obojí) |
 
 Nic dalšího se neupravuje. Částečná data (`"1959"`, `"2019-03"`), resources bez `code.coding` a `CareTeam.participant` bez `member` jsou ve FHIR R4 validní. Kdyby IRIS přesto něco odmítl, `OperationOutcome` zapiš do Blokerů v PROGRESS.md a sem doplň řádek.
 

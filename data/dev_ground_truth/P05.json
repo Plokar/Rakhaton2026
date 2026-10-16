@@ -1,0 +1,123 @@
+{
+  "patient_id": "P05",
+  "version": "dev-1",
+  "source": "DATASET.md §9 + doplněk 18:15 + ruční průzkum dat (T-013). Není oficiální ground truth.",
+  "mdt_date": "2026-10-21",
+  "mdt_question": {
+    "text": "Pacientka ve studii RKT-06 ORION-HRR má po 3 cyklech parciální odpověď, ale opakovanou anémii G3 vyžadující transfuze, léčba je přerušena. Pokračovat ve 2. redukci dávky (200 mg 2× denně), nebo léčbu změnit? Doporučit genetické vyšetření zárodečné varianty BRCA2?",
+    "citation": "P05-zad01"
+  },
+  "timeline": [
+    {"date": "2019-05", "type": "diagnosis", "label": "Metastázy jater a skeletu (sternum)", "citations": ["P05-dg2", "P05-dg3"]},
+    {"date": "2019-06", "type": "medication", "label": "4 linie paliativní léčby: letrozol + palbociklib, fulvestrant, paklitaxel, everolimus + exemestan", "citations": ["P05-doc01", "P05-doc02"]},
+    {"date": "2026-02-16", "type": "imaging", "label": "MR jater: vícečetné metastázy obou laloků", "citations": ["P05-img01"]},
+    {"date": "2026-02-19", "type": "imaging", "label": "PET/CT: aktivní metastázy jater a uzlin", "citations": ["P05-img02"]},
+    {"date": "2026-02-26", "type": "mdt", "label": "MDT: lokální léčba neindikována, biopsie S4b s NGS", "citations": ["P05-mdt01"]},
+    {"date": "2026-03-10", "type": "pathology", "label": "Biopsie S4b: ER 100 %, PR 10 %, HER2 1+ (HER2-low), Ki-67 60 %", "citations": ["P05-pat01"]},
+    {"date": "2026-04-08", "type": "pathology", "label": "NGS: patogenní varianta BRCA2 (VAF 47 %), MSS, TMB 12,6", "citations": ["P05-pat02"]},
+    {"date": "2026-04-15", "type": "mdt", "label": "Molekulární tumor board: RKT-06 + genetické poradenství", "citations": ["P05-mdt02"]},
+    {"date": "2026-05-04", "type": "document", "label": "Klinický farmaceut: vyhnout se třezalce a grapefruitu (CYP3A)", "citations": ["P05-doc03"]},
+    {"date": "2026-05-06", "type": "imaging", "label": "Baseline CT studie: 74 mm", "citations": ["P05-img03"]},
+    {"date": "2026-05-11", "type": "medication", "label": "Zahájení RKT-PARPi 300 mg 2× denně", "citations": ["P05-doc04", "P05-tx-parp-01"]},
+    {"date": "2026-07-30", "type": "imaging", "label": "Restaging: parciální odpověď 74 → 44 mm", "citations": ["P05-img04"]},
+    {"date": "2026-08-17", "type": "lab", "label": "Anémie G3 (Hb 76), přerušení, transfuze 2 TU", "citations": ["P05-doc07", "P05-anem01", "P05-proc02"]},
+    {"date": "2026-08-31", "type": "medication", "label": "Obnovení v 1. redukci 250 mg 2× denně", "citations": ["P05-doc08", "P05-tx-parpred-01"]},
+    {"date": "2026-09-28", "type": "lab", "label": "Opakovaná anémie G3 (Hb 77), přerušení, transfuze 2 TU", "citations": ["P05-doc09", "P05-anem02", "P05-proc03"]},
+    {"date": "2026-10-05", "type": "proms", "label": "2. dotazník PROMs: únava 8, třezalkový čaj, otázka genetiky kvůli dceři", "citations": ["P05-prom02"]},
+    {"date": "2026-10-06", "type": "document", "label": "Nominace na mamární komisi s molekulárním tumor boardem", "citations": ["P05-doc10", "P05-zad01"]},
+    {"date": "2026-10-21", "type": "mdt", "label": "Plánovaná mamární komise", "citations": ["P05-zad01-task"]}
+  ],
+  "key_facts": [
+    {"id": "P05-F01", "category": "diagnosis", "text": "Metastatický karcinom pravého prsu (C50.4) s metastázami jater, skeletu a uzlin", "citations": ["P05-dg1", "P05-dg2", "P05-dg3", "P05-dg4"]},
+    {"id": "P05-F02", "category": "biomarker", "text": "Metastáza: ER 100 %, PR 10 %, HER2 1+ (HER2-low), Ki-67 60 %; v dokumentaci popisováno jako „HER2 negativní“", "citations": ["P05-bm05", "P05-bm06", "P05-bm07", "P05-bm08", "P05-bm03"]},
+    {"id": "P05-F03", "category": "biomarker", "text": "BRCA2 patogenní varianta v nádoru (VAF 47 %, původ neurčen), MSS, TMB 12,6, fúze ESR1, PIK3CA/AKT1/PTEN bez varianty", "citations": ["P05-bm09", "P05-bm10", "P05-bm11", "P05-bm12", "P05-bm13"]},
+    {"id": "P05-F04", "category": "biomarker", "text": "Germinální BRCA nevyšetřeno, poradenství doporučené 15. 4. neproběhlo", "citations": ["P05-bm14", "P05-mdt02"]},
+    {"id": "P05-F05", "category": "treatment", "text": "Ve studii RKT-06 od 11. 5. 2026: 300 mg, od 31. 8. 250 mg 2× denně, od 28. 9. přerušeno", "citations": ["P05-tx-parp-01", "P05-tx-parpred-01", "P05-doc09"]},
+    {"id": "P05-F06", "category": "response", "text": "Parciální odpověď: 74 → 44 mm (−41 %)", "citations": ["P05-img03", "P05-img04"]},
+    {"id": "P05-F07", "category": "toxicity", "text": "Anémie G3 dvakrát (Hb 76 a 77 g/l), 2× transfuze; nyní Hb 92 g/l", "citations": ["P05-anem01", "P05-anem02", "P05-lab04-hb-f", "P05-lab06-hb-f", "P05-lab07-hb-f"]},
+    {"id": "P05-F08", "category": "patient_voice", "text": "Každý večer třezalkový čaj a železo z lékárny; farmaceut před třezalkou varoval", "citations": ["P05-prom02", "P05-doc03"]},
+    {"id": "P05-F09", "category": "patient_voice", "text": "Únava 8/10, psychika 7, dušnost a bušení srdce; prioritou je kvalita života; chce vědět o genetice kvůli dceři", "citations": ["P05-prom02"]},
+    {"id": "P05-F10", "category": "treatment", "text": "Předchozí léčba zahrnuje fulvestrant (2. linie) a paklitaxel (3. linie)", "citations": ["P05-doc01"]},
+    {"id": "P05-F11", "category": "imaging", "text": "Poslední zobrazení 30. 7. 2026 (83 dní před MDT)", "citations": ["P05-img04"]},
+    {"id": "P05-F12", "category": "treatment", "text": "Kyselina zoledronová á 12 týdnů (sternum)", "citations": ["P05-med01"]}
+  ],
+  "red_flags": [
+    {"id": "P05-RF01", "rule": "RF-MED", "severity": "high", "importance": "key", "title": "Třezalka při studijním PARP inhibitoru", "description": "Pacientka pije každý večer třezalkový čaj a bere železo; klinický farmaceut výslovně varoval před třezalkou (CYP3A), v medikaci chybí.", "citations": ["P05-prom02", "P05-doc03", "P05-tx-parpred-01"], "guideline": null, "basis": "P05-doc03 (klinický farmaceut), ARCH §5.4 RF-MED"},
+    {"id": "P05-RF02", "rule": "RF-LAB", "severity": "high", "importance": "key", "title": "Opakovaná anémie G3 (Hb 76 a 77 g/l)", "description": "Dvakrát Hb < 80 g/l s transfuzí; podle protokolu RKT-06 zbývá jen redukce na 200 mg 2× denně, další G3 znamená ukončení.", "citations": ["P05-lab04-hb-f", "P05-lab06-hb-f", "P05-anem01", "P05-anem02"], "guideline": null, "basis": "protokol studie RKT-06 a konvence týmu (Hb < 80 g/l)"},
+    {"id": "P05-RF03", "rule": "RF-GENETIC", "severity": "moderate", "importance": "key", "title": "Germinální BRCA2 nevyšetřena, poradenství neproběhlo", "description": "Tumor board 15. 4. doporučil genetické poradenství, neproběhlo; pacientka se ptá kvůli dceři a nikdo jí to nevysvětlil.", "citations": ["P05-bm14", "P05-mdt02", "P05-prom02"], "guideline": "OBC-2.4"},
+    {"id": "P05-RF04", "rule": "RF-STALE", "severity": "moderate", "importance": "key", "title": "Staging starší než 6 týdnů", "description": "Poslední CT 30. 7. 2026, k MDT 21. 10. 2026 je to 83 dní.", "citations": ["P05-img04", "P05-zad01-task"], "guideline": "OBC-1.2"},
+    {"id": "P05-RF05", "rule": "RF-PROMS", "severity": "moderate", "importance": "key", "title": "Únava 8/10, psychika 7/10", "description": "Výrazná symptomová zátěž (únava 2 → 8).", "citations": ["P05-prom02", "P05-prom01"], "guideline": "OBC-1.3"},
+    {"id": "P05-RF06", "rule": "RF-LLM", "severity": "moderate", "importance": "key", "title": "Zpráva uvádí „únava mírná“, pacientka den předtím 8/10", "description": "Zpráva k nominaci z 6. 10. podhodnocuje únavu, kterou pacientka 5. 10. hlásí jako 8/10.", "citations": ["P05-doc10", "P05-prom02"], "guideline": "OBC-1.3"},
+    {"id": "P05-RF07", "rule": "RF-MISSING", "severity": "moderate", "importance": "key", "title": "ESR1 v ctDNA nevyšetřeno", "description": "V tkáni fúze ESR1, bodové mutace neprokázány, ctDNA nevyšetřena.", "citations": ["P05-bm12", "P05-pat02"], "guideline": "PRS-1.3"},
+    {"id": "P05-RF08", "rule": "RF-LLM", "also_rules": ["RF-NOMINATION"], "severity": "low", "importance": "secondary", "title": "HER2 popsán jako „negativní“, správně 1+ (HER2-low)", "description": "Dokumentace uvádí HER2 negativní; IHC 1+ v primáru i metastáze = HER2-low, což otevírá trastuzumab deruxtekan.", "citations": ["P05-bm03", "P05-bm07", "P05-doc01"], "guideline": "PRS-1.2"},
+    {"id": "P05-RF09", "rule": "RF-PALIATIVE", "severity": "moderate", "importance": "secondary", "title": "Paliativní péče nezapojena", "description": "Pokročilé onemocnění, únava 8, psychika 7; zapojení paliativního týmu chybí.", "citations": ["P05-prom02", "P05-img04"], "guideline": "OBC-2.1"},
+    {"id": "P05-RF10", "rule": "RF-DATAQUALITY", "severity": "low", "importance": "secondary", "title": "Diagnóza bez data vzniku", "description": "Onkologická diagnóza P05-dg1 nemá datum (primární nádor „cca před 12 lety“).", "citations": ["P05-dg1", "P05-doc01"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-DATAQUALITY)"},
+    {"id": "P05-RF11", "rule": "RF-LAB", "severity": "moderate", "importance": "secondary", "title": "Markery stoupají proti nadiru (CA 15-3 48 → 63, CEA 5,0 → 6,3)", "description": "Vzestup ≥ 25 % proti nadiru v přerušení léčby; sám o sobě nejde o progresi, staging je zastaralý.", "citations": ["P05-lab05-ca153", "P05-lab07-ca153", "P05-lab05-cea", "P05-lab07-cea"], "guideline": "PRS-4.2"}
+  ],
+  "missing_data": [
+    {"id": "P05-M01", "field": "bm.gbrca", "item": "Germinální BRCA1/2", "citations": ["P05-bm14"], "required_by": "PRS-1.4", "expected_ai_reaction": "Údaj chybí: zárodečný původ BRCA2 neověřen → genetické poradenství a test z krve."},
+    {"id": "P05-M02", "field": "bm.esr1", "item": "ESR1 mutace v ctDNA", "citations": ["P05-bm12"], "required_by": "PRS-1.3", "expected_ai_reaction": "Údaj chybí: ctDNA nevyšetřena; RKT-01/Z2 nelze posoudit."},
+    {"id": "P05-M03", "field": "staging.imaging", "item": "Aktuální staging (≤ 6 týdnů)", "citations": ["P05-img04"], "required_by": "OBC-1.2", "expected_ai_reaction": "Poslední CT je 83 dní staré → zastaralý staging."}
+  ],
+  "ai_uncertainty": [
+    {"id": "P05-U01", "text": "Zprávy z 3. 8. a 31. 8. uvádějí rozmezí „ECOG 0–1“ bez strukturovaného záznamu", "citations": ["P05-doc06", "P05-doc08"], "expected_ai_reaction": "NEJISTOTA AI: rozmezí ECOG nepřevádět na jedno číslo."}
+  ],
+  "discussion_questions": [
+    {"text": "Pokračovat v RKT-06 ve 200 mg 2× denně (Hb 92 ≥ 90, další G3 = konec), nebo změnit léčbu (např. trastuzumab deruxtekan u HER2-low) s ohledem na únavu a prioritu kvality života?", "citations": ["P05-lab07-hb-f", "P05-anem02", "P05-prom02", "P05-bm07"], "guideline": ["PRS-2.2", "PRS-2.3"]},
+    {"text": "Vysadit třezalku (interakce se studijním PARPi přes CYP3A) a vyjasnit železo?", "citations": ["P05-prom02", "P05-doc03"], "guideline": []},
+    {"text": "Genetické poradenství a germinální test BRCA2 (pacientka se ptá kvůli dceři)?", "citations": ["P05-bm14", "P05-prom02"], "guideline": ["OBC-2.4", "PRS-1.4"]}
+  ],
+  "recist": {
+    "baseline": {"date": "2026-05-06", "sum_mm": 74, "citation": "P05-img03"},
+    "nadir": null,
+    "current": {"date": "2026-07-30", "sum_mm": 44, "citation": "P05-img04"},
+    "change_from_baseline_pct": -40.5,
+    "change_from_nadir_pct": null,
+    "new_lesions": false,
+    "response": "PR",
+    "target_lesions": "S4b, S7, subkarinální a paraaortální uzlina",
+    "note": "Baseline studie RKT-06; poslední hodnocení 83 dní před MDT."
+  },
+  "trials": [
+    {"study_id": "RKT-06", "overall": "eligible", "note": "Zařazena od 11. 5. 2026. Protokol: 2× anémie G3 (300 a 250 mg); Hb 92 ≥ 90 → lze pokračovat 200 mg 2× denně, další G3 při 200 mg = ukončení.", "criteria": [
+      {"criterion_id": "RKT-06/Z1", "kind": "inclusion", "status": "met", "citations": ["P05-bm09"]},
+      {"criterion_id": "RKT-06/Z2", "kind": "inclusion", "status": "met", "citations": ["P05-doc02"], "note": "4 předchozí linie"},
+      {"criterion_id": "RKT-06/Z3", "kind": "inclusion", "status": "met", "citations": ["P05-ecog05"]},
+      {"criterion_id": "RKT-06/Z4", "kind": "inclusion", "status": "met", "citations": ["P05-lab07-hb-f", "P05-lab07-neu", "P05-lab07-plt"], "note": "Hb 92, neutrofily 2,2, trombocyty 170"},
+      {"criterion_id": "RKT-06/V1", "kind": "exclusion", "status": "not_met", "citations": ["P05-doc02"], "note": "PARP inhibitor před studií nebyl"},
+      {"criterion_id": "RKT-06/V2", "kind": "exclusion", "status": "not_met", "citations": ["P05-doc02"], "note": "MDS/AML v anamnéze není"},
+      {"criterion_id": "RKT-06/V3", "kind": "exclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P05-img03", "P05-img02"], "missing": "mozek nezobrazen (CT „mozek nevyšetřován“, PET „nehodnocen“)"}
+    ]},
+    {"study_id": "RKT-01", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-01/Z1", "kind": "inclusion", "status": "met", "citations": ["P05-bm05", "P05-bm07"]},
+      {"criterion_id": "RKT-01/Z2", "kind": "inclusion", "status": "unknown", "citations": ["P05-bm12"], "missing": "ESR1 v ctDNA"},
+      {"criterion_id": "RKT-01/Z3", "kind": "inclusion", "status": "met", "citations": ["P05-doc01"], "note": "progrese po letrozolu + palbociklibu"},
+      {"criterion_id": "RKT-01/Z4", "kind": "inclusion", "status": "met", "citations": ["P05-doc01"], "note": "1 linie chemoterapie (paklitaxel)"},
+      {"criterion_id": "RKT-01/Z5", "kind": "inclusion", "status": "met", "citations": ["P05-ecog05"]},
+      {"criterion_id": "RKT-01/V4", "kind": "exclusion", "status": "met", "citations": ["P05-doc01"], "note": "předchozí fulvestrant (2. linie)"}
+    ]},
+    {"study_id": "RKT-02", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-02/Z1", "kind": "inclusion", "status": "not_met", "citations": ["P05-bm07"], "note": "HER2 1+"}
+    ]},
+    {"study_id": "RKT-05", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-05/Z1", "kind": "inclusion", "status": "met", "citations": ["P05-doc10"]},
+      {"criterion_id": "RKT-05/Z2", "kind": "inclusion", "status": "not_met", "citations": ["P05-vaha01", "P05-vaha03"], "note": "74 → 72 kg (−2,7 %)"},
+      {"criterion_id": "RKT-05/Z3", "kind": "inclusion", "status": "met", "citations": ["P05-ecog05"]}
+    ]},
+    {"study_id": "RKT-03", "overall": "not_eligible", "note": "jiná diagnóza (kolorektum)"},
+    {"study_id": "RKT-04", "overall": "not_eligible", "note": "jiná diagnóza (NSCLC)"}
+  ],
+  "guideline_passages": ["PRS-1.2", "PRS-1.3", "PRS-1.4", "PRS-2.2", "PRS-2.3", "PRS-4.1", "OBC-1.2", "OBC-1.3", "OBC-2.1", "OBC-2.4"],
+  "compatibility_rules": [
+    {"rule_id": "VS-PRS-07", "status": "green", "patient_citations": ["P05-lab07-hb-f"], "note": "Hb 92 → lze 200 mg 2× denně; další G3 = konec"},
+    {"rule_id": "VS-PRS-09", "status": "orange", "patient_citations": ["P05-prom02", "P05-doc03"], "note": "třezalka"},
+    {"rule_id": "VS-OBC-11", "status": "orange", "patient_citations": ["P05-prom02"], "note": "třezalka"},
+    {"rule_id": "VS-PRS-08", "status": "green", "patient_citations": ["P05-doc02"], "note": "bez MDS/AML a předchozího PARPi"},
+    {"rule_id": "VS-PRS-12", "status": "green", "patient_citations": ["P05-lab07-krea"], "note": "CrCl ≈ 72 ml/min (odvozeno)"},
+    {"rule_id": "VS-PRS-03", "status": "green", "patient_citations": ["P05-bm07"], "note": "HER2 1+"},
+    {"rule_id": "VS-OBC-09", "status": "orange", "patient_citations": ["P05-img04"], "note": "staging 83 dní"}
+  ],
+  "new_findings": [
+    "Zpráva k nominaci P05-doc10 (6. 10.) uvádí „únava mírná“, pacientka den předtím v P05-prom02 hlásí únavu 8/10 (stejný vzor jako P01-doc07 vs. P01-prom02)."
+  ]
+}

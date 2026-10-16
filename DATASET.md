@@ -506,4 +506,13 @@ FHIR:
 
 - **P05-ae1:** třetí kategorie `Condition`, „nežádoucí účinek léčby“ (D64.8, anémie G3 při PARPi, od 2026-08-17). Není to onkologická diagnóza ani komorbidita: context builder a hlavička (komorbidity, FR-A4) ji musí rozlišit podle `category.text`. Pro P05 je to další zdroj k anémii G3 (`P05-anem01`, `P05-anem02`, protokol RKT-06).
 
+### Doplněk Pá 16. 10. (T-013, dev ground truth)
+
+Při ručním sestavení `data/dev_ground_truth/` (každé tvrzení ověřeno v datech):
+
+- **P01, RECIST:** CT 12. 5. 2026 (`P01-img05`) má v závěru „stacionární nález, bez známek progrese“. Cílové léze ale vzrostly z nadiru 30 mm (`P01-img04`) na 37 mm (+23 %, +7 mm), což dle RECIST 1.1 **už je progrese**. První linie tedy selhala asi o 4 měsíce dřív, než uvádí nominace (`RF-LLM`).
+- **P05:** zpráva k nominaci `P05-doc10` (6. 10.) uvádí „únava mírná“, pacientka den předtím v `P05-prom02` hlásí únavu 8/10. Je to stejný vzor jako u P01 (`P01-doc07` vs. `P01-prom02`).
+- **P04, TNM:** tumor 62 mm odpovídá podle TNM 8 kategorii T3. Údaj cT2b v hrudně chirurgickém konziliu (`P04-tnm02`, `P04-doc06`) je tedy chybný, ne jen odlišný.
+- **P03, genetika:** podle OBC-2.4 je indikací ke genetickému poradenství i „výskyt karcinomů Lynchova spektra v rodině“. Otec měl karcinom tlustého střeva (`P03-doc02`), takže indikace platí i bez výsledku MMR.
+
 **Doporučený demo pacient:** **P03**. Má jasnou otázku, vizuálně silné rozpory (ECOG, neuropatie podle pacienta, chybějící hrudník, MMR), RECIST, studii RKT-03 s několika `unknown` kritérii a je nejmenší. Záloha je **P05** (třezalka jako „wow“ red flag, protokol studie).

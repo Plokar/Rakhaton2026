@@ -1,0 +1,115 @@
+{
+  "patient_id": "P02",
+  "version": "dev-1",
+  "source": "DATASET.md §9 + doplněk 18:15 + ruční průzkum dat (T-013). Není oficiální ground truth.",
+  "mdt_date": "2026-10-14",
+  "mdt_question": {
+    "text": "Nově 2 mozkové metastázy (14 a 9 mm) při stabilní extrakraniální nemoci na udržovací léčbě pertuzumab + trastuzumab. Lokální léčba (stereotaktická radioterapie) a pokračování PH, nebo změna systémové léčby (trastuzumab deruxtekan / studie RKT-02)?",
+    "citation": "P02-zad01"
+  },
+  "timeline": [
+    {"date": "2025-01-14", "type": "pathology", "label": "Core biopsie pravého prsu: NST G3, ER 10 %, PR 0 %, HER2 3+", "citations": ["P02-pat01"]},
+    {"date": "2025-01-20", "type": "imaging", "label": "Staging CT: cT4b cN1, plicní metastázy, součet cílových lézí 112 mm", "citations": ["P02-img02", "P02-tnm01"]},
+    {"date": "2025-01-29", "type": "mdt", "label": "MDT: 1. linie pertuzumab + trastuzumab + paklitaxel, LVEF á 3 měsíce", "citations": ["P02-mdt01"]},
+    {"date": "2025-02-05", "type": "procedure", "label": "Implantace venózního portu", "citations": ["P02-proc02", "P02-doc03"]},
+    {"date": "2025-02-10", "type": "medication", "label": "Zahájení PH + paklitaxel", "citations": ["P02-doc05", "P02-tx-pac-01"]},
+    {"date": "2025-06-30", "type": "medication", "label": "Ukončen paklitaxel (21×), udržovací PH; neuropatie G1", "citations": ["P02-doc06", "P02-tx-pac-21"]},
+    {"date": "2026-08-20", "type": "document", "label": "Echo: LVEF 52 % (−11 bodů), kontrola za 3–4 týdny", "citations": ["P02-doc08", "P02-lvef07"]},
+    {"date": "2026-09-15", "type": "document", "label": "Bolesti hlavy, ranní nauzea → MR mozku", "citations": ["P02-doc09"]},
+    {"date": "2026-09-22", "type": "imaging", "label": "MR mozku: 2 metastázy (frontálně vlevo 14 mm s edémem, mozeček 9 mm)", "citations": ["P02-img05"]},
+    {"date": "2026-09-23", "type": "medication", "label": "Zahájen dexametazon 4 mg/den", "citations": ["P02-doc10", "P02-med03"]},
+    {"date": "2026-09-24", "type": "imaging", "label": "CT: extrakraniálně stabilní (46 mm, nadir)", "citations": ["P02-img06"]},
+    {"date": "2026-09-30", "type": "proms", "label": "2. dotazník PROMs: bolest 7, psychika 8, rozmazané vidění", "citations": ["P02-prom02"]},
+    {"date": "2026-10-01", "type": "document", "label": "Nominace na mamární komisi (urgentní)", "citations": ["P02-doc11", "P02-zad01"]},
+    {"date": "2026-10-14", "type": "mdt", "label": "Plánovaná mamární komise", "citations": ["P02-zad01-task"]}
+  ],
+  "key_facts": [
+    {"id": "P02-F01", "category": "diagnosis", "text": "Invazivní karcinom pravého prsu NST G3 (C50.4) s plicními a nově mozkovými metastázami", "citations": ["P02-dg1", "P02-dg2", "P02-dg3", "P02-pat01"]},
+    {"id": "P02-F02", "category": "biomarker", "text": "ER 10 %, PR 0 %, HER2 3+, Ki-67 35 %", "citations": ["P02-bm01", "P02-bm02", "P02-bm03", "P02-bm04"]},
+    {"id": "P02-F03", "category": "stage", "text": "cT4b cN1 cM1 (PUL), stadium IV", "citations": ["P02-tnm01"]},
+    {"id": "P02-F04", "category": "treatment", "text": "1. linie PH + paklitaxel (02–06/2025), poté udržovací PH, poslední podání 8. 9. 2026", "citations": ["P02-tx-pac-21", "P02-tx-tra-12", "P02-tx-per-12"]},
+    {"id": "P02-F05", "category": "imaging", "text": "2 mozkové metastázy (14 mm s edémem, 9 mm), bez leptomeningeálního sycení; extrakraniálně stabilní", "citations": ["P02-img05", "P02-img06"]},
+    {"id": "P02-F06", "category": "treatment", "text": "Dexametazon 4 mg/den od 23. 9. 2026", "citations": ["P02-med03"]},
+    {"id": "P02-F07", "category": "lab", "text": "LVEF 63 → 52 % (−11 bodů)", "citations": ["P02-lvef01", "P02-lvef07"]},
+    {"id": "P02-F08", "category": "lab", "text": "Glykémie 11,8 mmol/l u diabetičky na metforminu a dexametazonu", "citations": ["P02-lab06-glu", "P02-med01", "P02-med03"]},
+    {"id": "P02-F09", "category": "performance", "text": "ECOG 1 podle lékaře vs. 2 podle pacientky", "citations": ["P02-ecog04", "P02-prom02"]},
+    {"id": "P02-F10", "category": "patient_voice", "text": "Bolest hlavy 7/10, psychika 8/10, ranní nauzea, rozmazané vidění, horší spánek po nových lécích", "citations": ["P02-prom02"]},
+    {"id": "P02-F11", "category": "patient_voice", "text": "Bojí se ozařování hlavy kvůli paměti, chce dál hlídat vnučku", "citations": ["P02-prom02", "P02-zad01"]},
+    {"id": "P02-F12", "category": "comorbidity", "text": "Diabetes mellitus 2. typu, hypertenze", "citations": ["P02-kom1", "P02-kom2"]},
+    {"id": "P02-F13", "category": "toxicity", "text": "Neuropatie G1 po paklitaxelu", "citations": ["P02-neuro02"]}
+  ],
+  "red_flags": [
+    {"id": "P02-RF01", "rule": "RF-ECOG", "severity": "moderate", "importance": "key", "title": "ECOG lékař 1 vs. pacientka 2", "description": "Lékař ECOG 1, pacientka popisuje, že pracovat nemůže a přes den odpočívá.", "citations": ["P02-ecog04", "P02-prom02"], "guideline": "OBC-1.3"},
+    {"id": "P02-RF02", "rule": "RF-PROMS", "severity": "moderate", "importance": "key", "title": "Bolest 7/10 a psychická zátěž 8/10", "description": "Bolest vzrostla 1 → 7, psychika 3 → 8.", "citations": ["P02-prom02", "P02-prom01"], "guideline": "OBC-1.3"},
+    {"id": "P02-RF03", "rule": "RF-NEWSYMPTOM", "severity": "high", "importance": "key", "title": "Mozkové metastázy jsou symptomatické, rozmazané vidění zpráva neuvádí", "description": "Bolesti hlavy, ranní nauzea a nově rozmazané vidění; zpráva k nominaci vidění nezmiňuje. Symptomatické neléčené metastázy jsou důležité i pro RKT-02/Z3.", "citations": ["P02-prom02", "P02-doc11", "P02-img05"], "guideline": "PRS-4.2"},
+    {"id": "P02-RF04", "rule": "RF-STEROID", "severity": "low", "importance": "key", "title": "Dexametazon 4 mg bez plánu snižování", "description": "Kortikoid od 23. 9. pokračuje, plán snižování dávky v dokumentaci není.", "citations": ["P02-med03", "P02-doc11"], "guideline": "OBC-3.1"},
+    {"id": "P02-RF05", "rule": "RF-LAB", "severity": "moderate", "importance": "key", "title": "Hyperglykémie 11,8 mmol/l při dexametazonu u diabetičky", "description": "Diabetes na metforminu, po zahájení dexametazonu glykémie 11,8 mmol/l.", "citations": ["P02-lab06-glu", "P02-med03", "P02-med01"], "guideline": "OBC-3.1"},
+    {"id": "P02-RF06", "rule": "RF-LAB", "severity": "moderate", "importance": "key", "title": "Pokles LVEF o 11 bodů (63 → 52 %)", "description": "Při anti-HER2 léčbě pokles ≥ 10 bodů; LVEF stále ≥ 50 % (těsně splňuje RKT-02/Z5).", "citations": ["P02-lvef01", "P02-lvef07", "P02-doc08"], "guideline": "PRS-3.4"},
+    {"id": "P02-RF07", "rule": "RF-NOMINATION", "also_rules": ["RF-LLM"], "severity": "moderate", "importance": "key", "title": "Zpráva k nominaci uvádí „EF v normě“, poslední LVEF je 52 %", "description": "Zpráva z 1. 10. uvádí normální EF, kardiolog 20. 8. popisuje mírně sníženou funkci LK s LVEF 52 %.", "citations": ["P02-doc11", "P02-lvef07", "P02-doc08"], "guideline": "PRS-3.4"},
+    {"id": "P02-RF08", "rule": "RF-MISSING", "severity": "moderate", "importance": "key", "title": "Chybí kontrolní echokardiografie", "description": "Kardiolog 20. 8. doporučil kontrolu za 3–4 týdny, v datech k MDT není.", "citations": ["P02-doc08", "P02-lvef07"], "guideline": "PRS-3.4"},
+    {"id": "P02-RF09", "rule": "RF-IDENTITY", "severity": "high", "importance": "key", "title": "Zpráva o portu uvádí „karcinom levého prsu“", "description": "Pacientka má karcinom pravého prsu; zpráva o implantaci portu uvádí levý prs.", "citations": ["P02-doc03", "P02-dg1", "P02-pat01"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-IDENTITY)"},
+    {"id": "P02-RF10", "rule": "RF-LLM", "also_rules": ["RF-TNM"], "severity": "moderate", "importance": "key", "title": "TNM v záznamu MDT cN2 vs. cN1", "description": "Klinické zhodnocení předchozího MDT uvádí cT4b N2 M1, strukturované TNM a vstupní zpráva uvádějí cN1.", "citations": ["P02-mdt01", "P02-tnm01", "P02-doc02"], "guideline": "OBC-1.1"},
+    {"id": "P02-RF11", "rule": "RF-DATAQUALITY", "severity": "low", "importance": "secondary", "title": "Hodnoty LVEF bez zdrojového dokumentu", "description": "LVEF z 8/2025, 11/2025 a 5/2026 nemají derivedFrom (mezera v dohledatelnosti).", "citations": ["P02-lvef03", "P02-lvef04", "P02-lvef06"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-DATAQUALITY)"},
+    {"id": "P02-RF12", "rule": "RF-PALIATIVE", "severity": "moderate", "importance": "secondary", "title": "Paliativní péče nezapojena", "description": "Pokročilé onemocnění, bolest 7/10, psychika 8/10; zapojení paliativního týmu chybí.", "citations": ["P02-prom02", "P02-img05"], "guideline": "OBC-2.1"},
+    {"id": "P02-RF13", "rule": "RF-PRIOR-PROC", "severity": "low", "importance": "secondary", "title": "Venózní port", "description": "Informace pro chirurga a radiačního onkologa: port v. jugularis interna l. sin.", "citations": ["P02-proc02", "P02-doc03"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-PRIOR-PROC)"},
+    {"id": "P02-RF14", "rule": "RF-MED", "severity": "moderate", "importance": "secondary", "title": "Vitamin D mimo medikaci", "description": "Pacientka v PROMs uvádí vitamin D, v medikaci (zpráva k nominaci) není.", "citations": ["P02-prom02", "P02-doc11"], "guideline": null, "basis": "ARCH §5.4 RF-MED"}
+  ],
+  "missing_data": [
+    {"id": "P02-M01", "field": null, "item": "Kontrolní echokardiografie (doporučena za 3–4 týdny od 20. 8.)", "citations": ["P02-doc08"], "required_by": "PRS-3.4", "expected_ai_reaction": "Údaj chybí: aktuální LVEF po poklesu na 52 % → doplnit před rozhodnutím o anti-HER2 léčbě."},
+    {"id": "P02-M02", "field": null, "item": "Plán snižování dexametazonu", "citations": ["P02-med03", "P02-doc11"], "required_by": "OBC-3.1", "expected_ai_reaction": "Plán snižování kortikoidu v dokumentaci není → doplnit."}
+  ],
+  "ai_uncertainty": [],
+  "discussion_questions": [
+    {"text": "Stereotaktická radioterapie 2 mozkových metastáz a pokračování v PH, nebo změna linie (trastuzumab deruxtekan / RKT-02 po lokální léčbě)?", "citations": ["P02-img05", "P02-img06", "P02-zad01"], "guideline": ["PRS-3.3", "PRS-3.2"]},
+    {"text": "Pokles LVEF na 52 %: pokračovat v anti-HER2 léčbě, kdy kontrolní echo?", "citations": ["P02-lvef07", "P02-doc08"], "guideline": ["PRS-3.4"]},
+    {"text": "Plán snižování dexametazonu a kontrola glykémie u diabetičky?", "citations": ["P02-med03", "P02-lab06-glu"], "guideline": ["OBC-3.1", "PRS-3.3"]}
+  ],
+  "recist": {
+    "baseline": {"date": "2025-01-20", "sum_mm": 112, "citation": "P02-img02"},
+    "nadir": {"date": "2026-09-24", "sum_mm": 46, "citation": "P02-img06"},
+    "current": {"date": "2026-09-24", "sum_mm": 46, "citation": "P02-img06"},
+    "change_from_baseline_pct": -58.9,
+    "change_from_nadir_pct": 0,
+    "new_lesions": true,
+    "response": "PD",
+    "target_lesions": "prs, axilární uzlina, 2 plicní ložiska",
+    "note": "Extrakraniálně nadir, ale nové mozkové metastázy (P02-img05) = progrese."
+  },
+  "trials": [
+    {"study_id": "RKT-02", "overall": "not_eligible", "also_acceptable": ["potentially_eligible"], "note": "Nyní Z3 nesplněno; po lokální léčbě (léčené a stabilní metastázy) a snížení dexametazonu přehodnotit.", "criteria": [
+      {"criterion_id": "RKT-02/Z1", "kind": "inclusion", "status": "met", "citations": ["P02-bm03"]},
+      {"criterion_id": "RKT-02/Z2", "kind": "inclusion", "status": "met", "citations": ["P02-tx-pac-21", "P02-tx-tra-12", "P02-img05"], "note": "progrese (mozek) po trastuzumabu a taxanu"},
+      {"criterion_id": "RKT-02/Z3", "kind": "inclusion", "status": "not_met", "citations": ["P02-img05", "P02-prom02", "P02-med03"], "note": "neléčené, symptomatické, dexametazon 4 mg > 2 mg"},
+      {"criterion_id": "RKT-02/Z4", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P02-ecog04", "P02-prom02"], "note": "lékař ECOG 1, pacientka 2"},
+      {"criterion_id": "RKT-02/Z5", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P02-lvef07"], "note": "LVEF 52 % (těsně), kontrolní echo chybí"},
+      {"criterion_id": "RKT-02/V1", "kind": "exclusion", "status": "not_met", "citations": ["P02-img06"], "note": "bez známek pneumonitidy"},
+      {"criterion_id": "RKT-02/V2", "kind": "exclusion", "status": "not_met", "citations": ["P02-zad01"]},
+      {"criterion_id": "RKT-02/V3", "kind": "exclusion", "status": "not_met", "citations": ["P02-img05"], "note": "leptomeningeální sycení není patrné"}
+    ]},
+    {"study_id": "RKT-01", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-01/Z1", "kind": "inclusion", "status": "not_met", "citations": ["P02-bm03"], "note": "HER2 3+"}
+    ]},
+    {"study_id": "RKT-05", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-05/Z1", "kind": "inclusion", "status": "met", "citations": ["P02-doc11"]},
+      {"criterion_id": "RKT-05/Z2", "kind": "inclusion", "status": "not_met", "citations": ["P02-vaha03", "P02-vaha04"], "note": "hmotnost stabilní 71 kg"},
+      {"criterion_id": "RKT-05/Z3", "kind": "inclusion", "status": "met", "citations": ["P02-ecog04"]}
+    ]},
+    {"study_id": "RKT-06", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-06/Z1", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P02-pat01"], "missing": "NGS nádoru na HRR nebylo provedeno"},
+      {"criterion_id": "RKT-06/Z2", "kind": "inclusion", "status": "met", "citations": ["P02-tx-pac-01"]},
+      {"criterion_id": "RKT-06/Z3", "kind": "inclusion", "status": "met", "citations": ["P02-ecog04"]},
+      {"criterion_id": "RKT-06/Z4", "kind": "inclusion", "status": "met", "citations": ["P02-lab06-hb-f", "P02-lab06-neu", "P02-lab06-plt"]},
+      {"criterion_id": "RKT-06/V3", "kind": "exclusion", "status": "met", "citations": ["P02-img05"], "note": "neléčené mozkové metastázy"}
+    ]},
+    {"study_id": "RKT-03", "overall": "not_eligible", "note": "jiná diagnóza (kolorektum)"},
+    {"study_id": "RKT-04", "overall": "not_eligible", "note": "jiná diagnóza (NSCLC)"}
+  ],
+  "guideline_passages": ["PRS-3.1", "PRS-3.2", "PRS-3.3", "PRS-3.4", "PRS-4.2", "OBC-1.1", "OBC-1.3", "OBC-2.1", "OBC-3.1"],
+  "compatibility_rules": [
+    {"rule_id": "VS-OBC-02", "status": "orange", "patient_citations": ["P02-ecog04", "P02-prom02"], "note": "ECOG 1 vs. 2"},
+    {"rule_id": "VS-OBC-05", "status": "orange", "patient_citations": ["P02-lab06-glu", "P02-med03"], "note": "glykémie 11,8"},
+    {"rule_id": "VS-PRS-01", "status": "orange", "patient_citations": ["P02-lvef01", "P02-lvef07"], "note": "pokles ≥ 10 bodů, LVEF ≥ 50 %"},
+    {"rule_id": "VS-PRS-11", "status": "green", "patient_citations": ["P02-img05"], "note": "2 ložiska → SRS; obava z ozařování hlavy (preference)"}
+  ],
+  "new_findings": []
+}

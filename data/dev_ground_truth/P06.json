@@ -1,0 +1,126 @@
+{
+  "patient_id": "P06",
+  "version": "dev-1",
+  "source": "DATASET.md §9 + doplněk 18:15 + ruční průzkum dat (T-013). Není oficiální ground truth.",
+  "mdt_date": "2026-10-21",
+  "mdt_question": {
+    "text": "Smíšená odpověď na 1. linii pertuzumab + trastuzumab: dominantní plicní ložisko PHL roste (nadir 30 → 46 mm) a zvětšuje se uzlina 4R. Metastáza karcinomu prsu, nebo druhý primární nádor plic? Rebiopsie s HER2, ER a IHC původu? Pokračovat v PH, nebo změnit linii? Kdy a jak řešit suspektní nádor pravé ledviny?",
+    "citation": "P06-zad01"
+  },
+  "timeline": [
+    {"date": "2025-10-07", "type": "pathology", "label": "Core biopsie levého prsu: NST G2, ER 15 %, PR 0 %, HER2 3+", "citations": ["P06-pat01"]},
+    {"date": "2025-10-17", "type": "imaging", "label": "Staging CT: plicní ložiska (dominantní PHL 31 mm), 4R, suspektní nádor pravé ledviny 54 mm; součet 137 mm", "citations": ["P06-img02"]},
+    {"date": "2025-10-22", "type": "mdt", "label": "MDT: ověřit dominantní plicní ložisko, pak PH + taxan; ledvina sledovat", "citations": ["P06-mdt01"]},
+    {"date": "2025-10-27", "type": "document", "label": "Uroonkologická komise: ledvina nyní není priorita, znovu do 6 měsíců", "citations": ["P06-doc03"]},
+    {"date": "2025-11-04", "type": "procedure", "label": "Transtorakální biopsie PHL, komplikace pneumotorax", "citations": ["P06-proc02", "P06-doc05"]},
+    {"date": "2025-11-10", "type": "pathology", "label": "Biopsie PHL: málo diferencovaný karcinom, TTF-1−, GATA3−, HER2/ER nevyšetřeny", "citations": ["P06-pat02"]},
+    {"date": "2025-11-17", "type": "medication", "label": "Zahájení PH + paklitaxel (redukovaně)", "citations": ["P06-doc06", "P06-tx-pac-01"]},
+    {"date": "2026-01-12", "type": "imaging", "label": "Parciální odpověď (94 mm), dominantní ložisko PHL bez odpovědi", "citations": ["P06-img03"]},
+    {"date": "2026-03-23", "type": "medication", "label": "Paklitaxel ukončen pro neuropatii G2, udržovací PH", "citations": ["P06-doc08", "P06-neuro01"]},
+    {"date": "2026-06-22", "type": "imaging", "label": "PR trvá (87 mm, nadir), ložisko PHL 34 mm", "citations": ["P06-img04"]},
+    {"date": "2026-08-24", "type": "document", "label": "Echo: LVEF 55 % (−10 bodů), kontrola začátkem října", "citations": ["P06-doc10", "P06-lvef04"]},
+    {"date": "2026-09-21", "type": "imaging", "label": "Smíšená odpověď: PHL 46 mm, 4R 15 mm, ledvina 57 mm; RECIST SD (101 mm)", "citations": ["P06-img05"]},
+    {"date": "2026-10-03", "type": "proms", "label": "2. dotazník PROMs: únava 7, dušnost 6, −3 kg; nechce další biopsii ani operaci ledviny", "citations": ["P06-prom02"]},
+    {"date": "2026-10-05", "type": "document", "label": "Nominace na mamární komisi s hrudní komisí a urologem", "citations": ["P06-doc11", "P06-zad01"]},
+    {"date": "2026-10-21", "type": "mdt", "label": "Plánovaná mamární komise", "citations": ["P06-zad01-task"]}
+  ],
+  "key_facts": [
+    {"id": "P06-F01", "category": "diagnosis", "text": "Karcinom levého prsu NST G2 (C50.4), HER2 3+, ER 15 %, PR 0 %; stadium IV", "citations": ["P06-dg1", "P06-pat01", "P06-bm03", "P06-tnm01"]},
+    {"id": "P06-F02", "category": "diagnosis", "text": "Plicní metastázy jen předpokládané (provisional); dominantní ložisko PHL histologicky bez určení původu, HER2 a ER/PR nevyšetřeny", "citations": ["P06-dg2", "P06-pat02", "P06-bm07", "P06-bm08"]},
+    {"id": "P06-F03", "category": "diagnosis", "text": "Suspektní renální karcinom pravé ledviny cT1b (54 → 57 mm), neověřen", "citations": ["P06-dg3", "P06-tnm02", "P06-img05"]},
+    {"id": "P06-F04", "category": "response", "text": "Smíšená odpověď: prs a axila regredují, PHL 30 → 46 mm, 4R 10 → 15 mm; RECIST SD (101 mm, +16 % proti nadiru)", "citations": ["P06-img05", "P06-img04"]},
+    {"id": "P06-F05", "category": "lab", "text": "LVEF 65 → 55 % (−10 bodů)", "citations": ["P06-lvef01", "P06-lvef04"]},
+    {"id": "P06-F06", "category": "lab", "text": "CA 15-3 24 → 52, CEA 3,8 → 8,6, LD 4,4; albumin 34 g/l; kreatinin 106 µmol/l (CKD G3a)", "citations": ["P06-lab05-ca153", "P06-lab07-ca153", "P06-lab05-cea", "P06-lab07-cea", "P06-lab07-ldh", "P06-lab07-alb", "P06-lab07-krea"]},
+    {"id": "P06-F07", "category": "performance", "text": "ECOG 1 podle lékaře (dříve 2) vs. 2 podle pacientky", "citations": ["P06-ecog04", "P06-ecog03", "P06-prom02"]},
+    {"id": "P06-F08", "category": "other", "text": "Hmotnost 67 → 63 kg", "citations": ["P06-vaha03", "P06-vaha04"]},
+    {"id": "P06-F09", "category": "toxicity", "text": "Neuropatie G2 po paklitaxelu (ukončen)", "citations": ["P06-neuro01", "P06-doc08"]},
+    {"id": "P06-F10", "category": "other", "text": "Věk 76 let, žije sama, chodí s holí", "citations": ["P06", "P06-doc11"]},
+    {"id": "P06-F11", "category": "patient_voice", "text": "Prioritou kvalita života a soběstačnost; další biopsii plic (po pneumotoraxu) ani operaci ledviny nechce, pokud nebude nutná", "citations": ["P06-prom02", "P06-zad01"]},
+    {"id": "P06-F12", "category": "comorbidity", "text": "Hypertenze, CKD G3a, polyartróza; alergie: otoky po doplňcích stravy", "citations": ["P06-kom1", "P06-kom2", "P06-kom3", "P06-prom02"]}
+  ],
+  "red_flags": [
+    {"id": "P06-RF01", "rule": "RF-LESION", "severity": "high", "importance": "key", "title": "Rostoucí plicní ložisko bez určení původu", "description": "Dominantní ložisko PHL roste 30 → 46 mm při regresi ostatních; histologie neurčila původ, HER2 a ER/PR nevyšetřeny, diagnóza jen provisional. Před zásadní změnou léčby ověřit histologicky.", "citations": ["P06-img05", "P06-pat02", "P06-bm07", "P06-dg2"], "guideline": "OBC-1.4"},
+    {"id": "P06-RF02", "rule": "RF-LESION", "severity": "moderate", "importance": "key", "title": "Neověřený nádor ledviny, přehodnocení urologem neproběhlo", "description": "Suspektní RCC od 10/2025 (54 → 57 mm), uroonkologická komise doporučila znovu předložit do 6 měsíců; nestalo se.", "citations": ["P06-dg3", "P06-doc03", "P06-img05"], "guideline": "OBC-1.4"},
+    {"id": "P06-RF03", "rule": "RF-LAB", "severity": "moderate", "importance": "key", "title": "Pokles LVEF o 10 bodů (65 → 55 %)", "description": "Při anti-HER2 léčbě je nutné častější sledování.", "citations": ["P06-lvef01", "P06-lvef04", "P06-doc10"], "guideline": "PRS-3.4"},
+    {"id": "P06-RF04", "rule": "RF-NOMINATION", "severity": "moderate", "importance": "key", "title": "Nominace uvádí zastaralé „LVEF 61 % (1/2026)“", "description": "Poslední LVEF je 55 % z 24. 8. 2026.", "citations": ["P06-zad01", "P06-lvef04"], "guideline": "PRS-3.4"},
+    {"id": "P06-RF05", "rule": "RF-MISSING", "severity": "moderate", "importance": "key", "title": "Chybí kontrolní echokardiografie (začátek října)", "description": "Kardiolog doporučil kontrolu za 6 týdnů; v datech k MDT není.", "citations": ["P06-doc10", "P06-lvef04"], "guideline": "PRS-3.4"},
+    {"id": "P06-RF06", "rule": "RF-ECOG", "severity": "moderate", "importance": "key", "title": "ECOG lékař 1 vs. pacientka 2", "description": "Lékař ECOG 1 (dříve 2), pacientka popisuje, že pracovat nemůže a přes den odpočívá.", "citations": ["P06-ecog04", "P06-prom02"], "guideline": "OBC-1.3"},
+    {"id": "P06-RF07", "rule": "RF-PROMS", "severity": "moderate", "importance": "key", "title": "Únava 7/10, dušnost 6/10", "description": "Únava 5 → 7, dušnost 4 → 6, nechutenství.", "citations": ["P06-prom02", "P06-prom01"], "guideline": "OBC-1.3"},
+    {"id": "P06-RF08", "rule": "RF-GERI", "severity": "low", "importance": "key", "title": "Věk 76 let bez geriatrického screeningu G8", "description": "G8 v dokumentaci chybí.", "citations": ["P06", "P06-doc11"], "guideline": "OBC-2.2"},
+    {"id": "P06-RF09", "rule": "RF-WEIGHT", "severity": "moderate", "importance": "key", "title": "Úbytek hmotnosti 67 → 63 kg a pokles albuminu", "description": "Úbytek kolem 6 %, albumin 34 g/l.", "citations": ["P06-vaha03", "P06-vaha04", "P06-lab07-alb"], "guideline": "OBC-2.3"},
+    {"id": "P06-RF10", "rule": "RF-IDENTITY", "severity": "high", "importance": "key", "title": "Místní nález „vnitřní kvadranty“ vs. horní zevní kvadrant", "description": "Vstupní zpráva popisuje rezistenci v horních a dolních vnitřních kvadrantech, zobrazení, histologie i diagnóza uvádějí horní zevní kvadrant.", "citations": ["P06-doc01", "P06-img01", "P06-pat01"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-IDENTITY)"},
+    {"id": "P06-RF11", "rule": "RF-LAB", "severity": "moderate", "importance": "secondary", "title": "Markery rostou (CA 15-3 24 → 52, CEA 3,8 → 8,6, LD 4,4)", "description": "Vzestup markerů při smíšené odpovědi; sám o sobě nejde o progresi.", "citations": ["P06-lab05-ca153", "P06-lab07-ca153", "P06-lab07-cea"], "guideline": "PRS-4.2"},
+    {"id": "P06-RF12", "rule": "RF-PALIATIVE", "severity": "moderate", "importance": "secondary", "title": "Paliativní péče nezapojena", "description": "Pokročilé onemocnění, únava 7/10, zhoršující se dušnost; zapojení paliativního týmu chybí.", "citations": ["P06-prom02", "P06-img05"], "guideline": "OBC-2.1"},
+    {"id": "P06-RF13", "rule": "RF-PRIOR-PROC", "severity": "low", "importance": "secondary", "title": "Pneumotorax po biopsii, port, ASA", "description": "Informace pro hrudního chirurga a pneumologa: pneumotorax po transtorakální biopsii, venózní port, antiagregace.", "citations": ["P06-proc02", "P06-proc03", "P06-med03"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-PRIOR-PROC)"},
+    {"id": "P06-RF14", "rule": "RF-MISSING", "severity": "moderate", "importance": "secondary", "title": "HER2 a ER/PR plicního ložiska nevyšetřeny", "description": "Pro nedostatek materiálu nevyšetřeno; souvisí s P06-RF01.", "citations": ["P06-bm07", "P06-bm08", "P06-pat02"], "guideline": "PRS-1.1"}
+  ],
+  "missing_data": [
+    {"id": "P06-M01", "field": null, "item": "HER2 a ER/PR rostoucího plicního ložiska (rebiopsie s IHC původu)", "citations": ["P06-bm07", "P06-bm08"], "required_by": "OBC-1.4", "expected_ai_reaction": "Údaj chybí: původ ložiska neurčen → rebiopsie; nepředpokládat metastázu."},
+    {"id": "P06-M02", "field": "geri.g8", "item": "Geriatrický screening G8", "citations": ["P06", "P06-doc11"], "required_by": "OBC-2.2", "expected_ai_reaction": "Údaj chybí: věk 76 let, G8 neproveden."},
+    {"id": "P06-M03", "field": null, "item": "Kontrolní echokardiografie (začátek října 2026)", "citations": ["P06-doc10"], "required_by": "PRS-3.4", "expected_ai_reaction": "Údaj chybí: aktuální LVEF po poklesu na 55 %."},
+    {"id": "P06-M04", "field": null, "item": "Ověření nádoru ledviny a stanovisko urologa", "citations": ["P06-doc03", "P06-dg3"], "required_by": "OBC-1.4", "expected_ai_reaction": "Druhý nádor neověřen, plán řešení chybí → doplnit."}
+  ],
+  "ai_uncertainty": [
+    {"id": "P06-U01", "text": "Zpráva z 17. 11. 2025 uvádí rozmezí „ECOG 1–2“, strukturovaně uloženo jako ECOG 2; zpráva z 19. 1. 2026 rozmezí bez záznamu", "citations": ["P06-doc06", "P06-ecog02", "P06-doc07"], "expected_ai_reaction": "NEJISTOTA AI: rozmezí ECOG nepřevádět na jedno číslo."}
+  ],
+  "discussion_questions": [
+    {"text": "Rebiopsie rostoucího ložiska PHL s HER2, ER a IHC původu – raději EBUS z uzliny 4R (po pneumotoraxu a s obavou pacientky z biopsie)?", "citations": ["P06-img05", "P06-pat02", "P06-prom02", "P06-doc02"], "guideline": ["OBC-1.4", "PRS-1.1"]},
+    {"text": "Do výsledku pokračovat v udržovací PH, nebo změnit linii (trastuzumab deruxtekan)?", "citations": ["P06-img05", "P06-zad01"], "guideline": ["PRS-3.1", "PRS-3.2"]},
+    {"text": "Nádor ledviny: priorita a plán (sledování, biopsie, ablace) při CKD a přání pacientky operaci nepodstoupit?", "citations": ["P06-dg3", "P06-doc03", "P06-prom02"], "guideline": ["OBC-1.4"]}
+  ],
+  "recist": {
+    "baseline": {"date": "2025-10-17", "sum_mm": 137, "citation": "P06-img02"},
+    "nadir": {"date": "2026-06-22", "sum_mm": 87, "citation": "P06-img04"},
+    "current": {"date": "2026-09-21", "sum_mm": 101, "citation": "P06-img05"},
+    "change_from_baseline_pct": -26.3,
+    "change_from_nadir_pct": 16.1,
+    "new_lesions": false,
+    "response": "SD",
+    "target_lesions": "prs, axilární uzlina, PHL, LDL, uzlina 4R (ledvina hodnocena samostatně)",
+    "note": "Formálně SD (+16 % < 20 %), ale disociovaný růst dominantního ložiska PHL (30 → 46 mm)."
+  },
+  "trials": [
+    {"study_id": "RKT-02", "overall": "potentially_eligible", "also_acceptable": ["not_eligible"], "criteria": [
+      {"criterion_id": "RKT-02/Z1", "kind": "inclusion", "status": "met", "citations": ["P06-bm03"]},
+      {"criterion_id": "RKT-02/Z2", "kind": "inclusion", "status": "unknown", "also_acceptable": ["met"], "citations": ["P06-img05", "P06-tx-tra-16", "P06-tx-pac-18"], "missing": "potvrzení progrese (smíšená odpověď, RECIST SD) a původu rostoucího ložiska"},
+      {"criterion_id": "RKT-02/Z3", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P06-img05"], "note": "mozkové metastázy nejsou známy (mozek nezobrazen)"},
+      {"criterion_id": "RKT-02/Z4", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P06-ecog04", "P06-prom02"], "note": "lékař ECOG 1, pacientka 2"},
+      {"criterion_id": "RKT-02/Z5", "kind": "inclusion", "status": "met", "citations": ["P06-lvef04"], "note": "LVEF 55 %, kontrolní echo chybí"},
+      {"criterion_id": "RKT-02/V1", "kind": "exclusion", "status": "not_met", "citations": ["P06-img05"]},
+      {"criterion_id": "RKT-02/V2", "kind": "exclusion", "status": "not_met", "citations": ["P06-zad01"]},
+      {"criterion_id": "RKT-02/V3", "kind": "exclusion", "status": "not_met", "also_acceptable": ["unknown"], "citations": ["P06-doc11"]}
+    ]},
+    {"study_id": "RKT-01", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-01/Z1", "kind": "inclusion", "status": "not_met", "citations": ["P06-bm03"], "note": "HER2 3+"}
+    ]},
+    {"study_id": "RKT-05", "overall": "eligible", "also_acceptable": ["potentially_eligible"], "criteria": [
+      {"criterion_id": "RKT-05/Z1", "kind": "inclusion", "status": "met", "citations": ["P06-doc11"]},
+      {"criterion_id": "RKT-05/Z2", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P06-prom01", "P06-vaha04"], "note": "67 kg (12. 4.) → 63 kg (5. 10.), −6 %"},
+      {"criterion_id": "RKT-05/Z3", "kind": "inclusion", "status": "met", "citations": ["P06-ecog04"]},
+      {"criterion_id": "RKT-05/V1", "kind": "exclusion", "status": "not_met", "citations": ["P06-doc11"]},
+      {"criterion_id": "RKT-05/V2", "kind": "exclusion", "status": "not_met", "also_acceptable": ["unknown"], "citations": ["P06-prom02"]},
+      {"criterion_id": "RKT-05/V3", "kind": "exclusion", "status": "not_met", "also_acceptable": ["unknown"], "citations": ["P06-doc11"], "note": "chodí samostatně s holí"}
+    ]},
+    {"study_id": "RKT-06", "overall": "potentially_eligible", "also_acceptable": ["not_eligible"], "criteria": [
+      {"criterion_id": "RKT-06/Z1", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P06-pat01"], "missing": "NGS nádoru na HRR"},
+      {"criterion_id": "RKT-06/Z2", "kind": "inclusion", "status": "met", "citations": ["P06-tx-pac-01"]},
+      {"criterion_id": "RKT-06/Z3", "kind": "inclusion", "status": "met", "citations": ["P06-ecog04"]},
+      {"criterion_id": "RKT-06/Z4", "kind": "inclusion", "status": "met", "citations": ["P06-lab07-hb-f", "P06-lab07-neu", "P06-lab07-plt"]}
+    ]},
+    {"study_id": "RKT-03", "overall": "not_eligible", "note": "jiná diagnóza (kolorektum)"},
+    {"study_id": "RKT-04", "overall": "not_eligible", "note": "jiná diagnóza (NSCLC); plicní ložisko neověřeno"}
+  ],
+  "guideline_passages": ["PRS-1.1", "PRS-1.2", "PRS-3.1", "PRS-3.2", "PRS-3.4", "PRS-4.2", "OBC-1.3", "OBC-1.4", "OBC-2.1", "OBC-2.2", "OBC-2.3"],
+  "compatibility_rules": [
+    {"rule_id": "VS-OBC-02", "status": "orange", "patient_citations": ["P06-ecog04", "P06-prom02"], "note": "ECOG 1 vs. 2"},
+    {"rule_id": "VS-OBC-03", "status": "grey", "patient_citations": [], "note": "G8 chybí"},
+    {"rule_id": "VS-OBC-04", "status": "orange", "patient_citations": ["P06-vaha03", "P06-vaha04"], "note": "67 → 63 kg"},
+    {"rule_id": "VS-OBC-08", "status": "orange", "patient_citations": ["P06-lab07-krea"], "note": "CrCl ≈ 40 ml/min (odvozeno)"},
+    {"rule_id": "VS-OBC-10", "status": "orange", "patient_citations": ["P06-pat02", "P06-dg3"], "note": "plicní ložisko a ledvina bez histologie"},
+    {"rule_id": "VS-PRS-01", "status": "orange", "patient_citations": ["P06-lvef01", "P06-lvef04"], "note": "65 → 55 %"},
+    {"rule_id": "VS-PRS-10", "status": "orange", "patient_citations": ["P06-neuro01"], "note": "neuropatie G2"},
+    {"rule_id": "VS-URO-01", "status": "orange", "patient_citations": ["P06-doc03", "P06-lab07-krea"], "note": "CKD G3a; operaci si nepřeje"},
+    {"rule_id": "VS-DG-01", "status": "orange", "patient_citations": ["P06-proc02"], "note": "pneumotorax po biopsii"}
+  ],
+  "new_findings": []
+}

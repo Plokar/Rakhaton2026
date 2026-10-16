@@ -1,0 +1,139 @@
+{
+  "patient_id": "P03",
+  "version": "dev-1",
+  "source": "DATASET.md §9 + ruční průzkum dat (T-013), barvy semaforu docs/POZADAVKY_LEKARE.md §5.4. Není oficiální ground truth.",
+  "mdt_date": "2026-10-21",
+  "mdt_question": {
+    "text": "Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?",
+    "citation": "P03-zad01"
+  },
+  "timeline": [
+    {"date": "2019-03-20", "type": "procedure", "label": "IM, PCI RIA s implantací lékového stentu", "citations": ["P03-proc03", "P03-kom1"]},
+    {"date": "2026-04-21", "type": "procedure", "label": "Koloskopie s biopsií: tumor sigmatu", "citations": ["P03-doc01", "P03-proc01"]},
+    {"date": "2026-04-24", "type": "pathology", "label": "Adenokarcinom sigmatu G2", "citations": ["P03-pat01", "P03-dg1"]},
+    {"date": "2026-04-28", "type": "imaging", "label": "Staging CT hrudníku, břicha a pánve: 4 jaterní metastázy, hrudník bez metastáz, součet cílových lézí 83 mm", "citations": ["P03-img01"]},
+    {"date": "2026-05-06", "type": "imaging", "label": "MR jater: navíc ložisko S3, postižení obou laloků", "citations": ["P03-img02"]},
+    {"date": "2026-05-12", "type": "pathology", "label": "KRAS G12D, NRAS a BRAF wt, MMR/MSI nevyšetřeno", "citations": ["P03-pat02", "P03-bm01", "P03-bm04"]},
+    {"date": "2026-05-20", "type": "mdt", "label": "1. MDT: potenciálně resekabilní, konverzní FOLFOX + bevacizumab, re-MDT po restagingu", "citations": ["P03-mdt01"]},
+    {"date": "2026-05-28", "type": "procedure", "label": "Implantace venózního portu", "citations": ["P03-proc02", "P03-doc03"]},
+    {"date": "2026-06-01", "type": "medication", "label": "Zahájení FOLFOX + bevacizumab (1. cyklus)", "citations": ["P03-doc04", "P03-tx-oxa-01", "P03-tx-bev-01"]},
+    {"date": "2026-06-01", "type": "proms", "label": "1. dotazník PROMs", "citations": ["P03-prom01"]},
+    {"date": "2026-09-07", "type": "medication", "label": "8. cyklus, oxaliplatina redukována na 75 %; poslední bevacizumab", "citations": ["P03-doc06", "P03-tx-oxa-08", "P03-tx-bev-08"]},
+    {"date": "2026-09-21", "type": "imaging", "label": "Restagingové CT břicha a pánve (bez hrudníku): parciální odpověď, 50 mm (−40 %)", "citations": ["P03-img03"]},
+    {"date": "2026-09-28", "type": "imaging", "label": "Restagingová MR jater: regrese, vymizelé S5, S3 trvá, levý lalok 38 %", "citations": ["P03-img04"]},
+    {"date": "2026-10-04", "type": "proms", "label": "2. dotazník PROMs: brnění 6/10, knoflíky, ECOG podle pacienta 1", "citations": ["P03-prom02"]},
+    {"date": "2026-10-05", "type": "document", "label": "Kontrola po restagingu, nominace na re-MDT", "citations": ["P03-doc07", "P03-zad01"]},
+    {"date": "2026-10-21", "type": "mdt", "label": "Plánované re-MDT GIT", "citations": ["P03-zad01-task"]}
+  ],
+  "key_facts": [
+    {"id": "P03-F01", "category": "diagnosis", "text": "Adenokarcinom sigmatu (C18.7) G2 se synchronními jaterními metastázami (C78.7)", "citations": ["P03-dg1", "P03-dg2", "P03-pat01"]},
+    {"id": "P03-F02", "category": "stage", "text": "cT3 cN1 cM1a, stadium IVA", "citations": ["P03-tnm01"]},
+    {"id": "P03-F03", "category": "biomarker", "text": "KRAS G12D (RAS mutovaný), NRAS a BRAF V600E wild-type; anti-EGFR není indikován", "citations": ["P03-bm01", "P03-bm02", "P03-bm03", "P03-pat02"]},
+    {"id": "P03-F04", "category": "biomarker", "text": "MMR/MSI nevyšetřeno", "citations": ["P03-bm04", "P03-pat02"]},
+    {"id": "P03-F05", "category": "treatment", "text": "8 cyklů FOLFOX + bevacizumab (1. 6. – 7. 9. 2026), 8. cyklus s oxaliplatinou na 75 %", "citations": ["P03-tx-oxa-01", "P03-tx-oxa-08", "P03-doc06"]},
+    {"id": "P03-F06", "category": "response", "text": "Parciální odpověď dle RECIST 1.1: součet cílových lézí 83 → 50 mm (−40 %), bez nových ložisek", "citations": ["P03-img01", "P03-img03"]},
+    {"id": "P03-F07", "category": "imaging", "text": "Postižení obou laloků: ložisko S3 (7 → 4 mm), S8 v kontaktu s pravou jaterní žílou, vymizelá metastáza S5 (plánovat podle původní lokalizace)", "citations": ["P03-img02", "P03-img04"]},
+    {"id": "P03-F08", "category": "imaging", "text": "Objem levého laloku (S2–S4) odhadem 38 % celkového objemu jater", "citations": ["P03-img04"]},
+    {"id": "P03-F09", "category": "imaging", "text": "Restagingové CT bez hrudníku („hrudník nebyl požadován“), poslední CT hrudníku 28. 4. 2026", "citations": ["P03-img03", "P03-img01"]},
+    {"id": "P03-F10", "category": "performance", "text": "ECOG 0 podle lékaře (5. 10.) vs. 1 podle pacienta (samostatnost, 4. 10.)", "citations": ["P03-ecog03", "P03-prom02"]},
+    {"id": "P03-F11", "category": "toxicity", "text": "Neuropatie podle lékaře G1, pacient: brnění 6/10, „špatně zapínám knoflíky a padají mi věci z ruky“", "citations": ["P03-neuro01", "P03-prom02"]},
+    {"id": "P03-F12", "category": "lab", "text": "CEA klesalo 86 → 9,1 µg/l, nyní znovu 13,9 µg/l", "citations": ["P03-lab01-cea", "P03-lab05-cea", "P03-lab06-cea"]},
+    {"id": "P03-F13", "category": "other", "text": "Hmotnost 84 → 78 kg (−7 %) od května 2026", "citations": ["P03-vaha01", "P03-vaha04"]},
+    {"id": "P03-F14", "category": "treatment", "text": "Poslední bevacizumab 7. 9. 2026: operace nejdříve po 6 týdnech (~19. 10. 2026)", "citations": ["P03-tx-bev-08"]},
+    {"id": "P03-F15", "category": "comorbidity", "text": "IM 2019 s lékovým stentem (PCI RIA), hypertenze, hypercholesterolémie; užívá kyselinu acetylsalicylovou", "citations": ["P03-kom1", "P03-kom2", "P03-kom3", "P03-proc03", "P03-med01"]},
+    {"id": "P03-F16", "category": "other", "text": "Venózní port (v. subclavia l. dx.)", "citations": ["P03-proc02"]},
+    {"id": "P03-F17", "category": "patient_voice", "text": "Pacient si přeje operaci, pokud dává smysl; je profesionální řidič a s brněním rukou nyní nemůže řídit; obává se dlouhé pracovní neschopnosti", "citations": ["P03-prom02", "P03-zad01"]},
+    {"id": "P03-F18", "category": "other", "text": "Otec karcinom tlustého střeva v 72 letech", "citations": ["P03-doc02"]},
+    {"id": "P03-F19", "category": "mdt", "text": "Předchozí MDT 20. 5. 2026: kurativní záměr, konverzní chemoterapie, re-MDT po restagingu", "citations": ["P03-mdt01"]}
+  ],
+  "red_flags": [
+    {"id": "P03-RF01", "rule": "RF-ECOG", "severity": "moderate", "importance": "key", "title": "ECOG lékař 0 vs. pacient 1", "description": "Lékař hodnotí ECOG 0, pacient v dotazníku popisuje omezení těžší fyzické práce (ECOG 1) a vyjde jen jedno patro.", "citations": ["P03-ecog03", "P03-prom02"], "guideline": "OBC-1.3"},
+    {"id": "P03-RF02", "rule": "RF-TOX", "severity": "high", "importance": "key", "title": "Neuropatie: lékař G1, pacient popisuje G2", "description": "Lékař uvádí neuropatii G1, pacient hlásí brnění 6/10 a omezení instrumentálních činností (knoflíky, padání věcí z ruky), což odpovídá G2 a vede ke stop-and-go oxaliplatiny. Sporné i pro RKT-03/V3.", "citations": ["P03-neuro01", "P03-prom02", "P03-doc07"], "guideline": "KRC-3.2"},
+    {"id": "P03-RF03", "rule": "RF-STALE", "severity": "high", "importance": "key", "title": "Neúplný restaging před resekcí jater: chybí CT hrudníku", "description": "Restagingové CT 21. 9. bylo jen břicha a pánve, poslední CT hrudníku je z 28. 4. 2026. Před resekcí jater je potřeba CT hrudníku, břicha a pánve a MR jater ne starší než 4–6 týdnů.", "citations": ["P03-img03", "P03-img01"], "guideline": "KRC-2.4"},
+    {"id": "P03-RF04", "rule": "RF-MISSING", "severity": "moderate", "importance": "key", "title": "MMR/MSI nevyšetřeno", "description": "Stav MMR/MSI je u metastatického kolorektálního karcinomu povinný (volba imunoterapie, genetika); chybí i pro RKT-03/V2.", "citations": ["P03-bm04", "P03-pat02"], "guideline": "KRC-1.1"},
+    {"id": "P03-RF05", "rule": "RF-WEIGHT", "severity": "moderate", "importance": "key", "title": "Úbytek hmotnosti −7 %", "description": "Hmotnost 84 kg (18. 5.) → 78 kg (5. 10.), tj. −7 % za méně než 6 měsíců; indikace nutričního vyšetření a relevantní pro RKT-05.", "citations": ["P03-vaha01", "P03-vaha04", "P03-prom02"], "guideline": "OBC-2.3"},
+    {"id": "P03-RF06", "rule": "RF-LAB", "severity": "moderate", "importance": "secondary", "title": "CEA znovu roste (9,1 → 13,9 µg/l)", "description": "Vzestup o 53 % proti nadiru po ukončení chemoterapie; důvod ke kontrole, sám o sobě nejde o progresi.", "citations": ["P03-lab05-cea", "P03-lab06-cea"], "guideline": null, "basis": "konvence týmu (vzestup markeru ≥ 25 % proti nadiru, ARCH §5.4)"},
+    {"id": "P03-RF07", "rule": "RF-MED", "severity": "moderate", "importance": "secondary", "title": "Doplňky mimo medikaci: hořčík, vitamin B", "description": "Pacient v PROMs uvádí hořčík a vitamin B (doporučila známá), v medikaci nejsou.", "citations": ["P03-prom02", "P03-doc02"], "guideline": null, "basis": "ARCH §5.4 RF-MED (PROMs leky-mimo vs. medikace)"},
+    {"id": "P03-RF08", "rule": "RF-GENETIC", "severity": "moderate", "importance": "key", "title": "Karcinom Lynchova spektra v rodině, genetika ani MMR neprovedeny", "description": "Otec měl karcinom tlustého střeva; výskyt karcinomů Lynchova spektra v rodině je indikací ke genetickému poradenství, MMR/MSI nevyšetřeno.", "citations": ["P03-doc02", "P03-bm04"], "guideline": "OBC-2.4"},
+    {"id": "P03-RF09", "rule": "RF-PRIOR-PROC", "severity": "low", "importance": "secondary", "title": "Port, koronární stent, kyselina acetylsalicylová", "description": "Informace pro chirurga: venózní port, lékový stent po IM 2019, antiagregace ASA.", "citations": ["P03-proc02", "P03-proc03", "P03-med01"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-PRIOR-PROC)"},
+    {"id": "P03-RF10", "rule": "RF-PROMS", "severity": "moderate", "importance": "secondary", "title": "Brnění 0 → 6 mezi dotazníky", "description": "Nárůst o 6 bodů (≥ 3) mezi 1. 6. a 4. 10.; souvisí s neuropatií (P03-RF02).", "citations": ["P03-prom01", "P03-prom02"], "guideline": "OBC-1.3"}
+  ],
+  "missing_data": [
+    {"id": "P03-M01", "field": "bm.mmr", "item": "MMR/MSI", "citations": ["P03-bm04"], "required_by": "KRC-1.1", "expected_ai_reaction": "Údaj chybí: MMR/MSI nevyšetřeno → doplnit; RKT-03/V2 nelze posoudit; při dMMR genetika (KRC-1.2)."},
+    {"id": "P03-M02", "field": "staging.chest_ct", "item": "Aktuální CT hrudníku před resekcí", "citations": ["P03-img03", "P03-img01"], "required_by": "KRC-2.4", "expected_ai_reaction": "Údaj chybí: restaging bez hrudníku, poslední CT hrudníku 28. 4. 2026 → doplnit; RKT-03/Z1 a V1 nelze posoudit."},
+    {"id": "P03-M03", "field": null, "item": "Stav DPD před fluoropyrimidiny", "citations": ["P03-tx-5fu-01"], "required_by": "EXT-EMA-DPD-2020", "expected_ai_reaction": "V podkladech není → semafor VS-KRC-09 šedý (nelze posoudit), nedomýšlet."}
+  ],
+  "ai_uncertainty": [
+    {"id": "P03-U01", "text": "Zpráva z 7. 9. uvádí rozmezí „ECOG 0–1“, strukturovaně uloženo jako ECOG 1", "citations": ["P03-doc06", "P03-ecog02"], "expected_ai_reaction": "NEJISTOTA AI: rozmezí ECOG nepřevádět na jedno číslo, ukázat obojí."}
+  ],
+  "discussion_questions": [
+    {"text": "Je resekce jater proveditelná a v jakém pořadí (jednodobě vs. dvoudobě, ablace S3, plán podle původní lokalizace S5) při FLR 38 % po intenzivní chemoterapii a kontaktu S8 s pravou jaterní žílou?", "citations": ["P03-img04", "P03-zad01"], "guideline": ["KRC-2.1", "KRC-2.4", "KRC-2.5"]},
+    {"text": "Doplnit před rozhodnutím CT hrudníku (restaging) a MMR/MSI?", "citations": ["P03-img03", "P03-bm04"], "guideline": ["KRC-2.4", "KRC-1.1"]},
+    {"text": "Při pokračování chemoterapie: neuropatie podle pacienta odpovídá G2 → vysadit oxaliplatinu (stop-and-go)?", "citations": ["P03-neuro01", "P03-prom02"], "guideline": ["KRC-3.2"]}
+  ],
+  "recist": {
+    "baseline": {"date": "2026-04-28", "sum_mm": 83, "citation": "P03-img01"},
+    "nadir": null,
+    "current": {"date": "2026-09-21", "sum_mm": 50, "citation": "P03-img03"},
+    "change_from_baseline_pct": -39.8,
+    "change_from_nadir_pct": null,
+    "new_lesions": false,
+    "response": "PR",
+    "target_lesions": "S7 (48 → 29 mm), S8 (35 → 21 mm)",
+    "note": "Radiolog uvádí −40 %; MR 28. 9. potvrzuje (S7 28 mm, S8 22 mm)."
+  },
+  "trials": [
+    {"study_id": "RKT-03", "overall": "potentially_eligible", "criteria": [
+      {"criterion_id": "RKT-03/Z1", "kind": "inclusion", "status": "unknown", "citations": ["P03-img03", "P03-img01"], "missing": "CT hrudníku (restaging bez hrudníku)"},
+      {"criterion_id": "RKT-03/Z2", "kind": "inclusion", "status": "met", "citations": ["P03-img03", "P03-tx-oxa-08"], "note": "8 cyklů s oxaliplatinou, parciální odpověď"},
+      {"criterion_id": "RKT-03/Z3", "kind": "inclusion", "status": "met", "citations": ["P03-ecog03", "P03-prom02"], "note": "ECOG 0 lékař, 1 pacient – obojí v rozmezí 0–1"},
+      {"criterion_id": "RKT-03/Z4", "kind": "inclusion", "status": "unknown", "citations": ["P03-zad01"], "missing": "rozhodnutí MDT s hepatobiliárním chirurgem (je předmětem tohoto MDT)"},
+      {"criterion_id": "RKT-03/V1", "kind": "exclusion", "status": "unknown", "citations": ["P03-img03", "P03-img01"], "missing": "CT hrudníku"},
+      {"criterion_id": "RKT-03/V2", "kind": "exclusion", "status": "unknown", "citations": ["P03-bm04"], "missing": "MMR/MSI"},
+      {"criterion_id": "RKT-03/V3", "kind": "exclusion", "status": "unknown", "also_acceptable": ["met"], "citations": ["P03-neuro01", "P03-prom02"], "missing": "jednoznačné hodnocení neuropatie (lékař G1, popis pacienta odpovídá G2)", "note": "sporné"},
+      {"criterion_id": "RKT-03/V4", "kind": "exclusion", "status": "not_met", "citations": ["P03-img04"], "note": "FLR (levý lalok) 38 % ≥ 30 %"}
+    ]},
+    {"study_id": "RKT-05", "overall": "eligible", "also_acceptable": ["potentially_eligible"], "criteria": [
+      {"criterion_id": "RKT-05/Z1", "kind": "inclusion", "status": "met", "citations": ["P03-dg1", "P03-doc07"]},
+      {"criterion_id": "RKT-05/Z2", "kind": "inclusion", "status": "met", "citations": ["P03-vaha01", "P03-vaha04"], "note": "84 → 78 kg, −7 %"},
+      {"criterion_id": "RKT-05/Z3", "kind": "inclusion", "status": "met", "citations": ["P03-ecog03"]},
+      {"criterion_id": "RKT-05/V1", "kind": "exclusion", "status": "not_met", "citations": ["P03-doc07"], "note": "probíhá protinádorová léčba, ne jen BSC"},
+      {"criterion_id": "RKT-05/V2", "kind": "exclusion", "status": "not_met", "also_acceptable": ["unknown"], "citations": ["P03-prom02"], "note": "výživa sondou ani parenterálně v datech není"},
+      {"criterion_id": "RKT-05/V3", "kind": "exclusion", "status": "not_met", "citations": ["P03-prom02"], "note": "vyjde jedno patro bez zastavení"}
+    ]},
+    {"study_id": "RKT-06", "overall": "potentially_eligible", "also_acceptable": ["not_eligible"], "criteria": [
+      {"criterion_id": "RKT-06/Z1", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P03-pat02"], "missing": "HRR geny nevyšetřeny (NGS panel jen KRAS, NRAS, BRAF)"},
+      {"criterion_id": "RKT-06/Z2", "kind": "inclusion", "status": "met", "citations": ["P03-tx-oxa-01"]},
+      {"criterion_id": "RKT-06/Z3", "kind": "inclusion", "status": "met", "citations": ["P03-ecog03"]},
+      {"criterion_id": "RKT-06/Z4", "kind": "inclusion", "status": "met", "citations": ["P03-lab06-hb", "P03-lab06-neu", "P03-lab06-plt"], "note": "Hb 114, neutrofily 2,9, trombocyty 168"}
+    ]},
+    {"study_id": "RKT-01", "overall": "not_eligible", "note": "jiná diagnóza (karcinom prsu)"},
+    {"study_id": "RKT-02", "overall": "not_eligible", "note": "jiná diagnóza (karcinom prsu)"},
+    {"study_id": "RKT-04", "overall": "not_eligible", "note": "jiná diagnóza (NSCLC)"}
+  ],
+  "guideline_passages": ["KRC-1.1", "KRC-1.2", "KRC-2.1", "KRC-2.2", "KRC-2.3", "KRC-2.4", "KRC-2.5", "KRC-3.1", "KRC-3.2", "OBC-1.1", "OBC-1.2", "OBC-1.3", "OBC-2.3", "OBC-2.4"],
+  "compatibility": [
+    {"option": "Resekce jater (jednodobě nebo dvoudobě) + resekce primárního nádoru", "guideline": ["KRC-2.1", "KRC-2.4", "KRC-2.5"], "overall": "orange", "rules": [
+      {"rule_id": "VS-KRC-01", "status": "orange", "patient_citations": ["P03-img04"], "note": "FLR 38 % po intenzivní chemoterapii"},
+      {"rule_id": "VS-KRC-02", "status": "orange", "patient_citations": ["P03-img03", "P03-img01"], "note": "chybí CT hrudníku"},
+      {"rule_id": "VS-KRC-03", "status": "orange", "patient_citations": ["P03-img04"], "note": "S3, vymizelé S5, S8 u pravé jaterní žíly"},
+      {"rule_id": "VS-CHIR-03", "status": "green", "patient_citations": ["P03-tx-bev-08"], "note": "operace od 19. 10. 2026"},
+      {"rule_id": "VS-CHIR-01", "status": "green", "patient_citations": ["P03-proc03", "P03-med01"], "note": "IM i stent 2019; info: užívá ASA"},
+      {"rule_id": "VS-OBC-04", "status": "orange", "patient_citations": ["P03-vaha01", "P03-vaha04"], "note": "−7 %"},
+      {"rule_id": "VS-OBC-02", "status": "orange", "patient_citations": ["P03-ecog03", "P03-prom02"], "note": "ECOG 0 vs. 1"}
+    ]},
+    {"option": "Pokračovat ve FOLFOX + bevacizumab", "guideline": ["KRC-3.1", "KRC-2.2"], "overall": "orange", "rules": [
+      {"rule_id": "VS-KRC-05", "status": "orange", "patient_citations": ["P03-neuro01", "P03-prom02"], "note": "neuropatie G1 vs. popis pacienta"},
+      {"rule_id": "VS-KRC-08", "status": "orange", "patient_citations": ["P03-kom1", "P03-doc07"], "note": "IM 2019; hypertenze kompenzovaná"},
+      {"rule_id": "VS-KRC-09", "status": "grey", "patient_citations": [], "note": "DPD v datech není"},
+      {"rule_id": "VS-KRC-10", "status": "orange", "patient_citations": ["P03-tx-oxa-08", "P03-img04"], "note": "8 cyklů, vymizelé S5: neprodlužovat"}
+    ]},
+    {"option": "Anti-EGFR (cetuximab, panitumumab)", "guideline": ["KRC-3.1"], "overall": "red", "rules": [
+      {"rule_id": "VS-KRC-06", "status": "red", "patient_citations": ["P03-bm01"], "note": "KRAS G12D"}
+    ]},
+    {"option": "Imunoterapie", "guideline": ["KRC-1.2"], "overall": "grey", "rules": [
+      {"rule_id": "VS-KRC-07", "status": "grey", "patient_citations": ["P03-bm04"], "note": "MMR nevyšetřeno"}
+    ]}
+  ],
+  "new_findings": []
+}

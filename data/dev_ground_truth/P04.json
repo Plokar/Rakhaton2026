@@ -1,0 +1,118 @@
+{
+  "patient_id": "P04",
+  "version": "dev-1",
+  "source": "DATASET.md §9 + doplněk 18:15 + ruční průzkum dat (T-013), barvy semaforu docs/POZADAVKY_LEKARE.md §5.4. Není oficiální ground truth.",
+  "mdt_date": "2026-10-21",
+  "mdt_question": {
+    "text": "Adenokarcinom PHL cT3 N2 (single-station 4R) M0?, PD-L1 60 %. Resekce po neoadjuvantní chemoimunoterapii, nebo definitivní chemoradioterapie s konsolidační imunoterapií? Je pacient funkčně operabilní?",
+    "citation": "P04-zad01"
+  },
+  "timeline": [
+    {"date": "2026-07-28", "type": "document", "label": "Hemoptoe, stín na RTG; aktivní kuřák s CHOPN", "citations": ["P04-doc01", "P04-img01"]},
+    {"date": "2026-08-04", "type": "imaging", "label": "Staging CT: tumor PHL 62 mm, uzlina 4R 18 mm, ložisko levé nadledviny 14 mm", "citations": ["P04-img02"]},
+    {"date": "2026-08-14", "type": "pathology", "label": "Bronchoskopická biopsie: adenokarcinom G3, TTF-1+", "citations": ["P04-pat01", "P04-proc01"]},
+    {"date": "2026-08-20", "type": "pathology", "label": "PD-L1 TPS 60 %, ALK a ROS1 negativní, EGFR nevyšetřen (málo DNA)", "citations": ["P04-pat02"]},
+    {"date": "2026-08-25", "type": "document", "label": "Spirometrie: FEV1 58 %, DLCO 45 %", "citations": ["P04-doc03"]},
+    {"date": "2026-09-16", "type": "mdt", "label": "MDT: rozhodnutí odloženo, doplnit PET-CT, EBUS, MR mozku, NGS, chirurgické posouzení", "citations": ["P04-mdt01"]},
+    {"date": "2026-09-25", "type": "imaging", "label": "PET-CT: aktivní tumor a 4R, ložisko nadledviny SUVmax 4,1 – nelze vyloučit metastázu", "citations": ["P04-img03"]},
+    {"date": "2026-10-01", "type": "procedure", "label": "EBUS-TBNA 4R, 7, 10R", "citations": ["P04-proc02", "P04-doc04"]},
+    {"date": "2026-10-02", "type": "imaging", "label": "MR mozku bez metastáz", "citations": ["P04-img04"]},
+    {"date": "2026-10-05", "type": "pathology", "label": "4R metastáza adenokarcinomu, 7 a 10R negativní; NGS (EGFR) probíhá", "citations": ["P04-pat03"]},
+    {"date": "2026-10-05", "type": "proms", "label": "2. dotazník PROMs: dušnost 7, −7 kg, 1 patro jen se zastávkou", "citations": ["P04-prom02"]},
+    {"date": "2026-10-06", "type": "document", "label": "Nominace na hrudní komisi (cT3 N2 M0, IIIB)", "citations": ["P04-doc05", "P04-zad01"]},
+    {"date": "2026-10-07", "type": "document", "label": "Hrudní chirurg: technicky resekabilní, funkčně hraniční (ppoFEV1 49 %, ppoDLCO 38 %), doporučena spiroergometrie", "citations": ["P04-doc06"]},
+    {"date": "2026-10-21", "type": "mdt", "label": "Plánovaná hrudní komise", "citations": ["P04-zad01-task"]}
+  ],
+  "key_facts": [
+    {"id": "P04-F01", "category": "diagnosis", "text": "Adenokarcinom pravého horního laloku plíce (C34.1) G3, TTF-1 pozitivní", "citations": ["P04-dg1", "P04-pat01"]},
+    {"id": "P04-F02", "category": "stage", "text": "Tumor 62 mm (cT3), N2 single-station 4R ověřeno EBUS (7 a 10R negativní); M nejasné kvůli ložisku nadledviny", "citations": ["P04-img02", "P04-pat03", "P04-img03"]},
+    {"id": "P04-F03", "category": "biomarker", "text": "PD-L1 TPS 60 %, ALK a ROS1 negativní, EGFR zatím neznámý (probíhá)", "citations": ["P04-bm01", "P04-bm02", "P04-bm03", "P04-bm04", "P04-bm05"]},
+    {"id": "P04-F04", "category": "other", "text": "FEV1 58 %, DLCO 45 %; ppoFEV1 cca 49 %, ppoDLCO cca 38 %; zátěžový test neproveden", "citations": ["P04-spiro01", "P04-spiro02", "P04-spiro03", "P04-spiro04", "P04-doc06"]},
+    {"id": "P04-F05", "category": "imaging", "text": "MR mozku bez metastáz, PET-CT jinde bez vzdálených ložisek", "citations": ["P04-img04", "P04-img03"]},
+    {"id": "P04-F06", "category": "lab", "text": "Sodík 136 → 129 mmol/l (progredující hyponatrémie)", "citations": ["P04-lab01-na", "P04-lab05-na"]},
+    {"id": "P04-F07", "category": "other", "text": "Hmotnost 78 → 71 kg (−9 % za 2,5 měsíce)", "citations": ["P04-vaha01", "P04-vaha03"]},
+    {"id": "P04-F08", "category": "performance", "text": "ECOG 0 podle lékaře vs. 1 podle pacienta; dušnost 7/10, 1 patro jen se zastávkou", "citations": ["P04-ecog03", "P04-prom02"]},
+    {"id": "P04-F09", "category": "comorbidity", "text": "CHOPN GOLD 2, hypertenze, aktivní kuřák (10 cig./den, 40 balíčkoroků)", "citations": ["P04-kom1", "P04-kom2", "P04-kour01"]},
+    {"id": "P04-F10", "category": "other", "text": "Věk 70 let", "citations": ["P04"]},
+    {"id": "P04-F11", "category": "patient_voice", "text": "Operaci chce, pokud půjde; bojí se dušnosti po odstranění části plíce", "citations": ["P04-prom02", "P04-zad01"]},
+    {"id": "P04-F12", "category": "lab", "text": "CEA 8,2 → 11,5 µg/l", "citations": ["P04-lab01-cea", "P04-lab05-cea"]}
+  ],
+  "red_flags": [
+    {"id": "P04-RF01", "rule": "RF-TNM", "also_rules": ["RF-LLM"], "severity": "moderate", "importance": "key", "title": "Rozpor TNM: cT3 N2 IIIB vs. cT2b N2 IIIA", "description": "Nominace a pneumolog uvádějí cT3 cN2 (IIIB), hrudní chirurg cT2b cN2 (IIIA). Tumor 62 mm odpovídá T3.", "citations": ["P04-tnm01", "P04-tnm02", "P04-doc06"], "guideline": "OBC-1.1"},
+    {"id": "P04-RF02", "rule": "RF-LESION", "also_rules": ["RF-NOMINATION"], "severity": "high", "importance": "key", "title": "Neověřené ložisko levé nadledviny (SUVmax 4,1)", "description": "PET-CT: nelze vyloučit metastázu, doporučeno ověření; zpráva k nominaci ho bagatelizuje jako pravděpodobný adenom. Bez ověření nelze stanovit M (RKT-04/V3).", "citations": ["P04-img03", "P04-doc05", "P04-img02"], "guideline": "PLI-1.2"},
+    {"id": "P04-RF03", "rule": "RF-MISSING", "severity": "moderate", "importance": "key", "title": "EGFR neznámý před perioperační imunoterapií", "description": "Z bronchoskopie nedostatek DNA, NGS z EBUS probíhá; EGFR/ALK je potřeba znát před perioperační imunoterapií.", "citations": ["P04-bm04", "P04-bm05"], "guideline": "PLI-1.3"},
+    {"id": "P04-RF04", "rule": "RF-ECOG", "severity": "moderate", "importance": "key", "title": "ECOG lékař 0 vs. pacient 1", "description": "Lékař ECOG 0, pacient nezvládá těžší práci a 1 patro vyjde jen se zastávkou.", "citations": ["P04-ecog03", "P04-prom02"], "guideline": "OBC-1.3"},
+    {"id": "P04-RF05", "rule": "RF-PROMS", "severity": "moderate", "importance": "key", "title": "Dušnost 7/10 (vzestup 4 → 7)", "description": "Subjektivní dušnost je i kritérium funkční operability.", "citations": ["P04-prom02", "P04-prom01"], "guideline": "OBC-1.3"},
+    {"id": "P04-RF06", "rule": "RF-WEIGHT", "also_rules": ["RF-LLM"], "severity": "moderate", "importance": "key", "title": "Úbytek hmotnosti −9 %, zpráva uvádí „hmotnost stabilní“", "description": "78 → 71 kg za 2,5 měsíce; zpráva k nominaci uvádí stabilní hmotnost.", "citations": ["P04-vaha01", "P04-vaha03", "P04-doc05"], "guideline": "OBC-2.3"},
+    {"id": "P04-RF07", "rule": "RF-LAB", "severity": "moderate", "importance": "key", "title": "Progredující hyponatrémie bez vyšetření SIADH", "description": "Na 136 → 129 mmol/l; osmolalita séra a moči ani natriurie v datech nejsou.", "citations": ["P04-lab01-na", "P04-lab05-na"], "guideline": "PLI-3.2"},
+    {"id": "P04-RF08", "rule": "RF-GERI", "severity": "low", "importance": "key", "title": "Věk 70 let bez geriatrického screeningu G8", "description": "G8 v dokumentaci chybí.", "citations": ["P04", "P04-doc05"], "guideline": "OBC-2.2"},
+    {"id": "P04-RF09", "rule": "RF-LAB", "severity": "moderate", "importance": "secondary", "title": "CEA roste 8,2 → 11,5 µg/l", "description": "Vzestup markeru před zahájením léčby.", "citations": ["P04-lab01-cea", "P04-lab05-cea"], "guideline": null, "basis": "konvence týmu (vzestup markeru ≥ 25 %, ARCH §5.4)"}
+  ],
+  "missing_data": [
+    {"id": "P04-M01", "field": "bm.egfr", "item": "EGFR (NGS)", "citations": ["P04-bm04", "P04-bm05"], "required_by": "PLI-1.3", "expected_ai_reaction": "Údaj chybí: EGFR probíhá → výsledek doplnit; RKT-04/Z4 a V1 nelze posoudit."},
+    {"id": "P04-M02", "field": "spiro.vo2max", "item": "Zátěžový test (spiroergometrie, VO2max)", "citations": ["P04-doc06", "P04-doc03"], "required_by": "PLI-3.1", "expected_ai_reaction": "Údaj chybí: ppoDLCO 38 % < 60 % → zátěžový test je nutný, zatím neproveden."},
+    {"id": "P04-M03", "field": "geri.g8", "item": "Geriatrický screening G8", "citations": ["P04", "P04-doc05"], "required_by": "OBC-2.2", "expected_ai_reaction": "Údaj chybí: věk 70 let, G8 neproveden."},
+    {"id": "P04-M04", "field": null, "item": "Ověření ložiska levé nadledviny (MR nadledvin / biopsie)", "citations": ["P04-img03"], "required_by": "PLI-1.2", "expected_ai_reaction": "Bez ověření nelze stanovit M; nedomýšlet adenom."},
+    {"id": "P04-M05", "field": null, "item": "Vyšetření SIADH (osmolalita séra a moči, natriurie)", "citations": ["P04-lab05-na"], "required_by": "PLI-3.2", "expected_ai_reaction": "Údaj chybí → doplnit a upravit Na před léčbou."}
+  ],
+  "ai_uncertainty": [],
+  "discussion_questions": [
+    {"text": "Resekce po neoadjuvantní chemoimunoterapii, nebo definitivní chemoradioterapie + durvalumab? Funkčně hraniční (ppoDLCO 38 %) – nejdřív spiroergometrie?", "citations": ["P04-spiro03", "P04-spiro04", "P04-doc06", "P04-zad01"], "guideline": ["PLI-2.2", "PLI-2.4", "PLI-3.1"]},
+    {"text": "Ověřit ložisko levé nadledviny před radikální léčbou (M?)", "citations": ["P04-img03", "P04-doc05"], "guideline": ["PLI-1.2", "OBC-1.4"]},
+    {"text": "Počkat na EGFR před perioperační imunoterapií? Odvykání kouření ≥ 4 týdny před operací, korekce hyponatrémie.", "citations": ["P04-bm05", "P04-kour01", "P04-lab05-na"], "guideline": ["PLI-1.3", "PLI-3.3", "PLI-3.2"]}
+  ],
+  "recist": null,
+  "recist_note": "Léčba zatím nezahájena; jen výchozí měření 80 mm (CT 4. 8. 2026, P04-img02), hodnocení odpovědi není.",
+  "trials": [
+    {"study_id": "RKT-04", "overall": "potentially_eligible", "criteria": [
+      {"criterion_id": "RKT-04/Z1", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P04-pat01", "P04-pat03", "P04-tnm01", "P04-doc06"], "note": "st. III, single-station N2, technicky resekabilní; M zatím nejasné"},
+      {"criterion_id": "RKT-04/Z2", "kind": "inclusion", "status": "met", "citations": ["P04-ecog03", "P04-prom02"]},
+      {"criterion_id": "RKT-04/Z3", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P04-spiro03", "P04-spiro04", "P04-doc06"], "missing": "zátěžový test (ppoDLCO 38 % < 40 %)"},
+      {"criterion_id": "RKT-04/Z4", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P04-bm05", "P04-bm02"], "missing": "EGFR (NGS probíhá); ALK negativní"},
+      {"criterion_id": "RKT-04/V1", "kind": "exclusion", "status": "unknown", "citations": ["P04-bm05", "P04-bm02"], "missing": "EGFR"},
+      {"criterion_id": "RKT-04/V2", "kind": "exclusion", "status": "not_met", "citations": ["P04-kom1", "P04-kom2", "P04-kom3"], "note": "autoimunitní onemocnění v anamnéze není"},
+      {"criterion_id": "RKT-04/V3", "kind": "exclusion", "status": "unknown", "citations": ["P04-img03", "P04-doc05"], "missing": "ověření ložiska levé nadledviny"}
+    ]},
+    {"study_id": "RKT-05", "overall": "eligible", "also_acceptable": ["potentially_eligible"], "criteria": [
+      {"criterion_id": "RKT-05/Z1", "kind": "inclusion", "status": "met", "citations": ["P04-zad01"], "note": "plánovaná radikální léčba"},
+      {"criterion_id": "RKT-05/Z2", "kind": "inclusion", "status": "met", "citations": ["P04-vaha01", "P04-vaha03"], "note": "−9 %"},
+      {"criterion_id": "RKT-05/Z3", "kind": "inclusion", "status": "met", "citations": ["P04-ecog03"]},
+      {"criterion_id": "RKT-05/V1", "kind": "exclusion", "status": "not_met", "citations": ["P04-zad01"]},
+      {"criterion_id": "RKT-05/V2", "kind": "exclusion", "status": "not_met", "also_acceptable": ["unknown"], "citations": ["P04-prom02"]},
+      {"criterion_id": "RKT-05/V3", "kind": "exclusion", "status": "not_met", "citations": ["P04-prom02"], "note": "1 patro se zastávkou"}
+    ]},
+    {"study_id": "RKT-06", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-06/Z1", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P04-pat03"], "missing": "NGS panel bez HRR genů"},
+      {"criterion_id": "RKT-06/Z2", "kind": "inclusion", "status": "not_met", "citations": ["P04-zad01"], "note": "bez předchozí systémové léčby v metastatickém stadiu"}
+    ]},
+    {"study_id": "RKT-01", "overall": "not_eligible", "note": "jiná diagnóza (karcinom prsu)"},
+    {"study_id": "RKT-02", "overall": "not_eligible", "note": "jiná diagnóza (karcinom prsu)"},
+    {"study_id": "RKT-03", "overall": "not_eligible", "note": "jiná diagnóza (kolorektum)"}
+  ],
+  "guideline_passages": ["PLI-1.1", "PLI-1.2", "PLI-1.3", "PLI-2.1", "PLI-2.2", "PLI-2.3", "PLI-2.4", "PLI-3.1", "PLI-3.2", "PLI-3.3", "OBC-1.1", "OBC-1.3", "OBC-1.4", "OBC-2.2", "OBC-2.3"],
+  "compatibility": [
+    {"option": "Neoadjuvantní chemoimunoterapie + lobektomie", "guideline": ["PLI-2.2"], "overall": "orange", "rules": [
+      {"rule_id": "VS-PLI-01", "status": "orange", "patient_citations": ["P04-spiro03", "P04-spiro04"], "note": "49 % / 38 %"},
+      {"rule_id": "VS-PLI-02", "status": "grey", "patient_citations": ["P04-doc06"], "note": "VO2max chybí"},
+      {"rule_id": "VS-PLI-03", "status": "orange", "patient_citations": ["P04-prom02"], "note": "dušnost 7, patro se zastávkou"},
+      {"rule_id": "VS-PLI-06", "status": "orange", "patient_citations": ["P04-bm05"], "note": "EGFR probíhá"},
+      {"rule_id": "VS-PLI-04", "status": "orange", "patient_citations": ["P04-img03"], "note": "nadledvina"},
+      {"rule_id": "VS-PLI-09", "status": "orange", "patient_citations": ["P04-lab05-na"], "note": "Na 129"},
+      {"rule_id": "VS-CHIR-02", "status": "orange", "patient_citations": ["P04-kour01"], "note": "kouří"},
+      {"rule_id": "VS-OBC-03", "status": "grey", "patient_citations": [], "note": "G8 chybí"},
+      {"rule_id": "VS-OBC-04", "status": "orange", "patient_citations": ["P04-vaha01", "P04-vaha03"], "note": "−9 %"},
+      {"rule_id": "VS-PLI-11", "status": "green", "patient_citations": ["P04-lab05-krea"], "note": "CrCl ≈ 76 ml/min (odvozeno)"}
+    ]},
+    {"option": "Chemoradioterapie + durvalumab", "guideline": ["PLI-2.4"], "overall": "orange", "rules": [
+      {"rule_id": "VS-PLI-07", "status": "green", "patient_citations": ["P04-bm01"], "note": "TPS 60 %"},
+      {"rule_id": "VS-PLI-06", "status": "orange", "patient_citations": ["P04-bm05"], "note": "EGFR"},
+      {"rule_id": "VS-PLI-10", "status": "grey", "patient_citations": [], "note": "práh plicních funkcí pro RT v podkladech není"},
+      {"rule_id": "VS-PLI-04", "status": "orange", "patient_citations": ["P04-img03"]},
+      {"rule_id": "VS-OBC-04", "status": "orange", "patient_citations": ["P04-vaha01", "P04-vaha03"]},
+      {"rule_id": "VS-PLI-11", "status": "green", "patient_citations": ["P04-lab05-krea"]}
+    ]}
+  ],
+  "new_findings": [
+    "Tumor 62 mm odpovídá podle TNM 8 kategorii T3 (> 5–7 cm); cT2b v hrudně chirurgickém konziliu (P04-tnm02, P04-doc06) je chybné, ne jen odlišné."
+  ]
+}

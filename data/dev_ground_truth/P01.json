@@ -1,0 +1,120 @@
+{
+  "patient_id": "P01",
+  "version": "dev-1",
+  "source": "DATASET.md §9 + ruční průzkum dat (T-013). Není oficiální ground truth.",
+  "mdt_date": "2026-10-21",
+  "mdt_question": {
+    "text": "Progrese jaterních metastáz po 1. linii letrozol + ribociklib (40 měsíců). Jaká další linie – endokrinní léčba podle biomarkerů, trastuzumab deruxtekan (HER2-low v primáru, HER2 0 v metastáze), nebo chemoterapie? Je pacientka kandidátkou studie RKT-01?",
+    "citation": "P01-zad01"
+  },
+  "timeline": [
+    {"date": "2017-01-26", "type": "procedure", "label": "Mastektomie vlevo s disekcí axily, pT2 pN1a, HER2 1+", "citations": ["P01-proc02", "P01-pat01"]},
+    {"date": "2017-03", "type": "medication", "label": "Adjuvantní AC 4× → paklitaxel 12×, RT hrudní stěny, endokrinní léčba do 01/2022", "citations": ["P01-doc01", "P01-proc03"]},
+    {"date": "2023-04-12", "type": "imaging", "label": "Metastatický relaps: játra (S6, S4) a skelet, součet cílových lézí 55 mm", "citations": ["P01-img01"]},
+    {"date": "2023-04-20", "type": "pathology", "label": "Biopsie jater: ER 80 %, PR 0 %, HER2 0, Ki-67 40 %", "citations": ["P01-pat02"]},
+    {"date": "2023-05-10", "type": "mdt", "label": "MDT: 1. linie letrozol + ribociklib, denosumab", "citations": ["P01-mdt01"]},
+    {"date": "2023-05-22", "type": "medication", "label": "Zahájení letrozol + ribociklib + denosumab", "citations": ["P01-doc02"]},
+    {"date": "2023-07-17", "type": "medication", "label": "Neutropenie G3, ribociklib redukován na 400 mg", "citations": ["P01-doc03"]},
+    {"date": "2025-11-05", "type": "imaging", "label": "Parciální odpověď, nadir 30 mm", "citations": ["P01-img04"]},
+    {"date": "2026-05-12", "type": "imaging", "label": "CT: popsáno jako stacionární, ložiska ale rostou (30 → 37 mm)", "citations": ["P01-img05"]},
+    {"date": "2026-09-01", "type": "imaging", "label": "CT: progrese jaterních metastáz (48 mm) a nové ložisko S7", "citations": ["P01-img06"]},
+    {"date": "2026-09-08", "type": "document", "label": "Kontrola po progresi, plán MDT; rodinná anamnéza: sestra karcinom ovaria", "citations": ["P01-doc06"]},
+    {"date": "2026-10-05", "type": "proms", "label": "2. dotazník PROMs: únava 8, nová bolest pravé kyčle, ECOG podle pacientky 2", "citations": ["P01-prom02"]},
+    {"date": "2026-10-06", "type": "document", "label": "Kontrola před mamární komisí", "citations": ["P01-doc07"]},
+    {"date": "2026-10-21", "type": "mdt", "label": "Plánovaná mamární komise", "citations": ["P01-zad01-task"]}
+  ],
+  "key_facts": [
+    {"id": "P01-F01", "category": "diagnosis", "text": "Invazivní karcinom NST levého prsu (C50.4) s metastázami jater a skeletu", "citations": ["P01-dg1", "P01-dg2", "P01-dg3"]},
+    {"id": "P01-F02", "category": "biomarker", "text": "Primární nádor ER 90 %, PR 20 %, HER2 1+ (HER2-low); metastáza ER 80 %, PR 0 %, HER2 0", "citations": ["P01-bm01", "P01-bm02", "P01-bm03", "P01-bm05", "P01-bm06", "P01-bm07"]},
+    {"id": "P01-F03", "category": "biomarker", "text": "ESR1 (ctDNA), PIK3CA/AKT1/PTEN a germinální BRCA nevyšetřeny", "citations": ["P01-bm09", "P01-bm10", "P01-bm11"]},
+    {"id": "P01-F04", "category": "treatment", "text": "1. linie letrozol + ribociklib (400 mg) od 22. 5. 2023, denosumab; chemoterapie v metastatickém stadiu nebyla", "citations": ["P01-doc02", "P01-doc03", "P01-zad01"]},
+    {"id": "P01-F05", "category": "response", "text": "Progrese jaterních metastáz (součet 48 mm proti nadiru 30 mm) a nové ložisko S7", "citations": ["P01-img06", "P01-img04"]},
+    {"id": "P01-F06", "category": "lab", "text": "ALT/AST mírně zvýšené (G1), bilirubin v normě – bez známek viscerální krize", "citations": ["P01-lab06-alt", "P01-lab06-bili", "P01-doc07"]},
+    {"id": "P01-F07", "category": "lab", "text": "Hb 125 → 104 g/l, CA 15-3 28 → 121 kU/l", "citations": ["P01-lab03-hb-f", "P01-lab06-hb-f", "P01-lab01-ca153", "P01-lab06-ca153"]},
+    {"id": "P01-F08", "category": "performance", "text": "ECOG 1 podle lékaře vs. 2 podle pacientky", "citations": ["P01-ecog05", "P01-prom02"]},
+    {"id": "P01-F09", "category": "patient_voice", "text": "Nová bolest pravé kyčle a třísla 3 týdny, chůze jen po rovině, únava 8/10, paracetamol 2–3× denně", "citations": ["P01-prom02"]},
+    {"id": "P01-F10", "category": "patient_voice", "text": "Nechce chemoterapii s vypadáváním vlasů, prioritou je kvalita života", "citations": ["P01-prom02", "P01-zad01"]},
+    {"id": "P01-F11", "category": "other", "text": "Matka karcinom prsu v 60 letech, sestra karcinom ovaria ve 49 letech; genetika neprovedena", "citations": ["P01-doc06"]},
+    {"id": "P01-F12", "category": "comorbidity", "text": "Hypotyreóza na substituci, hypertenze", "citations": ["P01-kom1", "P01-kom2"]},
+    {"id": "P01-F13", "category": "treatment", "text": "Antracykliny (AC 4×) a RT hrudní stěny vlevo v roce 2017", "citations": ["P01-doc01", "P01-proc03"]}
+  ],
+  "red_flags": [
+    {"id": "P01-RF01", "rule": "RF-ECOG", "severity": "moderate", "importance": "key", "title": "ECOG lékař 1 vs. pacientka 2", "description": "Lékař hodnotí ECOG 1, pacientka popisuje, že pracovat nemůže a přes den odpočívá (ECOG 2).", "citations": ["P01-ecog05", "P01-prom02"], "guideline": "OBC-1.3"},
+    {"id": "P01-RF02", "rule": "RF-PROMS", "severity": "moderate", "importance": "key", "title": "Únava 8/10, bolest vzrostla 1 → 6", "description": "Výrazná symptomová zátěž v posledním dotazníku.", "citations": ["P01-prom02", "P01-prom01"], "guideline": "OBC-1.3"},
+    {"id": "P01-RF03", "rule": "RF-NEWSYMPTOM", "also_rules": ["RF-LLM"], "severity": "high", "importance": "key", "title": "Nová bolest pravé kyčle při kostních metastázách, zpráva ji neuvádí", "description": "Pacientka 3 týdny hlásí bolest pravé kyčle a třísla s omezením chůze, zpráva z následujícího dne uvádí „bez nových obtíží“; při kostních metastázách je indikováno cílené zobrazení.", "citations": ["P01-prom02", "P01-doc07", "P01-img06"], "guideline": "PRS-4.2"},
+    {"id": "P01-RF04", "rule": "RF-STALE", "severity": "moderate", "importance": "key", "title": "Staging starší než 6 týdnů", "description": "Poslední CT 1. 9. 2026, k MDT 21. 10. 2026 je to 50 dní.", "citations": ["P01-img06", "P01-zad01-task"], "guideline": "OBC-1.2"},
+    {"id": "P01-RF05", "rule": "RF-MISSING", "severity": "moderate", "importance": "key", "title": "Chybí ESR1 (ctDNA), PIK3CA/AKT1/PTEN a germinální BRCA", "description": "Biomarkery pro volbu další linie po CDK4/6 a pro RKT-01/Z2 nevyšetřeny.", "citations": ["P01-bm09", "P01-bm10", "P01-bm11"], "guideline": "PRS-1.3"},
+    {"id": "P01-RF06", "rule": "RF-GENETIC", "severity": "moderate", "importance": "key", "title": "Karcinom prsu a ovaria u příbuzných 1. stupně, genetika neprovedena", "description": "Matka karcinom prsu, sestra karcinom ovaria ve 49 letech; indikace genetického poradenství, gBRCA nevyšetřen.", "citations": ["P01-doc06", "P01-bm11"], "guideline": "OBC-2.4"},
+    {"id": "P01-RF07", "rule": "RF-LAB", "severity": "moderate", "importance": "key", "title": "Pokles hemoglobinu a extrémní únava", "description": "Hb 125 → 104 g/l a pacientka hlásí únavu 8/10 (příklad ze zadání).", "citations": ["P01-lab03-hb-f", "P01-lab06-hb-f", "P01-prom02"], "guideline": null, "basis": "konvence týmu (pokles Hb ≥ 20 g/l, ARCH §5.4)"},
+    {"id": "P01-RF08", "rule": "RF-LAB", "severity": "moderate", "importance": "secondary", "title": "CA 15-3 roste 28 → 121 kU/l", "description": "Vzestup markeru, progrese je potvrzena zobrazením.", "citations": ["P01-lab01-ca153", "P01-lab06-ca153"], "guideline": "PRS-4.2"},
+    {"id": "P01-RF09", "rule": "RF-MED", "severity": "moderate", "importance": "secondary", "title": "Paracetamol 2–3× denně mimo medikaci", "description": "Pacientka užívá paracetamol na bolest kyčle, v medikaci není.", "citations": ["P01-prom02", "P01-doc06"], "guideline": null, "basis": "ARCH §5.4 RF-MED"},
+    {"id": "P01-RF10", "rule": "RF-PALIATIVE", "severity": "moderate", "importance": "secondary", "title": "Paliativní péče nezapojena", "description": "Pokročilé onemocnění, progrese, únava 8/10, zhoršení výkonnosti; zapojení paliativního týmu v dokumentaci chybí.", "citations": ["P01-prom02", "P01-img06"], "guideline": "OBC-2.1"},
+    {"id": "P01-RF11", "rule": "RF-LLM", "also_rules": ["RF-DATAQUALITY"], "severity": "moderate", "importance": "secondary", "title": "CT 12. 5. 2026 popsáno jako stacionární, podle měření už progrese", "description": "Cílové léze 30 → 37 mm (+23 %, +7 mm proti nadiru) splňují progresi dle RECIST 1.1; závěr uvádí stacionární nález. První linie selhala asi o 4 měsíce dřív.", "citations": ["P01-img05", "P01-img04"], "guideline": null, "basis": "RECIST 1.1 (zadání), rozpor závěru a měření"},
+    {"id": "P01-RF12", "rule": "RF-PRIOR-PROC", "severity": "low", "importance": "secondary", "title": "Mastektomie a RT hrudní stěny vlevo", "description": "Informace pro chirurga a radiačního onkologa: mastektomie s disekcí axily a RT hrudní stěny a nadklíčku 50 Gy (2017).", "citations": ["P01-proc02", "P01-proc03"], "guideline": null, "basis": "konzultace (ARCH §5.4 RF-PRIOR-PROC)"}
+  ],
+  "missing_data": [
+    {"id": "P01-M01", "field": "bm.esr1", "item": "ESR1 mutace v ctDNA", "citations": ["P01-bm09"], "required_by": "PRS-1.3", "expected_ai_reaction": "Údaj chybí: ESR1 v ctDNA nevyšetřeno → doplnit; RKT-01/Z2 nelze posoudit."},
+    {"id": "P01-M02", "field": "bm.pik3ca", "item": "PIK3CA / AKT1 / PTEN", "citations": ["P01-bm10"], "required_by": "PRS-1.3", "expected_ai_reaction": "Údaj chybí → doplnit před volbou další linie."},
+    {"id": "P01-M03", "field": "bm.gbrca", "item": "Germinální BRCA1/2", "citations": ["P01-bm11", "P01-doc06"], "required_by": "PRS-1.3", "expected_ai_reaction": "Údaj chybí: gBRCA nevyšetřeno, rodinná anamnéza → genetické poradenství."},
+    {"id": "P01-M04", "field": "staging.imaging", "item": "Aktuální staging (≤ 6 týdnů) a cílené zobrazení pravé kyčle", "citations": ["P01-img06", "P01-prom02"], "required_by": "OBC-1.2", "expected_ai_reaction": "Staging je 50 dní starý a nová bolest kyčle není došetřena → doplnit zobrazení."}
+  ],
+  "ai_uncertainty": [],
+  "discussion_questions": [
+    {"text": "Další linie: endokrinní léčba podle ESR1/PIK3CA (nevyšetřeno), trastuzumab deruxtekan (HER2-low jen v primáru, metastáza HER2 0), nebo chemoterapie, kterou si pacientka nepřeje?", "citations": ["P01-bm03", "P01-bm07", "P01-bm09", "P01-prom02"], "guideline": ["PRS-2.2", "PRS-2.3", "PRS-1.1"]},
+    {"text": "Nová bolest pravé kyčle při kostních metastázách: cílené zobrazení, RT nebo ortopedie?", "citations": ["P01-prom02", "P01-img06"], "guideline": ["PRS-4.2", "PRS-4.1"]},
+    {"text": "Genetické poradenství a germinální BRCA (matka karcinom prsu, sestra karcinom ovaria)?", "citations": ["P01-doc06", "P01-bm11"], "guideline": ["OBC-2.4", "PRS-1.3"]}
+  ],
+  "recist": {
+    "baseline": {"date": "2023-04-12", "sum_mm": 55, "citation": "P01-img01"},
+    "nadir": {"date": "2025-11-05", "sum_mm": 30, "citation": "P01-img04"},
+    "current": {"date": "2026-09-01", "sum_mm": 48, "citation": "P01-img06"},
+    "change_from_baseline_pct": -12.7,
+    "change_from_nadir_pct": 60.0,
+    "new_lesions": true,
+    "response": "PD",
+    "target_lesions": "jaterní S6 a S4 (kostní ložiska nehodnotitelná); nové ložisko S7",
+    "note": "Podle měření splňovalo kritéria PD už CT 12. 5. 2026 (37 mm, +23 % proti nadiru)."
+  },
+  "trials": [
+    {"study_id": "RKT-01", "overall": "potentially_eligible", "criteria": [
+      {"criterion_id": "RKT-01/Z1", "kind": "inclusion", "status": "met", "citations": ["P01-bm05", "P01-bm07", "P01-bm03"], "note": "ER 80 %, HER2 0 / 1+ (HER2 negativní ve smyslu studie)"},
+      {"criterion_id": "RKT-01/Z2", "kind": "inclusion", "status": "unknown", "citations": ["P01-bm09"], "missing": "ESR1 mutace v ctDNA ne starší než 3 měsíce"},
+      {"criterion_id": "RKT-01/Z3", "kind": "inclusion", "status": "met", "citations": ["P01-img06", "P01-doc07"]},
+      {"criterion_id": "RKT-01/Z4", "kind": "inclusion", "status": "met", "citations": ["P01-zad01"], "note": "v metastatickém stadiu bez chemoterapie"},
+      {"criterion_id": "RKT-01/Z5", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P01-ecog05", "P01-prom02"], "missing": null, "note": "lékař ECOG 1, pacientka popisuje 2 – sporné"},
+      {"criterion_id": "RKT-01/V1", "kind": "exclusion", "status": "not_met", "citations": ["P01-lab06-bili", "P01-doc07"], "note": "bilirubin v normě, bez viscerální krize"},
+      {"criterion_id": "RKT-01/V2", "kind": "exclusion", "status": "not_met", "also_acceptable": ["unknown"], "citations": ["P01-doc07"], "note": "mozkové metastázy nejsou známy, mozek nezobrazen"},
+      {"criterion_id": "RKT-01/V3", "kind": "exclusion", "status": "not_met", "citations": ["P01-lab06-bili"], "note": "bilirubin 14 µmol/l (ULN 21)"},
+      {"criterion_id": "RKT-01/V4", "kind": "exclusion", "status": "not_met", "citations": ["P01-zad01"], "note": "fulvestrant ani jiný SERD nebyl podán"}
+    ]},
+    {"study_id": "RKT-02", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-02/Z1", "kind": "inclusion", "status": "not_met", "citations": ["P01-bm03", "P01-bm07"], "note": "HER2 1+ / 0, ne HER2 pozitivní"}
+    ]},
+    {"study_id": "RKT-05", "overall": "not_eligible", "criteria": [
+      {"criterion_id": "RKT-05/Z1", "kind": "inclusion", "status": "met", "citations": ["P01-doc07"]},
+      {"criterion_id": "RKT-05/Z2", "kind": "inclusion", "status": "not_met", "citations": ["P01-vaha01", "P01-vaha02"], "note": "68 → 67 kg (−1,5 %)"},
+      {"criterion_id": "RKT-05/Z3", "kind": "inclusion", "status": "met", "citations": ["P01-ecog05"]}
+    ]},
+    {"study_id": "RKT-06", "overall": "potentially_eligible", "also_acceptable": ["not_eligible"], "criteria": [
+      {"criterion_id": "RKT-06/Z1", "kind": "inclusion", "status": "unknown", "also_acceptable": ["not_met"], "citations": ["P01-bm11"], "missing": "NGS nádoru na HRR (BRCA1/2) – rodinná anamnéza je suspektní"},
+      {"criterion_id": "RKT-06/Z2", "kind": "inclusion", "status": "met", "citations": ["P01-doc02"], "note": "1. linie letrozol + ribociklib"},
+      {"criterion_id": "RKT-06/Z3", "kind": "inclusion", "status": "met", "also_acceptable": ["unknown"], "citations": ["P01-ecog05", "P01-prom02"], "note": "lékař ECOG 1"},
+      {"criterion_id": "RKT-06/Z4", "kind": "inclusion", "status": "met", "citations": ["P01-lab06-hb-f", "P01-lab06-neu", "P01-lab06-plt"], "note": "Hb 104, neutrofily 1,7, trombocyty 176"},
+      {"criterion_id": "RKT-06/V1", "kind": "exclusion", "status": "not_met", "citations": ["P01-zad01"]},
+      {"criterion_id": "RKT-06/V2", "kind": "exclusion", "status": "not_met", "citations": ["P01-zad01"]}
+    ]},
+    {"study_id": "RKT-03", "overall": "not_eligible", "note": "jiná diagnóza (kolorektum)"},
+    {"study_id": "RKT-04", "overall": "not_eligible", "note": "jiná diagnóza (NSCLC)"}
+  ],
+  "guideline_passages": ["PRS-1.1", "PRS-1.2", "PRS-1.3", "PRS-1.4", "PRS-2.2", "PRS-2.3", "PRS-2.4", "PRS-4.1", "PRS-4.2", "OBC-1.1", "OBC-1.2", "OBC-1.3", "OBC-2.1", "OBC-2.4"],
+  "compatibility_rules": [
+    {"rule_id": "VS-OBC-02", "status": "orange", "patient_citations": ["P01-ecog05", "P01-prom02"], "note": "ECOG 1 vs. 2"},
+    {"rule_id": "VS-OBC-09", "status": "orange", "patient_citations": ["P01-img06"], "note": "staging 50 dní"},
+    {"rule_id": "VS-OBC-07", "status": "green", "patient_citations": ["P01-lab06-bili"], "note": "bilirubin v normě"},
+    {"rule_id": "VS-PRS-03", "status": "orange", "patient_citations": ["P01-bm03", "P01-bm07"], "note": "HER2 1+ v primáru, 0 v metastáze"},
+    {"rule_id": "VS-PRS-04", "status": "green", "patient_citations": ["P01-lab06-bili"], "note": "bez viscerální krize"}
+  ],
+  "new_findings": [
+    "CT 12. 5. 2026 (P01-img05) má v závěru „stacionární nález“, ale součet cílových lézí 30 → 37 mm (+23 %, +7 mm proti nadiru) splňuje progresi dle RECIST 1.1."
+  ]
+}

@@ -15,11 +15,10 @@ from apps.copilot.models import GenerationJob
 from services import patients
 from services.fhir import writeback
 
+from . import config as cfg
 from . import roles
+from .config import DEFAULT_CONFIG, BriefConfigSerializer
 from .models import BriefConfig, MdtCase, MdtSession
-
-DEFAULT_CONFIG = {'name': 'Výchozí', 'sections': [], 'roles_present': [], 'detail_level': 'standard',
-                  'language': 'cs', 'hide_unverified': False}
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
@@ -67,7 +66,7 @@ def _config(data, case: MdtCase) -> dict:
     if data.get('config') is not None:
         if not isinstance(data['config'], dict):
             raise ValidationError({'config': 'Očekáván objekt BriefConfig (ARCH §8.5).'})
-        return {**DEFAULT_CONFIG, **data['config']}
+        return cfg.validated(data['config'])
     return case.session.config.snapshot() if case.session.config else dict(DEFAULT_CONFIG)
 
 
@@ -173,3 +172,29 @@ def case_brief(request, cid):
                                        created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def config_list(request):
+    """Presety konfigurace podkladu (FR-R1). Zakládá jen předseda."""
+    if request.method == 'POST':
+        _require(request, roles.ADMIN)
+        s = BriefConfigSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        return Response(BriefConfigSerializer(s.save(owner=request.user)).data, status=201)
+    return Response(BriefConfigSerializer(BriefConfig.objects.order_by('-is_preset', 'name'), many=True).data)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def config_detail(request, cfg_id):
+    obj = get_object_or_404(BriefConfig, pk=cfg_id)
+    if request.method == 'PUT':
+        _require(request, roles.ADMIN)
+        s = BriefConfigSerializer(obj, data=request.data)
+        s.is_valid(raise_exception=True)
+        obj = s.save()
+    return Response(BriefConfigSerializer(obj).data)

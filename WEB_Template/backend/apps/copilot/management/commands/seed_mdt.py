@@ -2,6 +2,7 @@
 from django.core.management.base import BaseCommand
 
 from apps.mdt import roles
+from apps.mdt.config import ensure_presets
 from apps.mdt.models import MdtCase, MdtSession
 from services.mdt_seed import load_nominations
 
@@ -11,6 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         users = roles.ensure_demo_users()
+        ensure_presets(users['predseda'])
         created_sessions = created_cases = 0
         for order, n in enumerate(load_nominations()):
             session, new = MdtSession.objects.get_or_create(date=n['date'], title=n['title'],

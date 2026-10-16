@@ -12,6 +12,11 @@ from services.tests.dataset import load_guideline_markdowns, load_patient, load_
 ROLES = ["surgeon", "oncologist", "radiologist", "pathologist", "radiation_oncologist", "patient"]
 
 
+@pytest.fixture(autouse=True)
+def indexed_grounding_vectors(grounding_vectors):
+    """Grounding v2 proti in-memory vektorům, ne proti živému IRIS (v CI není)."""
+
+
 @pytest.fixture(scope="module")
 def guidelines():
     return [p for md in load_guideline_markdowns().values() for p in parse_guidelines(md)]
@@ -88,7 +93,8 @@ LLM_ROLE = {
 def test_llm_role_output_is_sanitized(guidelines):
     provider = MockAIProvider(responses={"RoleViewOutput": LLM_ROLE})
     surgeon = role_sections(brief_for("P03", guidelines, provider, roles=["surgeon"]))["surgeon"]
-    assert [i["verification"] for i in surgeon["items"]] == ["verified", "unverified"]   # 45 % ve zdroji není
+    llm_items = [i for i in surgeon["items"] if "-dx-" not in i["id"]]        # bez údajů podle diagnózy (T-506)
+    assert [i["verification"] for i in llm_items] == ["verified", "unverified"]   # 45 % ve zdroji není
     assessment = surgeon["assessment"]
     assert assessment["question"] == "Je pacient kandidátem resekce jaterních metastáz?"   # otázka ze systému
     first, second = assessment["criteria"]
@@ -117,3 +123,43 @@ def test_radiologist_recist_new_lesion_from_llm_is_pd(guidelines):
     recist = next(item for item in radiologist["items"] if item["id"] == "radiologist-recist")
     assert "odpověď PD (nová léze: P02-img05)" in recist["text"]
     assert "P02-img05" in recist["citations"] and recist["verification"] == "verified"
+
+
+# ── T-506: údaje podle diagnózy (FR-B8) a katalog metod (FR-D5) ───────────────
+def _texts(section):
+    return [i["text"] for i in section["items"]]
+
+
+def test_diagnosis_data_in_role_sections(guidelines):
+    """DoD: P04 ukáže spirometrii, P02 LVEF, P03 FLR a bevacizumab (i bez LLM)."""
+    def cites(section):
+        return {c for i in section["items"] for c in i["citations"]}
+
+    p04 = role_sections(brief_for("P04", guidelines, roles=["surgeon", "pulmonologist"]))
+    assert {"P04-spiro03", "P04-spiro04"} <= cites(p04["surgeon"])                     # ppoFEV1, ppoDLCO
+    assert {"P04-spiro01", "P04-spiro02", "P04-kour01"} <= cites(p04["pulmonologist"])
+    p02 = role_sections(brief_for("P02", guidelines, roles=["oncologist"]))["oncologist"]
+    assert any(t.startswith("LVEF (poslední 3):") and "52 %" in t for t in _texts(p02))
+    p03 = role_sections(brief_for("P03", guidelines, roles=["surgeon", "oncologist"]))
+    surgeon = _texts(p03["surgeon"])
+    assert any(t.startswith("FLR (budoucí jaterní remnant):") and "38 %" in t for t in surgeon)
+    assert any(t.startswith("Poslední dávka bevacizumabu: 2026-09-07") for t in surgeon)
+    assert "P03-bm04" in cites(p03["oncologist"])                                       # MMR / MSI nevyšetřeno
+    for section in [*p04.values(), p02, *p03.values()]:
+        assert all(i["verification"] == "verified" for i in section["items"])
+
+
+def test_missing_diagnosis_data_is_missing_with_guideline(guidelines):
+    surgeon = role_sections(brief_for("P04", guidelines, roles=["surgeon"]))["surgeon"]
+    vo2 = next(i for i in surgeon["items"] if i["text"].startswith("Spiroergometrie (VO2max)"))
+    assert vo2["kind"] == "missing" and vo2["expected_source"] == "PLI-3.1"
+
+
+def test_modality_catalog_section(guidelines):
+    brief = brief_for("P03", guidelines)
+    modalities = next(s for s in brief["sections"] if s["id"] == "modalities")
+    texts = _texts(modalities)
+    assert any(t.startswith("Chirurgie: vyjadřuje se chirurg") and "Resekce jaterních metastáz" in t for t in texts)
+    assert any(t.startswith("Cílená léčba:") for t in texts)
+    assert all(i["verification"] == "verified" and i["citations"] for i in modalities["items"])
+    schemas.Brief.model_validate(brief)

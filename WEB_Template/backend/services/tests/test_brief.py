@@ -9,20 +9,14 @@ from services.ai.brief import build_brief, generate_brief
 from services.ai.context_builder import context_from_resources
 from services.ai.grounding import check_claim, verify_claims
 from services.ai_service import MockAIProvider
-from services.fhir import ingest
-from services.iris import indexing
 from services.tests.dataset import load_patient, load_studies
 
 PATIENTS = ["P01", "P02", "P03", "P04", "P05", "P06"]
 
 
 @pytest.fixture(autouse=True)
-def indexed_grounding_vectors(fake_iris, dataset_root):
+def indexed_grounding_vectors(grounding_vectors):
     """Podklady ověřují grounding proti stejným in-memory vektorům jako IRIS."""
-    for patient_id in PATIENTS:
-        indexing.index_patient(patient_id, ingest.load_patient(dataset_root, patient_id))
-    indexing.index_guidelines(indexing.guideline_chunks(dataset_root))
-    indexing.index_trials(indexing.trial_criteria(ingest.load_studies(dataset_root)))
 
 # Souhrn, jak by ho napsal LLM: čísla a data přesně podle zdrojů, citace odstavců
 P03_SUMMARY = {"items": [
@@ -196,7 +190,7 @@ def test_config_applies_language_and_detail_to_role_prompt():
     brief = brief_for("P03", provider, config=config)
 
     role = next(s for s in brief["sections"] if s.get("role") == "surgeon")
-    assert len(role["items"]) == 3
+    assert len([i for i in role["items"] if "-dx-" not in i["id"]]) == 3       # údaje podle diagnózy se nekrátí
     assert "Piš anglicky" in provider.system_prompts[0]
     assert "Úroveň detailu brief" in provider.system_prompts[0]
     assert provider.system_prompts[0].endswith("Write all newly generated text exclusively in English.")

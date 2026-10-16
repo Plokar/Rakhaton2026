@@ -74,16 +74,16 @@ export function CitationChip({ id }: { id: EvidenceId }) {
     <button
       type="button"
       onClick={() => ctx?.open(id)}
-      title={`Zdroj ${id}`}
+      title={`Otevřít zdroj: ${id}`}
       aria-label={`Otevřít zdroj ${id}`}
       className={cn(
-        'inline-flex h-5 min-w-5 items-center justify-center rounded-md border px-1 align-baseline font-mono text-[10px] font-semibold leading-none transition',
+        'inline-flex h-5 min-w-5 items-center justify-center rounded-sm border px-1.5 align-baseline font-mono text-[11px] font-bold leading-none tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         active
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-muted text-muted-foreground hover:border-primary hover:text-primary',
+          ? 'border-primary bg-primary text-primary-foreground shadow-2xs'
+          : 'border-border bg-muted/90 text-foreground hover:border-primary hover:bg-primary/10 hover:text-primary',
       )}
     >
-      {number ?? id}
+      {number !== undefined ? `[${number}]` : id}
     </button>
   );
 }
@@ -91,10 +91,11 @@ export function CitationChip({ id }: { id: EvidenceId }) {
 export function Citations({ ids, className }: { ids: EvidenceId[]; className?: string }) {
   if (!ids.length) return null;
   return (
-    <span className={cn('ml-1 inline-flex flex-wrap gap-0.5 align-baseline', className)}>
+    <span className={cn('ml-1.5 inline-flex flex-wrap gap-1 align-baseline', className)}>
       {ids.map((id) => (
         <CitationChip key={id} id={id} />
       ))}
     </span>
   );
 }
+

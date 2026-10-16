@@ -47,15 +47,16 @@ export function JobProgress({
 
   const progress = job?.progress ?? 0;
   return (
-    <div className="rounded-xl border border-border bg-card p-4" role="status" aria-live="polite">
-      <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <LoaderCircle className="h-4 w-4 animate-spin text-purple-500" aria-hidden />
+    <div className="rounded-xl border border-border bg-card p-4 shadow-2xs" role="status" aria-live="polite">
+      <p className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
+        <LoaderCircle className="h-4 w-4 animate-spin text-primary" aria-hidden />
         {STATUS_LABEL[job?.status ?? 'queued']}
-        <span className="ml-auto font-mono text-xs text-muted-foreground">{progress} %</span>
+        <span className="ml-auto font-mono text-xs font-bold tabular-nums text-muted-foreground">{progress} %</span>
       </p>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-purple-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
 }
+

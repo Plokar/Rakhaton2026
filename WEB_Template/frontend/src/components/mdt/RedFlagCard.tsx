@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronDown, Columns2, LoaderCircle, Sparkles } from 'lucide-react';
+import { ChevronDown, Columns2, Cpu, LoaderCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EvidenceId, EvidenceSource, RedFlag } from '@/types/mdt';
 import { CitationChip, Citations } from './citations';
@@ -9,30 +9,54 @@ import { useBriefData } from './data-source';
 import { formatDate } from './format';
 
 const SEVERITY = {
-  high: { label: 'vysoká závažnost', className: 'border-l-red-500' },
-  moderate: { label: 'střední závažnost', className: 'border-l-orange-500' },
-  low: { label: 'nízká závažnost', className: 'border-l-slate-400' },
+  high: {
+    label: 'Vysoká závažnost',
+    border: 'border-l-red-600 dark:border-l-red-500',
+    badge: 'bg-red-100 text-red-900 border-red-300 dark:bg-red-950/80 dark:text-red-200 dark:border-red-700/70',
+  },
+  moderate: {
+    label: 'Střední závažnost',
+    border: 'border-l-amber-600 dark:border-l-amber-500',
+    badge: 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700/70',
+  },
+  low: {
+    label: 'Nízká závažnost',
+    border: 'border-l-slate-500',
+    badge: 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600',
+  },
 } as const;
 
 /** Varovný signál (FR-R2): závažnost, popis, pasáž guidelines a oba zdroje rozporu vedle sebe. */
 export function RedFlagCard({ flag }: { flag: RedFlag }) {
   const [compare, setCompare] = React.useState(false);
   const pair = flag.citations.slice(0, 2);
+  const sev = SEVERITY[flag.severity];
   return (
-    <li className={cn('rounded-lg border border-border border-l-4 bg-background px-3 py-2', SEVERITY[flag.severity].className)}>
-      <p className="text-sm font-semibold text-foreground">
-        {flag.title}
-        {flag.rule === 'RF-LLM' && (
-          <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-purple-500/15 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-purple-700 dark:text-purple-300">
-            <Sparkles className="h-3 w-3" aria-hidden /> AI návrh
+    <li className={cn('rounded-lg border border-border border-l-4 bg-background p-3.5 shadow-2xs', sev.border)}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-bold text-foreground">
+          {flag.title}
+          {flag.rule === 'RF-LLM' && (
+            <span className="ml-2 inline-flex items-center gap-1 rounded-md border border-teal-700/30 bg-teal-50 px-1.5 py-0.5 align-middle font-mono text-[10px] font-semibold text-teal-900 dark:border-teal-400/30 dark:bg-teal-950/70 dark:text-teal-200">
+              <Cpu className="h-3 w-3" aria-hidden /> AI návrh
+            </span>
+          )}
+        </p>
+        <div className="flex items-center gap-1.5">
+          <span className={cn('rounded-md border px-2 py-0.5 text-[11px] font-semibold', sev.badge)}>
+            {sev.label}
           </span>
-        )}
-      </p>
-      <p className="text-[11px] text-muted-foreground">
-        {SEVERITY[flag.severity].label} · {flag.rule}
-        {flag.verification === 'unverified' && ' · neověřeno'}
-      </p>
-      <p className="mt-1 text-sm text-foreground">
+          <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground">
+            {flag.rule}
+          </span>
+          {flag.verification === 'unverified' && (
+            <span className="rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:text-amber-200">
+              neověřeno
+            </span>
+          )}
+        </div>
+      </div>
+      <p className="mt-1.5 text-sm leading-relaxed text-foreground">
         {flag.description}
         <Citations ids={[...flag.citations, ...(flag.guideline ? [flag.guideline] : [])]} />
       </p>
@@ -41,14 +65,14 @@ export function RedFlagCard({ flag }: { flag: RedFlag }) {
           type="button"
           onClick={() => setCompare(!compare)}
           aria-expanded={compare}
-          className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground transition-colors hover:bg-accent"
         >
           <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', !compare && '-rotate-90')} aria-hidden />
-          <Columns2 className="h-3.5 w-3.5" aria-hidden /> Porovnat zdroje
+          <Columns2 className="h-3.5 w-3.5 text-primary" aria-hidden /> Porovnat oba zdroje vedle sebe
         </button>
       )}
       {compare && (
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <div className="mt-2.5 grid gap-2.5 sm:grid-cols-2">
           {pair.map((id) => (
             <SourcePreview key={id} id={id} hint={flag.description} />
           ))}

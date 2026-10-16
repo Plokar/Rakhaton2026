@@ -63,10 +63,10 @@ export function ConfirmDialog({
           Potvrzuje: <strong>{confirmer}</strong>. Závěr se stane oficiálním záznamem a zapíše se do IRIS; potom ho nejde měnit.
         </DialogDescription>
       </DialogHeader>
-      <div className="mt-3 space-y-2 text-sm">
+      <div className="mt-3 space-y-2.5 text-sm">
         {aiParts > 0 && (
-          <p className="rounded-md bg-purple-500/10 px-2 py-1.5 text-xs text-purple-800 dark:text-purple-200">
-            Závěr obsahuje {aiParts} částí od AI. Potvrzením je přebíráte jako rozhodnutí komise.
+          <p className="rounded-lg border border-teal-700/30 bg-teal-50/80 px-3 py-2 text-xs font-medium text-teal-950 dark:border-teal-400/30 dark:bg-teal-950/60 dark:text-teal-200">
+            Závěr obsahuje {aiParts} částí předvyplněných AI. Potvrzením je přebíráte jako oficiální rozhodnutí komise.
           </p>
         )}
         <p className="text-xs font-semibold text-foreground">Zapíše se do IRIS (jeden transaction Bundle):</p>

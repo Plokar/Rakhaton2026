@@ -23,25 +23,49 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Přehled</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {user?.first_name ? `${user.first_name}, ` : ''}zasedání komise, zařazení pacienti a úkoly po termínu.
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Klinický přehled MDT</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {user?.first_name ? `${user.first_name}, ` : ''}zasedání komise (boardy), zařazení pacienti a úkoly po termínu.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/mdt"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-2xs hover:bg-primary/90"
+          >
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden /> Otevřít boardy MDT
+          </Link>
         </div>
 
         <Link
           href="/dashboard/cases/demo"
-          className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card px-4 py-3 text-sm transition hover:border-primary hover:bg-muted/40"
+          className="group flex flex-wrap items-center justify-between gap-4 rounded-xl border border-primary/35 bg-card p-4 shadow-xs transition hover:border-primary hover:bg-primary/[0.04]"
         >
-          <FileText className="h-5 w-5 shrink-0 text-primary" />
-          <span className="min-w-0 flex-1">
-            <span className="font-semibold text-foreground">Ukázkový podklad P03</span>
-            <span className="block text-xs text-muted-foreground">
-              Kolorektální karcinom s jaterními metastázami, data z fixtures (funguje i bez backendu)
-            </span>
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-base font-extrabold text-foreground group-hover:text-primary transition-colors">
+                  Ukázkový 30s podklad pacienta P03
+                </span>
+                <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">
+                  C18.7 · Stádium IV
+                </span>
+                <span className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs font-bold text-foreground">
+                  ECOG 0 · Záměr C
+                </span>
+              </div>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Adenokarcinom sigmoidea s jaterními metastázami · posouzení resekability jater a sekvence léčby (data z fixtures, funguje i bez backendu)
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-bold text-foreground group-hover:border-primary/40 group-hover:text-primary">
+            Otevřít 30s podklad <ArrowUpRight className="h-3.5 w-3.5" />
           </span>
-          <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
         </Link>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

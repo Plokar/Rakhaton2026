@@ -38,14 +38,14 @@ function SessionsContent() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Zasedání MDT</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Zasedání MDT</h1>
           <p className="mt-1 text-sm text-muted-foreground">Boardy komise s termínem a agendou zařazených pacientů.</p>
         </div>
         {can.manageBoards(me) && (
-          <Button size="sm" onClick={() => setCreating(true)} className="gap-1.5">
+          <Button size="sm" onClick={() => setCreating(true)} className="h-9 gap-1.5">
             <Plus className="h-4 w-4" /> Nový board
           </Button>
         )}

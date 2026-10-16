@@ -66,8 +66,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       group: 'Systém & Nástroje',
       items: [
         {
-          label: resolvedTheme === 'dark' ? 'Přepnout na světlý režim' : 'Přepnout na tmavý režim',
-          icon: resolvedTheme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-500" />,
+          label: resolvedTheme === 'dark' ? 'Přepnout na světlý režim' : 'Přepnout na tmavý režim (Projektor)',
+          icon: resolvedTheme === 'dark' ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4 text-primary" />,
           action: () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'),
         },
         ...(isDev

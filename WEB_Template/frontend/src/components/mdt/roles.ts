@@ -2,18 +2,40 @@ import type { RoleId } from '@/types/mdt';
 
 /**
  * Odbornosti a jejich barvy (D-017). Barva odbornosti se nesmí plést se semaforem
- * (zelená, oranžová, červená, šedá) ani s AI (fialová), a vždy je u ní i text.
+ * (zelená, oranžová, červená, šedá) ani s AI označením, a vždy je u ní i text.
  */
 export const ROLE_META: Record<RoleId, { label: string; className: string }> = {
-  surgeon: { label: 'Chirurg', className: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30' },
-  oncologist: { label: 'Klinický onkolog', className: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30' },
+  surgeon: {
+    label: 'Chirurg',
+    className: 'bg-sky-100 text-sky-900 border-sky-300 dark:bg-sky-950/70 dark:text-sky-200 dark:border-sky-700/70',
+  },
+  oncologist: {
+    label: 'Klinický onkolog',
+    className: 'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-950/70 dark:text-blue-200 dark:border-blue-700/70',
+  },
   radiation_oncologist: {
     label: 'Radiační onkolog',
-    className: 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+    className: 'bg-teal-100 text-teal-900 border-teal-300 dark:bg-teal-950/70 dark:text-teal-200 dark:border-teal-700/70',
   },
-  radiologist: { label: 'Radiolog', className: 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30' },
-  pathologist: { label: 'Patolog', className: 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border-slate-500/30' },
-  pulmonologist: { label: 'Pneumolog', className: 'bg-stone-500/15 text-stone-700 dark:text-stone-300 border-stone-500/30' },
-  cardiologist: { label: 'Kardiolog', className: 'bg-zinc-500/15 text-zinc-700 dark:text-zinc-300 border-zinc-500/30' },
-  patient: { label: 'Pacient', className: 'bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30' },
+  radiologist: {
+    label: 'Radiolog',
+    className: 'bg-cyan-100 text-cyan-900 border-cyan-300 dark:bg-cyan-950/70 dark:text-cyan-200 dark:border-cyan-700/70',
+  },
+  pathologist: {
+    label: 'Patolog',
+    className: 'bg-stone-200/80 text-stone-900 border-stone-400/70 dark:bg-stone-800/80 dark:text-stone-200 dark:border-stone-600',
+  },
+  pulmonologist: {
+    label: 'Pneumolog',
+    className: 'bg-slate-200/80 text-slate-900 border-slate-400/70 dark:bg-slate-800/80 dark:text-slate-200 dark:border-slate-600',
+  },
+  cardiologist: {
+    label: 'Kardiolog',
+    className: 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-700/60',
+  },
+  patient: {
+    label: 'Hlas pacienta',
+    className: 'bg-amber-100/80 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700/60',
+  },
 };
+

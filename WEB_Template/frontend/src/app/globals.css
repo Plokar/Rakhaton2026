@@ -4,48 +4,48 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #fafafa;
-  --foreground: #09090b;
+  --background: #f4f6f8;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #09090b;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #09090b;
-  --primary: #4f46e5;
+  --popover-foreground: #0f172a;
+  --primary: #0f766e;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #ef4444;
+  --secondary: #e2e8f0;
+  --secondary-foreground: #0f172a;
+  --muted: #edf1f5;
+  --muted-foreground: #475569;
+  --accent: #e6eef4;
+  --accent-foreground: #0f172a;
+  --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #4f46e5;
-  --radius: 0.75rem;
+  --border: #cbd5e1;
+  --input: #cbd5e1;
+  --ring: #0f766e;
+  --radius: 0.625rem;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --card: #111115;
-  --card-foreground: #f4f4f5;
-  --popover: #111115;
-  --popover-foreground: #f4f4f5;
-  --primary: #6366f1;
-  --primary-foreground: #ffffff;
-  --secondary: #18181b;
-  --secondary-foreground: #fafafa;
-  --muted: #1e1e24;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #6366f1;
+  --background: #0b1118;
+  --foreground: #f1f5f9;
+  --card: #111a24;
+  --card-foreground: #f1f5f9;
+  --popover: #111a24;
+  --popover-foreground: #f1f5f9;
+  --primary: #2dd4bf;
+  --primary-foreground: #042f2e;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #172230;
+  --muted-foreground: #94a3b8;
+  --accent: #1e2d3d;
+  --accent-foreground: #f8fafc;
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+  --border: #263547;
+  --input: #263547;
+  --ring: #2dd4bf;
 }
 
 @theme inline {
@@ -70,10 +70,13 @@
   --color-ring: var(--ring);
 }
 
-/* V base vrstvě, aby barvy okrajů z utilit (border-l-purple-500…) měly přednost. */
+/* V base vrstvě, aby barvy okrajů z utilit měly přednost. */
 @layer base {
   * {
     border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
   }
 }
 
@@ -82,12 +85,13 @@ body {
   color: var(--foreground);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -99,3 +103,4 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+

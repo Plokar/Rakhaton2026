@@ -13,21 +13,21 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme | null;
     if (savedTheme) {
       setThemeState(savedTheme);
     } else {
-      setThemeState('dark'); // Default to dark for high-tech hackathon aesthetic
+      setThemeState('light');
     }
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-    let effective: 'dark' | 'light' = 'dark';
+    let effective: 'dark' | 'light' = 'light';
 
     if (theme === 'system') {
       effective = window.matchMedia('(prefers-color-scheme: dark)').matches

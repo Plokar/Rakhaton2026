@@ -16,7 +16,8 @@ import {
   ArrowRight,
   ShieldCheck,
   AlertCircle,
-  Sparkles,
+  Clock,
+  Cpu,
 } from 'lucide-react';
 
 // Demo účty zakládá `seed_mdt` (T-501) nad fiktivními daty. 1-click přihlášení heslo záměrně zveřejňuje;
@@ -88,50 +89,50 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left side: Hero showcase (desktop only) */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between border-r border-border bg-card p-12 relative overflow-hidden">
-        {/* Subtle decorative background gradient */}
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-
+    <div className="flex min-h-screen bg-background">
+      {/* Left side: Clinical overview showcase (desktop only) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between border-r border-border bg-card p-12">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-indigo-500/30">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/30 bg-primary text-primary-foreground shadow-2xs">
             <Stethoscope className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-base font-bold tracking-tight">MDT Copilot</span>
-            <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>
+            <span className="text-base font-extrabold tracking-tight text-foreground">MDT Copilot</span>
+            <span className="block text-xs font-medium text-muted-foreground">Podklady pro onkologickou komisi</span>
           </div>
         </div>
 
-        <div className="space-y-6 max-w-md">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> AI připravuje, rozhoduje lékař
+        <div className="space-y-6 max-w-lg">
+          <div className="inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+            <Clock className="h-3.5 w-3.5" /> Pravidlo 30 sekund · AI připravuje, rozhoduje lékař
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight">
-            Celý případ <br />
+          <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Celý případ přehledně <br />
             za 30 sekund.
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Podklad pro multidisciplinární komisi z dat pacienta: souhrn, pohledy odborníků,
-            možnosti léčby z doporučených postupů a vhodné klinické studie.
+            Strukturovaný klinický podklad z dat pacienta v InterSystems IRIS for Health: okamžitá orientace v diagnóze,
+            TNM, ECOG lékaře i pacienta, pohledech odborností a semaforu souladu s doporučenými postupy.
           </p>
 
           <div className="space-y-3 pt-4 border-t border-border">
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <span>Každé tvrzení AI má citaci zdroje, chybějící údaj je vždy vidět</span>
+            <div className="flex items-center gap-3 text-xs font-medium text-foreground">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>Každé tvrzení AI má klikací citaci zdroje, chybějící údaj je vždy označen</span>
             </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <span>Oficiálním záznamem se závěr stane až po potvrzení lékařem</span>
+            <div className="flex items-center gap-3 text-xs font-medium text-foreground">
+              <Cpu className="h-4 w-4 shrink-0 text-primary" />
+              <span>Semafor léčby počítají deterministická pravidla z guidelines, nikoliv odhad modelu</span>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-medium text-foreground">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span>Oficiálním záznamem v IRIS se závěr stane až po výslovném potvrzení lékařem</span>
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} MDT Copilot • Rakathon 2026
+        <div className="text-xs font-medium text-muted-foreground">
+          © {new Date().getFullYear()} MDT Copilot • Klinický informační systém pro MDT
         </div>
       </div>
 

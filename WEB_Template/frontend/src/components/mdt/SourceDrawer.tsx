@@ -59,28 +59,30 @@ export function SourceDrawer({
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={`Zdroj ${evidenceId}`}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" onClick={onClose} aria-hidden />
-      <aside className="relative flex h-full w-full flex-col border-l border-border bg-card shadow-2xl sm:max-w-md">
-        <div className="flex items-start gap-2 border-b border-border px-4 py-3">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={onClose} aria-hidden />
+      <aside className="relative flex h-full w-full flex-col border-l border-border bg-card shadow-2xl sm:max-w-lg">
+        <div className="flex items-start gap-3 border-b border-border bg-muted/40 px-5 py-4">
           <div className="min-w-0 flex-1">
-            <p className="font-mono text-xs text-muted-foreground">{evidenceId}</p>
-            <p className="text-sm font-semibold text-foreground">
+            <span className="inline-block rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">
+              {evidenceId}
+            </span>
+            <p className="mt-1.5 text-base font-bold leading-snug text-foreground">
               {current?.source?.title ?? (current?.error ? 'Zdroj nenalezen' : 'Načítám zdroj…')}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground transition hover:bg-accent hover:text-foreground"
             aria-label="Zavřít zdroj"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="flex-1 overflow-y-auto px-5 py-4">
           {!current && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> Načítám…
+              <LoaderCircle className="h-4 w-4 animate-spin text-primary" aria-hidden /> Načítám…
             </p>
           )}
           {current?.error && <p className="text-sm text-destructive">{current.error}</p>}
@@ -99,46 +101,53 @@ function SourceBody({ source }: { source: EvidenceSource }) {
 
   const Icon = source.kind === 'guideline' ? BookOpen : source.kind === 'trial_criterion' ? FlaskConical : source.kind === 'external' ? ExternalLink : FileText;
   return (
-    <div className="space-y-3 text-sm">
-      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+    <div className="space-y-4 text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
         <span
           className={cn(
-            'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold',
+            'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 font-bold',
             source.kind === 'external'
               ? 'border-dashed border-foreground/40 text-foreground'
-              : 'border-border bg-muted text-muted-foreground',
+              : 'border-border bg-muted text-foreground',
           )}
         >
-          <Icon className="h-3 w-3" aria-hidden /> {KIND_LABEL[source.kind]}
+          <Icon className="h-3.5 w-3.5 text-primary" aria-hidden /> {KIND_LABEL[source.kind]}
         </span>
-        {source.date && <span className="text-muted-foreground">{formatDate(source.date)}</span>}
+        {source.date && <span className="font-mono font-medium text-muted-foreground">{formatDate(source.date)}</span>}
         {source.criterion_kind && (
-          <span className="text-muted-foreground">
+          <span className="rounded bg-muted px-2 py-0.5 font-medium text-muted-foreground">
             {source.criterion_kind === 'inclusion' ? 'kritérium zařazení' : 'kritérium vyřazení'}
           </span>
         )}
       </div>
 
       {(source.department || source.author) && (
-        <dl className="space-y-0.5 text-xs text-muted-foreground">
-          {source.department && <dd>{source.department.trim()}</dd>}
+        <dl className="rounded-lg border border-border bg-muted/30 px-3 py-2 space-y-0.5 text-xs text-muted-foreground">
+          {source.department && <dd className="font-semibold text-foreground">{source.department.trim()}</dd>}
           {source.author && <dd>{source.author.text}</dd>}
         </dl>
       )}
 
       {source.value && (
-        <div className="rounded-lg border border-border bg-background p-3">
-          <p className="text-2xl font-bold text-foreground">
+        <div className="rounded-xl border border-border bg-background p-4 shadow-2xs">
+          <p className="font-mono text-2xl font-extrabold text-foreground tabular-nums">
             {source.value.text}
             {source.value.interpretation && (
-              <span className="ml-2 rounded bg-muted px-1.5 py-0.5 align-middle text-xs font-semibold text-muted-foreground">
+              <span
+                className={cn(
+                  'ml-2.5 rounded-md border px-2 py-0.5 align-middle font-sans text-xs font-bold',
+                  source.value.interpretation === 'H' || source.value.interpretation === 'L'
+                    ? 'border-amber-500/40 bg-amber-500/15 text-amber-900 dark:text-amber-200'
+                    : 'border-border bg-muted text-muted-foreground',
+                )}
+              >
                 {source.value.interpretation === 'H' ? 'nad normou' : source.value.interpretation === 'L' ? 'pod normou' : source.value.interpretation}
               </span>
             )}
           </p>
           {(source.value.ref_low !== null || source.value.ref_high !== null) && (
-            <p className="text-xs text-muted-foreground">
-              Referenční rozsah: {source.value.ref_low ?? '–'} – {source.value.ref_high ?? '–'} {source.value.unit ?? ''}
+            <p className="mt-1 text-xs font-medium text-muted-foreground">
+              Referenční rozsah: <span className="font-mono font-semibold text-foreground">{source.value.ref_low ?? '–'} – {source.value.ref_high ?? '–'} {source.value.unit ?? ''}</span>
             </p>
           )}
         </div>
@@ -147,8 +156,8 @@ function SourceBody({ source }: { source: EvidenceSource }) {
       {source.text && <SourceText text={source.text} highlight={source.highlight} markRef={markRef} />}
 
       {(source.source || source.region) && (
-        <p className="text-xs text-muted-foreground">
-          Zdroj: {source.source}
+        <p className="text-xs font-medium text-muted-foreground">
+          Zdroj: <strong className="text-foreground">{source.source}</strong>
           {source.region && <> · {source.region}</>}
         </p>
       )}
@@ -157,22 +166,22 @@ function SourceBody({ source }: { source: EvidenceSource }) {
           href={source.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
         >
-          <ExternalLink className="h-3 w-3" aria-hidden /> Otevřít původní zdroj
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden /> Otevřít původní zdroj
         </a>
       )}
 
       {source.derived_from && source.derived_from.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Zdrojový dokument</p>
+        <div className="space-y-2 border-t border-border pt-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Zdrojový dokument</p>
           {source.derived_from.map((doc) => (
-            <div key={doc.evidence_id} className="rounded-lg border border-border p-3">
-              <p className="text-xs font-semibold text-foreground">
-                {doc.title} <span className="font-mono font-normal text-muted-foreground">{doc.evidence_id}</span>
+            <div key={doc.evidence_id} className="rounded-lg border border-border bg-background p-3">
+              <p className="text-xs font-bold text-foreground">
+                {doc.title} <span className="ml-1 font-mono font-normal text-muted-foreground">{doc.evidence_id}</span>
               </p>
               {doc.date && <p className="text-[11px] text-muted-foreground">{formatDate(doc.date)}</p>}
-              {doc.text && <p className="mt-1 whitespace-pre-wrap text-xs text-foreground">{doc.text}</p>}
+              {doc.text && <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-foreground">{doc.text}</p>}
             </div>
           ))}
         </div>
@@ -191,15 +200,24 @@ function SourceText({
   markRef: React.RefObject<HTMLElement | null>;
 }) {
   if (!highlight) {
-    return <p className="whitespace-pre-wrap leading-relaxed text-foreground">{text}</p>;
+    return (
+      <div className="rounded-lg border border-border bg-background p-3.5">
+        <p className="whitespace-pre-wrap leading-relaxed text-foreground">{text}</p>
+      </div>
+    );
   }
   return (
-    <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
-      {text.slice(0, highlight.start)}
-      <mark ref={markRef} className="rounded bg-yellow-200 px-0.5 text-foreground dark:bg-yellow-500/30">
-        {text.slice(highlight.start, highlight.end)}
-      </mark>
-      {text.slice(highlight.end)}
-    </p>
+    <div className="rounded-lg border border-border bg-background p-3.5">
+      <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+        {text.slice(0, highlight.start)}
+        <mark
+          ref={markRef}
+          className="rounded border border-amber-500/40 bg-amber-300/40 px-1 py-0.5 font-medium text-foreground dark:bg-amber-500/30"
+        >
+          {text.slice(highlight.start, highlight.end)}
+        </mark>
+        {text.slice(highlight.end)}
+      </p>
+    </div>
   );
 }

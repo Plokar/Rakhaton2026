@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Cpu, Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -46,13 +46,13 @@ const roleLabel = (r: RoleId | 'chair') => (r === 'chair' ? 'Předseda' : ROLE_M
 /** Úprava textu od AI z něj udělá „AI návrh upravený lékařem“ (FR-R4). */
 const afterEdit = (source: Source): Source => (source === 'ai' ? 'ai_edited' : source);
 
-const fieldClass = 'h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground disabled:opacity-70';
+const fieldClass = 'h-9 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground disabled:opacity-70';
 
 function SourceBadge({ source }: { source: Source }) {
   if (source === 'human') return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/15 px-2 py-0.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
-      <Sparkles className="h-3 w-3" aria-hidden /> {source === 'ai' ? 'AI návrh' : 'AI návrh upravený lékařem'}
+    <span className="inline-flex items-center gap-1 rounded-md border border-teal-700/30 bg-teal-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-teal-900 dark:border-teal-400/30 dark:bg-teal-950/70 dark:text-teal-200">
+      <Cpu className="h-3 w-3" aria-hidden /> {source === 'ai' ? 'AI návrh' : 'AI návrh upravený lékařem'}
     </span>
   );
 }
@@ -83,7 +83,7 @@ function SourcedText({
 }) {
   const id = React.useId();
   return (
-    <div className={cn('space-y-1.5', value.source !== 'human' && 'border-l-2 border-purple-500 pl-3')}>
+    <div className={cn('space-y-1.5', value.source !== 'human' && 'border-l-2 border-teal-700 dark:border-teal-400 pl-3')}>
       <label htmlFor={id} className="flex flex-wrap items-center gap-2 text-xs font-semibold text-foreground">
         {label} <SourceBadge source={value.source} />
       </label>
@@ -205,7 +205,7 @@ export function DecisionEditor({
       <Field label="Doporučený postup">
         <ul className="space-y-2">
           {s.recommendation.map((r, i) => (
-            <li key={i} className={cn('space-y-1.5 rounded-lg border border-border p-2', r.source !== 'human' && 'border-l-2 border-l-purple-500')}>
+            <li key={i} className={cn('space-y-1.5 rounded-lg border border-border p-2', r.source !== 'human' && 'border-l-2 border-l-teal-700 dark:border-l-teal-400')}>
               <div className="flex flex-wrap items-center gap-2">
                 <select
                   className={fieldClass}
@@ -428,7 +428,7 @@ export function DecisionEditor({
             const update = (patch: Partial<typeof t>) =>
               setTop({ tasks: decision.tasks.map((x, j) => (j === i ? { ...x, ...patch, source: afterEdit(x.source) } : x)) });
             return (
-              <li key={t.id} className={cn('space-y-1.5 rounded-lg border border-border p-2', t.source !== 'human' && 'border-l-2 border-l-purple-500')}>
+              <li key={t.id} className={cn('space-y-1.5 rounded-lg border border-border p-2', t.source !== 'human' && 'border-l-2 border-l-teal-700 dark:border-l-teal-400')}>
                 <div className="flex items-center gap-2">
                   <SourceBadge source={t.source} />
                   {!readOnly && (

@@ -320,13 +320,16 @@ class TestFactory:
 
 
 # ── Živý test (opt-in, jen placený tier) ──────────────────────────────────────
+LIVE_KEY = os.environ.get("GEMINI_API_KEY", "")     # autouse fixture env čistí, klíč se vezme při importu
+
+
 @pytest.mark.integration
 @pytest.mark.skipif(
-    os.environ.get("AI_LIVE_TESTS") != "1" or not os.environ.get("GEMINI_API_KEY"),
+    os.environ.get("AI_LIVE_TESTS") != "1" or not LIVE_KEY,
     reason="živý Gemini test: AI_LIVE_TESTS=1 + GEMINI_API_KEY (placený tier, Q9)",
 )
 def test_gemini_live_smoke():
-    provider = GeminiProvider()
+    provider = GeminiProvider(api_key=LIVE_KEY)
     result = provider.generate(
         "Vrať claim s id 'c1', kind 'claim', text 'Test' a citací 'P00-test'. Nic dalšího.",
         response_schema=Claim,

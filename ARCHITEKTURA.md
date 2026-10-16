@@ -45,7 +45,7 @@
 
 ## 1. Zadání v kostce
 
-Výtah ze zadání `WEB_Template/MDT_Copilot_zadani_upravené_2026_v02.pptx`, včetně poznámek řečníka.
+Výtah ze zadání `docs/zadani/MDT_Copilot_zadani_upravené_2026_v02.pptx`, včetně poznámek řečníka.
 
 ### 1.1 Kontext
 
@@ -1356,7 +1356,7 @@ Rakhaton2026/
 
 ## 12. Zdroje
 
-- Zadání: `WEB_Template/MDT_Copilot_zadani_upravené_2026_v02.pptx` (Asseco CE)
+- Zadání: `docs/zadani/MDT_Copilot_zadani_upravené_2026_v02.pptx` (Asseco CE)
 - Dataset: `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/README.md` + [DATASET.md](DATASET.md)
 - [InterSystems Challenge at Rakathon 2026](https://developer.intersystems.com/intersystems-challenge-at-rakathon-2026/)
 - [FHIR-AI-Hackathon-Kit (V2)](https://github.com/intersystems-community/FHIR-AI-Hackathon-Kit): tutoriály 3.x FHIR, 3.5 FHIR SQL Builder, 4.1 Vector Search, 5.1 agenti, 5.2 MCP; `skills/`

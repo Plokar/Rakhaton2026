@@ -1,11 +1,14 @@
 """Zápisy aplikace do IRIS FHIR (ARCH §4.3 výstupy). Struktura kopíruje předchozí MDT v datasetu (D-009)."""
 import html
+import logging
 import re
 from datetime import datetime
 
 from services.fhir import client as fhir
 from services.fhir.ids import resource_type_for_id
 from services.patients import _ref_id
+
+logger = logging.getLogger(__name__)
 
 BASE = 'https://rakathon.example.org/fhir'
 CS = f'{BASE}/CodeSystem'
@@ -233,4 +236,16 @@ def confirm_decision(decision: dict, *, patient_id: str, service_request_id: str
         confirmed_by=confirmed_by, red_flags=red_flags, now=now,
     )
     fhir.transaction(bundle)
+    _reindex_vectors(patient_id)
     return ids
+
+
+def _reindex_vectors(patient_id: str) -> None:
+    """Nový záznam MDT do vektorového hledání a groundingu (ARCH §4.5). Selhání potvrzení nebrání:
+    oficiální záznam je už ve FHIR, vektory jdou dopočítat (`ingest_dataset --skip-fhir --patients Pxx`)."""
+    try:
+        from services.iris import indexing
+        indexing.index_patient(patient_id)
+    except Exception:
+        logger.warning('Reindex vektorů %s po zápisu závěru selhal (ručně: ingest_dataset --skip-fhir --patients %s)',
+                       patient_id, patient_id, exc_info=True)

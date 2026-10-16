@@ -407,4 +407,7 @@ export const aiApi = {
     apiFetch<{ providers: AiProviderInfo[] }>('/api/ai/providers/'),
 };
 
-export { apiFetch, ApiError };
+/** Absolutní URL endpointu (odkazy ke stažení: export PDF / FHIR). */
+const apiUrl = (endpoint: string) => `${API_BASE}${endpoint}`;
+
+export { apiFetch, apiUrl, ApiError };

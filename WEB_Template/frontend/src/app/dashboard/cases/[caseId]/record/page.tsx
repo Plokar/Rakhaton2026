@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CircleCheck, Save, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CircleCheck, FileDown, FileJson, Save, ShieldCheck } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DEMO_CASE } from '@/components/mdt/CaseBriefScreen';
 import { CitationProvider, collectCitations } from '@/components/mdt/citations';
@@ -17,7 +17,7 @@ import { ROLE_META } from '@/components/mdt/roles';
 import { SourceDrawer } from '@/components/mdt/SourceDrawer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ApiError } from '@/lib/api';
+import { ApiError, apiUrl } from '@/lib/api';
 import { briefP03, decisionP03 } from '@/lib/fixtures';
 import { mdtApi } from '@/lib/mdt-api';
 import { useApiData } from '@/lib/use-api-data';
@@ -196,6 +196,22 @@ function DecisionContent({ caseId }: { caseId: string }) {
               Zapsáno do IRIS: <span className="font-mono">{current.fhir_ids.composition}</span>, CarePlan, CareTeam,{' '}
               {current.fhir_ids.tasks.length} úkolů, {current.fhir_ids.detected_issues.length} varovných signálů, Provenance.
             </p>
+          )}
+          {!isDemo && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a
+                href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.pdf`)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                <FileDown className="h-3.5 w-3.5" aria-hidden /> Export PDF
+              </a>
+              <a
+                href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.fhir.json`)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+              >
+                <FileJson className="h-3.5 w-3.5" aria-hidden /> FHIR document Bundle
+              </a>
+            </div>
           )}
         </div>
       )}

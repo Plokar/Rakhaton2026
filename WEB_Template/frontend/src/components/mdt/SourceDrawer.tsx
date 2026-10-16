@@ -152,6 +152,16 @@ function SourceBody({ source }: { source: EvidenceSource }) {
           {source.region && <> · {source.region}</>}
         </p>
       )}
+      {source.url && (
+        <a
+          href={source.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          <ExternalLink className="h-3 w-3" aria-hidden /> Otevřít původní zdroj
+        </a>
+      )}
 
       {source.derived_from && source.derived_from.length > 0 && (
         <div className="space-y-2">

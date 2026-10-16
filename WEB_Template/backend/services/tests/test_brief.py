@@ -29,6 +29,16 @@ def brief_for(patient_id, provider=None, **kwargs):
                        provider=provider or MockAIProvider(), case_id="7", **kwargs)
 
 
+class PromptCaptureProvider(MockAIProvider):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.system_prompts = []
+
+    def generate(self, prompt, **kwargs):
+        self.system_prompts.append(kwargs.get("system_prompt", ""))
+        return super().generate(prompt, **kwargs)
+
+
 def section(brief, section_id):
     return next(s for s in brief["sections"] if s["id"] == section_id)
 
@@ -102,6 +112,58 @@ def test_config_controls_sections():
     assert [s["id"] for s in brief["sections"]] == ["timeline"]
     assert brief["red_flags"] == []
     assert brief["config"]["roles_present"]                        # doplněno z výchozí konfigurace
+
+
+def test_config_detail_override_changes_summary_output_and_language_prompt():
+    response = {"items": [{"text": f"Fakt {letter}", "citations": ["P03-img03#4"]}
+                          for letter in "ABCDE"]}
+    brief_config = {"detail_level": "standard", "language": "en",
+                    "sections": [{"id": "summary", "enabled": True, "order": 1, "detail": "brief"}]}
+    detailed_config = {"detail_level": "brief", "language": "sk",
+                       "sections": [{"id": "summary", "enabled": True, "order": 1, "detail": "detailed"}]}
+    brief_provider = PromptCaptureProvider(responses={"SummaryOutput": response})
+    detailed_provider = PromptCaptureProvider(responses={"SummaryOutput": response})
+
+    brief = brief_for("P03", brief_provider, config=brief_config)
+    detailed = brief_for("P03", detailed_provider, config=detailed_config)
+
+    brief_claims = [c for c in section(brief, "summary")["items"] if c["kind"] == "claim"]
+    detailed_claims = [c for c in section(detailed, "summary")["items"] if c["kind"] == "claim"]
+    assert len(brief_claims) == 3
+    assert len(detailed_claims) == 5
+    assert "Piš anglicky" in brief_provider.system_prompts[0]
+    assert "Úroveň detailu brief" in brief_provider.system_prompts[0]
+    assert brief_provider.system_prompts[0].endswith("Write all newly generated text exclusively in English.")
+    assert "Piš slovensky" in detailed_provider.system_prompts[0]
+    assert "Úroveň detailu detailed" in detailed_provider.system_prompts[0]
+    assert detailed_provider.system_prompts[0].endswith("Všetok novo vytvorený text napíš výhradne po slovensky.")
+
+
+def test_config_applies_language_and_detail_to_role_prompt():
+    response = {"items": [{"text": f"Role fact {letter}", "citations": ["P03-img03#4"]}
+                          for letter in "ABCDEF"]}
+    provider = PromptCaptureProvider(responses={"RoleViewOutput": response})
+    config = {"language": "en", "detail_level": "standard", "roles_present": ["surgeon"],
+              "sections": [{"id": "role_views", "enabled": True, "order": 1, "detail": "brief"}]}
+
+    brief = brief_for("P03", provider, config=config)
+
+    role = next(s for s in brief["sections"] if s.get("role") == "surgeon")
+    assert len(role["items"]) == 3
+    assert "Piš anglicky" in provider.system_prompts[0]
+    assert "Úroveň detailu brief" in provider.system_prompts[0]
+    assert provider.system_prompts[0].endswith("Write all newly generated text exclusively in English.")
+
+
+def test_config_applies_language_to_red_flag_prompt():
+    provider = PromptCaptureProvider(responses={"LlmRedFlags": {"flags": []}})
+    config = {"language": "sk", "sections": [
+        {"id": "red_flags", "enabled": True, "order": 1, "detail": "detailed"}]}
+
+    brief_for("P03", provider, config=config)
+
+    assert len(provider.system_prompts) == 1
+    assert provider.system_prompts[0].endswith("Všetok novo vytvorený text napíš výhradne po slovensky.")
 
 
 def test_generate_brief_job_interface(monkeypatch):

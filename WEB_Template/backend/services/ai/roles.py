@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext
+from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai_service import BaseAIProvider
 from services.rules.compatibility import CHECKS, load_catalog
 from services.rules.red_flags import PatientData
@@ -75,12 +76,13 @@ def role_question(role: str, guideline_sets: list[str]) -> str | None:
 
 # ── Sekce role ────────────────────────────────────────────────────────────────
 def role_section(role: str, context: PatientContext, data: PatientData, compatibility: list[dict],
-                 provider: BaseAIProvider, log_call: Callable[[str, dict], Any]) -> dict:
+                 provider: BaseAIProvider, log_call: Callable[[str, dict], Any],
+                 config: dict | None = None) -> dict:
     cfg = load_roles()[role]
     question = role_question(role, context.guideline_sets)
     system = (f"{ROLE_PROMPT}\n\nTvoje role: {cfg['title']}. Zaměř se na: {cfg['focus']}.\n"
               + (f"Otázka posouzení: {question}\n" if question else "Posouzení role (assessment) nevyplňuj.\n")
-              + "\n" + prompt_rules())
+              + "\n" + prompt_rules() + "\n" + prompt_settings(config, "role_views"))
     result = provider.generate(context.render(), system_prompt=system, response_schema=RoleViewOutput,
                                temperature=0.1)
     log_call(f"brief.role.{role}", result)
@@ -91,6 +93,7 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
              for i, item in enumerate((output or {}).get("items") or [], 1) if item.get("text", "").strip()]
     if not items:
         items = _fallback_items(role, cfg, context, data)
+    items = items[:output_limit(config, "role_views")]
 
     assessment = None
     if question:

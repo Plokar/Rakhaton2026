@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // Standalone output pro Docker production build
   output: 'standalone',
 
+  // ponytail: dev v Dockeru na Windows (WATCHPACK_POLLING z docker-compose.dev.yml) – Turbopack přes bind mount
+  // nevidí nové soubory ("Module not found"); polling je podle docs poslední možnost, mimo kontejner se nezapne
+  ...(process.env.WATCHPACK_POLLING === 'true' ? { watchOptions: { pollIntervalMs: 1000 } } : {}),
+
   // Povolené vzory pro optimalizaci obrázků (next.js 15+)
   images: {
     remotePatterns: [

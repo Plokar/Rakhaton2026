@@ -4,7 +4,8 @@ Nahrazuje ``services.iris.db.connect``, takže funguje ``services/iris/vector_st
 ``services/ai/guidelines.py:load_guidelines``. Umí jen podmnožinu SQL, kterou tyto moduly posílají:
 ``CREATE TABLE`` / ``CREATE INDEX`` / ``DROP TABLE``, ``INSERT … TO_VECTOR(?, DOUBLE)``,
 ``DELETE … WHERE``, ``SELECT [TOP n] … [VECTOR_COSINE(…) AS Score] … WHERE a = ? AND b IN (?, ?)
-[ORDER BY Score DESC]``, ``GROUP BY EmbeddingModel`` a dotaz na ``INFORMATION_SCHEMA.TABLES``.
+[ORDER BY Score DESC]``, ``GROUP BY [%EXACT(]sloupec[)]`` (bez ``%EXACT`` vrací velká písmena jako kolace
+SQLUPPER v IRIS) a dotaz na ``INFORMATION_SCHEMA.TABLES``.
 Neznámý příkaz, tabulka nebo sloupec vyhodí ``FakeIrisError`` (jako chyba SQL v IRIS).
 
 Hlídá i zavírání spojení (``open_connections``): Community Edition má limit spojení (AGENTS.md).
@@ -44,7 +45,8 @@ _DROP = re.compile(r'DROP TABLE (\w+)\.(\w+)$')
 _INSERT = re.compile(r'INSERT INTO (\w+)\.(\w+) \((.*?)\) VALUES \((.*)\)$', re.S)
 _DELETE = re.compile(r'DELETE FROM (\w+)\.(\w+)(?: WHERE (.*))?$', re.S)
 _SELECT = re.compile(
-    r'SELECT (?:TOP (\d+) )?(.*?) FROM (\w+)\.(\w+)(?: WHERE (.*?))?(?: GROUP BY (\w+))?(?: ORDER BY (\w+) DESC)?$', re.S,
+    r'SELECT (?:TOP (\d+) )?(.*?) FROM (\w+)\.(\w+)(?: WHERE (.*?))?(?: GROUP BY (%EXACT\(\w+\)|\w+))?'
+    r'(?: ORDER BY (\w+) DESC)?$', re.S,
 )
 _SCORE = 'VECTOR_COSINE(Embedding, TO_VECTOR(?, DOUBLE)) AS Score'
 _EXISTS = 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?'
@@ -158,9 +160,13 @@ class FakeIris:
         predicate = self._where(table, where_sql, params)
         rows = [r for r in table['rows'] if predicate(r)]
         if group_by:
+            # jako IRIS: GROUP BY vrací hodnotu v kolaci SQLUPPER, přesnou jen přes %EXACT(…) (Q16)
+            exact = group_by.startswith('%EXACT(')
+            col = self._column(table, group_by[len('%EXACT('):-1] if exact else group_by)
             counts: dict = {}
             for r in rows:
-                counts[r[self._column(table, group_by)]] = counts.get(r[group_by], 0) + 1
+                value = r[col] if exact or not isinstance(r[col], str) else r[col].upper()
+                counts[value] = counts.get(value, 0) + 1
             return list(counts.items())
         out = []
         for r in rows:

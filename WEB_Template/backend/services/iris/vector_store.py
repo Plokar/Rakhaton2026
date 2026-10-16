@@ -279,7 +279,10 @@ def counts() -> dict[str, dict[str, int]]:
         for name in TABLES:
             if not _table_exists(cursor, name):
                 continue
-            cursor.execute(f'SELECT EmbeddingModel, COUNT(*) FROM {_table(name)} GROUP BY EmbeddingModel')
+            # %EXACT: GROUP BY v IRIS vrací hodnotu v kolaci SQLUPPER ("MOCK:HASHED@1536"), Q16
+            cursor.execute(
+                f'SELECT %EXACT(EmbeddingModel), COUNT(*) FROM {_table(name)} GROUP BY %EXACT(EmbeddingModel)'
+            )
             out[_table(name)] = {model: n for model, n in cursor.fetchall()}
     return out
 

@@ -42,9 +42,18 @@ class DatasetError(Exception):
 
 # ── Načtení datasetu ──────────────────────────────────────────────────────────
 
+def repo_dataset() -> Path | None:
+    """Dataset v checkoutu repa (lokálně bez Dockeru, CI). V kontejneru ho nastavuje ``DATASET_DIR``."""
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / 'Dataset_MDT_Copilot_v1.1_pre_timy' / 'Dataset_MDT_Copilot_v1.1'
+        if (candidate / 'pacienti').is_dir():
+            return candidate
+    return None
+
+
 def dataset_dir(path: str | os.PathLike | None = None) -> Path:
-    """Kořen datasetu z argumentu nebo env ``DATASET_DIR`` (cestu nehardcodujeme)."""
-    raw = path or os.environ.get('DATASET_DIR')
+    """Kořen datasetu z argumentu, env ``DATASET_DIR``, jinak z checkoutu repa (cestu nehardcodujeme)."""
+    raw = path or os.environ.get('DATASET_DIR') or repo_dataset()
     if not raw:
         raise DatasetError('Není nastavená proměnná DATASET_DIR (cesta k Dataset_MDT_Copilot_v1.1).')
     root = Path(raw)

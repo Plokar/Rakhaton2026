@@ -4,24 +4,15 @@ from pathlib import Path
 
 import pytest
 
-from services.fhir import client
+from services.fhir import client, ingest
 from services.fhir.testing import FakeFhirServer
 from services.iris import db
 from services.iris.testing import FakeIris
 
 
-def _repo_dataset() -> Path | None:
-    """Dataset v checkoutu repa (lokálně, CI). V kontejneru nastavuje DATASET_DIR docker-compose.dev.yml."""
-    for parent in Path(__file__).resolve().parents:
-        candidate = parent / 'Dataset_MDT_Copilot_v1.1_pre_timy' / 'Dataset_MDT_Copilot_v1.1'
-        if candidate.is_dir():
-            return candidate
-    return None
-
-
 @pytest.fixture(scope='session')
 def dataset_root() -> Path:
-    raw = os.environ.get('DATASET_DIR') or _repo_dataset()
+    raw = os.environ.get('DATASET_DIR') or ingest.repo_dataset()
     if not raw or not (Path(raw) / 'pacienti').is_dir():
         pytest.skip(f'dataset není k dispozici ({raw}); nastav DATASET_DIR')
     return Path(raw)

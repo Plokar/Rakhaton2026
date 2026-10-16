@@ -89,12 +89,22 @@ def test_collect_unknown_patient(dataset_root):
 
 def test_dataset_dir_from_env(monkeypatch, tmp_path, dataset_root):
     monkeypatch.delenv('DATASET_DIR', raising=False)
+    monkeypatch.setattr(ingest, 'repo_dataset', lambda: None)
     with pytest.raises(ingest.DatasetError, match='DATASET_DIR'):
         ingest.dataset_dir()
     with pytest.raises(ingest.DatasetError, match='pacienti'):
         ingest.dataset_dir(tmp_path)
     monkeypatch.setenv('DATASET_DIR', str(dataset_root))
     assert ingest.dataset_dir() == dataset_root
+
+
+def test_dataset_dir_falls_back_to_repo_checkout(monkeypatch):
+    """CI a lokální běh bez Dockeru: bez DATASET_DIR se použije dataset z checkoutu (reset dema T-311)."""
+    repo = ingest.repo_dataset()
+    if repo is None:
+        pytest.skip('dataset není v checkoutu')
+    monkeypatch.delenv('DATASET_DIR', raising=False)
+    assert ingest.dataset_dir() == repo
 
 
 # ── transaction bundle ──

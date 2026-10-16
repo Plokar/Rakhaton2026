@@ -8,7 +8,8 @@ import type { NextRequest } from 'next/server';
  * Pokud uživatel nemá JWT cookie → přesměrovat na /login
  */
 
-const PROTECTED_PATHS = ['/dashboard', '/brief'];   // /brief/[caseId] = podklad v úzkém okně (ARCH §7.1)
+// /brief/[caseId] = podklad v úzkém okně (ARCH §7.1), /projector = úzký panel pro projektor (T-512)
+const PROTECTED_PATHS = ['/dashboard', '/brief', '/projector'];
 const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 

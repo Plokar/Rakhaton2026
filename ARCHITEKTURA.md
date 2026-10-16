@@ -1128,12 +1128,13 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | `/` | přesměruje na `/dashboard` (veřejná landing page není) |
 | `/login` | z templatu + 1-click demo účty (předseda, chirurg, onkolog…) |
 | `/dashboard` | **boardy** (zasedání 2026-10-14 a 2026-10-21), případy a jejich stav, úkoly po termínu; předseda zakládá board a mění termín |
-| `/dashboard/mdt` | seznam zasedání (boardů) s termínem → agenda; v navigaci „Zasedání“ |
+| `/dashboard/mdt` | **admin workspace boardů** (T-512): karty boardů s počtem případů a termínem, rozbalení na případy, přidání boardu a uživatele; výběr případu přepne okno `/projector` (BroadcastChannel), stav v `?board=&case=&patient=`; na širokém monitoru náhled panelu; v navigaci „Zasedání“ |
 | `/dashboard/mdt/[sessionId]` | agenda zasedání: pacienti, readiness, stav, přesun pacienta do jiného boardu, tlačítko „Zařadit pacienta“ |
 | `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4): předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
 | `/dashboard/cases/[caseId]` | **podklad** v úzkém sloupci: hlavička (D-018) + A / red flags / anamnéza / B (sekce odborností s posouzením) / B2 (semafor, studie, otázky) / otázka pro MDT |
 | `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
+| `/projector` | **úzký panel pro projektor** vedle snímku z PACS (T-512, 320–420 px, bez navigace, chráněno v `proxy.ts`): hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P, anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z `/dashboard/mdt` |
 | `…/cases/demo`, `/brief/demo` | podklad P03 z fixtures (`data/fixtures/brief_P03.json` + zdroje citací `evidence_P03.json`), funguje bez backendu; obě stránky skládá `CaseBriefScreen` |
 | `/dashboard/cases/[caseId]/record` | **zápis závěru**: editor (sekce jako záznam MDT), úkoly, potvrzení, export |
 | `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |

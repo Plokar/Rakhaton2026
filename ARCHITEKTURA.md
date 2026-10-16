@@ -521,7 +521,10 @@ WHERE PatientId = ?
 ORDER BY Score DESC
 ```
 
-- **Chunking:** texty jsou krátké (93 dokumentů, max ~1 900 znaků), takže **1 odstavec = 1 chunk** (dělit podle prázdných řádků a řádků „Závěr:“, „Nález:“). Kvůli zvýraznění v UI ukládáme i offset v textu.
+- **Chunking:** texty jsou krátké (93 dokumentů, max ~1 900 znaků), takže **1 odstavec = 1 chunk**. Kvůli zvýraznění v UI ukládáme i offset v textu.
+  - **Jediný zdroj číslování odstavců** je `services/ai/text.py`: `resource_text(resource)` + `split_paragraphs(text)` (nebo `resource_paragraphs(resource)`). Používá ho context builder (T-105) a **musí** ho použít i `MDT.EvidenceChunk` (T-102) a resolver citací (T-104). Jinak `P03-img03#2` ukáže v každé části aplikace na jiný text.
+  - Text resource: DocumentReference `content[].attachment.data`, DiagnosticReport `presentedForm[].data` (bez něj `conclusion`), Composition sekce jako `Název: text`, ServiceRequest otázka pro MDT (`#1`) + poznámky `note[]`.
+  - Nový odstavec začíná za prázdným řádkem a na řádku s nadpisem (`Závěr:`, `Nález:`, `Subjektivně:`, `OA:`…, regex `^[A-ZÁ-Ž][^:]{0,40}:`). Číslování je od 1. Na datasetu to dává 555 odstavců, nejdelší má 542 znaků.
 - **Embeddingy:**
   - `gemini-embedding-001`, `output_dimensionality=1536`;
   - **L2 normalizovat** (pod 3072 dimenzí to Google vyžaduje);
@@ -583,6 +586,16 @@ ORDER BY Score DESC
    - celek má desítky tisíc tokenů a vejde se do jednoho callu (D-010);
    - IRIS Vector Search pro každou sekci seřadí nejrelevantnější odstavce na začátek a označí je;
    - před odesláním proběhne **pseudonymizace** ([§5.7](#57-model-a-ochrana-údajů)).
+   - **Implementace (T-105):** `services/ai/context_builder.py`.
+     - `build_context(pid)` čte FHIR přes `services/fhir/client.py`: pacienta, referencované `Practitioner` a `Organization` a studie. Guidelines bere z IRIS `MDT.GuidelineChunk` přes `services/ai/guidelines.py:load_guidelines`. Když tabulka chybí, vyhodí `GuidelinesUnavailable` (nahrává ji T-203; `parse_guidelines()` je připravený parser markdownu).
+     - Vrací `PatientContext`:
+       - `render(highlight=[…])` = text pro LLM, řádky `[ID] datum text` seskupené podle témat, za nimi guidelines a studie;
+       - `allowed_ids` = povolené citace;
+       - `source_text(id)` = text zdroje pro grounding validátor;
+       - `facts` = pohlaví, věk, datum MDT, otázka, diagnózy (pro hlavičku D-018);
+       - `rule_results` = řádky z deterministických pravidel.
+     - Výběr sady guidelines a studií je v `services/rules/guideline_sets.py`. Pseudonymizace (`services/ai/pseudonymize.py`) běží nad každým řádkem a `pseudonymized` je počet náhrad pro audit.
+     - Kontext P03 má 171 resources, 256 řádků a ~41 tisíc znaků (~12 tisíc tokenů).
 3. **Generace:**
    - jeden Gemini call na sekci: A, B (každá přítomná role včetně posouzení role), B2, red flags (LLM část) a otázky; běží **paralelně** (ThreadPool);
    - teplota 0–0.2, **strukturovaný výstup** (`response_mime_type=application/json` + `response_schema` = pydantic schéma z [§8](#8-datové-kontrakty-fe--be));
@@ -872,7 +885,7 @@ WEB_Template/backend/
 │   ├── ai_service.py            # providery; GeminiProvider přepsat (google-genai, schema, embed, transcribe)
 │   ├── fhir/                ★   # client.py, ingest.py (sanitize + to_transaction), writeback.py, export.py
 │   ├── iris/                ★   # db.py (connect ctx manager), vector_store.py
-│   ├── ai/                  ★   # context_builder.py, pseudonymize.py, grounding.py, anamnesis.py, prompts/*.md
+│   ├── ai/                  ★   # context_builder.py, text.py (odstavce), guidelines.py, pseudonymize.py, grounding.py, anamnesis.py, prompts/*.md
 │   └── rules/               ★   # red_flags.py, intake.py, compatibility.py (+ data/compatibility_rules.yaml), readiness.py, recist.py, scales.py, guideline_sets.py
 └── mcp_server.py            ★   # (SHOULD) FastMCP nad IRIS
 ```

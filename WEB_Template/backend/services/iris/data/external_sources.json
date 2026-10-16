@@ -1,0 +1,148 @@
+{
+  "_comment": "Externí zdroje prahů pro semafor (D-016, T-504) → MDT.GuidelineChunk s GuidelineSet = EXT. Texty jsou přepis katalogu pravidel docs/POZADAVKY_LEKARE.md §5.3 a §6.1 (odkazy §13, ověřeno 16. 10. 2026); nic nad jeho rámec. ⚠ = jen sekundární souhrn nebo k ověření. Nikdy pro fakta pacienta.",
+  "sources": [
+    {
+      "evidence_id": "EXT-EMA-DPD-2020",
+      "title": "Deficit DPD před fluoropyrimidiny",
+      "source": "EMA 2020, referral článek 31 (fluorouracil, kapecitabin, tegafur)",
+      "url": "https://www.ema.europa.eu/en/documents/referral/fluorouracil-and-fluorouracil-related-substances-article-31-referral-new-testing-and-treatment-recommendations-fluorouracil-capecitabine-tegafur-and-flucytosine_en.pdf",
+      "region": "EU",
+      "icd_prefixes": "*",
+      "rules": ["VS-KRC-09"],
+      "verified": "ověřeno 16. 10. 2026",
+      "text": "5-FU, kapecitabin: kontrola deficitu DPD. Normální aktivita DPD → bez omezení. Částečný deficit → snížit úvodní dávku. Úplný deficit → nepodávat."
+    },
+    {
+      "evidence_id": "EXT-LUNGRADS-2022",
+      "title": "Lung-RADS v2022 (screeningové CT plic)",
+      "source": "ACR Lung-RADS v2022, souhrn",
+      "url": "https://ACR.org/-/media/ACR/Files/RADS/Lung-RADS/Lung-RADS-2022-Summary-_Final.pdf",
+      "region": "US",
+      "icd_prefixes": "C34",
+      "rules": ["BON-6"],
+      "verified": "⚠ kategorie ověřit proti PDF ACR",
+      "text": "Lung-RADS platí jen pro nález ze screeningového nízkodávkového CT plic; u jiného CT nelze použít. Solidní uzel: 2 = < 6 mm · 3 = 6 až < 8 mm · 4A = 8 až < 15 mm · 4B = ≥ 15 mm · 4X = přídatné suspektní znaky."
+    },
+    {
+      "evidence_id": "EXT-FLEISCHNER-2017",
+      "title": "Fleischner 2017 (náhodně zjištěný plicní uzel)",
+      "source": "Fleischner Society 2017 (MacMahon a kol., Radiology 2017), souhrn Cleveland Clinic",
+      "url": "https://consultqd.clevelandclinic.org/incidental-pulmonary-nodules-a-summary-of-the-2017-fleischner-society-guidelines",
+      "region": "INT",
+      "icd_prefixes": "C34",
+      "rules": ["BON-6"],
+      "verified": "⚠ tabulka velikostí a intervalů zatím není převzatá (doplnit z originální publikace)",
+      "text": "Fleischner 2017 platí jen pro náhodně zjištěný plicní uzel u dospělého ≥ 35 let bez známého nádoru, bez imunosuprese a mimo screening. U pacienta se známým nádorem se nevztahuje. Tabulka velikostí a intervalů kontrol zatím není převzatá, do té doby nelze posoudit."
+    },
+    {
+      "evidence_id": "EXT-G8-2023",
+      "title": "Geriatrický screening G8",
+      "source": "MDCalc G8; Frontiers in Oncology 2023",
+      "url": "https://www.mdcalc.com/calc/10426/g8-geriatric-screening-tool",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": ["VS-OBC-03"],
+      "verified": "ověřeno 16. 10. 2026",
+      "text": "Intenzivní léčba u věku ≥ 70 let: G8 > 14 → bez omezení; G8 ≤ 14 → komplexní geriatrické hodnocení. Povinnost screeningu: OBC-2.2."
+    },
+    {
+      "evidence_id": "EXT-VO2MAX-2016",
+      "title": "VO2max před lobektomií",
+      "source": "sekundární souhrn Springer 2016 (ověřit v ERS/ESTS 2025)",
+      "url": "https://link.springer.com/article/10.1007/s40137-016-0158-x",
+      "region": "INT",
+      "icd_prefixes": "C34",
+      "rules": ["VS-PLI-02"],
+      "verified": "⚠ sekundární souhrn, zdroje se liší; ověřit v ERS/ESTS 2025",
+      "text": "Lobektomie, zátěžová spiroergometrie: VO2max > 20 ml/kg/min → nízké riziko; 10–20 ml/kg/min → střední riziko; < 10 ml/kg/min → vysoké riziko. Zátěžový test je indikovaný při ppoFEV1 nebo ppoDLCO < 60 % (PLI-3.1)."
+    },
+    {
+      "evidence_id": "EXT-ACC-AHA-ESC-2022",
+      "title": "Infarkt myokardu a koronární stent před velkou operací",
+      "source": "ACC/AHA a ESC 2022 (sekundární souhrny: JAMA Surgery, The Hospitalist)",
+      "url": "https://jamanetwork.com/journals/jamasurgery/fullarticle/2825366",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": ["VS-CHIR-01"],
+      "verified": "⚠ sekundární souhrny",
+      "text": "Velká operace: infarkt myokardu před > 60 dny a stent před > 6 měsíci → bez omezení. Lékový stent ≤ 6 měsíců → pozor. Infarkt myokardu ≤ 60 dní → vysoké riziko."
+    },
+    {
+      "evidence_id": "EXT-GALSKY-2011",
+      "title": "Kritéria nezpůsobilosti pro cisplatinu",
+      "source": "Galsky a kol. 2011 (konsenzus, uroteliální karcinom), souhrn Healio",
+      "url": "https://www.healio.com/news/hematology-oncology/20120325/panel-proposes-consensus-definition-of-cisplatin-ineligibility-criteria",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": ["VS-PLI-11"],
+      "verified": "⚠ kritéria vznikla u uroteliálního karcinomu, pro plíce potvrdí lékař",
+      "text": "Cisplatina: CrCl ≥ 60 ml/min a žádné další kritérium → bez omezení. CrCl < 60 ml/min, neuropatie ≥ G2, ztráta sluchu ≥ G2, ECOG 2 nebo srdeční selhání NYHA III → zvážit karboplatinu."
+    },
+    {
+      "evidence_id": "EXT-ICI-AUTOIMMUNE-2018",
+      "title": "Imunoterapie a autoimunitní onemocnění",
+      "source": "přehled PMC 2018",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6045736",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": ["VS-PLI-08"],
+      "verified": "⚠ k ověření lékařem",
+      "text": "Imunoterapie: autoimunitní onemocnění se systémovou léčbou nebo transplantace → pozor. Takoví pacienti byli vyřazeni z registračních studií a hrozí vzplanutí autoimunity."
+    },
+    {
+      "evidence_id": "EXT-AVASTIN-FDA-2020",
+      "title": "Bevacizumab: kontraindikace a interval před operací",
+      "source": "příbalový text Avastin (FDA 2020); monografie Cancer Care Ontario",
+      "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/125085s337lbl.pdf",
+      "region": "US",
+      "icd_prefixes": "*",
+      "rules": ["VS-KRC-08", "VS-CHIR-03"],
+      "verified": "ověřeno 16. 10. 2026",
+      "text": "Bevacizumab: krevní tlak pod kontrolou, bez arteriální tromboembolie, proteinurie < 2 g/24 h → bez omezení. Arteriální tromboembolie nebo infarkt myokardu v anamnéze → opatrnost. Nekontrolovaná hypertenze → nezahajovat; proteinurie ≥ 2 g/24 h → přerušit; nefrotický syndrom → ukončit. Interval před operací uvádí americký příbalový text 28 dní; dodané guidelines jsou přísnější (≥ 6 týdnů, KRC-2.3)."
+    },
+    {
+      "evidence_id": "EXT-KISQALI-SMPC-UK",
+      "title": "Ribociklib: QTcF a inhibitory CYP3A",
+      "source": "Kisqali SmPC/PI (UK); Cancer Care Ontario",
+      "url": "https://pro.novartis.com/uk-en/sites/pro_novartis_com_uk/files/2025-01/kisqali-pi.pdf",
+      "region": "UK",
+      "icd_prefixes": "C50",
+      "rules": ["VS-PRS-05", "VS-PRS-09"],
+      "verified": "ověřeno 16. 10. 2026",
+      "text": "Ribociklib: QTcF < 450 ms → bez omezení; QTcF ≥ 450 ms → nezahajovat; QTcF > 480 ms → přerušit. Silné inhibitory CYP3A (např. grapefruit) a induktory (např. třezalka) při léčbě → vyřešit."
+    },
+    {
+      "evidence_id": "EXT-ZOMETA-SMPC-UK",
+      "title": "Kyselina zoledronová: dávka podle clearance kreatininu",
+      "source": "Zometa SmPC (UK eMC)",
+      "url": "https://www.medicines.org.uk/emc/product/12754/smpc/print",
+      "region": "UK",
+      "icd_prefixes": "*",
+      "rules": ["VS-PRS-12", "VS-OBC-08"],
+      "verified": "ověřeno 16. 10. 2026",
+      "text": "Kyselina zoledronová: CrCl ≥ 60 ml/min → 4 mg; CrCl 30–59 ml/min → snížit dávku na 3,0–3,5 mg; CrCl < 30 ml/min → nedoporučeno."
+    },
+    {
+      "evidence_id": "EXT-PIQRAY-TGA-2020",
+      "title": "Alpelisib a diabetes",
+      "source": "PI PIQRAY (TGA 2020); Cancer Care Ontario",
+      "url": "https://tga.gov.au/sites/default/files/auspar-alpelisib-200820-pi.pdf",
+      "region": "AU",
+      "icd_prefixes": "C50",
+      "rules": ["VS-PRS-06"],
+      "verified": "⚠ k ověření lékařem",
+      "text": "Alpelisib (PI3K inhibitor): bez diabetu a s glykémií v normě → bez omezení. Diabetes → upravit glykémii před zahájením. Nekompenzovaný diabetes 2. typu nebo diabetes 1. typu → bezpečnost nestanovena."
+    },
+    {
+      "evidence_id": "EXT-TDXD-ILD-2022",
+      "title": "Trastuzumab deruxtekan a intersticiální plicní onemocnění",
+      "source": "Swain a kol. 2022 (PubMed)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/35430509/",
+      "region": "INT",
+      "icd_prefixes": "C50",
+      "rules": ["VS-PRS-02"],
+      "verified": "⚠ přesné znění SmPC ověřit",
+      "text": "Trastuzumab deruxtekan (T-DXd): intersticiální plicní onemocnění (ILD) nebo pneumonitida v anamnéze → pozor, riziko ILD hodnotit před léčbou (PRS-2.3; vyřazení ve studii RKT-02/V1)."
+    }
+  ]
+}

@@ -79,6 +79,7 @@ class Command(BaseCommand):
         guidelines = indexing.guideline_chunks(root)
         for warning in indexing.guideline_count_warnings(guidelines):
             self.stdout.write(self.style.WARNING(f'⚠ {warning}'))
+        guidelines += indexing.external_chunks()        # EXT-… pro semafor (T-504, D-016)
 
         if offline:
             studies = next((p.resources for p in report.parts if p.label == 'studie'), [])
@@ -86,7 +87,8 @@ class Command(BaseCommand):
                           if p.label in patients}
             self.stdout.write(
                 f'Vektory (nic neodesláno): odstavce {paragraphs} = {sum(paragraphs.values())}, '
-                f'guidelines {len(guidelines)}, kritéria studií {len(indexing.trial_criteria(studies))}.'
+                f'guidelines {len(guidelines)} (z toho EXT {sum(g.GuidelineSet == "EXT" for g in guidelines)}), '
+                f'kritéria studií {len(indexing.trial_criteria(studies))}.'
             )
             return
 
@@ -96,9 +98,9 @@ class Command(BaseCommand):
                 '⚠ AI_PROVIDER=mock: vektory jsou hashované (jen lexikální podobnost). Pro Gemini nastav '
                 'AI_PROVIDER=gemini + GEMINI_API_KEY (placený tier, Q9) a spusť znovu s --skip-fhir.'
             ))
-        created = vs.ensure_schema(recreate)
-        if created:
-            self.stdout.write(f'Založeny tabulky: {", ".join(created)}')
+        changes = vs.ensure_schema(recreate)
+        if changes:
+            self.stdout.write(f'Schéma MDT.*: založeno / doplněno {", ".join(changes)}')
         for pid in patients:
             n = indexing.index_patient(pid, provider=provider)       # čte z IRIS FHIR
             self.stdout.write(f'  MDT.EvidenceChunk {pid}: {n} odstavců')

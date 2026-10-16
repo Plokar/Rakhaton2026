@@ -73,6 +73,29 @@ def test_search_guidelines_by_diagnosis(indexed):
     assert vs.get_guideline('XYZ-1.1') is None
 
 
+def test_external_sources_resolve_with_url_and_stay_out_of_guideline_sets(indexed):
+    """T-504: EXT-… je v MDT.GuidelineChunk se znením a odkazem; do sad podle diagnózy se nemíchá (D-016)."""
+    indexing.index_guidelines(indexing.external_chunks())
+    row = vs.get_guideline('EXT-EMA-DPD-2020')
+    assert row['GuidelineSet'] == 'EXT' and row['Url'].startswith('https://www.ema.europa.eu/')
+    assert 'Úplný deficit → nepodávat' in row['Text'] and 'VS-KRC-09' in row['Text']
+    assert vs.get_guideline('KRC-2.4')['Url'] is None
+    assert vs.search_guidelines('deficit DPD fluoropyrimidiny', ['EXT'], top_k=1)[0]['EvidenceId'] == 'EXT-EMA-DPD-2020'
+    assert all(r['GuidelineSet'] != 'EXT' for r in vs.search_guidelines('DPD', ['KRC', 'OBC'], top_k=50))
+    assert vs.similarity('úplný deficit DPD', ['EXT-EMA-DPD-2020'])['EXT-EMA-DPD-2020'] > 0
+
+
+def test_ensure_schema_adds_missing_columns(fake_iris):
+    """Tabulka ze starší verze (bez Url) se doplní ALTER TABLE, data zůstanou."""
+    old_ddl = vs._ddl('GuidelineChunk', 1536).replace(', Url VARCHAR(500)', '')
+    fake_iris.execute(old_ddl, [])
+    fake_iris.rows('MDT.GuidelineChunk').append({'EvidenceId': 'KRC-1.1'})
+    changes = vs.ensure_schema()
+    assert 'MDT.GuidelineChunk.Url' in changes and 'MDT.EvidenceChunk' in changes
+    assert 'Url' in fake_iris.tables['MDT.GuidelineChunk']['columns'] and len(fake_iris.rows('MDT.GuidelineChunk')) == 1
+    assert vs.ensure_schema() == []
+
+
 def test_context_builder_reads_guidelines_written_by_ingest(indexed):
     """Spoj T-203 → T-105: ``load_guidelines`` (services/ai) čte, co sem zapsal ingest."""
     passages = ai_guidelines.load_guidelines(['KRC', 'OBC'])
@@ -116,15 +139,15 @@ def test_ingest_command_builds_vectors_from_iris(fake_fhir, fake_iris, dataset_r
     text = out.getvalue()
     from_files = len(indexing.evidence_chunks('P03', ingest.load_patient(dataset_root, 'P03')))
     assert from_files == 85 and f'MDT.EvidenceChunk P03: {from_files} odstavců' in text    # čteno z FHIR = soubory
-    assert "'KRC': 9" in text and 'MDT.TrialCriterion:' in text and 'AI_PROVIDER=mock' in text
+    assert "'KRC': 9" in text and "'EXT': 13" in text and 'MDT.TrialCriterion:' in text and 'AI_PROVIDER=mock' in text
     assert {r['PatientId'] for r in fake_iris.rows('MDT.EvidenceChunk')} == {'P03'}
-    assert len(fake_iris.rows('MDT.GuidelineChunk')) == 42 and fake_iris.open_connections == 0
+    assert len(fake_iris.rows('MDT.GuidelineChunk')) == 42 + 13 and fake_iris.open_connections == 0
 
 
 def test_ingest_command_dry_run_counts_vectors_offline(dataset_root):
     out = StringIO()
     call_command('ingest_dataset', '--dry-run', dataset_dir=str(dataset_root), stdout=out)
-    assert '= 665, guidelines 42' in out.getvalue()
+    assert '= 665, guidelines 55 (z toho EXT 13)' in out.getvalue()
 
 
 def test_search_iris_command(indexed):

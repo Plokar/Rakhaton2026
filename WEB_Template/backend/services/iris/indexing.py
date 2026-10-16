@@ -4,10 +4,13 @@
   ``services/ai/text.py`` (stejné jako v context builderu a resolveru, jinak ``P03-img03#2`` ukáže jinam).
 - T-203: pasáže guidelines → ``MDT.GuidelineChunk`` (parser ``services/ai/guidelines.py``),
   kritéria studií (``Group.characteristic``) → ``MDT.TrialCriterion``.
+- T-504: externí zdroje prahů semaforu ``EXT-…`` (``data/external_sources.json``) → ``MDT.GuidelineChunk``
+  se sadou ``EXT`` a odkazem v ``Url`` (D-016). Jen pro pravidla semaforu, nikdy pro fakta pacienta.
 
 ``index_patient(pid)`` čte pacienta z IRIS FHIR, takže ho jde zavolat i po zápisu závěru komise
 (T-209), aby šel nový ``Composition/Pxx-mdtNN`` vyhledat a citovat.
 """
+import json
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -16,11 +19,14 @@ from typing import Iterable
 from services.ai.guidelines import parse_guidelines
 from services.ai.text import resource_paragraphs
 from services.fhir import client as fhir
+from services.fhir.ids import parse_evidence_id
 from services.iris import vector_store as vs
 from services.rules.guideline_sets import GUIDELINE_SET_ORDER, ICD10_PREFIX_TO_SET
 
 TEXT_TYPES = ('DocumentReference', 'DiagnosticReport', 'Composition', 'ServiceRequest')   # = services/ai/text.py
 EXPECTED_GUIDELINES = {'KRC': 9, 'PRS': 14, 'PLI': 10, 'OBC': 9}                         # DATASET §7, celkem 42
+EXTERNAL_SOURCES_FILE = Path(__file__).resolve().parent / 'data' / 'external_sources.json'
+EXTERNAL_SET = 'EXT'
 GUIDELINE_REGION = 'CZ'
 _ISO_DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
 
@@ -122,6 +128,21 @@ def index_guidelines(chunks: list[vs.GuidelineChunk], provider=None) -> dict[str
     for c in chunks:
         by_set[c.GuidelineSet].append(c)
     return {s: vs.replace_guidelines(s, rows, provider) for s, rows in by_set.items()}
+
+
+def external_chunks(path: Path = EXTERNAL_SOURCES_FILE) -> list[vs.GuidelineChunk]:
+    """Katalog ``EXT-…`` (přepis docs/POZADAVKY_LEKARE.md §5.3, §6.1, §13). Stav ověření je součást textu."""
+    out = []
+    for item in json.loads(path.read_text(encoding='utf-8'))['sources']:
+        ref = parse_evidence_id(item['evidence_id'])
+        if ref is None or ref.kind != 'external':
+            raise ValueError(f"{item['evidence_id']}: neplatné Evidence ID externího zdroje (EXT-…, ARCH §5.2)")
+        out.append(vs.GuidelineChunk(
+            EvidenceId=item['evidence_id'], GuidelineSet=EXTERNAL_SET, Title=item['title'][:300],
+            Source=item['source'][:200], Region=item['region'], IcdPrefixes=item['icd_prefixes'],
+            Text=f"{item['text']} [{item['verified']}; pravidla {', '.join(item['rules'])}]", Url=item['url'],
+        ))
+    return out
 
 
 def trial_criteria(resources: Iterable[dict]) -> list[vs.TrialCriterion]:

@@ -2,10 +2,10 @@
 
 Nahrazuje ``services.iris.db.connect``, takže funguje ``services/iris/vector_store.py`` i
 ``services/ai/guidelines.py:load_guidelines``. Umí jen podmnožinu SQL, kterou tyto moduly posílají:
-``CREATE TABLE`` / ``CREATE INDEX`` / ``DROP TABLE``, ``INSERT … TO_VECTOR(?, DOUBLE)``,
+``CREATE TABLE`` / ``CREATE INDEX`` / ``DROP TABLE`` / ``ALTER TABLE … ADD``, ``INSERT … TO_VECTOR(?, DOUBLE)``,
 ``DELETE … WHERE``, ``SELECT [TOP n] … [VECTOR_COSINE(…) AS Score] … WHERE a = ? AND b IN (?, ?)
 [ORDER BY Score DESC]``, ``GROUP BY [%EXACT(]sloupec[)]`` (bez ``%EXACT`` vrací velká písmena jako kolace
-SQLUPPER v IRIS) a dotaz na ``INFORMATION_SCHEMA.TABLES``.
+SQLUPPER v IRIS) a dotazy na ``INFORMATION_SCHEMA.TABLES`` / ``COLUMNS``.
 Neznámý příkaz, tabulka nebo sloupec vyhodí ``FakeIrisError`` (jako chyba SQL v IRIS).
 
 Hlídá i zavírání spojení (``open_connections``): Community Edition má limit spojení (AGENTS.md).
@@ -50,6 +50,8 @@ _SELECT = re.compile(
 )
 _SCORE = 'VECTOR_COSINE(Embedding, TO_VECTOR(?, DOUBLE)) AS Score'
 _EXISTS = 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?'
+_COLUMNS = 'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?'
+_ALTER_ADD = re.compile(r'ALTER TABLE (\w+)\.(\w+) ADD (\w+) (.+)$')
 
 
 class FakeIris:
@@ -76,6 +78,15 @@ class FakeIris:
         self.statements.append(sql)
         if sql == _EXISTS:
             return [(1 if f'{params[0]}.{params[1]}' in self.tables else 0,)]
+        if sql == _COLUMNS:
+            table = self.tables.get(f'{params[0]}.{params[1]}')
+            return [(c,) for c in table['columns']] if table else []
+        if m := _ALTER_ADD.match(sql):
+            table = self._table(m[1], m[2])
+            if m[3] in table['columns']:
+                raise FakeIrisError(f'Sloupec {m[3]} už existuje')
+            table['columns'].append(m[3])
+            return []
         if m := _CREATE.match(sql):
             name = f'{m[1]}.{m[2]}'
             if name in self.tables:

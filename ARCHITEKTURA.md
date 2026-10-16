@@ -505,6 +505,7 @@ CREATE TABLE MDT.GuidelineChunk (
     Region       VARCHAR(20),         -- "CZ"  (konzultace: zdroj a region postupu)
     IcdPrefixes  VARCHAR(100),        -- "C18,C19,C20" | "C50" | "C34" | "*" (OBC)
     Text         VARCHAR(5000),
+    Url          VARCHAR(500),        -- odkaz na zdroj u EXT-… (T-504), jinak NULL
     EmbeddingModel VARCHAR(100),
     Embedding    VECTOR(DOUBLE, 1536)
 );
@@ -529,7 +530,8 @@ ORDER BY Score DESC
 ```
 
 - **Implementace (T-102, T-203):** tabulky a dotazy `services/iris/vector_store.py`, plnění `services/iris/indexing.py`, příkazy `ingest_dataset` (FHIR + vektory) a `search_iris` (ruční ověření).
-  - Řádky: `MDT.EvidenceChunk` 665 (555 odstavců zpráv a nálezů + 81 sekcí záznamů MDT + 29 odstavců nominací; P03 má 85), `MDT.GuidelineChunk` 42, `MDT.TrialCriterion` 45 kritérií v 6 studiích.
+  - Řádky: `MDT.EvidenceChunk` 665 (555 odstavců zpráv a nálezů + 81 sekcí záznamů MDT + 29 odstavců nominací; P03 má 85), `MDT.GuidelineChunk` 42 + 13 `EXT-…` (T-504), `MDT.TrialCriterion` 45 kritérií v 6 studiích.
+  - **Schéma se doplňuje samo:** `ensure_schema()` (volá ho `ingest_dataset`) založí chybějící tabulky a chybějící sloupce přidá přes `ALTER TABLE … ADD` (např. `Url` z T-504), data zůstanou. Zahodit a založit znovu: `--recreate-vector-tables`.
   - **`EmbeddingModel`:** hledá se jen mezi řádky aktuálního modelu (`provider:model@dim`), takže se vektory z mocku a z Gemini nikdy nesmíchají. Po přepnutí `AI_PROVIDER` nebo `EMBEDDING_MODEL` je potřeba reindex: `ingest_dataset --skip-fhir`. Dokud neproběhne, hledání vrací prázdný seznam a loguje varování.
   - **API pro ostatní úkoly:**
     - `search_evidence(pid, q, top_k)` → řádky se `Score`, `EvidenceId` se rovnou hodí do `PatientContext.render(highlight=…)` (T-105). Bez `pid` vyhodí `ValueError` (NFR-2);
@@ -652,7 +654,7 @@ ORDER BY Score DESC
   | `Pxx-…#n` | `P03-img03#4` | n-tý odstavec textu |
   | `KRC-2.4` | `KRC-2.4` | pasáž guidelines |
   | `RKT-03` / `RKT-03/V3` | `RKT-03/V3` | studie / kritérium |
-  | `EXT-…` | `EXT-EMA-DPD-2020` | externí zdroj prahu (D-016); jen pro pravidla semaforu, nikdy pro fakta pacienta |
+  | `EXT-…` | `EXT-EMA-DPD-2020` | externí zdroj prahu (D-016); jen pro pravidla semaforu, nikdy pro fakta pacienta. **Katalog ID (13):** `WEB_Template/backend/services/iris/data/external_sources.json` (přepis docs/POZADAVKY_LEKARE.md §5.3, §6.1, §13), v IRIS `MDT.GuidelineChunk` se sadou `EXT` a `Url` |
 
   Citace pro guidelines a kritéria studií ukazují na znění guideline nebo studie. Faktům pacienta se vždy cituje ID pacienta.
 - LLM dostane **jen povolená ID** (z evidence listu) a smí citovat **pouze je**.

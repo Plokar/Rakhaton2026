@@ -3,6 +3,7 @@ from collections import Counter
 
 from services.ai.text import resource_text
 from services.fhir import ingest
+from services.fhir.ids import parse_evidence_id
 from services.iris import indexing
 
 
@@ -56,3 +57,15 @@ def test_trial_criteria(dataset_root):
     assert by_id['RKT-03/V3'].Kind == 'exclusion' and 'neuropat' in by_id['RKT-03/V3'].Text.lower()
     assert by_id['RKT-03/Z1'].Kind == 'inclusion'
     assert by_id['RKT-06/Z4'].StudyId == 'RKT-06'
+
+
+def test_external_chunks_catalog():
+    """T-504: katalog EXT-… z docs/POZADAVKY_LEKARE.md §5.3 / §6.1 / §13 (D-016)."""
+    chunks = indexing.external_chunks()
+    ids = [c.EvidenceId for c in chunks]
+    assert len(ids) == len(set(ids)) == 13
+    assert {'EXT-EMA-DPD-2020', 'EXT-LUNGRADS-2022'} <= set(ids)                   # ID z ARCH §5.2 a POZADAVKY §6.1
+    for c in chunks:
+        assert parse_evidence_id(c.EvidenceId).kind == 'external'
+        assert c.GuidelineSet == 'EXT' and c.Url.startswith('https://') and len(c.Url) <= 500
+        assert len(c.Source) <= 200 and len(c.Title) <= 300 and '[' in c.Text      # stav ověření a pravidla

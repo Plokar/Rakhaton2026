@@ -47,6 +47,7 @@ class GuidelineChunk:
     Region: str                # "CZ"
     IcdPrefixes: str           # "C18,C19,C20" | "C50" | "C34" | "*"
     Text: str
+    Url: str | None = None     # odkaz na zdroj, u EXT-… (T-504); u guidelines datasetu prázdné
 
 
 @dataclass
@@ -67,6 +68,7 @@ _COLUMNS = {
     'GuidelineChunk': (GuidelineChunk, {
         'EvidenceId': 'VARCHAR(50)', 'GuidelineSet': 'VARCHAR(10)', 'Title': 'VARCHAR(300)',
         'Source': 'VARCHAR(200)', 'Region': 'VARCHAR(20)', 'IcdPrefixes': 'VARCHAR(100)', 'Text': 'VARCHAR(5000)',
+        'Url': 'VARCHAR(500)',
     }, ('GuidelineSet',)),
     'TrialCriterion': (TrialCriterion, {
         'EvidenceId': 'VARCHAR(50)', 'StudyId': 'VARCHAR(16)', 'Kind': 'VARCHAR(10)', 'Text': 'VARCHAR(2000)',
@@ -79,10 +81,13 @@ def _table(name: str) -> str:
     return f'{SCHEMA}.{name}'
 
 
-def _ddl(name: str, dim: int) -> str:
+def _column_types(name: str, dim: int) -> dict[str, str]:
     _, columns, _ = _COLUMNS[name]
-    cols = [f'{col} {sql_type}' for col, sql_type in columns.items()]
-    cols += ['EmbeddingModel VARCHAR(100)', f'Embedding VECTOR(DOUBLE, {dim})']
+    return {**columns, 'EmbeddingModel': 'VARCHAR(100)', 'Embedding': f'VECTOR(DOUBLE, {dim})'}
+
+
+def _ddl(name: str, dim: int) -> str:
+    cols = [f'{col} {sql_type}' for col, sql_type in _column_types(name, dim).items()]
     return f'CREATE TABLE {_table(name)} ({", ".join(cols)})'
 
 
@@ -125,10 +130,21 @@ def _table_exists(cursor, name: str) -> bool:
     return cursor.fetchone()[0] > 0
 
 
+def _missing_columns(cursor, name: str, dim: int) -> dict[str, str]:
+    cursor.execute(
+        'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?', [SCHEMA, name],
+    )
+    existing = {row[0].lower() for row in cursor.fetchall()}
+    return {col: t for col, t in _column_types(name, dim).items() if col.lower() not in existing}
+
+
 def ensure_schema(recreate: bool = False) -> list[str]:
-    """Založí chybějící tabulky (idempotentní). ``recreate`` = zahodit a založit znovu (jiná dimenze)."""
+    """Založí chybějící tabulky a doplní chybějící sloupce (idempotentní, vrací provedené změny).
+
+    ``recreate`` = zahodit a založit znovu (např. jiná ``EMBEDDING_DIM``).
+    """
     dim = ai_service.embedding_dim()
-    created = []
+    changes = []
     with _cursor(commit=True) as cursor:
         for name, (_, _, indexed) in _COLUMNS.items():
             exists = _table_exists(cursor, name)
@@ -139,8 +155,12 @@ def ensure_schema(recreate: bool = False) -> list[str]:
                 cursor.execute(_ddl(name, dim))
                 for col in indexed:
                     cursor.execute(f'CREATE INDEX {name}{col}Idx ON {_table(name)} ({col})')
-                created.append(_table(name))
-    return created
+                changes.append(_table(name))
+                continue
+            for col, sql_type in _missing_columns(cursor, name, dim).items():   # novější verze schématu (Url, T-504)
+                cursor.execute(f'ALTER TABLE {_table(name)} ADD {col} {sql_type}')
+                changes.append(f'{_table(name)}.{col}')
+    return changes
 
 
 # ── Zápis ─────────────────────────────────────────────────────────────────────

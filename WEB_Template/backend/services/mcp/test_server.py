@@ -61,6 +61,9 @@ def test_get_evidence_kinds(iris):
     assert obs['resource']['valueQuantity']['value'] == 13.9
     assert server.get_evidence('KRC-2.4')['Title'] == 'Restaging před resekcí'
     assert server.get_evidence('RKT-03/V3')['Kind'] == 'exclusion'
+    indexing.index_guidelines(indexing.external_chunks())
+    ext = server.get_evidence('EXT-EMA-DPD-2020')                      # T-504: znění a odkaz
+    assert ext['kind'] == 'external' and ext['Url'].startswith('https://') and 'DPD' in ext['Text']
     assert 'error' in server.get_evidence('P03-img03#99')
     assert 'error' in server.get_evidence('nesmysl')
     assert 'error' in server.get_evidence('P03-doc99')

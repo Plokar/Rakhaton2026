@@ -126,7 +126,8 @@ def test_generate_brief_job_interface(monkeypatch):
     schemas.Brief.model_validate(result)
     assert result["case_id"] == "12" and result["model"] == "mock"
     roles = brief_module.DEFAULT_CONFIG["roles_present"]
-    assert sorted(calls) == sorted([("brief.rf_llm", "success"), ("brief.summary", "success")]
+    assert sorted(calls) == sorted([("brief.rf_llm", "success"), ("brief.summary", "success"),
+                                    ("brief.recist.extract", "success")]
                                    + [(f"brief.role.{r}", "success") for r in roles])
     assert progress[0] == 5 and progress[-1] == 100 and progress == sorted(progress)
 
@@ -164,7 +165,7 @@ def test_grounding_v2_rejects_semantically_wrong_citation(p03_context, monkeypat
 
     monkeypatch.setattr(vector_store, "similarity", lambda text, citations: {citations[0]: 0.21})
     result = verify_claims([
-        {"kind": "claim", "text": "CEA 13,9 µg/l", "citations": ["P03-lab06-cea"]},
+        {"kind": "claim", "text": "CT z 21. 9. 2026 bez hrudníku", "citations": ["P03-img03"]},
     ], p03_context)[0]
     assert result["verification"] == "unverified"
     assert "sémantická podobnost" in result["_grounding"][0]
@@ -189,3 +190,15 @@ def test_grounding_v2_accepts_matching_citation_and_keeps_missing_exempt(p03_con
         {"kind": "missing", "text": "MMR chybí", "citations": []},
     ], p03_context)
     assert [item["verification"] for item in result] == ["verified", "verified"]
+
+
+def test_grounding_v2_skips_structured_citations_without_vectors(p03_context, monkeypatch):
+    """Q23: strukturovaná data (lab, TNM, biomarkery) vektor nemají, stačí jim body 1–3."""
+    from services.iris import vector_store
+
+    monkeypatch.setattr(vector_store, "similarity", lambda text, citations: {})
+    result = verify_claims([
+        {"kind": "claim", "text": "CEA 13,9 µg/l", "citations": ["P03-lab06-cea"]},
+        {"kind": "claim", "text": "CT z 21. 9. 2026 bez hrudníku", "citations": ["P03-img03"]},
+    ], p03_context)
+    assert [item["verification"] for item in result] == ["verified", "unverified"]

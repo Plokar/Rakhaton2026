@@ -39,9 +39,9 @@ def _imaging_resources(context: PatientContext) -> list[dict]:
     for line in context.evidence:
         if line.group != "imaging" or line.resource_type != "DiagnosticReport":
             continue
-        current = found.get(line.resource_id)
-        if current is None or line.id == line.resource_id:
-            found[line.resource_id] = {"citation": line.resource_id, "date": line.date, "text": line.text}
+        item = found.setdefault(line.resource_id, {"citation": line.resource_id, "date": line.date, "text": ""})
+        item["date"] = item["date"] or line.date
+        item["text"] = f"{item['text']}\n{line.text}".strip()     # hlavička + všechny odstavce zprávy
     return list(found.values())
 
 
@@ -98,10 +98,13 @@ def recist_claim(context: PatientContext, provider: BaseAIProvider,
         return None
     baseline, current, nadir = evaluated["baseline"], evaluated["current"], evaluated["nadir"]
     change = evaluated["change_from_baseline_pct"]
-    citations = list(dict.fromkeys([baseline["citation"], current["citation"]]))
+    citations = list(dict.fromkeys([baseline["citation"], nadir["citation"], current["citation"]]))
     text = (
         f"RECIST 1.1, cílové léze: SLD {baseline['sld_mm']:g} → {current['sld_mm']:g} mm "
         f"({change:+.0f} % od baseline), nadir {nadir['sld_mm']:g} mm; odpověď {evaluated['response']}. "
         "Jde o předběžné hodnocení cílových lézí; nové a necílové léze potvrzuje radiolog."
     )
-    return {"id": "radiologist-recist", "kind": "claim", "text": text, "citations": citations}
+    # Text i citace sestavuje kód z ověřených měření, ne LLM: vektorovou kontrolu přeskočí (`_computed`).
+    # Procento je odvozené (ve zdroji není), grounding ho nekontroluje (`_derived`).
+    return {"id": "radiologist-recist", "kind": "claim", "text": text, "citations": citations,
+            "_computed": True, "_derived": [f"{abs(change):.0f}"]}

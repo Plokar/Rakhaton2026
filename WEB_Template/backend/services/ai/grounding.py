@@ -7,8 +7,12 @@ Každé tvrzení (`Claim`) projde kontrolami; výsledek nastavuje `verification`
 2. čísla z tvrzení (desetinná čárka i tečka) jsou v citovaných zdrojích;
 3. data z tvrzení (ISO i „21. 9.“ / „21. 9. 2026“) jsou v citovaných zdrojích.
 
-Vektorová podobnost tvrzení a zdroje přijde v2 (T-213). Chybějící údaje (`kind = "missing"`) se jen
-kontrolují na existenci citací.
+4. (v2, T-213) vektorová podobnost tvrzení a citovaných textů, ale jen když **všechny** citace mají
+   vektor (odstavce, textové zprávy, guidelines, kritéria studií). Strukturovaná data (`bm`, `tnm`, `dg`,
+   `proc`, ECOG…) vektor nemají a stačí jim body 1–3 (Q23). Stejně tvrzení, která sestavil kód
+   (`_computed`, např. RECIST), protože citace k nim nepřiřazuje LLM.
+
+Chybějící údaje (`kind = "missing"`) se jen kontrolují na existenci citací.
 """
 from __future__ import annotations
 
@@ -18,6 +22,7 @@ import os
 import re
 from dataclasses import dataclass, field
 
+from services.ai.abbreviations import TEXT_TYPES
 from services.ai.context_builder import PatientContext
 
 log = logging.getLogger(__name__)
@@ -62,6 +67,17 @@ def source_text(context: PatientContext, evidence_id: str) -> str:
     return context.source_text(evidence_id) or ""
 
 
+def has_vector(context: PatientContext, evidence_id: str) -> bool:
+    """Má citace text indexovaný v IRIS Vector Search (`MDT.EvidenceChunk` / `GuidelineChunk` / `TrialCriterion`)?"""
+    if "#" in evidence_id:
+        return True
+    if any(p.evidence_id == evidence_id for p in context.guidelines):
+        return True
+    if any(c.evidence_id == evidence_id for t in context.trials for c in t.criteria):
+        return True
+    return any(line.resource_id == evidence_id and line.resource_type in TEXT_TYPES for line in context.evidence)
+
+
 def check_claim(claim: dict, context: PatientContext) -> GroundingResult:
     citations = claim.get("citations") or []
     allowed = context.allowed_ids
@@ -72,7 +88,7 @@ def check_claim(claim: dict, context: PatientContext) -> GroundingResult:
     if not citations:
         return GroundingResult(False, ["tvrzení bez citace"])
     sources = "\n".join(source_text(context, c) for c in citations if c in allowed)
-    missing_numbers = _numbers(claim.get("text", "")) - _numbers(sources)
+    missing_numbers = _numbers(claim.get("text", "")) - _numbers(sources) - set(claim.get("_derived") or [])
     reasons += [f"číslo {n} není ve zdroji" for n in sorted(missing_numbers)]
     missing_dates = _dates(claim.get("text", "")) - _dates(sources)
     reasons += [f"datum {d}. {m}. není ve zdroji" for d, m in sorted(missing_dates)]
@@ -95,11 +111,14 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
     out = []
     for claim in claims:
         result = check_claim(claim, context)
-        if result.verified and claim.get("kind") != "missing":
+        citations = claim.get("citations") or []
+        semantic = (claim.get("kind") != "missing" and not claim.get("_computed")
+                    and all(has_vector(context, c) for c in citations))
+        if result.verified and semantic:
             try:
                 from services.iris.vector_store import similarity
 
-                scores = similarity(claim.get("text", ""), claim.get("citations") or [])
+                scores = similarity(claim.get("text", ""), citations)
                 valid_scores = [score for score in scores.values()
                                 if isinstance(score, (int, float)) and math.isfinite(score)]
                 if not valid_scores:

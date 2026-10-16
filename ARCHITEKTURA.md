@@ -812,6 +812,8 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - Chybějící údaj je `missing` s `expected_source` = pasáž, která ho vyžaduje (např. VO2max → PLI-3.1).
   - Sekce `modalities` („Léčebné metody a odborníci“): pro každou `mdt-modalita` ze semaforu kdo se musí vyjádřit, co má mít u sebe a které postupy ze sady guidelines k ní patří, s citací pasáží a faktů pacienta.
   - Obojí sestavuje kód (`_computed`), proto se přeskočí bod 4 groundingu. Body 1–3 platí.
+- **Anamnéza (FR-A5, T-507):** `services/ai/anamnesis.py` vezme z odstavců `DocumentReference` nejnovější znění každé sekce (NO, OA, FA včetně „Léková anamnéza“, alergie, RA, GA, SA, „Anamnéza“) s citací odstavce. Do `INTAKE_ANAMNESIS_MAX_CHARS` (600) jde doslovně, nad limit shrnutí LLM s citacemi jen na tyto odstavce (fallback: první věta každé sekce + „…“). Sekce `anamnesis` běží v poolu souběžně s ostatními voláními. Doslovné znění otevře klik na citaci (přepínač `AnamnesisBlock` je volitelný UI krok).
+- **Lung-RADS / Fleischner (BON-6, T-508):** `services/rules/scales.py:evaluate_scales(resources)` → `{scale, applicable, category, reason, patient_citations, rule_citation}` (`EXT-LUNGRADS-2022`, `EXT-FLEISCHNER-2017`). Lung-RADS jen u screeningového nízkodávkového CT plic (kategorie podle velikosti solidního uzlu), Fleischner jen u náhodného uzlu bez známého nádoru, ≥ 35 let a mimo screening (tabulka intervalů zatím ⚪). Výsledek je tvrzení v sekci radiologa a pneumologa; u všech 6 pacientů „nelze použít“ s důvodem. Imunosuprese se zatím nekontroluje.
 
 ### 5.6 AI zapisovatel (BON-3)
 

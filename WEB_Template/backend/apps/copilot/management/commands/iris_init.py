@@ -1,13 +1,11 @@
 """Idempotentně založí FHIR server v IRIS a Device/mdt-copilot (ARCH §4.2, podle kitu fhir_server_setup_native.py)."""
-import base64
-import json
 import os
 import time
-import urllib.request
 
 import iris
 from django.core.management.base import BaseCommand, CommandError
 
+from services.fhir import client as fhir
 from services.iris.db import connect
 
 NAMESPACE = 'FHIRSERVER'
@@ -56,26 +54,10 @@ class Command(BaseCommand):
                 time.sleep(2)
 
     def _put_device(self):
-        # ponytail: urllib místo FHIR klienta, services/fhir/client.py přijde v T-006
-        base = os.environ.get('FHIR_BASE_URL', 'http://iris:52773/fhir/r4')
-        device = {
+        fhir.put({
             'resourceType': 'Device',
             'id': 'mdt-copilot',
             'deviceName': [{'name': 'MDT Copilot', 'type': 'user-friendly-name'}],
             'version': [{'value': os.environ.get('AI_MODEL', 'gemini-3.8-flash')}],
-        }
-        auth = base64.b64encode(
-            f"{os.environ.get('IRIS_USER', 'SuperUser')}:{os.environ.get('IRIS_PASSWORD', 'SYS')}".encode()
-        ).decode()
-        req = urllib.request.Request(
-            f'{base}/Device/mdt-copilot',
-            data=json.dumps(device).encode(),
-            method='PUT',
-            headers={
-                'Content-Type': 'application/fhir+json',
-                'Accept': 'application/fhir+json',
-                'Authorization': f'Basic {auth}',
-            },
-        )
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            self.stdout.write(f'PUT Device/mdt-copilot → HTTP {resp.status}')
+        })
+        self.stdout.write('PUT Device/mdt-copilot OK')

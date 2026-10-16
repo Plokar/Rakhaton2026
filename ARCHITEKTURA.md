@@ -974,8 +974,10 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 
 | Route | Obsah |
 |---|---|
+| `/` | přesměruje na `/dashboard` (veřejná landing page není) |
 | `/login` | z templatu + 1-click demo účty (předseda, chirurg, onkolog…) |
 | `/dashboard` | **boardy** (zasedání 2026-10-14 a 2026-10-21), případy a jejich stav, úkoly po termínu; předseda zakládá board a mění termín |
+| `/dashboard/mdt` | seznam zasedání (boardů) s termínem → agenda; v navigaci „Zasedání“ |
 | `/dashboard/mdt/[sessionId]` | agenda zasedání: pacienti, readiness, stav, přesun pacienta do jiného boardu, tlačítko „Zařadit pacienta“ |
 | `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4): předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
@@ -985,7 +987,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |
 | `/dashboard/tasks` | úkoly po zasedání |
 
-Template stránky `projects`, `storage`, `realtime` a `ai` skrýt z navigace (`DashboardLayout.tsx`).
+Navigace (`DashboardLayout.tsx`, Ctrl+K): **Přehled**, **Zasedání**, **Úkoly** + Nastavení. Template stránky `projects`, `storage`, `realtime` a `ai` jsou z navigace skryté (kód zůstává). Odkazy na localhost služby (Swagger, Mailhog, Traefik) se ukazují jen v dev režimu.
 
 ### 7.2 Klíčové komponenty (`src/components/mdt/` ★)
 

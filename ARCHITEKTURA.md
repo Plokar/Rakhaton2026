@@ -769,6 +769,10 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - verdikt je `candidate` / `conditional` / `not_candidate` / `insufficient_data`;
   - vždy s poznámkou „podklad, rozhoduje lékař“.
 - **Otázky k diskusi:** 2–3 otázky odvozené z red flags, chybějících dat a otázky z nominace.
+- **Implementace bloku B (T-201):** `services/ai/roles.py` + role jako data `services/ai/data/roles.yaml` (název, zaměření, otázka posouzení podle sady guidelines, modality semaforu).
+  - Pro každou roli z `roles_present` jedno volání Gemini (`prompts/role_view.md`), všechna souběžně se souhrnem a RF-LLM.
+  - Kritérium posouzení s citací mimo kontext dostane `unknown`.
+  - Bez LLM (mock nebo chyba) vzniknou tvrzení z dat podle zaměření role a posouzení ze semaforu postupů, za které role odpovídá (red → `not_candidate`, orange → `conditional`, šedá → `insufficient_data`; u radiologa pravidla stagingu). Podpůrná léčba verdikt onkologa netvoří.
 
 ### 5.6 AI zapisovatel (BON-3)
 

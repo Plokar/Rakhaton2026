@@ -114,7 +114,9 @@ def test_generate_brief_job_interface(monkeypatch):
                             log_call=lambda purpose, r: calls.append((purpose, r["status"])))
     schemas.Brief.model_validate(result)
     assert result["case_id"] == "12" and result["model"] == "mock"
-    assert sorted(calls) == [("brief.rf_llm", "success"), ("brief.summary", "success")]
+    roles = brief_module.DEFAULT_CONFIG["roles_present"]
+    assert sorted(calls) == sorted([("brief.rf_llm", "success"), ("brief.summary", "success")]
+                                   + [(f"brief.role.{r}", "success") for r in roles])
     assert progress[0] == 5 and progress[-1] == 100 and progress == sorted(progress)
 
 

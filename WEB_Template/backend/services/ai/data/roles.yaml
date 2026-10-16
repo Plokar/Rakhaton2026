@@ -1,0 +1,102 @@
+# Pohledy odborníků (blok B, FR-B1 až FR-B7, ARCHITEKTURA §5.5, T-201).
+#
+# title     – název sekce v podkladu (sekce odbornosti, D-017)
+# focus     – co má role vidět (zadání + docs/POZADAVKY_LEKARE.md §4 a §5.2), jde do promptu
+# question  – otázka posouzení role (FR-B7) podle sady guidelines; bez otázky se posouzení nedělá
+# modalities– postupy semaforu (mdt-modalita), za které role odpovídá; z nich vzniká posouzení bez LLM
+# evidence  – skupiny a vzory řádků kontextu pro tvrzení bez LLM (fallback)
+
+surgeon:
+  title: "Chirurg"
+  focus: >-
+    resekabilita a rozsah onemocnění (TNM, počet a lokalizace ložisek, vztah k cévám), budoucí jaterní remnant
+    nebo predikované plicní funkce, předchozí operace a implantáty v oblasti, operační riziko (komorbidity,
+    ECOG, výživa, věk), interval od bevacizumabu
+  question:
+    KRC: "Je pacient kandidátem resekce jaterních metastáz?"
+    PLI: "Je pacient kandidátem anatomické resekce plic (lobektomie)?"
+    PRS: "Je u pacientky indikován chirurgický výkon?"
+  modalities: [chirurgie]
+  evidence:
+    - {group: diagnosis, pattern: "Onkologická diagnóza"}
+    - {group: staging, pattern: "TNM"}
+    - {group: imaging, pattern: "^Závěr", last: 2}
+    - {group: staging, pattern: "ppoFEV1|ppoDLCO"}
+    - {group: procedure, pattern: "chirurgick|stent|port"}
+
+oncologist:
+  title: "Klinický onkolog"
+  focus: >-
+    biomarkery včetně nevyšetřených, dosavadní linie systémové léčby a jejich trvání, odpověď na léčbu,
+    toxicita podle lékaře i podle pacienta, orgánové funkce, interakce s léky a doplňky
+  question:
+    KRC: "Je pacient kandidátem další systémové léčby nebo klinické studie?"
+    PLI: "Je pacient kandidátem perioperační nebo konsolidační systémové léčby?"
+    PRS: "Je pacientka kandidátkou další linie systémové léčby nebo klinické studie?"
+  modalities: [chemoterapie, cilena, imunoterapie, hormonalni]   # podpůrná léčba (jina-systemova) verdikt nedělá
+  evidence:
+    - {group: staging, pattern: "^Biomarker"}
+    - {group: staging, pattern: "^Toxicita"}
+    - {group: performance, pattern: "^ECOG"}
+
+radiologist:
+  title: "Radiolog"
+  focus: >-
+    vývoj nálezů a rozměrů lézí v čase (RECIST), srovnání posledních vyšetření, aktuálnost a úplnost stagingu,
+    nejasná ložiska k ověření
+  question:
+    KRC: "Je restaging aktuální a kompletní pro rozhodnutí komise?"
+    PLI: "Je staging aktuální a kompletní pro rozhodnutí komise?"
+    PRS: "Je staging aktuální a kompletní pro rozhodnutí komise?"
+  modalities: []
+  evidence:
+    - {group: imaging, pattern: "^Závěr|RECIST", last: 4}
+
+pathologist:
+  title: "Patolog"
+  focus: >-
+    histologie, grade, ICD-O-3, biomarkery z tkáně a jejich vzorek, diskordance primární nádor vs. metastáza,
+    co je třeba doplnit (IHC, molekulární vyšetření)
+  question: {}
+  modalities: [diagnostika]
+  evidence:
+    - {group: pathology, pattern: "^Závěr"}
+    - {group: staging, pattern: "^Biomarker"}
+
+radiation_oncologist:
+  title: "Radiační onkolog"
+  focus: "předchozí radioterapie (oblast, dávka), mozkové metastázy (počet, symptomy, kortikoidy), plicní funkce pro RT"
+  question:
+    PLI: "Je pacient kandidátem radikální chemoradioterapie?"
+    PRS: "Je pacientka kandidátkou radioterapie (např. SRS)?"
+  modalities: [rt]
+  evidence:
+    - {group: procedure, pattern: "radioterap"}
+    - {group: imaging, pattern: "mozk|MR mozku", last: 2}
+
+pulmonologist:
+  title: "Pneumolog"
+  focus: "spirometrie, DLCO, predikované pooperační hodnoty, zátěžový test, kouření, dušnost podle pacienta"
+  question: {}
+  modalities: []
+  evidence:
+    - {group: staging, pattern: "Funkční vyšetření plic|Kouření"}
+
+cardiologist:
+  title: "Kardiolog"
+  focus: "LVEF a její trend, kardiální komorbidity, kardiotoxicita léčby, stenty a antiagregace"
+  question: {}
+  modalities: []
+  evidence:
+    - {group: staging, pattern: "LVEF"}
+    - {group: diagnosis, pattern: "Komorbidita: I"}
+
+patient:
+  title: "Hlas pacienta"
+  focus: >-
+    trend dotazníku PROMs mezi vyplněními, výrazné symptomy, nové obtíže, ECOG podle pacienta, priorita
+    (délka vs. kvalita života), postoj a obavy, podpora doma, léky a doplňky navíc
+  question: {}
+  modalities: []
+  evidence:
+    - {group: performance, pattern: "^Dotazník pacienta", last: 1}

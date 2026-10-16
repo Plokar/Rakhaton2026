@@ -25,9 +25,11 @@ from services.ai.context_builder import PatientContext, context_from_resources, 
 from services.ai.grounding import verify_claims
 from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.red_flags_llm import detect_llm_red_flags
+from services.ai.roles import role_section
 from services.ai_service import BaseAIProvider, get_ai_provider
 from services.rules import red_flags as rules
 from services.rules.alerts import header_alerts
+from services.rules.compatibility import evaluate_compatibility
 from services.rules.guideline_sets import guideline_sets_for
 from services.rules.intake import intake_prefill
 from services.rules.red_flags import PatientData, _cc_text, _code, _ref_id
@@ -98,16 +100,27 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     progress(35)
 
     enabled = {s["id"] for s in config["sections"] if s.get("enabled", True)}
-    with ThreadPoolExecutor(max_workers=2) as pool:          # sekce paralelně (NFR-1)
+    roles = list(dict.fromkeys(config.get("roles_present") or [])) if "role_views" in enabled else []
+    compatibility = evaluate_compatibility(resources, skipped_fields=skipped_fields) if roles else []
+    with ThreadPoolExecutor(max_workers=2 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
         summary_future = pool.submit(_summary_items, context, provider, log_call) if "summary" in enabled else None
         llm_flags_future = pool.submit(_llm_flags, context, provider, log_call) if "red_flags" in enabled else None
+        role_futures = [pool.submit(role_section, role, context, data, compatibility, provider, log_call)
+                        for role in roles]
         summary_items = summary_future.result() if summary_future else []
         llm_flags = llm_flags_future.result() if llm_flags_future else []
+        role_sections = [future.result() for future in role_futures]
     progress(75)
 
     sections = []
     for section in sorted(config["sections"], key=lambda s: s.get("order", 0)):
-        if not section.get("enabled", True) or section["id"] not in ("summary", "timeline"):
+        if not section.get("enabled", True):
+            continue
+        if section["id"] == "role_views":
+            sections += [{**rs, "items": [_public(c) for c in verify_claims(rs["items"], context)]}
+                         for rs in role_sections]
+            continue
+        if section["id"] not in ("summary", "timeline"):
             continue
         if section["id"] == "summary":
             items = summary_items + _missing_items(resources, skipped_fields)

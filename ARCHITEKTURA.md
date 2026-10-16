@@ -946,6 +946,8 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
   - NEJISTOTA AI pro rozmezí ECOG v textu.
 - **Přeskočené pole** dostane stav `skipped` a umlčí flagy, které citují jeho zdroj. Otázku pro MDT přeskočit nejde.
 
+**Readiness (BON-1, T-303):** `services/rules/readiness.py:evaluate_readiness(resources, skipped_fields=[])` vrátí `Readiness` (§8.6). Skóre tvoří přítomná pole checklistu OBC-1.1, biomarkery a povinné doplňující snímky podle diagnózy; staging starší než 42 dní se zapíše zvlášť. Přeskočené a pending údaje zůstávají nevyřešené. Stav `ready` znamená, že všechna započtená pole jsou `present`; jinak `incomplete`. Výpočet je deterministický, neúplný případ může komise i tak projednat s podmíněným doporučením.
+
 ### 5.11 Pokrytí guidelines
 
 Guidelines datasetu jsou závazný obsah aplikace (zadání: možnosti léčby z dodaných guidelines s citací). Každá ze 42 pasáží má v aplikaci své místo:
@@ -1456,6 +1458,14 @@ interface IntakePrefill {                        // GET /api/mdt/patients/{pid}/
   warnings: IntakeWarning[];
   ecog_physician?: { value: number; citation: EvidenceId };
   intent_prefill?: "C" | "P";                   // z poslední MDT; „odloženo“ → nepředvyplněno
+}
+
+interface Readiness {                             // GET /api/mdt/cases/{cid}/readiness/
+  patient_id: string;
+  status: "ready" | "incomplete";
+  score: { present: number; total: number; percent: number };
+  unresolved: IntakeField[];                     // missing, pending nebo skipped; se zachovaným stavem
+  stale_staging: { id: string; age_days: number; citation?: EvidenceId }[];
 }
 
 interface MdtCase {                             // POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/

@@ -863,6 +863,15 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 5. Lékař varování může odkliknout (stačí klik, bez důvodu). Komise v podkladu dál vidí problém, ale ne to, kdo ho odklikl (D-019). Odkliknutí jde do auditu (`DetectedIssue.mitigation`).
 6. Lékař zadá nebo potvrdí ECOG (velká číslice) a záměr **C/P** a zaškrtne připomínku „Snímek mladší než 3 měsíce“. Záměr se předvyplní z poslední MDT; když minulá MDT rozhodnutí odložila, nepředvyplní se.
 
+**Implementace (T-502):** `services/rules/intake.py`, `intake_prefill(resources, skipped_fields=[])` vrátí `IntakePrefill` (§8.6).
+
+- **Pole:** obecná (OBC-1.1: otázka, histologie a grade, TNM, zobrazení ≤ 6 týdnů, ECOG lékař i pacient, komorbidity, léčba, preference, alergie, hmotnost, G8 od 70 let) a podle diagnózy (plíce, prs, kolorektum, docs/POZADAVKY_LEKARE.md §4). Každé pole má citaci a `required_by`.
+- **Varování:** red flags mají stejné `id` jako flag (`RF-TOX:P03-neuro01`), takže odkliknutí jde spárovat s podkladem (D-019). K nim se přidá:
+  - CHYBÍ pro pole, které žádný flag nehlásí;
+  - MIMO NORMU pro poslední laboratorní hodnotu s příznakem H/L;
+  - NEJISTOTA AI pro rozmezí ECOG v textu.
+- **Přeskočené pole** dostane stav `skipped` a umlčí flagy, které citují jeho zdroj. Otázku pro MDT přeskočit nejde.
+
 ### 5.11 Pokrytí guidelines
 
 Guidelines datasetu jsou závazný obsah aplikace (zadání: možnosti léčby z dodaných guidelines s citací). Každá ze 42 pasáží má v aplikaci své místo:

@@ -39,9 +39,10 @@ def _imaging_resources(context: PatientContext) -> list[dict]:
     for line in context.evidence:
         if line.group != "imaging" or line.resource_type != "DiagnosticReport":
             continue
-        current = found.get(line.resource_id)
-        if current is None or line.id == line.resource_id:
-            found[line.resource_id] = {"citation": line.resource_id, "date": line.date, "text": line.text}
+        # celý popis = hlavička + všechny odstavce (součet cílových lézí bývá až v nálezu nebo závěru)
+        item = found.setdefault(line.resource_id, {"citation": line.resource_id, "date": line.date, "text": ""})
+        item["text"] = f"{item['text']}\n{line.text}".strip() if line.text else item["text"]
+        item["date"] = item["date"] or line.date
     return list(found.values())
 
 

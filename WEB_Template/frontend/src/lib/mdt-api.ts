@@ -7,8 +7,10 @@ import type {
   BriefConfig,
   Decision,
   EvidenceSource,
+  IntakePrefill,
   Me,
   MdtCase,
+  PatientListItem,
   MdtSession,
   MdtSessionDetail,
   MdtSessionListItem,
@@ -91,6 +93,17 @@ export const mdtApi = {
 
   getEvidence: (evidenceId: string) =>
     apiFetch<EvidenceSource>(`/api/evidence/?id=${encodeURIComponent(evidenceId)}`),
+
+  /** Pacienti z IRIS (hlavička bez jména a RČ). */
+  getPatients: () => apiFetch<PatientListItem[]>('/api/patients/'),
+
+  /** Předvyplnění formuláře zařazení: povinné údaje s citacemi a varování (FR-P4, §8.6). */
+  getIntake: (patientId: string) =>
+    apiFetch<IntakePrefill>(`/api/mdt/patients/${encodeURIComponent(patientId)}/intake/`),
+
+  /** Zařazení pacienta do boardu (FR-P4); ruční ECOG a záměr se zapíší do IRIS s Provenance. */
+  createCase: (body: MdtCase & { acknowledge?: string[] }) =>
+    apiFetch<MdtCase>('/api/mdt/cases/', { method: 'POST', body: JSON.stringify(body) }),
 
   /** Časová osa pacienta z IRIS (seřazená podle data). */
   getTimeline: (patientId: string) =>

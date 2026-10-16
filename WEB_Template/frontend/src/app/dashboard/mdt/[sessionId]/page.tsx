@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CalendarDays, Pencil, SlidersHorizontal, Trash2, UsersRound } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Pencil, SlidersHorizontal, Trash2, UserPlus, UsersRound } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { BoardDialog } from '@/components/mdt/BoardDialog';
 import { formatDate } from '@/components/mdt/format';
@@ -95,6 +95,14 @@ function AgendaContent({ sessionId }: { sessionId: string }) {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              {can.generateBrief(me) && (
+                <Link
+                  href={`/dashboard/mdt/${encodeURIComponent(sessionId)}/add`}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <UserPlus className="h-3.5 w-3.5" aria-hidden /> Zařadit pacienta
+                </Link>
+              )}
               <Link
                 href={`/dashboard/mdt/${encodeURIComponent(sessionId)}/setup`}
                 className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground hover:bg-accent"

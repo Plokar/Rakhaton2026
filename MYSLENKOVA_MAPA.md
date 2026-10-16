@@ -8,73 +8,78 @@
 
 **Zlaté pravidlo:** AI připravuje, shrnuje, upozorňuje a navrhuje. Rozhoduje vždy lékař.
 
+## V kostce: vstupy → MDT Copilot → výstupy
+
+Zjednodušený pohled, stejný graf jako záložka „Přehled“ v artefaktu. Čte se shora dolů, výstupy odpovídají blokům A · B · B2 · C ze zadání.
+
 ```mermaid
-mindmap
-  root((MDT Copilot))
-    Problém
-      3–5 min na pacienta
-      Data v oddělených dokumentech
-      Volný text v eZdraví
-      Chybí hlas pacienta
-    Role u stolu
-      Předseda
-      Chirurg
-      Onkolog
-      Radiolog
-      Patolog
-      Radiační onkolog
-      Pacient
-    Vstupní data
-      eZdraví
-      PROMs
-      Nominace
-      ESMO a studie
-      Ground truth
-    Proces komise
-      Před
-      Během
-      Po
-    Hodnocení
-      UX 30 %
-      AI 20 %
-      Nastavitelnost 20 %
-      Standardy 15 %
-      Proces 15 %
-    Plán a stav
-      M0 až M5
-      Kritická cesta
-      Blokery
-    Podklad A B B2 C
-      Souhrn do 30 s
-      Pohledy rolí
-      Podpora rozhodování
-      Závěr a export
-    Match pro roli
-      Kandidát nebo ne
-      Kritéria s citací
-      Potvrzuje lékař
-    Kontrola dat
-      Red flags
-      Readiness
-      Grounding
-      Údaj chybí
-    Guidelines a studie
-      ESMO podle MKN-10
-      Podle země
-      Komorbidity
-    Důvěra v AI
-      Citace
-      Pseudonymizace
-      Eval
-    Architektura
-      Next.js na Vercelu
-      Django na VPS
-      IRIS FHIR a Vector Search
-      PostgreSQL
-    Standardy
-      FHIR R4
-      mCODE a ECCDM
-      MKN-10 LOINC SNOMED
+flowchart TB
+  subgraph VSTUPY["① VSTUPY"]
+    direction LR
+    I1["<b>Data pacienta</b><br/>zprávy, krev a markery,<br/>popisy CT/MRI, léky, výkony,<br/>dotazník PROMs 2× v čase"]
+    I2["<b>Nominace pacienta</b><br/>kdo ho posílá<br/>a s jakou otázkou,<br/>předchozí MDT"]
+    I3["<b>Postupy a studie</b><br/>výtahy z guidelines<br/>s číslovanými pasážemi,<br/>6 klinických studií"]
+    I4["<b>Od předsedy</b><br/>sekce, pořadí,<br/>přítomné role, detail;<br/>bonus: přepis diskuse"]
+  end
+
+  CP[["<b>② MDT COPILOT</b><br/>spojí data v IRIS → vytáhne podstatné s citací<br/>→ zkontroluje rozpory a chybějící údaje → připraví podklad"]]
+
+  subgraph NAVRH["③ AI NÁVRH PODKLADU · za pár sekund"]
+    direction LR
+    A["<b>A · Souhrn do 30 s</b><br/>diagnóza, TNM,<br/>ECOG lékař vs. pacient,<br/>otázka komise"]
+    B["<b>B · Pohled každé role</b><br/>chirurg: kandidát na operaci?<br/>onkolog, radiolog,<br/>patolog, pacient"]
+    B2["<b>B2 · Podpora rozhodování</b><br/>možnosti léčby s citací,<br/>vhodné studie,<br/>otázky k diskusi"]
+    RF["<b>Varovné signály</b><br/>rozpory mezi zdroji,<br/>chybějící údaje,<br/>předchozí operace"]
+  end
+
+  GATE(["✓ ④ Komise rozhodne, předseda potvrdí"])
+
+  subgraph ZAZNAM["⑤ OFICIÁLNÍ ZÁZNAM · C · Závěr a akční plán"]
+    direction LR
+    R1["<b>Rozhodnutí</b><br/>co se udělá a proč"]
+    R2["<b>Úkoly</b><br/>odpovědný, termín,<br/>opětovné posouzení"]
+    R3["<b>Zápis do IRIS</b><br/>FHIR, přítomní,<br/>kdo potvrdil a z čeho"]
+    R4["<b>Export</b><br/>PDF a HL7 FHIR"]
+  end
+
+  VSTUPY --> CP --> NAVRH --> GATE --> ZAZNAM
+
+  style NAVRH stroke-dasharray: 6 4
+  style GATE stroke:#2F7A4E,stroke-width:2px
+  style ZAZNAM stroke:#2F7A4E,stroke-width:2px
+```
+
+> **Nominace ≠ složení komise.** Nominace je žádanka na projednání *pacienta* (`ServiceRequest`: kdo posílá, otázka typu „lze operovat?“). Kdo sedí u stolu, vybírá předseda v nastavení (FR-R1, `roles_present`) a do výstupu se zapíše jako `CareTeam`. Jestli operovat, ozařovat nebo léčit léky, je **výstup**: Copilot navrhne posouzení každé role a možnosti léčby, komise rozhodne.
+
+## Jak do sebe projekt zapadá
+
+Shora dolů: proč to stavíme, co Copilot připraví (bloky A · B · B2 · C ze zadání), na čem to stojí a podle čeho nás hodnotí. Vstupy a výstupy jsou v grafu výše.
+
+```mermaid
+flowchart TB
+  P["<b>PROČ</b><br/>3–5 min na pacienta<br/>data roztroušená v dokumentech<br/>volný text v eZdraví, chybí hlas pacienta"]
+
+  subgraph PODKLAD["CO COPILOT PŘIPRAVÍ"]
+    direction LR
+    A["<b>A · Souhrn</b><br/>orientace do 30 s<br/>diagnóza, TNM, ECOG<br/>otázka komise"]
+    B["<b>B · Pohled rolí</b><br/>chirurg, onkolog, radiolog,<br/>patolog, radiační onkolog, pacient<br/>+ posouzení: je kandidát?"]
+    B2["<b>B2 · Podpora rozhodování</b><br/>možnosti léčby s citací<br/>vhodné studie<br/>otázky k diskusi"]
+    C["<b>C · Závěr</b><br/>rozhodnutí a úkoly<br/>potvrzení předsedou<br/>zápis do FHIR, export"]
+    A --> B --> B2 --> C
+  end
+
+  subgraph PILIRE["NA ČEM TO STOJÍ"]
+    direction LR
+    D["<b>Důvěra v AI</b><br/>citace u každého tvrzení<br/>red flags, údaj chybí<br/>rozhoduje člověk"]
+    T["<b>Technologie</b><br/>Next.js a Django<br/>IRIS FHIR + Vector Search<br/>Gemini"]
+    S["<b>Standardy</b><br/>FHIR R4, mCODE, ECCDM<br/>MKN-10, LOINC, SNOMED CT"]
+  end
+
+  H["<b>HODNOCENÍ</b><br/>UX 30 % · AI 20 % · nastavitelnost 20 %<br/>standardy 15 % · proces 15 %<br/>pitch So 13:00"]
+
+  P --> PODKLAD
+  PODKLAD -. stojí na .-> PILIRE
+  PILIRE ~~~ H
 ```
 
 ---
@@ -91,11 +96,11 @@ mindmap
 
 ### Kdo sedí u stolu
 
-Každá role chce vidět něco jiného _(poznámka)_.
+Každá role chce vidět něco jiného _(poznámka)_. Složení komise Copilot negeneruje: přítomné role vybere předseda v nastavení a Copilot pro každou z nich připraví pohled a posouzení.
 
 | Role | Co potřebuje vidět |
 |---|---|
-| Předseda | nastaví podklad, potvrdí závěr |
+| Předseda | vybere přítomné role, nastaví podklad, potvrdí závěr |
 | Chirurg | lze operovat, rozsah TNM, předchozí operace _(poznámka)_ |
 | Klinický onkolog | biomarkery, linie léčby, nežádoucí účinky |
 | Radiolog | vývoj nálezů v čase, RECIST 1.1 |
@@ -110,7 +115,7 @@ Smyšlená data od Asseco, **dataset v1.1 už dorazil a je ve formátu FHIR R4**
 - **6 pacientů** (4× prs, 1× kolorektum, 1× plíce), každý jako FHIR Bundle se 142–215 resources.
 - eZdraví: zprávy (`DocumentReference`), patologie a zobrazení (`DiagnosticReport`), laboratoř s trendy markerů, ECOG, biomarkery, TNM (`Observation`), léky, výkony.
 - PROMs: vlastní dotazník `MDT-PROMS-1` (ne EORTC, kvůli licenci), 2 vyplnění v čase; otázka `samostatnost` = ECOG podle pacienta.
-- Nominace: `ServiceRequest` + `Task`; předchozí MDT jako `Composition` + `CarePlan` + `CareTeam`.
+- Nominace pacienta (žádanka na projednání, ne složení komise): `ServiceRequest` s žadatelem, otázkou pro komisi a požadovaným zaměřením MDT + `Task` s datem zasedání. Předchozí MDT jako `Composition` + `CarePlan` + `CareTeam` (kdo tehdy seděl u stolu).
 - Guidelines: 4 výtahy (KRC, PRS, PLI, OBC) se 42 číslovanými pasážemi + 6 smyšlených studií (`RKT-01…06`).
 - Schválně vložené chyby a mezery ano. **Ground truth zatím ne** (až po odevzdání), máme vlastní hypotézy (DATASET §9).
 - Bonus přepis diskuse v datasetu **není**. Nahrajeme vlastní a přepíšeme ho Gemini.
@@ -120,7 +125,7 @@ Smyšlená data od Asseco, **dataset v1.1 už dorazil a je ve formátu FHIR R4**
 
 Copilot má pokrýt všechny 3 fáze.
 
-1. **Před:** nominace s otázkou (`ServiceRequest`), kontrola úplnosti, agenda.
+1. **Před:** lékař nominuje pacienta s otázkou (`ServiceRequest`), kontrola úplnosti, agenda, předseda vybere přítomné role.
 2. **Během:** přepínání pacientů, prezentační režim na projektor, AI zapisovatel převede přepis na draft závěru.
 3. **Po:** úkoly s termíny, kontrola plnění, opětovné posouzení.
 
@@ -220,7 +225,7 @@ Warning systém _(poznámka)_.
 ### Standardy a FHIR
 
 - Vstup: `Patient`, `Condition`, `Observation`, `DiagnosticReport`, `DocumentReference`…
-- Zápis do IRIS: `CarePlan`, `Task`, `DetectedIssue`, `Provenance`, `Composition` _(poznámka: výstup ve FHIRu)_.
+- Zápis do IRIS ve stejném tvaru jako předchozí MDT v datasetu: `Composition`, `CarePlan`, `CareTeam` (přítomní), `Task`, `DetectedIssue`, `Provenance` _(poznámka: výstup ve FHIRu)_.
 - Kódy: MKN-10, ICD-O-3, LOINC, SNOMED CT, ATC.
 - Bonus: profily mCODE / ECCDM v exportu, `$validate` v IRIS.
 - Komorbidity a alergie v datovém modelu ✅ ARCHITEKTURA §4.3: komorbidity = `Condition` „komorbidita“, alergie = PROMs + text (resource `AllergyIntolerance` v datasetu není).

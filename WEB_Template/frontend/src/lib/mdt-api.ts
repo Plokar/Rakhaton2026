@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api';
 import type {
   Brief,
   BriefConfig,
+  Decision,
   EvidenceSource,
   Me,
   MdtCase,
@@ -64,6 +65,20 @@ export const mdtApi = {
     }),
 
   getJob: (jobId: number) => apiFetch<GenerationJob>(`/api/jobs/${jobId}/`),
+
+  /** Draft nebo potvrzený závěr komise (404, dokud není). */
+  getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`),
+
+  /** Uložení draftu (předseda, lékař); server ho validuje podle §8.4, potvrzený závěr nejde měnit (409). */
+  saveDecision: (caseId: string, decision: Decision) =>
+    apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`, {
+      method: 'PUT',
+      body: JSON.stringify(decision),
+    }),
+
+  /** Potvrzení předsedou (FR-C3): zápis do IRIS, vrátí závěr s `fhir_ids`. */
+  confirmDecision: (caseId: string) =>
+    apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/confirm/`, { method: 'POST' }),
 
   getEvidence: (evidenceId: string) =>
     apiFetch<EvidenceSource>(`/api/evidence/?id=${encodeURIComponent(evidenceId)}`),

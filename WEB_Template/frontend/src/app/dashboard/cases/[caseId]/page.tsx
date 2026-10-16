@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PanelRightOpen } from 'lucide-react';
+import { ArrowLeft, NotebookPen, PanelRightOpen } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { CaseBriefScreen } from '@/components/mdt/CaseBriefScreen';
 import { can, useMe } from '@/components/mdt/me';
@@ -42,6 +42,12 @@ function CaseContent({ caseId }: { caseId: string }) {
             >
               <PanelRightOpen className="h-3.5 w-3.5" /> Otevřít v úzkém okně
             </a>
+            <Link
+              href={`/dashboard/cases/${encodeURIComponent(caseId)}/record`}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <NotebookPen className="h-3.5 w-3.5" /> Závěr komise
+            </Link>
           </div>
         }
       />

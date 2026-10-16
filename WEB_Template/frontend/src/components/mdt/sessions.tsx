@@ -31,6 +31,7 @@ import { CompatibilityLight } from './CompatibilityLight';
 import { apiDataSource, fixtureDataSource } from './data-source';
 import { EcogDifference, EcogTiles } from './EcogCompare';
 import { formatDate } from './format';
+import { ReadinessBadge } from './ReadinessBadge';
 import { SourceDrawer } from './SourceDrawer';
 
 export const SESSION_STATUS: Record<MdtSession['status'], string> = {
@@ -166,6 +167,7 @@ export function AgendaItem({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {item.id != null && <ReadinessBadge caseId={item.id} />}
           {item.imaging_recent_checked && (
             <span className="rounded-md border border-emerald-600/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-900 dark:text-emerald-200">
               Snímek &lt; 3 měs.

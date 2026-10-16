@@ -59,7 +59,7 @@ export default function TermsOfUsePage() {
             </h1>
             <p className="mt-3 text-base text-muted-foreground leading-relaxed">
               Tento dokument upravuje pravidla a podmínky používání webové platformy, API rozhraní
-              a doplňkových nástrojů Hackathon OS.
+              a doplňkových nástrojů MDT Copilot.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <span>Poslední aktualizace: <strong>11. září 2026</strong></span>
@@ -79,7 +79,7 @@ export default function TermsOfUsePage() {
                 1. Úvodní ustanovení a přijetí podmínek
               </h2>
               <p>
-                Používáním platformy Hackathon OS (webové aplikace, REST API, WebSocket rozhraní nebo
+                Používáním platformy MDT Copilot (webové aplikace, REST API, WebSocket rozhraní nebo
                 AI integračních nástrojů) vyjadřujete svůj úplný a bezvýhradný souhlas s těmito Podmínkami užití.
               </p>
               <p>
@@ -150,13 +150,13 @@ export default function TermsOfUsePage() {
                   <CheckCircle2 className="h-5 w-5" /> Vlastnictví vašeho hackathon kódu
                 </div>
                 <p className="text-xs leading-relaxed">
-                  <strong>Veškerý kód, nápady, design a datové modely, které v rámci Hackathon OS vytvoříte,
+                  <strong>Veškerý kód, nápady, design a datové modely, které v rámci MDT Copilot vytvoříte,
                   zůstávají 100% vaším výhradním duševním vlastnictvím.</strong> Provozovatel platformy si
                   nenárokuje žádná majetková ani autorská práva k vašim hackathon projektům.
                 </p>
               </div>
               <p className="pt-2 text-xs">
-                Samotný základní boilerplate kód Hackathon OS je distribuován pod svobodnou licencí <strong>MIT License</strong>,
+                Samotný základní boilerplate kód MDT Copilot je distribuován pod svobodnou licencí <strong>MIT License</strong>,
                 což vám dává plnou svobodu jej upravovat, rozšiřovat a využívat i pro komerční účely.
               </p>
             </section>
@@ -168,7 +168,7 @@ export default function TermsOfUsePage() {
                 5. Vyloučení záruk a dostupnost („AS IS“)
               </h2>
               <p>
-                Platforma Hackathon OS je poskytována <strong>„tak jak je“ (AS IS)</strong> a <strong>„jak je dostupná“ (AS AVAILABLE)</strong>,
+                Platforma MDT Copilot je poskytována <strong>„tak jak je“ (AS IS)</strong> a <strong>„jak je dostupná“ (AS AVAILABLE)</strong>,
                 bez jakýchkoli výslovných nebo předpokládaných záruk.
               </p>
               <p>
@@ -235,7 +235,7 @@ export default function TermsOfUsePage() {
       {/* Footer */}
       <footer className="py-6 text-center text-xs text-muted-foreground border-t border-border">
         <div className="mx-auto max-w-7xl px-4">
-          <p>© {new Date().getFullYear()} Hackathon OS • MIT Licence</p>
+          <p>© {new Date().getFullYear()} MDT Copilot • MIT Licence</p>
         </div>
       </footer>
     </div>

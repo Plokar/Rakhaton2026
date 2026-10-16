@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
-  Zap,
+  Stethoscope,
   Eye,
   EyeOff,
   User,
@@ -75,41 +75,41 @@ export default function LoginForm() {
 
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-indigo-500/30">
-            <Zap className="h-5 w-5 fill-current" />
+            <Stethoscope className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-base font-bold tracking-tight">Hackathon OS</span>
-            <span className="block text-xs font-mono text-muted-foreground">Vítej v řídicím centru</span>
+            <span className="text-base font-bold tracking-tight">MDT Copilot</span>
+            <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>
           </div>
         </div>
 
         <div className="space-y-6 max-w-md">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Hackathon Ready Environment
+            <Sparkles className="h-3.5 w-3.5" /> AI připravuje, rozhoduje lékař
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight">
-            Vše nastaveno. <br />
-            Můžeš se soustředit na samotný produkt.
+            Celý případ <br />
+            za 30 sekund.
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Stateless JWT autentizace s httpOnly cookies, auto-refresh tokeny, WebSocket echo a skupiny,
-            připravené AI Studio a seedovaná databáze s projekty a úkoly.
+            Podklad pro multidisciplinární komisi z dat pacienta: souhrn, pohledy odborníků,
+            možnosti léčby z doporučených postupů a vhodné klinické studie.
           </p>
 
           <div className="space-y-3 pt-4 border-t border-border">
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <span>Plně kompatibilní s bezpečnostními standardy OWASP</span>
+              <span>Každé tvrzení AI má citaci zdroje, chybějící údaj je vždy vidět</span>
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              <span>Traefik reverzní proxy s automatickým rate-limitingem</span>
+              <span>Oficiálním záznamem se závěr stane až po potvrzení lékařem</span>
             </div>
           </div>
         </div>
 
         <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Hackathon OS • Django 4.2 &amp; Next.js 16
+          © {new Date().getFullYear()} MDT Copilot • Rakathon 2026
         </div>
       </div>
 
@@ -118,9 +118,9 @@ export default function LoginForm() {
         <div className="flex items-center justify-between">
           <Link href="/" className="lg:hidden flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Zap className="h-4 w-4 fill-current" />
+              <Stethoscope className="h-4 w-4" />
             </div>
-            <span className="font-bold text-sm">Hackathon OS</span>
+            <span className="font-bold text-sm">MDT Copilot</span>
           </Link>
           <div className="ml-auto">
             <ThemeToggle />
@@ -232,12 +232,16 @@ export default function LoginForm() {
           </p>
         </div>
 
-        <div className="text-center text-xs text-muted-foreground">
-          Lokální e-maily můžete sledovat na{' '}
-          <a href="http://localhost:8025" target="_blank" rel="noreferrer" className="text-foreground underline">
-            Mailhog :8025
-          </a>
-        </div>
+        {process.env.NODE_ENV === 'development' ? (
+          <div className="text-center text-xs text-muted-foreground">
+            Lokální e-maily můžete sledovat na{' '}
+            <a href="http://localhost:8025" target="_blank" rel="noreferrer" className="text-foreground underline">
+              Mailhog :8025
+            </a>
+          </div>
+        ) : (
+          <div />
+        )}
       </div>
     </div>
   );

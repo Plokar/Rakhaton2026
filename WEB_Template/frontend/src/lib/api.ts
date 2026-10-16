@@ -1,5 +1,5 @@
 /**
- * API Client – Type-Safe HTTP Wrapper pro Hackathon OS Django Backend
+ * API Client – Type-Safe HTTP Wrapper pro MDT Copilot Django Backend
  * Automaticky posílá CSRF token a JWT httpOnly cookies.
  */
 

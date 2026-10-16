@@ -12,7 +12,7 @@ const inter = Inter({
   display: 'swap',
 });
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Hackathon OS';
+const appName = process.env.NEXT_PUBLIC_APP_NAME || 'MDT Copilot';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: `%s | ${appName}`,
   },
   description:
-    'Produkčně připravený hackathon operační systém s JWT auth, WebSockets, AI Studio a PostgreSQL.',
+    'Podklady pro multidisciplinární onkologickou komisi (MDT) s citacemi zdrojů. AI připravuje, rozhoduje lékař.',
 };
 
 export default function RootLayout({

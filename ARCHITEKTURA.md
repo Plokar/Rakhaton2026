@@ -622,7 +622,7 @@ ORDER BY Score DESC
    - texty se rozdělí na odstavce, z nich se spočítají embeddingy a uloží se do `MDT.EvidenceChunk`;
    - guidelines jdou do `MDT.GuidelineChunk` a kritéria studií do `MDT.TrialCriterion`.
 2. **Kontext (per pacient, `context_builder`):**
-   - z IRIS se načtou všechny resources pacienta ([DATASET.md §6.3](DATASET.md#63-čtení-za-běhu-context-builder)) a převedou se na **Evidence list**: kompaktní řádky s ID, např. `[P03-lab06-cea] 2026-10-05 CEA 13,9 µg/l (ref 0–5) H` nebo `[P03-img03#3] 2026-09-21 CT … „Závěr: Parciální odpověď…“`;
+   - z IRIS se načtou všechny resources pacienta ([DATASET.md §6.3](DATASET.md#63-čtení-za-běhu-context-builder)) a převedou se na **Evidence list**: kompaktní řádky s ID, např. `[P03-lab06-cea] 2026-10-05 CEA 13,9 µg/l (ref 0–5) H` nebo `[P03-img03#4] 2026-09-21 CT … „Závěr: Parciální odpověď…“`;
    - přidá se **celá příslušná sada guidelines** (podle MKN-10 + OBC, max ~23 pasáží), studie s kritérii a **výsledky deterministických pravidel** ([§5.4](#54-red-flags));
    - celek má desítky tisíc tokenů a vejde se do jednoho callu (D-010);
    - IRIS Vector Search pro každou sekci seřadí nejrelevantnější odstavce na začátek a označí je;
@@ -653,7 +653,7 @@ ORDER BY Score DESC
   | Formát | Příklad | Co znamená |
   |---|---|---|
   | `Pxx-…` | `P03-ecog03` | strukturovaný údaj / celý resource |
-  | `Pxx-…#n` | `P03-img03#3` | n-tý odstavec textu, číslováno od 1 podle pravidla z [§4.5](#45-vektorové-tabulky-iris-sql-namespace-fhirserver) (`split_paragraphs` v `apps/copilot/evidence.py`) |
+  | `Pxx-…#n` | `P03-img03#4` | n-tý odstavec textu, číslováno od 1 podle `services/ai/text.py` ([§4.5](#45-vektorové-tabulky-iris-sql-namespace-fhirserver)) |
   | `KRC-2.4` | `KRC-2.4` | pasáž guidelines |
   | `RKT-03` / `RKT-03/V3` | `RKT-03/V3` | studie / kritérium |
   | `EXT-…` | `EXT-EMA-DPD-2020` | externí zdroj prahu (D-016); jen pro pravidla semaforu, nikdy pro fakta pacienta. **Katalog ID (13):** `WEB_Template/backend/services/iris/data/external_sources.json` (přepis docs/POZADAVKY_LEKARE.md §5.3, §6.1, §13), v IRIS `MDT.GuidelineChunk` se sadou `EXT` a `Url` |
@@ -1126,12 +1126,12 @@ Navigace (`DashboardLayout.tsx`, Ctrl+K): **Přehled**, **Zasedání**, **Úkoly
 > - Vnořené typy mají v kódu jména: `BriefHeader`, `TreatmentOption`, `TrialScreening` (BE i FE stejně). Struktura je přesně podle této sekce.
 > - **Fixtures** demo pacienta P03 jsou v `data/fixtures/` (`brief_P03.json`, `decision_P03.json`, `intake_P03.json`), jen s reálnými ID z datasetu. Frontend má kopii v `src/fixtures/` a typovaný import v `src/lib/fixtures.ts`, protože frontend kontejner ani Vercel nevidí složky mimo `WEB_Template/frontend`. Test `apps/copilot/test_schemas.py` hlídá validaci pydantic (round-trip bez ztráty klíčů), existenci každé citace v datasetu a shodu kopie.
 > - Pydantic hlídá jen strukturu a výčty. Sémantiku (citace u tvrzení, ≥ 2 zdroje u red flagu, barva semaforu) hlídá grounding validátor a pravidla: chybná citace z LLM nemá shodit celý podklad, má skončit jako `unverified`. Proto má `verification` v pydantic výchozí hodnotu `"unverified"`.
-> - Formát Evidence ID a dělení textu na odstavce jsou v `apps/copilot/evidence.py` (`parse_evidence_id`, `split_paragraphs`). Používá je ingest (T-102), resolver (T-104) i testy.
+> - Formát Evidence ID ověřuje `apps/copilot/evidence.py` (`parse_evidence_id`, `is_evidence_id`). Odstavce `#n` se počítají jen přes `services/ai/text.py` (T-105, §4.5); fixtures i testy ho používají také.
 
 ### 8.1 Společné typy
 
 ```ts
-type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#3" | "KRC-2.4" | "RKT-03/V3" | "EXT-EMA-DPD-2020"
+type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#4" | "KRC-2.4" | "RKT-03/V3" | "EXT-EMA-DPD-2020"
 type Verification = "verified" | "unverified";
 type Severity = "high" | "moderate" | "low";
 type Light = "green" | "orange" | "red" | "grey" | "skipped";   // semafor souladu (§5.9)

@@ -142,7 +142,7 @@
       "id": "family_history",
       "label": "Rodinná anamnéza",
       "value": "otec karcinom tlustého střeva v 72 letech",
-      "citation": "P03-doc02#2",
+      "citation": "P03-doc02#6",
       "status": "present",
       "required_by": "OBC-2.4"
     },
@@ -168,7 +168,7 @@
       "severity": "moderate",
       "title": "Chybí MMR/MSI",
       "detail": "Vyšetření MMR/MSI nebylo požadováno, u metastatického KRC je povinné (KRC-1.1).",
-      "citations": ["P03-bm04", "P03-pat02#5", "KRC-1.1"]
+      "citations": ["P03-bm04", "P03-pat02#8", "KRC-1.1"]
     },
     {
       "id": "RF-TOX:P03-neuro01",
@@ -208,15 +208,15 @@
       "severity": "moderate",
       "title": "Doplňky mimo medikaci",
       "detail": "Pacient v dotazníku uvádí hořčík a vitamin B, v medikaci nejsou.",
-      "citations": ["P03-prom02", "P03-doc02#2"]
+      "citations": ["P03-prom02", "P03-doc02#4"]
     },
     {
-      "id": "AI-RANGE:P03-doc06#1",
+      "id": "AI-RANGE:P03-doc06#2",
       "kind": "ai_uncertain",
       "severity": "low",
       "title": "NEJISTOTA AI: „ECOG 0–1“",
       "detail": "Zpráva z 2026-09-07 uvádí rozmezí „ECOG 0–1“, strukturovaně je uloženo jako ECOG 1. AI rozmezí nepřevádí na jedno číslo.",
-      "citations": ["P03-doc06#1", "P03-ecog02"]
+      "citations": ["P03-doc06#2", "P03-ecog02"]
     }
   ],
   "ecog_physician": { "value": 0, "citation": "P03-ecog03" },

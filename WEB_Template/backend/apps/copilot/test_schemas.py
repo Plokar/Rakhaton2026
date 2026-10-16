@@ -5,7 +5,6 @@ Fixtures (``data/fixtures``) a dataset leží mimo backend. V CI jsou v checkout
 v backend kontejneru je jen dataset (``DATASET_DIR``); co chybí, test přeskočí.
 Dataset se tu čte jen kvůli kontrole citací, za běhu se čte z IRIS.
 """
-import base64
 import json
 import os
 import re
@@ -15,12 +14,8 @@ from pathlib import Path
 import pytest
 
 from apps.copilot import schemas
-from apps.copilot.evidence import (
-    GUIDELINE_ID_RE,
-    is_evidence_id,
-    parse_evidence_id,
-    split_paragraphs,
-)
+from apps.copilot.evidence import GUIDELINE_ID_RE, is_evidence_id, parse_evidence_id
+from services.ai.text import resource_paragraphs
 from services.ai_service import MockAIProvider, gemini_json_schema
 
 # Kořen repa (v CI a lokálně); v backend kontejneru je jen /code, tam je None.
@@ -96,14 +91,10 @@ def patient_resources(patient_id: str) -> dict[str, dict]:
     return {sanitize_id(e["resource"]["id"]): e["resource"] for e in bundle["entry"]}
 
 
-def resource_text(resource: dict) -> str | None:
-    if resource["resourceType"] == "DocumentReference":
-        data = resource["content"][0]["attachment"].get("data")
-    elif resource["resourceType"] == "DiagnosticReport" and resource.get("presentedForm"):
-        data = resource["presentedForm"][0].get("data")
-    else:
-        return None
-    return base64.b64decode(data).decode("utf-8") if data else None
+def paragraph_text(evidence_id: str) -> str | None:
+    ref = parse_evidence_id(evidence_id)
+    paragraphs = resource_paragraphs(patient_resources(ref.patient_id)[ref.resource_id])
+    return paragraphs[ref.paragraph - 1].text if ref.paragraph <= len(paragraphs) else None
 
 
 @lru_cache(maxsize=None)
@@ -147,18 +138,6 @@ class TestEvidenceId:
     ])
     def test_invalid(self, evidence_id):
         assert not is_evidence_id(evidence_id)
-
-    def test_split_paragraphs(self):
-        text = "Srovnání s CT.\n\nJátra:\n- S7: 29 mm\nSigma: klidná.\nZávěr: Parciální odpověď.\n\n\nPozn.: nic"
-        assert split_paragraphs(text) == [
-            "Srovnání s CT.",
-            "Játra:\n- S7: 29 mm\nSigma: klidná.",
-            "Závěr: Parciální odpověď.",
-            "Pozn.: nic",
-        ]
-
-    def test_split_paragraphs_nalez_starts_paragraph(self):
-        assert split_paragraphs("Indikace: x\nNález: y\nZávěr: z") == ["Indikace: x", "Nález: y", "Závěr: z"]
 
     def test_guideline_regex(self):
         assert GUIDELINE_ID_RE.match("OBC-1.3")
@@ -265,18 +244,29 @@ class TestFixtureCitations:
             if ref.kind == "patient":
                 if APP_CREATED_RE.match(ref.resource_id):
                     continue
-                resource = patient_resources(ref.patient_id).get(ref.resource_id)
-                if resource is None:
+                if ref.resource_id not in patient_resources(ref.patient_id):
                     problems.append(f"{evidence_id}: resource není v datasetu")
-                elif ref.paragraph is not None:
-                    text = resource_text(resource)
-                    if text is None or ref.paragraph > len(split_paragraphs(text)):
-                        problems.append(f"{evidence_id}: odstavec neexistuje")
+                elif ref.paragraph is not None and paragraph_text(evidence_id) is None:
+                    problems.append(f"{evidence_id}: odstavec neexistuje")
             elif ref.kind == "guideline" and evidence_id not in guideline_ids():
                 problems.append(f"{evidence_id}: pasáž není v guidelines")
             elif ref.kind == "trial" and evidence_id not in trial_ids():
                 problems.append(f"{evidence_id}: studie nebo kritérium neexistuje")
         assert not problems
+
+    @pytest.mark.parametrize("evidence_id, snippet", [
+        ("P03-img01#5", "83 mm"),
+        ("P03-img03#4", "50 mm (pokles o 40 %)"),
+        ("P03-img03#1", "hrudník nebyl požadován"),
+        ("P03-img04#3", "38 %"),
+        ("P03-doc02#5", "Alergie: neudává"),
+        ("P03-doc02#6", "otec karcinom tlustého střeva"),
+        ("P03-doc06#2", "ECOG 0–1"),
+        ("P03-pat02#8", "MMR/MSI nebylo požadováno"),
+    ])
+    def test_demo_citations_point_to_right_paragraph(self, evidence_id, snippet):
+        """Klíčové citace dema P03 podle číslování ze services/ai/text.py (T-105)."""
+        assert snippet in paragraph_text(evidence_id)
 
     def test_guidelines_count(self):
         assert len(guideline_ids()) == 42   # DATASET §7

@@ -69,3 +69,14 @@ def test_external_chunks_catalog():
         assert parse_evidence_id(c.EvidenceId).kind == 'external'
         assert c.GuidelineSet == 'EXT' and c.Url.startswith('https://') and len(c.Url) <= 500
         assert len(c.Source) <= 200 and len(c.Title) <= 300 and '[' in c.Text      # stav ověření a pravidla
+
+
+def test_every_ext_cited_by_rules_is_in_catalog():
+    """Spoj T-504 ↔ T-503: každé EXT-… citované pravidly semaforu jde resolvovat (jinak 404 u citace)."""
+    import re
+    from pathlib import Path
+    rules = Path(indexing.__file__).resolve().parents[1] / 'rules' / 'data' / 'compatibility_rules.yaml'
+    if not rules.exists():
+        return
+    cited = set(re.findall(r'EXT-[A-Z0-9][A-Z0-9.-]*[A-Z0-9]', rules.read_text(encoding='utf-8')))
+    assert cited and cited <= {c.EvidenceId for c in indexing.external_chunks()}

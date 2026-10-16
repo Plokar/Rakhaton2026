@@ -30,7 +30,7 @@ def resolve(evidence_id: str, follow: bool = True) -> dict:
     if ref.kind in ('guideline', 'external'):
         row = vs.get_guideline(ref.evidence_id) or _missing(ref.evidence_id)
         return {**out, 'title': f"{ref.evidence_id} – {row['Title']}", 'text': row['Text'],
-                'source': row.get('Source'), 'region': row.get('Region')}
+                'source': row.get('Source'), 'region': row.get('Region'), 'url': row.get('Url')}
     if ref.kind == 'trial_criterion':
         row = vs.get_trial_criterion(ref.evidence_id) or _missing(ref.evidence_id)
         kind = 'kritérium zařazení' if row['Kind'] == 'inclusion' else 'kritérium vyřazení'

@@ -1278,6 +1278,7 @@ interface EvidenceSource {                      // GET /api/evidence/?id=P03-img
   value?: { text: string; value: number | null; unit: string | null; ref_low: number | null; ref_high: number | null; interpretation: string | null };   // Observation
   derived_from?: EvidenceSource[];              // Observation → zdrojový dokument (derivedFrom + extension derived-from, Q15), bez další rekurze
   source?: string; region?: string;             // guidelines
+  url?: string | null;                          // odkaz na externí zdroj EXT-… (T-504)
   study_id?: string; criterion_kind?: "inclusion" | "exclusion";   // kritérium studie
 }
 

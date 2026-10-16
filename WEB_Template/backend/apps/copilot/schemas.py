@@ -273,6 +273,7 @@ class EvidenceSource(BaseModel):
     derived_from: list[EvidenceSource] | None = Field(default=None, description="Zdrojový dokument, bez další rekurze")
     source: str | None = Field(default=None, description="Guidelines")
     region: str | None = None
+    url: str | None = Field(default=None, description="Odkaz na externí zdroj EXT-… (T-504)")
     study_id: str | None = Field(default=None, description="Kritérium studie")
     criterion_kind: Literal["inclusion", "exclusion"] | None = None
 

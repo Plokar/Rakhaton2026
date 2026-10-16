@@ -227,6 +227,8 @@ export interface EvidenceSource {
   /** Guidelines. */
   source?: string | null;
   region?: string | null;
+  /** Odkaz na externí zdroj EXT-… (T-504). */
+  url?: string | null;
   /** Kritérium studie. */
   study_id?: string | null;
   criterion_kind?: 'inclusion' | 'exclusion' | null;

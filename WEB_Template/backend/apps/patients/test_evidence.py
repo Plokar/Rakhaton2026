@@ -11,7 +11,7 @@ pytestmark = pytest.mark.django_db
 @pytest.fixture
 def api(authenticated_client, fake_fhir_dataset, fake_iris, dataset_root):
     vs.ensure_schema()
-    indexing.index_guidelines(indexing.guideline_chunks(dataset_root))
+    indexing.index_guidelines(indexing.guideline_chunks(dataset_root) + indexing.external_chunks())
     indexing.index_trials(indexing.trial_criteria(ingest.load_studies(dataset_root)))
     return lambda eid: authenticated_client.get('/api/evidence/', {'id': eid})
 
@@ -46,6 +46,9 @@ def test_proms_answers_as_text(api):
 def test_guideline_and_trial_criterion(api):
     g = api('KRC-2.4').json()
     assert g['kind'] == 'guideline' and g['title'] == 'KRC-2.4 – Restaging před resekcí' and g['text']
+    assert g['url'] is None
+    ext = api('EXT-EMA-DPD-2020').json()
+    assert ext['kind'] == 'external' and ext['url'].startswith('http') and ext['text']
     c = api('RKT-03/V3').json()
     assert c['criterion_kind'] == 'exclusion' and 'neuropat' in c['text'].lower()
 

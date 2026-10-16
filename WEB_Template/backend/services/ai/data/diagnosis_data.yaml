@@ -1,0 +1,80 @@
+# Údaje podle diagnózy v sekcích odborností (FR-B8) a katalog léčebných metod (FR-D5), T-506.
+# Zdroj: docs/POZADAVKY_LEKARE.md §4 (povinné údaje podle diagnózy) a §5.2 (katalog metod a odborníků).
+#
+# data:       sada guidelines (KRC / PLI / PRS) → role → údaje. Každý údaj vybere řádky kontextu pacienta
+#             (group + pattern, `last` = jen N nejnovějších). Když řádek chybí, vznikne „missing“ s pasáží
+#             guidelines, která údaj vyžaduje (`required_by`). Údaje doplní kód, nezávisle na LLM.
+# modalities: mdt-modalita → kdo se musí vyjádřit a co má mít u sebe (blok „Léčebné metody a odborníci“).
+
+data:
+  KRC:
+    surgeon:
+      - {label: "FLR (budoucí jaterní remnant)", group: imaging, pattern: 'Objem levého laloku|FLR|remnant', last: 1, required_by: KRC-2.1}
+      - {label: "Poslední dávka bevacizumabu", group: treatment, pattern: 'bevacizumab \(ATC', last: 1, required_by: KRC-2.3}
+      - {label: "Restaging (CT hrudníku, břicha a pánve, MR jater)", group: imaging, pattern: '^(Zobrazení|Závěr)', last: 2, required_by: KRC-2.4}
+    oncologist:
+      - {label: "RAS (KRAS, NRAS)", group: staging, pattern: 'Biomarker.*(KRAS|NRAS|RAS)', required_by: KRC-1.1}
+      - {label: "BRAF V600E", group: staging, pattern: 'Biomarker.*BRAF', required_by: KRC-1.1}
+      - {label: "MMR / MSI", group: staging, pattern: 'Biomarker.*(MMR|MSI)', required_by: KRC-1.1}
+      - {label: "Poslední dávka bevacizumabu", group: treatment, pattern: 'bevacizumab \(ATC', last: 1, required_by: KRC-2.3}
+      - {label: "Neuropatie (lékař)", group: staging, pattern: '^Toxicita.*neuropat', last: 1, required_by: KRC-3.2}
+  PLI:
+    surgeon:
+      - {label: "ppoFEV1", group: staging, pattern: 'ppoFEV1', last: 1, required_by: PLI-3.1}
+      - {label: "ppoDLCO", group: staging, pattern: 'ppoDLCO', last: 1, required_by: PLI-3.1}
+      - {label: "Spiroergometrie (VO2max)", group: staging, pattern: 'VO2', last: 1, required_by: PLI-3.1}
+    pulmonologist:
+      - {label: "Spirometrie a DLCO", group: staging, pattern: 'Funkční vyšetření plic', required_by: PLI-3.1}
+      - {label: "Kouření", group: staging, pattern: 'Kouření', last: 1, required_by: PLI-3.3}
+    oncologist:
+      - {label: "EGFR", group: staging, pattern: 'Biomarker.*EGFR', required_by: PLI-1.3}
+      - {label: "ALK", group: staging, pattern: 'Biomarker.*ALK', required_by: PLI-1.3}
+      - {label: "ROS1", group: staging, pattern: 'Biomarker.*ROS1', required_by: PLI-1.3}
+      - {label: "PD-L1 TPS", group: staging, pattern: 'Biomarker.*PD-L1', required_by: PLI-1.3}
+      - {label: "Spirometrie a DLCO", group: staging, pattern: 'Funkční vyšetření plic – (FEV1|DLCO)', required_by: PLI-3.1}
+      - {label: "Kouření", group: staging, pattern: 'Kouření', last: 1, required_by: PLI-3.3}
+  PRS:
+    oncologist:
+      - {label: "ER", group: staging, pattern: 'Biomarker.*(Estrogenové|\bER\b)', required_by: PRS-1.1}
+      - {label: "PR", group: staging, pattern: 'Biomarker.*(Progesteronové|\bPR\b)', required_by: PRS-1.1}
+      - {label: "HER2", group: staging, pattern: 'Biomarker.*HER2', required_by: PRS-1.1}
+      - {label: "Ki-67", group: staging, pattern: 'Biomarker.*Ki-67', required_by: PRS-1.1}
+      - {label: "LVEF (poslední 3)", group: staging, pattern: 'LVEF', last: 3, required_by: PRS-3.4}
+    cardiologist:
+      - {label: "LVEF (trend)", group: staging, pattern: 'LVEF', last: 4, required_by: PRS-3.4}
+    pathologist:
+      - {label: "ER, PR, HER2, Ki-67", group: staging, pattern: 'Biomarker.*(Estrogenové|Progesteronové|HER2|Ki-67)', required_by: PRS-1.2}
+
+modalities:
+  chirurgie:
+    label: "Chirurgie"
+    expert: "chirurg dané oblasti (hrudní, hepatobiliární, mamární, urolog)"
+    needs: "resekabilita, TNM, FLR / ppoFEV1, předchozí operace, kardiální riziko, výživa, G8"
+  rt:
+    label: "Radioterapie"
+    expert: "radiační onkolog"
+    needs: "předchozí RT (oblast, dávka), plicní funkce, počet mozkových metastáz"
+  chemoterapie:
+    label: "Chemoterapie"
+    expert: "klinický onkolog"
+    needs: "biomarkery, linie léčby, toxicita (lékař vs. pacient), orgánové funkce, interakce"
+  cilena:
+    label: "Cílená léčba"
+    expert: "klinický onkolog"
+    needs: "biomarkery, linie léčby, toxicita (lékař vs. pacient), orgánové funkce, interakce"
+  imunoterapie:
+    label: "Imunoterapie"
+    expert: "klinický onkolog"
+    needs: "biomarkery (PD-L1, MMR/MSI, EGFR/ALK), autoimunitní onemocnění, orgánové funkce"
+  hormonalni:
+    label: "Hormonální léčba"
+    expert: "klinický onkolog"
+    needs: "ER/PR, menopauzální stav, linie léčby, interakce"
+  jina-systemova:
+    label: "Jiná systémová a podpůrná léčba"
+    expert: "klinický onkolog"
+    needs: "orgánové funkce (CrCl), stomatologické vyšetření, kalcium"
+  diagnostika:
+    label: "Diagnostika (biopsie, EBUS)"
+    expert: "radiolog, pneumolog, patolog"
+    needs: "ložisko, přístup, předchozí komplikace, potřebná imunohistochemie"

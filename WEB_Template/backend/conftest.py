@@ -7,6 +7,23 @@ import pytest
 # takže to funguje v kontejneru (db) i v CI (localhost).
 
 
+@pytest.fixture(autouse=True)
+def no_live_iris_sql(request, monkeypatch):
+    """Unit testy nesmí sahat na živé IRIS SQL (v CI není): stejné chování lokálně i v CI.
+
+    Vektory dává fixture ``fake_iris`` / ``grounding_vectors`` (services/conftest.py), živé IRIS jen ``-m integration``.
+    """
+    if request.node.get_closest_marker('integration'):
+        return
+    from services.fhir import client
+    from services.iris import db
+
+    def offline(*args, **kwargs):
+        raise ConnectionError('IRIS v unit testech není (CI); použij fixture fake_iris / fake_fhir nebo -m integration')
+    monkeypatch.setattr(db, 'connect', offline)
+    monkeypatch.setattr(client, 'request', offline)
+
+
 @pytest.fixture
 def api_client():
     """Provide a Django REST Framework API client."""

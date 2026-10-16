@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext
+from services.ai.diagnosis_data import role_diagnosis_items
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.recist import recist_claim
 from services.ai_service import BaseAIProvider
@@ -99,6 +100,8 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
     items = items[:output_limit(config, "role_views")]          # detail podle konfigurace (T-207)
     if not items:
         items = _fallback_items(role, cfg, context, data)       # data z FHIR se nekrátí (chybějící údaje zůstanou)
+    # FR-B8 (T-506): údaje podle diagnózy doplní kód vždy, i když je LLM nezmínil.
+    items += role_diagnosis_items(role, context, {c for item in items for c in item["citations"]})
     if recist_future:
         recist = recist_future.result()
         recist_pool.shutdown()

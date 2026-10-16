@@ -807,6 +807,11 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - Pro každou roli z `roles_present` jedno volání Gemini (`prompts/role_view.md`), všechna souběžně se souhrnem a RF-LLM.
   - Kritérium posouzení s citací mimo kontext dostane `unknown`.
   - Bez LLM (mock nebo chyba) vzniknou tvrzení z dat podle zaměření role a posouzení ze semaforu postupů, za které role odpovídá (red → `not_candidate`, orange → `conditional`, šedá → `insufficient_data`; u radiologa pravidla stagingu). Podpůrná léčba verdikt onkologa netvoří.
+- **Údaje podle diagnózy a katalog metod (FR-B8, FR-D5, T-506):** `services/ai/diagnosis_data.py` + data `services/ai/data/diagnosis_data.yaml` (docs/POZADAVKY_LEKARE.md §4 a §5.2).
+  - Ke každé sekci odbornosti kód připojí údaje podle sady guidelines pacienta: KRC chirurg FLR, poslední dávka bevacizumabu, restaging; onkolog RAS / BRAF / MMR, neuropatie. PLI: chirurg ppoFEV1 / ppoDLCO / VO2max, pneumolog spirometrie a kouření, onkolog EGFR / ALK / ROS1 / PD-L1. PRS: onkolog ER / PR / HER2 / Ki-67 a LVEF, kardiolog trend LVEF. Údaje se přidají vždy, i když je LLM nezmínil, a nekrátí se podle detailu.
+  - Chybějící údaj je `missing` s `expected_source` = pasáž, která ho vyžaduje (např. VO2max → PLI-3.1).
+  - Sekce `modalities` („Léčebné metody a odborníci“): pro každou `mdt-modalita` ze semaforu kdo se musí vyjádřit, co má mít u sebe a které postupy ze sady guidelines k ní patří, s citací pasáží a faktů pacienta.
+  - Obojí sestavuje kód (`_computed`), proto se přeskočí bod 4 groundingu. Body 1–3 platí.
 
 ### 5.6 AI zapisovatel (BON-3)
 

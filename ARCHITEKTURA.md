@@ -1214,6 +1214,22 @@ interface PatientDetail extends PatientListItem {   // GET /api/patients/{pid}/
   };
 }
 
+interface EvidenceSource {                      // GET /api/evidence/?id=P03-img03%232 (400 neplatné ID, 404 nenalezeno)
+  evidence_id: EvidenceId;
+  kind: "resource" | "paragraph" | "guideline" | "trial_criterion" | "external";
+  title: string;                                // "CT břicha a pánve…", "KRC-2.4 – Restaging před resekcí", "RKT-03 – kritérium vyřazení V3"
+  text?: string;                                // celý text zprávy / PROMs „otázka: odpověď“ / znění pasáže či kritéria
+  highlight?: { paragraph: number; start: number; end: number };   // u "#n": text.slice(start, end), offsety ve znacích (BMP = JS indexy)
+  resource_type?: string; resource_id?: string; patient_id?: string | null;
+  date?: string | null;
+  department?: string | null;                   // category text ("RDG – Radiodiagnostické oddělení")
+  author?: { id: string; text: string; specialty: string | null } | null;   // LEK-… + odbornost
+  value?: { text: string; value: number | null; unit: string | null; ref_low: number | null; ref_high: number | null; interpretation: string | null };   // Observation
+  derived_from?: EvidenceSource[];              // Observation → zdrojový dokument (derivedFrom + extension derived-from, Q15), bez další rekurze
+  source?: string; region?: string;             // guidelines
+  study_id?: string; criterion_kind?: "inclusion" | "exclusion";   // kritérium studie
+}
+
 interface ObservationSeries {                   // GET /api/patients/{pid}/observations/?code=718-7,lvef,proms:brneni → ObservationSeries[]
   code: string;                                 // LOINC | druh z ID bez LOINC ("lvef") | "proms:<linkId>"
   label: string;

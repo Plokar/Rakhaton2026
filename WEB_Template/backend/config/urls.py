@@ -86,6 +86,7 @@ import os
 from django.conf import settings
 from django.conf.urls.static import static
 from apps.projects.ai_views import ai_generate, ai_providers_list
+from apps.patients import views as patient_views
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -99,6 +100,7 @@ urlpatterns = [
     path('api/health/', health_check, name='health-check'),
     path('api/auth/', include('apps.authentication.urls')),
     path('api/patients/', include('apps.patients.urls')),
+    path('api/evidence/', patient_views.evidence_source, name='evidence-source'),
     path('api/items/', include('apps.items.urls')),
 
     # API Documentation (Swagger & ReDoc)

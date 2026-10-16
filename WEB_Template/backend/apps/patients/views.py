@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from services import patients
+from services import evidence, patients
 from services.fhir.client import FhirError
 
 
@@ -54,3 +54,18 @@ def patient_timeline(request, pid):
 def patient_observations(request, pid):
     codes = {c for c in request.query_params.get('code', '').split(',') if c} or None
     return Response(patients.observations(_load(pid), codes))
+
+
+@extend_schema(
+    responses=OpenApiTypes.OBJECT, tags=['evidence'],
+    parameters=[OpenApiParameter('id', str, required=True, description='Evidence ID: P03-img03, P03-img03#2, KRC-2.4, RKT-03/V3')],
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def evidence_source(request):
+    try:
+        return Response(evidence.resolve(request.query_params.get('id', '')))
+    except evidence.InvalidEvidenceId:
+        return Response({'detail': 'Neplatné Evidence ID (ARCHITEKTURA §5.2).'}, status=400)
+    except evidence.EvidenceNotFound:
+        raise Http404

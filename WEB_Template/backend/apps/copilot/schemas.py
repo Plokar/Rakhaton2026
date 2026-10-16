@@ -461,6 +461,14 @@ class FhirIds(BaseModel):
     research_subjects: list[str]
     provenance: str
     document_reference_pdf: str | None = None
+    document_reference_patient: str | None = Field(default=None, description='"P03-mdt02-pacient" (BON-4)')
+
+
+class PatientSummary(BaseModel):
+    """Shrnutí pro pacienta (BON-4, T-306): z potvrzeného závěru, každá věta s citací."""
+    items: list[Claim]
+    generated_at: str
+    document_reference: str = Field(description='"P03-mdt02-pacient" v IRIS')
 
 
 class Decision(BaseModel):
@@ -476,6 +484,7 @@ class Decision(BaseModel):
     confirmed_by: ConfirmedBy | None = None
     confirmed_at: str | None = None
     fhir_ids: FhirIds | None = Field(default=None, description="Po potvrzení")
+    patient_summary: PatientSummary | None = Field(default=None, description="Po potvrzení (BON-4)")
 
 
 # ── §8.6 Zařazení pacienta (MdtCase, IntakeWarning) ───────────────────────────

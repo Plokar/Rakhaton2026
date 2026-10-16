@@ -383,7 +383,11 @@ export interface Decision {
     research_subjects: string[];
     provenance: string;
     document_reference_pdf?: string;
+    /** "P03-mdt02-pacient" (BON-4) */
+    document_reference_patient?: string;
   };
+  /** Shrnutí pro pacienta (BON-4): z potvrzeného závěru, každá věta s citací. */
+  patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };
 }
 
 // ── §8.5 BriefConfig ──────────────────────────────────────────────────────────

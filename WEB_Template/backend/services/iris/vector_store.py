@@ -194,7 +194,9 @@ def _replace(name: str, rows: list, delete_where: str, delete_params: list, prov
     )
     params = [[getattr(r, c) for c in cols] + [model_id, _vector_param(v)] for r, v in zip(rows, vectors)]
     with _cursor(commit=True) as cursor:
-        cursor.execute(f'DELETE FROM {_table(name)} WHERE {delete_where}', delete_params)
+        # Jen řádky stejného modelu: mock a Gemini vektory žijí vedle sebe (dev, demo), `similarity` filtruje model.
+        cursor.execute(f'DELETE FROM {_table(name)} WHERE {delete_where} AND EmbeddingModel = ?',
+                       [*delete_params, model_id])
         if params:
             cursor.executemany(sql, params)
     return len(rows)
@@ -202,7 +204,7 @@ def _replace(name: str, rows: list, delete_where: str, delete_params: list, prov
 
 def replace_evidence(patient_id: str, chunks: list[EvidenceChunk], provider=None,
                      pseudonymizer: Callable[[str], str] | None = None) -> int:
-    """Všechny odstavce pacienta znovu (smaže staré, i z jiného modelu).
+    """Všechny odstavce pacienta znovu (smaže staré řádky téhož embedding modelu, jiné modely nechá).
 
     ``pseudonymizer`` = ``Pseudonymizer`` se jmény pacienta a lékařů (``indexing.index_patient``);
     bez něj jen vzory (RČ, e-mail, telefon, datum narození).

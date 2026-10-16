@@ -27,6 +27,7 @@ import logging
 import math
 import os
 import re
+import threading
 import time
 import unicodedata
 from abc import ABC, abstractmethod
@@ -44,8 +45,24 @@ DEFAULT_TEMPERATURE = 0.2          # ARCHITEKTURA §5.1: teplota 0–0.2
 DEFAULT_TIMEOUT_S = 90
 RETRY_ATTEMPTS = 3                 # včetně prvního pokusu; SDK opakuje 408, 429 a 5xx
 EMBED_BATCH_SIZE = 100
-EMBED_RATE_RETRIES = 3                                  # 429 free tieru: čekat podle „retry in Ns“
+RATE_RETRIES = 3                                        # 429 free tieru: čekat podle „retry in Ns“
 RETRY_IN = re.compile(r"retry in (\d+(?:\.\d+)?)s", re.IGNORECASE)
+
+
+def _rate_retry(call):
+    """Free tier (D-021) má limity za minutu; 429 nese „retry in Ns“ → počkat (max 65 s) a zkusit znovu."""
+    from google.genai import errors
+
+    for attempt in range(RATE_RETRIES + 1):
+        try:
+            return call()
+        except errors.APIError as exc:
+            delay = RETRY_IN.search(str(exc)) if exc.code == 429 else None
+            if delay is None or attempt == RATE_RETRIES:
+                raise
+            wait = min(float(delay.group(1)) + 1, 65)
+            logger.warning("Gemini 429, čekám %.0f s (pokus %d)", wait, attempt + 1)
+            time.sleep(wait)
 INLINE_AUDIO_MAX_BYTES = 20 * 1024 * 1024   # větší audio jde přes Files API
 
 # task_type pro embeddingy (ARCHITEKTURA §4.5)
@@ -324,6 +341,7 @@ class GeminiProvider(BaseAIProvider):
     def __init__(self, api_key: str | None = None, client: Any = None):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         self._client = client
+        self._client_lock = threading.Lock()
 
     @property
     def provider_name(self) -> str:
@@ -331,6 +349,12 @@ class GeminiProvider(BaseAIProvider):
 
     @property
     def client(self):
+        # Volání podkladu běží paralelně: bez zámku vznikne víc klientů a přepsaný se při GC zavře
+        # („client has been closed“) uprostřed požadavku jiného vlákna.
+        with self._client_lock:
+            return self._make_client()
+
+    def _make_client(self):
         if self._client is None:
             if not self.api_key:
                 raise AIProviderError("GEMINI_API_KEY není nastaven")
@@ -379,18 +403,11 @@ class GeminiProvider(BaseAIProvider):
         vectors: list[list[float]] = []
         for i in range(0, len(texts), EMBED_BATCH_SIZE):
             batch = texts[i:i + EMBED_BATCH_SIZE]
-            for attempt in range(EMBED_RATE_RETRIES + 1):
-                try:
-                    resp = self.client.models.embed_content(model=model_name, contents=batch, config=config)
-                    break
-                except errors.APIError as exc:
-                    # Free tier (D-021): 100 textů za minutu; 429 nese „retry in Ns“ → počkat a zkusit znovu.
-                    delay = RETRY_IN.search(str(exc)) if exc.code == 429 else None
-                    if delay is None or attempt == EMBED_RATE_RETRIES:
-                        raise AIProviderError(f"Gemini embed HTTP {exc.code}: {_short(exc)}") from exc
-                    wait = min(float(delay.group(1)) + 1, 65)
-                    logger.warning("Gemini embed 429, čekám %.0f s (pokus %d)", wait, attempt + 1)
-                    time.sleep(wait)
+            try:
+                resp = _rate_retry(lambda: self.client.models.embed_content(model=model_name, contents=batch,
+                                                                            config=config))
+            except errors.APIError as exc:
+                raise AIProviderError(f"Gemini embed HTTP {exc.code}: {_short(exc)}") from exc
             embeddings = resp.embeddings or []
             if len(embeddings) != len(batch):
                 raise AIProviderError(f"Gemini vrátil {len(embeddings)} embeddingů pro {len(batch)} textů")
@@ -436,8 +453,8 @@ class GeminiProvider(BaseAIProvider):
                 "response_json_schema": gemini_json_schema(response_schema),
             }
         try:
-            resp = self.client.models.generate_content(
-                model=model, contents=contents, config=types.GenerateContentConfig(**config))
+            resp = _rate_retry(lambda: self.client.models.generate_content(
+                model=model, contents=contents, config=types.GenerateContentConfig(**config)))
         except errors.APIError as exc:
             logger.error("Gemini API error %s (model %s)", exc.code, model)
             return self._error(f"Gemini HTTP {exc.code}: {_short(exc)}", model=model, started=started, p_hash=p_hash)

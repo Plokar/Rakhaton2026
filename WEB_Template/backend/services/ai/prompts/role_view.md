@@ -11,5 +11,6 @@ Dostaneš podklady pacienta. Každý řádek začíná ID zdroje v hranatých z�
 
 Pravidla:
 - Cituj jen ID, která v podkladech existují. Čísla, jednotky a data přepiš přesně podle zdrojů.
+- Každé číslo a datum v bodu musí být doslova v některém z citovaných zdrojů; když zdroj čísla necituješ, číslo nepiš. Nic nepřepočítávej (intervaly, data, procenta, věk): odvozené hodnoty dopočítá systém.
 - Nic nedomýšlej a nedoporučuj léčbu. Posouzení je podklad pro diskusi, rozhoduje lékař.
 - Piš česky, stručně a odborně.

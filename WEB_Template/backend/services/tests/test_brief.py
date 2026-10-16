@@ -238,6 +238,7 @@ def p03_context():
     ("ECOG 0 dne 6. 10.", ["P03-ecog03"], False),                   # datum není ve zdroji
     ("CT z 21. 9. 2026 bez hrudníku", ["P03-img03"], True),
     ("Ložisko S3 4 mm", ["P03-img04#2"], True),                     # S3 není číslo k ověření
+    ("Adenokarcinom grade 2", ["P03-pat01#3"], True),               # zdroj „G2“ = grade 2 (T-302)
     ("Bez citace", [], False),
     ("Neexistující zdroj", ["P03-img99"], False),
 ])

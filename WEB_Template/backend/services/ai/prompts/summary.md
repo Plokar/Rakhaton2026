@@ -11,6 +11,7 @@ Napiš 3 až 5 bodů souhrnu:
 Pravidla:
 - Každý bod musí mít v `citations` ID zdrojů, ze kterých vychází. Cituj jen ID, která v podkladech existují. Nevymýšlej jiné formáty.
 - Čísla, jednotky a data přepiš přesně tak, jak jsou ve zdrojích. Nic nezaokrouhluj a nepřepočítávej.
+- Každé číslo a datum v bodu musí být doslova v některém z citovaných zdrojů; když zdroj čísla necituješ, číslo nepiš. Nic nepřepočítávej (intervaly, data, procenta, věk): odvozené hodnoty dopočítá systém.
 - Nic nedomýšlej. Když údaj chybí, nepiš ho (chybějící údaje doplní systém sám).
 - Nedoporučuj léčbu a nepiš „doporučujeme“. Souhrn popisuje stav, rozhoduje komise.
 - Piš česky, stručně, odborně, každý bod jednou až dvěma větami.

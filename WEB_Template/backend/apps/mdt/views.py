@@ -1,6 +1,7 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
 import base64
 import json
+import re
 
 from django.db import transaction
 from django.http import HttpResponse
@@ -306,6 +307,62 @@ def case_patient_summary(request, cid):
     job = GenerationJob.objects.create(case=case, kind='patient_summary', params={}, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+def _next_import_id(pid: str) -> str:
+    from services.fhir import client as fhir
+    numbers = [int(m[1]) for d in fhir.search('DocumentReference', patient=pid)
+               if (m := re.match(rf'^{re.escape(pid)}-imp(\d+)$', d['id']))]
+    return f'{pid}-imp{max(numbers, default=0) + 1:02d}'
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def patient_import(request, pid):
+    """BON-7: vložený text (`{text}`) nebo multipart `pdf` → návrh hodnot s citací odstavce. Nic se nezapisuje."""
+    from services.ai import report_import
+    from services.ai.brief import _llm_call_log
+    from services.ai_service import get_ai_provider
+
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    _patient_resources(pid)
+    provider = get_ai_provider()
+    pdf = request.FILES.get('pdf')
+    if pdf:
+        if pdf.size > AUDIO_MAX_BYTES:
+            raise ValidationError({'pdf': 'PDF je větší než 20 MB.'})
+        text = report_import.pdf_text(pdf.read(), provider, _llm_call_log)
+    else:
+        text = str(request.data.get('text', ''))
+    if not text.strip():
+        raise ValidationError({'text': 'Vlož text zprávy nebo nahraj PDF.'})
+    try:
+        return Response(report_import.propose(pid, _next_import_id(pid), text, provider, _llm_call_log))
+    except ValueError as e:
+        raise ValidationError({'text': str(e)}) from None
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def patient_import_confirm(request, pid):
+    """BON-7: potvrzení lékařem → server návrh znovu ověří a zapíše jednou transakcí (+ Provenance)."""
+    from services.ai import report_import
+    from services.fhir import client as fhir
+
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    proposal = request.data
+    if not isinstance(proposal, dict) or proposal.get('patient_id') != pid:
+        raise ValidationError({'patient_id': 'Návrh nepatří tomuto pacientovi.'})
+    try:
+        resources = report_import.confirm(proposal, user_name=request.user.get_full_name() or request.user.username)
+    except (KeyError, ValueError) as e:
+        raise ValidationError({'values': str(e)}) from None
+    fhir.transaction({'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
+        {'resource': r, 'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources]})
+    writeback._reindex_vectors(pid)
+    return Response({'fhir_written': [f"{r['resourceType']}/{r['id']}" for r in resources]}, status=201)
 
 
 AUDIO_MAX_BYTES = 20 * 1024 * 1024          # inline limit Gemini (ARCH §5.6)

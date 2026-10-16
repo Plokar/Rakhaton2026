@@ -589,24 +589,43 @@ def rf_lesion(data: PatientData) -> list[RedFlag]:
     return flags
 
 
+LYNCH_FAMILY = re.compile(r"tlust\w* střev|kolorekt|rekt|endometri|děloh|žaludk|ovari|vaječník|močov|ledvinn\w* pánvičk",
+                          re.IGNORECASE)
+
+
+def rf_lynch(data: PatientData) -> list[RedFlag]:
+    """Kolorektum + karcinom Lynchova spektra v rodině + MMR/MSI nevyšetřeno → genetické poradenství (OBC-2.4, KRC-1.2)."""
+    if "KRC" not in data.sets:
+        return []
+    family = data.find_paragraphs(re.compile(r"^RA:.*(" + LYNCH_FAMILY.pattern + ")", re.I | re.S))
+    mmr = [o for o in data.by_category("Biomarker") if re.search(r"MMR|MSI", o.text)
+           and isinstance(o.value, str) and MISSING_VALUE.search(o.value)]
+    if not family or not mmr:
+        return []
+    return [_flag("RF-GENETIC", mmr[-1].id, "moderate", "Karcinom Lynchova spektra v rodině, MMR ani genetika neprovedeny",
+                  f"Rodinná anamnéza uvádí nádor Lynchova spektra, MMR / MSI je „{mmr[-1].value}“ a genetické "
+                  "poradenství neproběhlo.", [family[0], mmr[-1].id], "OBC-2.4")]
+
+
 def rf_genetic(data: PatientData) -> list[RedFlag]:
+    lynch = rf_lynch(data)
     germline = [o for o in data.by_category("Biomarker")
                 if re.search(r"germin|zárodeč", o.text, re.I) and isinstance(o.value, str)
                 and MISSING_VALUE.search(o.value)]
     if not germline:
-        return []
+        return lynch
     tumor = [o for o in data.by_category("Biomarker")
              if re.search(r"brca", o.text, re.I) and not re.search(r"germin|zárodeč", o.text, re.I)
              and isinstance(o.value, str) and re.search(r"patogen|mutac|variant", o.value, re.I)]
     family = data.find_paragraphs(re.compile(r"^RA:.*(" + GENETIC_FAMILY.pattern + ")", re.I | re.S))
     if not tumor and not family:
-        return []
+        return lynch
     reason = []
     if tumor:
         reason.append(f"patogenní varianta v nádoru ({tumor[-1].text})")
     if family:
         reason.append("rodinná anamnéza karcinomu prsu nebo vaječníků")
-    return [_flag("RF-GENETIC", germline[-1].id, "moderate", "Genetické poradenství neproběhlo",
+    return lynch + [_flag("RF-GENETIC", germline[-1].id, "moderate", "Genetické poradenství neproběhlo",
                   f"Indikace genetického poradenství: {' a '.join(reason)}. "
                   f"Germinální BRCA1/2 je „{germline[-1].value}“.",
                   [germline[-1].id, *(o.id for o in tumor[-1:]), *family[:1]],

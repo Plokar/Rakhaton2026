@@ -285,6 +285,24 @@ class TestGeminiProvider:
         with pytest.raises(AIProviderError):
             gemini(error=errors.APIError(500, {"error": {"message": "boom"}})).embed(["text"])
 
+    def test_embed_waits_on_free_tier_429(self, monkeypatch):
+        """D-021: 429 s „retry in Ns“ → počkat a zopakovat, ne spadnout."""
+        provider = gemini()
+        models = provider.client.models
+        ok = models.embed_content
+        errs = [errors.APIError(429, {"error": {"message": "Quota exceeded. Please retry in 2.5s."}})]
+
+        def flaky(**kwargs):
+            if errs:
+                raise errs.pop()
+            return ok(**kwargs)
+
+        models.embed_content = flaky
+        waits = []
+        monkeypatch.setattr(ai_service.time, "sleep", waits.append)
+        assert len(provider.embed(["text"])) == 1
+        assert waits == [3.5]
+
     def test_transcribe_inline_audio(self, monkeypatch):
         monkeypatch.setenv("TRANSCRIBE_MODEL", "gemini-transcribe-test")
         payload = {"segments": [{"speaker": "onkolog", "start": "00:12", "text": "ECOG je nula."}]}

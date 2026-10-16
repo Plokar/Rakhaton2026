@@ -9,8 +9,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 
-def evaluate_sld(measurements: Iterable[dict]) -> dict | None:
-    """Vrátí SLD, baseline, nadir, procentní změnu a odpověď pro alespoň 2 měření."""
+def evaluate_sld(measurements: Iterable[dict], new_lesions: bool = False) -> dict | None:
+    """Vrátí SLD, baseline, nadir, procentní změnu a odpověď pro alespoň 2 měření.
+
+    Nová léze znamená PD bez ohledu na SLD (RECIST 1.1).
+    """
     points = sorted(
         (item for item in measurements
          if isinstance(item.get("sld_mm"), (int, float)) and item["sld_mm"] >= 0 and item.get("date")),
@@ -31,7 +34,9 @@ def evaluate_sld(measurements: Iterable[dict]) -> dict | None:
     change_from_baseline = (current_mm - baseline_mm) / baseline_mm * 100
     change_from_nadir = ((current_mm - nadir_mm) / nadir_mm * 100) if nadir_mm else (0 if current_mm == 0 else float("inf"))
 
-    if current_mm == 0:
+    if new_lesions:
+        response = "PD"
+    elif current_mm == 0:
         response = "CR"
     elif change_from_nadir >= 20 and current_mm - nadir_mm >= 5:
         response = "PD"

@@ -6,6 +6,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 from services.fhir import client as fhir
+from services.fhir.mcode import apply_profiles
 from services.fhir.writeback import BASE, INTENTS, MODALITIES, ROLES_CS
 
 TASK_STATUS = {'requested': 'zadáno', 'in-progress': 'probíhá', 'completed': 'hotovo'}
@@ -46,7 +47,8 @@ def document_bundle(fhir_ids: dict, now: datetime) -> dict:
     return {
         'resourceType': 'Bundle', 'type': 'document', 'timestamp': now.isoformat(),
         'identifier': {'system': f'{BASE}/sid/mdt-zaznam', 'value': fhir_ids['composition']},
-        'entry': [{'fullUrl': f'{BASE}/{ref}', 'resource': r} for ref, r in resources.items()],
+        # BON-5 (T-307): mCODE profily a kódy jen v kopii pro export, IRIS beze změny
+        'entry': [{'fullUrl': f'{BASE}/{ref}', 'resource': apply_profiles(r)} for ref, r in resources.items()],
     }
 
 

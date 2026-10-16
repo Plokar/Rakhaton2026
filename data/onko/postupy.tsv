@@ -1,0 +1,204 @@
+dg	kontext	marker	postup	nazev	tagy	opora	zdroj	ov
+C34	nejasné plicní ložisko nebo ložisko měnící stadium	-	pli-biopsie-tt	Transtorakální biopsie pod CT	DG.biopsie.tt	-	PLI-1.2,OBC-1.4	D
+C34	suspektní mediastinální uzliny	-	pli-ebus	EBUS-TBNA, případně mediastinoskopie	DG.EBUS	-	PLI-1.1	D
+C34	NSCLC I–II resekabilní	-	pli-lobektomie	Anatomická resekce (lobektomie) + lymfadenektomie	CHIR.plice,INT,RAD	-	PLI-2.2,EXT-ESMO-NSCLC-EARLY-2017	E
+C34	NSCLC IA periferní ≤2 cm	-	pli-segmentektomie	Segmentektomie	CHIR.plice.segment,INT,RAD	JCOG0802,CALGB140503	EXT-JCOG0802-2022	E
+C34	NSCLC I inoperabilní nebo odmítá operaci	-	pli-sbrt	Stereotaktická RT (SBRT)	RT.SBRT.plice,RAD	-	EXT-ESMO-NSCLC-EARLY-2017	E
+C34	NSCLC II–IIIA po resekci	-	pli-adj-cht	Adjuvantní CHT (cisplatinový dublet)	CHT.platina.cis,INT	LACE	EXT-ESMO-NSCLC-EARLY-2017	E
+C34	NSCLC IB–IIIA po resekci	EGFR=mut	pli-adj-osimertinib	Adjuvantní osimertinib 3 roky	TT.EGFR.osi	ADAURA	PLI-2.3	D
+C34	NSCLC IB–IIIA po resekci	ALK=pos	pli-adj-alektinib	Adjuvantní alektinib 2 roky	TT.ALK	ALINA	EXT-ESMO-NSCLC-LG	⚠
+C34	NSCLC II–IIIA po resekci a adj. CHT	PDL1>=50	pli-adj-atezolizumab	Adjuvantní atezolizumab 1 rok	IO.PDL1	IMpower010	EXT-ESMO-NSCLC-LG	E
+C34	NSCLC IB–IIIA po resekci	-	pli-adj-pembrolizumab	Adjuvantní pembrolizumab	IO.PD1	PEARLS	EXT-ESMO-NSCLC-LG	⚠
+C34	NSCLC II–IIIB resekabilní	-	pli-neoadjuvance-lobektomie	Neoadjuvantní chemoimunoterapie a lobektomie	CHIR.plice,CHT.platina.cis,IO.PD1,INT,RAD	CheckMate816,KEYNOTE-671,AEGEAN,CheckMate77T,RKT-04	PLI-2.2	D
+C34	NSCLC III neresekabilní	-	pli-chrt-durvalumab	Konkomitantní chemoradioterapie a konsolidační durvalumab	RT.hrudnik,CHT.platina.cis,IO.PDL1,durvalumab,INT,RAD	PACIFIC	PLI-2.4	D
+C34	NSCLC III neresekabilní	EGFR=mut	pli-chrt-osimertinib	CHRT a konsolidační osimertinib	RT.hrudnik,CHT.platina,TT.EGFR.osi,INT,RAD	LAURA	EXT-ESMO-NSCLC-LG	⚠
+C34	NSCLC III, nezpůsobilý ke konkomitanci	-	pli-sekvencni-chrt	Sekvenční CHT → RT nebo samotná RT	RT.hrudnik,CHT.platina,RAD	-	EXT-ESMO-NSCLC-EARLY-2017	E
+C34	NSCLC IV 1L	EGFR=mut	pli-m-osimertinib	Osimertinib ± platina + pemetrexed	TT.EGFR.osi	FLAURA,FLAURA2	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 1L	EGFR=mut	pli-m-amivantamab	Amivantamab + lazertinib	TT.EGFR	MARIPOSA	EXT-ESMO-NSCLC-LG	⚠
+C34	NSCLC IV 1L	ALK=pos	pli-m-alk	Alektinib / lorlatinib / brigatinib	TT.ALK,TT.ALK.lorla	ALEX,CROWN	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 1L	ROS1=pos	pli-m-ros1	Entrektinib / krizotinib / repotrektinib	TT.ROS1	-	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV	BRAF=v600e	pli-m-braf	Dabrafenib + trametinib	TT.BRAF	-	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 2L	KRAS=g12c	pli-m-kras	Sotorasib / adagrasib	TT.KRAS	CodeBreaK200	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV	MET=ex14	pli-m-met	Kapmatinib / tepotinib	TT.MET	-	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 1L	RET=pos	pli-m-ret	Selperkatinib / pralsetinib	TT.RET	LIBRETTO-431	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV	NTRK=pos	pli-m-ntrk	Larotrektinib / entrektinib	TT.NTRK	-	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 2L	HER2MUT=mut	pli-m-her2mut	Trastuzumab deruxtekan	ADC.HER2.tdxd	DESTINY-Lung02	EXT-ESMO-NSCLC-LG	⚠
+C34	NSCLC IV 1L bez driveru	PDL1>=50	pli-m-io-mono	Pembrolizumab / atezolizumab / cemiplimab v monoterapii	IO.PD1,IO.PDL1	KEYNOTE-024,IMpower110,EMPOWER-Lung1	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 1L bez driveru, neskvamózní	-	pli-m-chemo-io-nsq	Pembrolizumab + platina + pemetrexed	IO.PD1,CHT.platina,CHT.pemetrexed,INT	KEYNOTE-189	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 1L bez driveru, skvamózní	-	pli-m-chemo-io-sq	Pembrolizumab + karboplatina + (nab-)paklitaxel	IO.PD1,CHT.platina.karbo,CHT.taxan,INT	KEYNOTE-407	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 1L bez driveru	-	pli-m-nivo-ipi	Nivolumab + ipilimumab ± 2 cykly CHT	IO.PD1,IO.CTLA4,CHT.platina	CheckMate9LA,CheckMate227	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV 2L	-	pli-m-docetaxel	Docetaxel ± nintedanib (adenokarcinom) nebo ramucirumab	CHT.taxan.doce,TT.VEGFR	LUME-Lung1,REVEL	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC IV, ECOG ≥2	-	pli-m-mono-cht	Monochemoterapie nebo BSC	CHT	-	EXT-ESMO-NSCLC-2023	E
+C34	NSCLC oligometastatický	-	pli-m-lat	Lokální ablativní léčba oligometastáz (SBRT, operace)	RT.SBRT,RAD	SABR-COMET	EXT-ESMO-NSCLC-2023	⚠
+C34	NSCLC II–IIIB studie	-	pli-rkt04	Studie RKT-04 PULMO-NEO	STUDIE,IO.PD1,CHIR.plice	RKT-04	RKT-04	D
+C34	SCLC T1–2 N0	-	sclc-resekce	Lobektomie + adjuvantní CHT	CHIR.plice,CHT.platina,INT,RAD	-	EXT-ESMO-SCLC-2021	E
+C34	SCLC omezené stadium	-	sclc-chrt	CHRT (cisplatina + etoposid), PCI nebo MR sledování, konsolidační durvalumab	RT.hrudnik,CHT.platina.cis,CHT.etopozid,IO.PDL1,INT,RAD	ADRIATIC	EXT-ESMO-SCLC-2021	⚠
+C34	SCLC rozsáhlé stadium 1L	-	sclc-es-chemo-io	Karboplatina + etoposid + atezolizumab / durvalumab	CHT.platina.karbo,CHT.etopozid,IO.PDL1	IMpower133,CASPIAN	EXT-ESMO-SCLC-2021	E
+C34	SCLC 2L	-	sclc-2l	Lurbinektedin / topotekan / znovu platina (relaps ≥3–6 měsíců)	CHT	-	EXT-ESMO-SCLC-2021	E
+C34	SCLC 2L+	-	sclc-tarlatamab	Tarlatamab	TT.BiTE	DeLLphi-304	EXT-IMDELLTRA-USPI	⚠
+C50	časný, operabilní	-	prs-bcs-rt	Záchovná operace (BCS) + SLNB + RT prsu (hypofrakcionace)	CHIR.prs.bcs,RT.prs,RAD	START,FAST-Forward	EXT-ESMO-EBC-2024	E
+C50	časný	-	prs-mastektomie	Mastektomie ± rekonstrukce, SLNB nebo disekce axily	CHIR.prs,INT,RAD	-	EXT-ESMO-EBC-2024	E
+C50	časný, ≥65–70 let, HR+, nízké riziko	HR=pos	prs-vynechani-rt	Vynechání RT po BCS při endokrinní léčbě	HT,SLED	PRIME-II,CALGB9343	EXT-ESMO-EBC-2024	E
+C50	časný HR+ HER2−	HR=pos	prs-adj-ht	Adjuvantní HT 5–10 let (tamoxifen / AI ± ovariální suprese)	HT.TAM,HT.AI,HT.OFS	SOFT-TEXT	EXT-ESMO-EBC-2024	E
+C50	časný HR+ HER2− vysoké riziko	HR=pos	prs-adj-cdk46	Adjuvantní abemaciklib / ribociklib + HT	TT.CDK46.abema,TT.CDK46.ribo,HT.AI	monarchE,NATALEE	EXT-ESMO-EBC-2024	E
+C50	časný HR+ HER2−, rozhodnutí o CHT	HR=pos	prs-genomicky-test	Genomický test (Oncotype DX, MammaPrint) k indikaci CHT	DG	TAILORx,RxPONDER,MINDACT	EXT-ESMO-EBC-2024	E
+C50	časný, (neo)adjuvance	-	prs-adj-cht	(Neo)adjuvantní CHT (antracyklin + taxan, TC)	CHT.antra,CHT.taxan,INT	-	EXT-ESMO-EBC-2024	E
+C50	časný HER2+ ≥T2 nebo N+	HER2=pos	prs-neo-her2	Neoadjuvantní taxan + trastuzumab + pertuzumab	CHT.taxan,TT.HER2,INT	NeoSphere,APHINITY	EXT-ESMO-EBC-2024	E
+C50	časný HER2+ reziduum po neoadjuvanci	HER2=pos	prs-adj-tdm1	Adjuvantní T-DM1	ADC.HER2.tdm1	KATHERINE	EXT-ESMO-EBC-2024	E
+C50	časný TNBC ≥T2 nebo N+	-	prs-tnbc-pembro	Neoadjuvantní pembrolizumab + CHT, adjuvantní pembrolizumab	IO.PD1,CHT.platina.karbo,CHT.taxan,CHT.antra,INT	KEYNOTE-522	EXT-ESMO-EBC-2024	E
+C50	časný TNBC reziduum	-	prs-tnbc-kapecitabin	Adjuvantní kapecitabin	CHT.FP.cape	CREATE-X	EXT-ESMO-EBC-2024	E
+C50	časný HER2− vysoké riziko	BRCA=mut	prs-adj-olaparib	Adjuvantní olaparib 1 rok (zárodečná BRCA)	TT.PARP.ola	OlympiA	EXT-ESMO-EBC-2024	E
+C50	M1 HR+ HER2− 1L	HR=pos	prs-endokrinni-cdk46	Endokrinní léčba ± inhibitor CDK4/6 (linie podle biomarkerů)	HT.AI,HT.SERD,TT.CDK46.palbo,TT.CDK46.ribo,TT.CDK46.abema	PALOMA-2,MONALEESA-2,MONARCH-3,MONALEESA-3,PALOMA-3	PRS-2.1,PRS-2.2	D
+C50	M1 HR+ HER2− po CDK4/6	ESR1=mut	prs-m-elacestrant	Elacestrant	HT.SERD	EMERALD	PRS-2.2	D
+C50	M1 HR+ HER2− po CDK4/6	PIK3CA=mut	prs-m-pi3k	Fulvestrant + alpelisib / capivasertib (PIK3CA, AKT1, PTEN)	HT.SERD,TT.PI3K,TT.AKT	SOLAR-1,CAPItello-291	PRS-2.2	D
+C50	M1 HR+ HER2− bez markeru	HR=pos	prs-m-everolimus	Everolimus + exemestan	TT.mTOR,HT.AI	BOLERO-2	PRS-2.2	D
+C50	M1 HER2−	BRCA=mut	prs-parp-inhibitor	PARP inhibitor (studie RKT-06)	TT.PARP,TT.PARP.ola	OlympiAD,EMBRACA,RKT-06	PRS-2.2,RKT-06	D
+C50	M1 HER2-low po endokrinní léčbě nebo CHT	-	prs-tdxd	Trastuzumab deruxtekan (T-DXd)	ADC.HER2.tdxd.low	DESTINY-Breast04,DESTINY-Breast06	PRS-2.3,PRS-1.2	D
+C50	M1 HR+ HER2− předléčený	HR=pos	prs-m-trop2	Sacituzumab govitekan / datopotamab deruxtekan	ADC.TROP2.sg,ADC.TROP2.dato	TROPiCS-02,TROPION-Breast01	EXT-ESMO-MBC-LG	⚠
+C50	M1 HER2+ 1L	HER2=pos	prs-anti-her2	Pertuzumab + trastuzumab (± taxan), udržovací anti-HER2 léčba	TT.HER2,CHT.taxan	CLEOPATRA	PRS-3.1	D
+C50	M1 HER2+ 2L	HER2=pos	prs-m-tdxd-her2	Trastuzumab deruxtekan (2. linie)	ADC.HER2.tdxd	DESTINY-Breast03	PRS-3.2	D
+C50	M1 HER2+ předléčený, mozkové metastázy	HER2=pos	prs-m-tukatinib	Tukatinib + trastuzumab + kapecitabin	TT.HER2,CHT.FP.cape	HER2CLIMB	PRS-3.3	D
+C50	M1 HER2+ studie	HER2=pos	prs-rkt02	Studie RKT-02 HELIX-2	STUDIE,ADC.HER2	RKT-02	RKT-02	D
+C50	M1 HR+ ESR1 mut studie	ESR1=mut	prs-rkt01	Studie RKT-01 MERIDIAN-B	STUDIE,HT.SERD	RKT-01	RKT-01	D
+C50	M1 TNBC 1L	CPS>=10	prs-m-tnbc-pembro	Pembrolizumab + CHT	IO.PD1,CHT	KEYNOTE-355	EXT-ESMO-MBC-LG	E
+C50	M1 TNBC 2L+	-	prs-m-tnbc-sg	Sacituzumab govitekan	ADC.TROP2.sg	ASCENT	EXT-ESMO-MBC-LG	E
+C50	M1, viscerální krize nebo endokrinní rezistence	-	prs-chemoterapie	Chemoterapie (volba podle předchozí léčby)	CHT,INT	-	PRS-2.2	D
+C50	M1 mozkové metastázy	-	prs-srs	Stereotaktická radioterapie mozkových metastáz (SRS), pokračovat v anti-HER2 léčbě	RT.SRS,SYS.steroid	JLGK0901	PRS-3.3	D
+C50	M1 kostní metastázy	-	prs-antiresorpcni	Kyselina zoledronová nebo denosumab	SYS.BMA,SYS.BMA.zol,SYS.BMA.deno	-	PRS-4.1	D
+C18	kolon I–III	-	krc-kolektomie	Kolektomie s lymfadenektomií (≥12 uzlin)	CHIR.kolorekt,INT,RAD	-	EXT-ESMO-COLON-2020	E
+C18	kolon III, II s vysokým rizikem	-	krc-adj-capox	Adjuvantní CAPOX 3 měsíce (nízké riziko III) / FOLFOX 6 měsíců	CHT.platina.oxali,CHT.FP,INT	IDEA	EXT-ESMO-COLON-2020	E
+C18	kolon II dMMR	MMR=dmmr	krc-ii-dmmr-sled	Bez adjuvantního fluoropyrimidinu (dMMR = příznivá prognóza)	SLED	-	EXT-ESMO-COLON-2020	E
+C20	rektum časné (T1–2 N0)	-	krc-rektum-tme	TME nebo lokální excize	CHIR.kolorekt,RAD	-	EXT-ESMO-RECTUM-2017	E
+C20	rektum lokálně pokročilé	-	krc-rektum-tnt	Totální neoadjuvance (RT/CHRT + CHT) → TME	RT.panev,CHT.FP,CHT.platina.oxali,CHIR.kolorekt,INT,RAD	RAPIDO,PRODIGE23	EXT-ESMO-RECTUM-2017	⚠
+C20	rektum po TNT, klinická kompletní odpověď	-	krc-rektum-ww	Watch & wait (zachování rekta)	SLED	OPRA	EXT-ESMO-RECTUM-2017	⚠
+C20	rektum lokálně pokročilé dMMR	MMR=dmmr	krc-rektum-dostarlimab	Dostarlimab bez operace	IO.PD1	Cercek2022	EXT-ESMO-RECTUM-2017	⚠
+C18-C20	M1 jaterní metastázy resekabilní	-	krc-resekce-jater	Resekce jaterních metastáz (jednodobě nebo dvoudobě) a resekce primárního nádoru	CHIR.jatra,INT,RAD	EPOC	KRC-2.1,KRC-2.4,KRC-2.5	D
+C18-C20	M1 jaterní metastázy do 3 cm	-	krc-ablace	Termální ablace drobných ložisek (± resekce)	ABL.RFA,RAD	-	KRC-2.5	D
+C18-C20	M1 potenciálně resekabilní	-	krc-konverzni-chemoterapie	Pokračovat v konverzní chemoterapii (fluoropyrimidin + oxaliplatina ± bevacizumab)	CHT.FP,CHT.platina.oxali,TT.antiVEGF.bev,KONV,INT	TRIBE,CAIRO5	KRC-2.2,KRC-3.1	D
+C18-C20	M1 1L	-	krc-m-chemo-bev	FOLFOX / FOLFIRI / FOLFOXIRI + bevacizumab	CHT.FP,CHT.platina.oxali,CHT.irino,TT.antiVEGF.bev,INT	TRIBE	KRC-3.1	D
+C18-C20	M1 RAS/BRAF wt levostranný	RAS=wt	krc-anti-egfr	Anti-EGFR protilátka (cetuximab, panitumumab) s chemoterapií	TT.antiEGFR,CHT.FP,CHT.platina.oxali	PARADIGM,FIRE-3	KRC-3.1	D
+C18-C20	M1 dMMR / MSI-H 1L	MMR=dmmr	krc-imunoterapie	Imunoterapie inhibitorem kontrolního bodu	IO.PD1,IO.CTLA4	KEYNOTE-177,CheckMate8HW	KRC-1.2	D
+C18-C20	M1 BRAF V600E	BRAF=v600e	krc-m-braf	Enkorafenib + cetuximab (v 1L s FOLFOX)	TT.BRAF,cetuximab	BEACON,BREAKWATER	EXT-ESMO-MCRC-2023	E
+C18-C20	M1 HER2+ RAS wt předléčený	HER2=pos	krc-m-her2	Trastuzumab + tukatinib / T-DXd	TT.HER2,ADC.HER2.tdxd	MOUNTAINEER,DESTINY-CRC02	EXT-ESMO-MCRC-2023	⚠
+C18-C20	M1 KRAS G12C předléčený	KRAS=g12c	krc-m-kras	Sotorasib + panitumumab / adagrasib + cetuximab	TT.KRAS,panitumumab	CodeBreaK300	EXT-ESMO-MCRC-2023	⚠
+C18-C20	M1 3L+	-	krc-m-3l	Trifluridin/tipiracil + bevacizumab / regorafenib / fruquintinib	CHT,TT.antiVEGF.bev,TT.VEGFR	SUNLIGHT,CORRECT,FRESCO-2	EXT-ESMO-MCRC-2023	E
+C18-C20	M1 udržovací léčba	-	krc-m-udrzovaci	Udržovací fluoropyrimidin + bevacizumab, stop-and-go	CHT.FP,TT.antiVEGF.bev	-	KRC-3.2	D
+C18-C20	M1 jaterní metastázy studie	-	krc-rkt03	Studie RKT-03 COLUMBA-LM	STUDIE,CHIR.jatra	RKT-03	RKT-03	D
+C64	lokalizovaný T1	-	ren-parcialni	Parciální nefrektomie	CHIR.ledvina,RAD	-	EXT-EAU-RCC-2025	E
+C64	lokalizovaný T2+	-	ren-radikalni	Radikální nefrektomie	CHIR.ledvina,INT,RAD	-	EXT-EAU-RCC-2025	E
+C64	malá masa ≤4 cm, komorbidní	-	ren-sledovani-ablace	Aktivní sledování nebo termální ablace	SLED,ABL.RFA	-	EXT-EAU-RCC-2025	E
+C64	ccRCC po nefrektomii, vysoké riziko	-	ren-adj-pembro	Adjuvantní pembrolizumab 1 rok	IO.PD1	KEYNOTE-564	EXT-EAU-RCC-2025	E
+C64	M1 ccRCC 1L	-	ren-m-io-tki	Pembrolizumab + axitinib / lenvatinib, nivolumab + kabozantinib	IO.PD1,TT.VEGFR	KEYNOTE-426,CLEAR,CheckMate9ER	EXT-EAU-RCC-2025	E
+C64	M1 ccRCC 1L, IMDC intermediární/poor	-	ren-m-nivo-ipi	Nivolumab + ipilimumab	IO.PD1,IO.CTLA4	CheckMate214	EXT-EAU-RCC-2025	E
+C64	M1 2L+	-	ren-m-2l	Kabozantinib / belzutifan / everolimus	TT.VEGFR,TT.HIF2,TT.mTOR	METEOR,LITESPARK-005	EXT-EAU-RCC-2025	E
+C64	M1 vybraní	-	ren-cytoredukce	Odložená cytoredukční nefrektomie	CHIR.ledvina.cyto,INT	CARMENA	EXT-EAU-RCC-2025	E
+D41	nejasná ložisková léze ledviny	-	ren-biopsie	Biopsie renální masy nebo aktivní sledování	DG.biopsie,SLED	-	EXT-EAU-RCC-2025	E
+C61	lokalizovaný, nízké riziko	-	pro-aktivni-sledovani	Aktivní sledování (PSA, MR, rebiopsie)	SLED	ProtecT	EXT-EAU-PROSTATE-2025	E
+C61	lokalizovaný	-	pro-rp	Radikální prostatektomie ± lymfadenektomie	CHIR.prostata,INT,RAD	ProtecT	EXT-EAU-PROSTATE-2025	E
+C61	lokalizovaný, střední / vysoké riziko	-	pro-rt-adt	Radikální RT (± brachy boost) + ADT 4–6 m (střední) / 18–36 m (vysoké riziko)	RT.panev,HT.ADT,RAD	-	EXT-EAU-PROSTATE-2025	E
+C61	lokalizovaný, nízké / příznivé střední riziko	-	pro-brachy	LDR nebo HDR brachyterapie	RT.brachy.prostata,RAD	-	EXT-EAU-PROSTATE-2025	E
+C61	biochemický relaps po RP	-	pro-salvage-rt	Záchranná RT lůžka ± ADT	RT.panev,HT.ADT,RAD	-	EXT-EAU-PROSTATE-2025	E
+C61	mHSPC	-	pro-mhspc-arpi	ADT + ARPI (abirateron, enzalutamid, apalutamid, darolutamid)	HT.ADT,HT.ARPI.abi,HT.ARPI.enza,HT.ARPI.apa,HT.ARPI.daro	LATITUDE,STAMPEDE,ARCHES,ENZAMET,TITAN	EXT-EAU-PROSTATE-2025	E
+C61	mHSPC vysoký objem	-	pro-mhspc-triplet	ADT + docetaxel + darolutamid / abirateron	HT.ADT,HT.ARPI.daro,HT.ARPI.abi,CHT.taxan.doce,INT	PEACE-1,ARASENS	EXT-EAU-PROSTATE-2025	E
+C61	mHSPC nízký objem	-	pro-mhspc-rt	RT prostaty + systémová léčba	RT.panev	STAMPEDE-H	EXT-EAU-PROSTATE-2025	E
+C61	nmCRPC, PSADT ≤10 měsíců	-	pro-nmcrpc	Apalutamid / enzalutamid / darolutamid	HT.ARPI.apa,HT.ARPI.enza,HT.ARPI.daro	SPARTAN,PROSPER,ARAMIS	EXT-EAU-PROSTATE-2025	E
+C61	mCRPC	-	pro-mcrpc-taxan	Docetaxel; kabazitaxel po docetaxelu a ARPI	CHT.taxan.doce,CHT.taxan,INT	TAX327,CARD	EXT-EAU-PROSTATE-2025	E
+C61	mCRPC HRR/BRCA	HRR=mut	pro-mcrpc-parp	Olaparib (± abirateron) / talazoparib + enzalutamid / niraparib + abirateron	TT.PARP,TT.PARP.ola,HT.ARPI	PROfound,PROpel,TALAPRO-2,MAGNITUDE	EXT-EAU-PROSTATE-2025	E
+C61	mCRPC PSMA+ po ARPI	PSMA=pos	pro-lu-psma	[177Lu]Lu-PSMA-617	NUK.LuPSMA	VISION,PSMAfore	EXT-EAU-PROSTATE-2025	E
+C61	mCRPC kostní metastázy bez viscerálních	-	pro-ra223	Radium-223	NUK.Ra223	ALSYMPCA	EXT-EAU-PROSTATE-2025	E
+C67	NMIBC	-	mm-turbt-bcg	TURBT + intravezikální BCG nebo chemoterapie	CHIR.mechyr.turbt	-	EXT-EAU-NMIBC-2025	E
+C67	MIBC cT2–4a N0	-	mm-neoadj-cystektomie	Neoadjuvantní CHT s cisplatinou (± durvalumab) + radikální cystektomie	CHT.platina.cis,IO.PDL1,CHIR.mechyr,INT,RAD	NIAGARA	EXT-EAU-MIBC-2025	E
+C67	MIBC, vybraní k zachování měchýře	-	mm-trimodalita	Maximální TURBT + CHRT	CHIR.mechyr.turbt,RT.panev,CHT,RAD	BC2001	EXT-EAU-MIBC-2025	E
+C67	po radikální operaci, vysoké riziko	-	mm-adj-nivolumab	Adjuvantní nivolumab	IO.PD1	CheckMate274	EXT-EAU-MIBC-2025	E
+C67	M1 1L	-	mm-m-ev-pembro	Enfortumab vedotin + pembrolizumab	ADC.N4,IO.PD1	EV-302	EXT-EAU-MIBC-2025	E
+C67	M1 1L, způsobilý k cisplatině	-	mm-m-gc-nivo	Cisplatina + gemcitabin + nivolumab; udržovací avelumab po platině	CHT.platina.cis,CHT.gem,IO.PD1,IO.PDL1,INT	CheckMate901,JAVELIN-Bladder100	EXT-EAU-MIBC-2025	E
+C67	M1 alterace FGFR3	FGFR=mut	mm-m-erdafitinib	Erdafitinib	TT.FGFR	THOR	EXT-EAU-MIBC-2025	E
+C15	jícen lokalizovaný	-	jic-cross	Neoadjuvantní CHRT (karboplatina + paklitaxel) + ezofagektomie	RT.hrudnik,CHT.platina.karbo,CHT.taxan,CHIR.jicen,INT,RAD	CROSS	EXT-ESMO-OESO-2022	E
+C15	jícen adenokarcinom lokalizovaný	-	jic-flot	Perioperační FLOT + ezofagektomie	CHT.taxan.doce,CHT.platina.oxali,CHT.FP,CHIR.jicen,INT,RAD	ESOPEC	EXT-ESMO-OESO-2022	⚠
+C15	jícen SCC	-	jic-def-chrt	Definitivní CHRT	RT.hrudnik,CHT.platina,RAD	-	EXT-ESMO-OESO-2022	E
+C15	po CROSS a resekci s reziduem	-	jic-adj-nivo	Adjuvantní nivolumab	IO.PD1	CheckMate577	EXT-ESMO-OESO-2022	E
+C15	M1 1L	-	jic-m-io	Pembrolizumab / nivolumab + CHT	IO.PD1,CHT.platina,CHT.FP	KEYNOTE-590,CheckMate648	EXT-ESMO-OESO-2022	E
+C16	žaludek ≥cT2 nebo N+	-	gas-flot	Perioperační FLOT (± durvalumab) + gastrektomie	CHT.taxan.doce,CHT.platina.oxali,CHT.FP,CHIR.zaludek,INT,RAD	FLOT4,MATTERHORN	EXT-ESMO-GASTRIC-2022	E
+C15-C16	M1 HER2+ 1L	HER2=pos	gas-m-her2	Trastuzumab + platina + fluoropyrimidin (+ pembrolizumab při CPS ≥1)	TT.HER2,CHT.platina,CHT.FP,IO.PD1	ToGA,KEYNOTE-811	EXT-ESMO-GASTRIC-2022	E
+C15-C16	M1 HER2− 1L	CPS>=1	gas-m-io	Nivolumab / pembrolizumab + platina + fluoropyrimidin	IO.PD1,CHT.platina.oxali,CHT.FP	CheckMate649,KEYNOTE-859	EXT-ESMO-GASTRIC-2022	E
+C15-C16	M1 CLDN18.2+ HER2− 1L	CLDN18=pos	gas-m-zolbetuximab	Zolbetuximab + CAPOX / mFOLFOX6	TT.CLDN,CHT.platina.oxali,CHT.FP	SPOTLIGHT,GLOW	EXT-ESMO-GASTRIC-2022	⚠
+C15-C16	M1 2L	-	gas-m-2l	Ramucirumab + paklitaxel (T-DXd u HER2+)	TT.antiVEGF.ramu,CHT.taxan	RAINBOW,DESTINY-Gastric01	EXT-ESMO-GASTRIC-2022	E
+C15-C16	M1 3L	-	gas-m-3l	Trifluridin/tipiracil	CHT	TAGS	EXT-ESMO-GASTRIC-2022	E
+C25	resekabilní	-	pan-resekce	Resekce (pankreatoduodenektomie, distální) + adjuvantní mFOLFIRINOX	CHIR.pankreas,CHT.platina.oxali,CHT.irino,CHT.FP,FOLFIRINOX,INT,RAD	PRODIGE24,ESPAC-4	EXT-ESMO-PANC-2023	E
+C25	hraničně resekabilní	-	pan-neoadj	Neoadjuvantní (m)FOLFIRINOX ± CHRT → resekce	CHT.platina.oxali,CHT.irino,CHT.FP,FOLFIRINOX,CHIR.pankreas,INT,RAD	-	EXT-ESMO-PANC-2023	E
+C25	lokálně pokročilý	-	pan-lapc	Indukční CHT ± CHRT nebo SBRT, přehodnotit resekabilitu	CHT,RT,INT	-	EXT-ESMO-PANC-2023	E
+C25	M1 1L, ECOG 0–1	-	pan-m-folfirinox	(m)FOLFIRINOX / NALIRIFOX	CHT.platina.oxali,CHT.irino,CHT.FP,FOLFIRINOX,INT	PRODIGE4,NAPOLI-3	EXT-ESMO-PANC-2023	E
+C25	M1 1L	-	pan-m-gem-nab	Gemcitabin + nab-paklitaxel	CHT.gem,CHT.taxan	MPACT	EXT-ESMO-PANC-2023	E
+C25	M1 zárodečná BRCA po platině	BRCA=mut	pan-m-olaparib	Udržovací olaparib	TT.PARP.ola	POLO	EXT-ESMO-PANC-2023	E
+C25	M1 2L po gemcitabinu	-	pan-m-2l	Nal-IRI + 5-FU	CHT.irino,CHT.FP	NAPOLI-1	EXT-ESMO-PANC-2023	E
+C22	BCLC 0/A	-	hcc-resekce	Resekce jater	CHIR.jatra,INT,RAD	-	EXT-EASL-HCC-2018	E
+C22	BCLC A v Milánských kritériích	-	hcc-transplantace	Transplantace jater	CHIR.jatra.tx,INT,RAD	Milan	EXT-EASL-HCC-2018	E
+C22	BCLC 0/A ≤3 cm	-	hcc-ablace	Termální ablace	ABL.RFA,RAD	-	EXT-EASL-HCC-2018	E
+C22	BCLC B	-	hcc-tace	TACE	ABL.TACE	-	EXT-EASL-HCC-2018	E
+C22	BCLC B/C vybraní	-	hcc-sirt-sbrt	SIRT nebo SBRT	ABL.SIRT,RT.jatra	-	EXT-EASL-HCC-2018	⚠
+C22	BCLC C, B nevhodné pro TACE, 1L	-	hcc-atezo-bev	Atezolizumab + bevacizumab	IO.PDL1,TT.antiVEGF.bev	IMbrave150	EXT-EASL-HCC-2018	E
+C22	BCLC C 1L	-	hcc-durva-treme	Durvalumab + tremelimumab (STRIDE)	IO.PDL1,IO.CTLA4	HIMALAYA	EXT-EASL-HCC-2018	⚠
+C22	BCLC C 1L, kontraindikace IO	-	hcc-tki	Lenvatinib / sorafenib	TT.VEGFR	REFLECT,SHARP	EXT-EASL-HCC-2018	E
+C22	2L	-	hcc-2l	Regorafenib / kabozantinib / ramucirumab (AFP ≥400)	TT.VEGFR,TT.antiVEGF.ramu	RESORCE,CELESTIAL,REACH-2	EXT-EASL-HCC-2018	E
+C56	pokročilý, R0 dosažitelná	-	ova-cytoredukce	Primární cytoredukce (cíl R0) + karboplatina + paklitaxel	CHIR.gyn,CHT.platina.karbo,CHT.taxan,INT,RAD	-	EXT-ESMO-OVARY-2023	E
+C56	pokročilý, R0 nedosažitelná	-	ova-nact-ids	Neoadjuvantní CHT + intervalová cytoredukce (± HIPEC)	CHT.platina.karbo,CHT.taxan,CHIR.gyn,INT	EORTC55971,CHORUS,OVHIPEC-1	EXT-ESMO-OVARY-2023	E
+C56	po 1L s odpovědí	BRCA=mut	ova-udrz-olaparib	Udržovací olaparib 2 roky	TT.PARP.ola	SOLO-1	EXT-ESMO-OVARY-2023	E
+C56	po 1L s bevacizumabem	HRD=pos	ova-udrz-ola-bev	Olaparib + bevacizumab	TT.PARP.ola,TT.antiVEGF.bev	PAOLA-1	EXT-ESMO-OVARY-2023	E
+C56	po 1L s odpovědí	-	ova-udrz-niraparib	Udržovací niraparib	TT.PARP	PRIMA	EXT-ESMO-OVARY-2023	E
+C56	1L vysoké riziko	-	ova-bev	Bevacizumab s CHT a udržovací	TT.antiVEGF.bev	ICON7,GOG-218	EXT-ESMO-OVARY-2023	E
+C56	relaps citlivý na platinu	-	ova-relaps-ps	Platinový dublet ± udržovací PARPi; sekundární cytoredukce (AGO+)	CHT.platina.karbo,TT.PARP,CHIR.gyn	SOLO-2,NOVA,DESKTOP-III	EXT-ESMO-OVARY-2023	E
+C56	relaps rezistentní na platinu	-	ova-relaps-pr	Týdenní paklitaxel / PLD / topotekan ± bevacizumab	CHT,TT.antiVEGF.bev	AURELIA	EXT-ESMO-OVARY-2023	E
+C56	relaps rezistentní na platinu, FRα vysoká	FRA=pos	ova-mirvetuximab	Mirvetuximab soravtansin	ADC.FRa	MIRASOL	EXT-ESMO-OVARY-2023	⚠
+C53	IA2–IB2	-	cer-hysterektomie	Radikální hysterektomie (otevřená) + uzliny	CHIR.gyn,INT,RAD	LACC	EXT-ESGO-CERVIX-2023	E
+C53	nízké riziko ≤2 cm	-	cer-prosta-hyst	Prostá hysterektomie	CHIR.gyn,RAD	SHAPE	EXT-ESGO-CERVIX-2023	⚠
+C53	lokálně pokročilý	-	cer-chrt-brachy	CHRT (cisplatina týdně) + MR navigovaná brachyterapie	RT.panev,RT.brachy,CHT.platina.cis,INT,RAD	EMBRACE	EXT-ESGO-CERVIX-2023	E
+C53	lokálně pokročilý, vysoké riziko	-	cer-chrt-pembro	CHRT + pembrolizumab nebo indukční CHT	RT.panev,RT.brachy,CHT.platina.cis,IO.PD1,INT,RAD	KEYNOTE-A18,INTERLACE	EXT-ESGO-CERVIX-2023	⚠
+C53	M1 nebo relaps 1L	CPS>=1	cer-m-pembro	Pembrolizumab + platina + paklitaxel ± bevacizumab	IO.PD1,CHT.platina,CHT.taxan,TT.antiVEGF.bev	KEYNOTE-826	EXT-ESGO-CERVIX-2023	E
+C53	2L	-	cer-m-2l	Cemiplimab / tisotumab vedotin	IO.PD1,ADC.TF	EMPOWER-Cervical1,innovaTV301	EXT-ESGO-CERVIX-2023	⚠
+C54	časný	-	end-hysterektomie	Hysterektomie + adnexektomie + sentinel; molekulární klasifikace	CHIR.gyn,RAD	-	EXT-ESGO-ENDOMETRIUM-2021	E
+C54	střední / vysoce-střední riziko	-	end-adj-rt	Adjuvantní vaginální brachyterapie nebo pánevní RT	RT.brachy,RT.panev	PORTEC-1,PORTEC-2	EXT-ESGO-ENDOMETRIUM-2021	E
+C54	vysoké riziko, p53abn	-	end-adj-chrt	Adjuvantní CHRT + CHT	RT.panev,CHT.platina,CHT.taxan,INT	PORTEC-3	EXT-ESGO-ENDOMETRIUM-2021	E
+C54	pokročilý nebo relaps 1L	-	end-m-chemo-io	Karboplatina + paklitaxel + dostarlimab / pembrolizumab / durvalumab	CHT.platina.karbo,CHT.taxan,IO.PD1,IO.PDL1	RUBY,NRG-GY018,DUO-E	EXT-ESMO-ENDOMETRIUM-2022	E
+C54	2L pMMR	MMR=pmmr	end-m-pembro-lenva	Pembrolizumab + lenvatinib	IO.PD1,TT.VEGFR	KEYNOTE-775	EXT-ESMO-ENDOMETRIUM-2022	E
+C54	low-grade, ER+	HR=pos	end-ht	Hormonální léčba (gestageny, AI)	HT.gesta,HT.AI	-	EXT-ESMO-ENDOMETRIUM-2022	E
+C43	I–II	-	mel-excize	Excize s okraji + SLNB	CHIR.kuze,RAD	MSLT-II	EXT-ESMO-MELANOMA-2019	E
+C43	IIB–IV po resekci	-	mel-adj-io	Adjuvantní pembrolizumab / nivolumab	IO.PD1	KEYNOTE-054,KEYNOTE-716,CheckMate238	EXT-ESMO-MELANOMA-2019	E
+C43	III po resekci	BRAF=v600	mel-adj-braf	Adjuvantní dabrafenib + trametinib	TT.BRAF	COMBI-AD	EXT-ESMO-MELANOMA-2019	E
+C43	III resekabilní, makroskopické uzliny	-	mel-neoadj	Neoadjuvantní pembrolizumab nebo ipilimumab + nivolumab → operace	IO.PD1,IO.CTLA4,CHIR.kuze	S1801,NADINA	EXT-ESMO-MELANOMA-2019	⚠
+C43	M1 1L	-	mel-m-io	Nivolumab + ipilimumab / nivolumab + relatlimab / anti-PD-1	IO.PD1,IO.CTLA4,IO.LAG3	CheckMate067,RELATIVITY-047	EXT-ESMO-MELANOMA-2019	E
+C43	M1	BRAF=v600	mel-m-braf	BRAF + MEK inhibitor (dabrafenib + trametinib, enkorafenib + binimetinib)	TT.BRAF	COMBI-d,COLUMBUS	EXT-ESMO-MELANOMA-2019	E
+C43	M1 po anti-PD-1	-	mel-m-til	TIL terapie	SYS.TIL,INT	TIL-Rohaan	EXT-ESMO-MELANOMA-2019	⚠
+C43	asymptomatické mozkové metastázy	-	mel-mozek-io	Ipilimumab + nivolumab (± SRS)	IO.PD1,IO.CTLA4,RT.SRS	CheckMate204	EXT-EANO-ESMO-BM-2021	E
+C00-C14,C32	časný (I–II)	-	hn-chir-rt	Operace nebo RT (monomodalita)	CHIR.hn,RT.hn,RAD	-	EXT-ESMO-HN-2020	E
+C00-C14,C32	lokálně pokročilý	-	hn-chrt	CHRT s cisplatinou (100 mg/m² á 3 týdny nebo 40 mg/m² týdně)	RT.hn,CHT.platina.cis,INT,RAD	JCOG1008,MACH-NC	EXT-ESMO-HN-2020	E
+C00-C14,C32	pooperačně ECE nebo R1	-	hn-adj-chrt	Pooperační CHRT	RT.hn,CHT.platina.cis,INT	EORTC22931,RTOG9501	EXT-ESMO-HN-2020	E
+C00-C14,C32	nezpůsobilý k cisplatině	-	hn-rt-cetux	RT ± cetuximab	RT.hn,TT.antiEGFR	Bonner,RTOG1016	EXT-ESMO-HN-2020	E
+C00-C14,C32	R/M 1L	CPS>=1	hn-m-pembro	Pembrolizumab ± platina + 5-FU	IO.PD1,CHT.platina,CHT.FP	KEYNOTE-048	EXT-ESMO-HN-2020	E
+C00-C14,C32	R/M 1L, CPS <1	-	hn-m-extreme	Cetuximab + platina + 5-FU (EXTREME)	TT.antiEGFR,CHT.platina,CHT.FP,INT	EXTREME	EXT-ESMO-HN-2020	E
+C00-C14,C32	R/M po platině	-	hn-m-nivo	Nivolumab	IO.PD1	CheckMate141	EXT-ESMO-HN-2020	E
+C71	GBM ≤70 let, KPS ≥70	-	gbm-stupp	Maximální bezpečná resekce + RT 60 Gy + TMZ (± TTFields)	CHIR.mozek,RT.mozek,CHT.TMZ,INT,RAD	Stupp,EF-14	EXT-EANO-GLIOMA-2021	E
+C71	GBM ≥70 let nebo KPS <70	-	gbm-starsi	Hypofrakcionovaná RT 40 Gy/15 + TMZ, nebo TMZ samotný (MGMT metylace)	RT.mozek,CHT.TMZ	Perry2017,NOA-08,Nordic	EXT-EANO-GLIOMA-2021	E
+C71	GBM relaps	-	gbm-relaps	Lomustin / reoperace / re-RT	CHT,CHIR.mozek,RT.mozek	EORTC26101	EXT-EANO-GLIOMA-2021	E
+C71	IDH mutovaný gliom G2 po operaci	IDH=mut	gbm-vorasidenib	Vorasidenib	TT.IDH	INDIGO	EXT-EANO-GLIOMA-2021	⚠
+C79.3	1–4 (až 10) mozkových metastáz	-	met-mozek-srs	Stereotaktická radiochirurgie	RT.SRS,SYS.steroid	JLGK0901	EXT-EANO-ESMO-BM-2021	E
+C79.3	velké symptomatické ložisko	-	met-mozek-resekce	Neurochirurgická resekce + SRT lůžka	CHIR.mozek,RT.SRS	-	EXT-EANO-ESMO-BM-2021	E
+C79.3	mnohočetné metastázy	-	met-mozek-wbrt	WBRT se šetřením hipokampů + memantin (nebo systémová léčba s CNS aktivitou)	RT.WBRT	NRG-CC001	EXT-EANO-ESMO-BM-2021	E
+C79.5	bolestivé kostní metastázy	-	met-kost-rt	Paliativní RT 8 Gy / 1 frakce	RT.kost	SC.20	EXT-ESMO-BONE-2020	E
+C79.5	páteř, oligometastázy	-	met-pater-sbrt	SBRT páteře	RT.SBRT,RT.pater	SC.24	EXT-ESMO-BONE-2020	⚠
+C79.5	riziko patologické fraktury	-	met-kost-fixace	Profylaktická ortopedická stabilizace + RT	CHIR.orto,RT.kost	-	EXT-MIRELS-1989	E
+C79.5	komprese míchy (MSCC)	-	met-mscc	Dexametazon + dekompresní operace u vybraných + RT	CHIR.pater,RT.pater,SYS.steroid	Patchell2005	EXT-PATCHELL-2005	E
+C79.5	kostní metastázy	-	met-bma	Denosumab nebo kyselina zoledronová	SYS.BMA,SYS.BMA.deno,SYS.BMA.zol	-	EXT-ESMO-BONE-2020	E
+C78-C79	oligometastázy (≤5)	-	met-sabr	SABR všech ložisek	RT.SBRT,RAD	SABR-COMET	EXT-SABR-COMET-2019	⚠
+C78.7	jaterní metastázy jiných nádorů	-	met-jatra-lokal	Resekce, ablace nebo SBRT vybraných jaterních metastáz	CHIR.jatra,ABL.RFA,RT.jatra	-	EXT-ESMO-MCRC-2023	⚠
+C78.2	maligní pleurální výpotek	-	met-pleura	Tunelizovaný pleurální katetr nebo talková pleurodéza	CHIR.pleura	AMPLE,TIME2	EXT-BTS-PLEURAL-2023	E
+*	nové ložisko u známého nádoru, druhý nádor	-	obc-biopsie	Biopsie s histologií a IHC před zásadní změnou léčby	DG.biopsie	-	OBC-1.4	D
+*	pokročilé onemocnění, symptomy ≥7	-	sup-paliativni	Včasná paliativní péče souběžně s léčbou	SUP.paliat	Temel2010	OBC-2.1	D
+*	úbytek hmotnosti ≥5 % za 6 měsíců	-	sup-nutrice	Nutriční intervence	SUP.nutri	RKT-05	OBC-2.3	D
+*	věk ≥70 let před intenzivní léčbou	-	sup-geriatr	Screening G8 → komplexní geriatrické hodnocení	SUP.geri	-	OBC-2.2	D
+*	indikace podle OBC-2.4	-	sup-genetika	Genetické poradenství	SUP.genet	-	OBC-2.4	D
+*	ambulantní CHT, Khorana ≥2	-	sup-vte-profylaxe	Tromboprofylaxe (apixaban, rivaroxaban, LMWH)	SUP.VTE,SYS.antikoag.doac	AVERT,CASSINI	EXT-ASCO-VTE-2023	E
+*	VTE u nádoru	-	sup-vte-lecba	Léčba VTE: LMWH nebo DOAC (pozor u GI/GU nádorů)	SYS.antikoag.doac	Hokusai-VTE-Cancer,SELECT-D,Caravaggio	EXT-ITAC-2022	E
+*	CHT s rizikem FN ≥20 %	-	sup-gcsf	Primární profylaxe G-CSF	SUP.GCSF	-	EXT-EORTC-GCSF-2011	E
+*	reprodukční věk	-	sup-fertilita	Prezervace fertility před gonadotoxickou léčbou	SUP.fert	-	EXT-ESMO-FERT-2020	E
+*	úbytek hmotnosti, probíhající léčba	-	sup-rkt05	Studie RKT-05 VITALIS	STUDIE,SUP.nutri	RKT-05	RKT-05	D
+*	HRR alterace, ≥1 linie v M1	HRR=mut	obc-rkt06	Studie RKT-06 ORION-HRR (basket)	STUDIE,TT.PARP	RKT-06	RKT-06	D

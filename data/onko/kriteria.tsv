@@ -1,0 +1,168 @@
+id	dg	plati	kdy	kontrola	fakt	zel	ora	cer	proc	zdroj	ov
+VS-OBC-01	*	INT	-	ECOG lékaře	ecog.physician	<=1	=2	>=3	ECOG ≥3: intenzivní léčba jen výjimečně; studie ECOG 0–1	OBC-1.3,RKT-01/Z5	⚠
+VS-OBC-02	*	*	-	ECOG lékař vs. pacient (rozdíl)	ecog.diff	=0	>=1	-	rozdíl ≥1 výslovně zmínit na MDT, mění intenzitu léčby	OBC-1.3	D
+VS-OBC-03	*	INT	age>=70	Geriatrický screening G8	geri.g8	>14	<=14	-	≤14 → komplexní geriatrické hodnocení	OBC-2.2,EXT-G8-2023	E
+VS-OBC-04	*	CHIR,INT	-	Úbytek hmotnosti za 6 měsíců (%)	wt.loss6m	<5	>=5	-	nutriční vyšetření a intervence, zejména před velkým výkonem	OBC-2.3	D
+VS-OBC-05	*	SYS.steroid	dm=ano	Glykémie při kortikoidech (mmol/l)	lab.glu	<=10	>10	-	upravit antidiabetickou léčbu, nejnižší dávka kortikoidu	OBC-3.1	⚠
+VS-OBC-06	*	CHT,TT.PARP,TT.CDK46,ADC,NUK	-	Krevní obraz pro myelotoxickou léčbu	lab.neu	>=1.5&lab.plt>=100&lab.hb>=90	*	-	pod prahem → odložit nebo upravit dávku	RKT-06/Z4	⚠
+VS-OBC-07	*	CHT,TT,IO,HT,ADC	-	Bilirubin (×ULN)	lab.bili_xuln	<=1.5	>1.5	-	úprava léčby; u prsu možná viscerální krize	RKT-01/V3,PRS-2.4	D
+VS-OBC-08	*	CHT,TT,ADC,SYS.BMA,NUK	-	CrCl Cockcroft-Gault (ml/min)	lab.crcl	>=60	<60	-	renální úprava dávky (konkrétní léky VS-CHT, VS-TT)	EXT-GALSKY-2011	⚠
+VS-OBC-09	*	RAD,CHT,TT,IO,HT,ADC	-	Stáří stagingu k datu MDT (dny)	staging.age_days	<=42	>42	-	rozhodnutí nad zastaralým stagingem	OBC-1.2	D
+VS-OBC-10	*	RAD,CHT,TT,IO,HT,ADC	-	Nejasné ložisko nebo 2. nádor bez histologie	lesion.unverified	=ne	=ano	-	ověřit histologicky + IHC před zásadní změnou léčby	OBC-1.4	D
+VS-OBC-11	*	TT,HT.ARPI,CHT.taxan,ADC	-	Byliny a léky ovlivňující CYP3A (třezalka, grapefruit)	med.cyp3a	=ne	=ano	-	interakce → vyřešit před zahájením	EXT-KISQALI-SMPC-UK	E
+VS-OBC-12	*	*	-	Alergie, přecitlivělost	allergy	=ne	=ano	-	info pro volbu léku a premedikaci	OBC-1.1	D
+VS-OBC-13	*	RT,CHIR	-	Předchozí výkon nebo RT v oblasti, implantát	prior.local	=ne	=ano	-	info pro chirurga a radiačního onkologa	OBC-1.1	D
+VS-OBC-14	*	CHT	sex=Z	Gravidita (chemoterapie)	pregnancy	=ne	=T2|T3	=T1	1. trimestr teratogenní; ve 2.–3. jen vybrané režimy	EXT-ESMO-PREG-2013	E
+VS-OBC-15	*	RT,TT,IO,HT,ADC,NUK,SYS.BMA	sex=Z	Gravidita (ostatní léčba)	pregnancy	=ne	-	=T1|T2|T3	cílená, imuno-, hormonální, nukleární léčba a RT se v graviditě odkládají	EXT-ESMO-PREG-2013	E
+VS-OBC-16	*	CHT,RT.panev,HT.OFS	age<40	Poradenství k prezervaci fertility	fert.counsel	=ano	=ne	-	nabídnout před gonadotoxickou léčbou	EXT-ESMO-FERT-2020	⚠
+VS-OBC-17	*	CHT,IO,TT,ADC	-	Screening HBV (HBsAg, anti-HBc)	inf.hbv	=neg	=pos|nezn	-	riziko reaktivace HBV → profylaxe nebo monitorace	EXT-ASCO-HBV-2020	E
+VS-OBC-18	*	CHT.FP	-	Warfarin	med.warfarin	=ne	=ano	-	↑ INR a krvácení → častá kontrola INR, zvážit LMWH	EXT-XELODA-SMPC	E
+VS-OBC-19	*	CHT.FP	-	Brivudin v posledních 4 týdnech	med.brivudine_4w	=ne	-	=ano	inhibice DPD → fatální toxicita fluoropyrimidinů	EXT-XELODA-SMPC	E
+VS-OBC-20	*	CHIR	-	Albumin (g/l)	lab.alb	>=35	<35	-	<30 = těžké nutriční riziko → nutriční podpora 7–14 dní před operací	OBC-2.3,EXT-ESPEN-SURG-2021	E
+VS-OBC-21	*	CHT	-	Khoranovo skóre (riziko VTE)	vte.khorana	<2	>=2	-	zvážit tromboprofylaxi (apixaban, rivaroxaban, LMWH)	EXT-ASCO-VTE-2023	E
+VS-OBC-22	*	SYS.antikoag.doac	-	Luminální GI/GU nádor in situ	tumor.luminal_gi_gu	=ne	=ano	-	vyšší riziko krvácení s DOAC → zvážit LMWH	EXT-ITAC-2022	E
+VS-OBC-23	*	CHT	-	Riziko febrilní neutropenie režimu (%)	cht.fn_risk	<10	>=10	-	≥20 % primární profylaxe G-CSF; 10–20 % podle rizik pacienta (věk ≥65)	EXT-EORTC-GCSF-2011	E
+VS-OBC-24	*	*	-	Symptomová zátěž v PROMs (max 0–10)	prom.symptom_max	<7	>=7	-	≥7 zmínit na MDT; včasná paliativní péče souběžně s léčbou	OBC-1.3,OBC-2.1	D
+VS-OBC-25	*	*	-	Indikace ke genetickému poradenství	gen.indication	=ne	=ano	-	odeslat ke klinickému genetikovi	OBC-2.4	D
+VS-CHIR-01	*	CHIR	-	Infarkt myokardu (dny) a koronární stent (dny)	card.mi_days	>60&card.stent_days>183	card.stent_days<=183	<=60	IM ≤60 dní vysoké riziko; lékový stent ≤6 měsíců → odložit elektivní výkon	EXT-ACC-AHA-ESC-2022	⚠
+VS-CHIR-02	*	CHIR,RT	-	Kouření	smoking	=ne	=ano	-	odvykání ≥4 týdny před operací a RT snižuje komplikace	PLI-3.3	D
+VS-CHIR-03	*	CHIR	-	Dny od poslední dávky bevacizumabu	treatment.bev_days	>=42	-	<42	porucha hojení a krvácení; znovu nejdříve 6–8 týdnů po operaci	KRC-2.3	D
+VS-CHIR-05	*	CHIR	-	Funkční kapacita (METs; 2 patra schodů ≈ 4)	card.mets	>=4	<4	-	před rizikovým výkonem kardiologické vyšetření	EXT-ESC-NCS-2022	E
+VS-CHIR-06	*	CHIR	-	Měsíce od CMP nebo TIA	neuro.stroke_months	>=9	<9	-	riziko perioperační CMP zvýšené ~9 měsíců → odložit elektivní výkon	EXT-JORGENSEN-2014	⚠
+VS-CHIR-07	*	CHIR,DG,ABL	-	Antikoagulace (DOAC, warfarin)	med.anticoag	=ne	=ano	-	plán vysazení podle CrCl a rizika krvácení; bridging jen u vybraných	EXT-ESC-NCS-2022	E
+VS-CHIR-08	*	CHIR	-	Duální antiagregace	med.dapt	=ne	=ano	-	elektivní výkon po ukončení DAPT; ASA obvykle ponechat	EXT-ESC-NCS-2022	E
+VS-CHIR-09	*	CHIR	dm=ano	HbA1c (mmol/mol)	lab.hba1c	<69	>=69	-	optimalizovat diabetes před elektivní operací	EXT-CPOC-DM-2021	⚠
+VS-CHIR-10	*	CHIR	-	Předoperační anémie (Hb pod normou WHO)	lab.hb_anemia	=ne	=ano	-	vyšetřit a léčit (i.v. železo) – patient blood management	EXT-MUNOZ-PBM-2017	E
+VS-CHIR-11	*	CHIR	-	Srdeční selhání (NYHA)	card.nyha	<=2	>=3	-	vysoké perioperační riziko → kardiolog	EXT-ESC-NCS-2022	⚠
+VS-CHIR-12	*	CHIR	-	ASA klasifikace	asa	<=3	>=4	-	vysoké anesteziologické riziko	EXT-ASA-PS-2020	⚠
+VS-CHIR-13	*	CHIR	-	Probíhající anti-VEGF TKI	treatment.vegf_tki	=ne	=ano	-	vysadit podle SmPC (kabozantinib ≥28 dní před výkonem)	EXT-CABOMETYX-SMPC	E
+VS-DG-01	C34	DG.biopsie.tt	-	Emfyzém/CHOPN nebo pneumotorax po biopsii	lung.emphysema_ptx	=ne	=ano	-	riziko pneumotoraxu → zvážit EBUS nebo VATS	EXT-BTS-BIOPSY-2003	⚠
+VS-DG-02	*	DG,CHIR	-	Antiagregace (ASA, klopidogrel)	med.antiplatelet	=ne	=ano	-	info: plán podle rizika krvácení výkonu	EXT-SIR-2019	⚠
+VS-DG-03	C34	DG.biopsie.tt	-	FEV1 (% náležité)	spiro.fev1	>=35	<35	-	relativní kontraindikace transtorakální biopsie	EXT-BTS-BIOPSY-2003	⚠
+VS-DG-04	*	DG,ABL	-	Trombocyty (10^9/l)	lab.plt	>=50	<50	-	výkon s vysokým rizikem krvácení → korekce	EXT-SIR-2019	E
+VS-DG-05	*	DG,ABL	-	INR	lab.inr	<=1.5	>1.5	>1.8	výkon s vysokým rizikem krvácení: korekce na 1,5–1,8	EXT-SIR-2019	⚠
+VS-RT-01	*	RT	-	Předchozí RT téže nebo překrývající se oblasti	rt.prior_same_area	=ne	=ano	-	re-iradiace: kumulativní dávku (EQD2) na rizikové orgány posoudí radiační onkolog	EXT-ESTRO-REIRRAD-2022	E
+VS-RT-02	*	RT	intent=C	Měsíce od RT téže oblasti (kurativní záměr)	rt.prior_months	>=6	-	<6	tkáně se po RT nestihly zotavit; re-RT <6 měsíců jen výjimečně	EXT-ESTRO-REIRRAD-2022	⚠
+VS-RT-03	*	RT	intent=P	Měsíce od paliativní RT téže oblasti	rt.prior_months	>=1	-	<1	opakovaná paliativní RT bolestivé kosti je možná ≥4 týdny	EXT-CHOW-SC20-2014	⚠
+VS-RT-04	*	RT	-	Systémové onemocnění pojiva (sklerodermie, aktivní SLE)	ctd.active	=ne	=ano	-	vyšší akutní i pozdní toxicita → zvážit jinou modalitu nebo dávku	EXT-LIN-CVD-RT-2008	⚠
+VS-RT-05	*	RT	-	Kardiostimulátor nebo ICD	card.cied	=ne	=ano	-	stratifikace podle dávky na přístroj a energie svazku (>10 MV), kontrola přístroje	EXT-AAPM-TG203-2019	E
+VS-RT-06	*	RT	-	Současný BRAF/MEK inhibitor	med.brafi	=ne	=ano	-	radiosenzitizace → vysadit ≥3 dny před a po RT (u SRS ≥1 den)	EXT-ANKER-BRAF-RT-2016	⚠
+VS-RT-07	*	RT.hrudnik,RT.SBRT.plice	-	Intersticiální plicní onemocnění	lung.ild	=ne	=ano	-	vysoké riziko radiační pneumonitidy, i fatální	EXT-CHEN-ILD-RT-2017	⚠
+VS-RT-08	*	RT.SRS	-	Největší mozkové ložisko (mm)	brain.max_mm	<=30	>30	-	>3 cm: zvážit resekci nebo frakcionovanou SRT	PRS-3.3,EXT-EANO-ESMO-BM-2021	⚠
+VS-RT-09	*	RT.SRS	-	Leptomeningeální postižení	brain.lmd	=ne	=ano	-	SRS difuzní postižení neřeší	EXT-EANO-ESMO-BM-2021	E
+VS-RT-10	*	RT.WBRT	-	Celomozková RT	-	-	*	-	kognitivní toxicita: odkládá se; je-li nutná, šetřit hipokampy + memantin	PRS-3.3,EXT-NRG-CC001-2020	D
+VS-RT-11	*	RT.pater	-	SINS (stabilita páteře)	spine.sins	<=6	>=7	-	7–12 nejistá, ≥13 nestabilní → chirurgická konzultace před RT	EXT-SINS-2010	E
+VS-RT-12	*	RT.pater	-	Komprese míchy (MSCC)	spine.mscc	=ne	=ano	-	urgentně: dexametazon, u vybraných dekomprese + RT	EXT-PATCHELL-2005	E
+VS-RT-13	*	RT.kost	-	Riziko patologické fraktury (Mirels)	bone.mirels	<=7	>=8	-	≥9 → profylaktická fixace před RT	EXT-MIRELS-1989	E
+VS-RT-14	*	RT.brachy.prostata	-	IPSS	pros.ipss	<=20	>20	-	výrazné obstrukční symptomy → riziko retence po brachyterapii	EXT-ABS-LDR-2012	⚠
+VS-RT-15	*	RT.hn	-	Stomatologické ošetření před RT hlavy a krku	dental.exam	=ano	=ne	-	riziko osteoradionekrózy	EXT-ESMO-HN-2020	⚠
+VS-RT-16	*	RT.SBRT.plice	-	Ultracentrální lokalizace	lung.ultracentral	=ne	=ano	-	riziko fatálního krvácení → více frakcí nebo jiná modalita	EXT-HILUS-2021	⚠
+VS-CHT-01	*	CHT.platina.oxali	-	Neutrofily a trombocyty před 1. cyklem (10^9/l)	lab.neu	>=2&lab.plt>=100	-	<2;lab.plt<100	SmPC: myelosuprese před 1. cyklem	EXT-OXALIPLATIN-SPC	E
+VS-CHT-02	*	CHT.platina.oxali	-	CrCl (ml/min)	lab.crcl	>=30	-	<30	SmPC: těžká renální insuficience	EXT-OXALIPLATIN-SPC	E
+VS-CHT-03	*	CHT.platina.karbo	-	CrCl (ml/min)	lab.crcl	>20	-	<=20	SmPC; dávka podle AUC (Calvert)	EXT-CARBOPLATIN-SPC	E
+VS-CHT-04	*	CHT.pemetrexed	-	CrCl (ml/min)	lab.crcl	>=45	-	<45	nedoporučeno; premedikace kyselina listová + B12	EXT-ALIMTA-SMPC	E
+VS-CHT-05	*	CHT.FP.cape	-	CrCl (ml/min)	lab.crcl	>50	30-50	<30	30–50 → 75 % dávky; <30 kontraindikace	EXT-XELODA-SMPC	E
+VS-CHT-06	*	CHT.antra	-	Kumulativní dávka antracyklinu (doxorubicin-ekvivalent mg/m²)	cht.antra_cum_dox	<400	>=400	>=550	max. 450–550 (po RT mediastina nižší); epirubicin max. 900	EXT-DOXORUBICIN-SPC	E
+VS-CHT-07	*	CHT.antra	-	LVEF výchozí (%)	lvef	>=55	<55	-	50–54 % střední, <50 % vysoké riziko kardiotoxicity	EXT-ESC-CARDIOONC-2022	E
+VS-CHT-08	*	CHT.antra	-	Symptomatické srdeční selhání	hf.symptomatic	=ne	-	=ano	SmPC kontraindikace	EXT-DOXORUBICIN-SPC	E
+VS-CHT-09	*	CHT.irino	-	Bilirubin (×ULN)	lab.bili_xuln	<=1.5	>1.5	>3	>3× ULN kontraindikace; 1,5–3× ULN vyšší riziko neutropenie	EXT-IRINOTECAN-SPC	E
+VS-CHT-10	*	CHT.irino,ADC.TROP2.sg	-	UGT1A1*28	bm.ugt1a1	=wt|het	=hom	-	homozygot *28/*28 → snížit úvodní dávku	EXT-IRINOTECAN-SPC,EXT-TRODELVY-SMPC	E
+VS-CHT-11	*	CHT.irino	-	Chronický střevní zánět nebo obstrukce střeva	gi.ibd_obstruction	=ne	-	=ano	SmPC kontraindikace	EXT-IRINOTECAN-SPC	E
+VS-CHT-12	*	CHT.taxan.doce	-	Bilirubin, ALT/AST a ALP (×ULN)	lab.bili_xuln	<=1&lab.alt_xuln<=1.5	*	>1;lab.alt_xuln>1.5&lab.alp_xuln>2.5	SmPC: nepodávat; jinak redukce dávky	EXT-TAXOTERE-SMPC	E
+VS-CHT-13	*	CHT.taxan	-	Neutrofily (10^9/l)	lab.neu	>=1.5	-	<1.5	SmPC kontraindikace	EXT-TAXOTERE-SMPC	E
+VS-CHT-14	*	CHT.FP	-	ICHS nebo koronární spazmy v anamnéze	card.cad	=ne	=ano	-	riziko koronárního vazospazmu	EXT-XELODA-SMPC	E
+VS-CHT-15	*	CHT.TMZ	-	Neutrofily a trombocyty před zahájením (10^9/l)	lab.neu	>=1.5&lab.plt>=100	-	<1.5;lab.plt<100	SmPC; při konkomitanci s RT profylaxe PCP	EXT-TEMODAL-SMPC	E
+VS-CHT-16	*	FOLFIRINOX	-	Kritéria PRODIGE 4 (ECOG, bilirubin)	ecog.physician	<=1&lab.bili_xuln<=1.5	*	-	ECOG 2 nebo bilirubin >1,5× ULN → gemcitabin ± nab-paklitaxel, nejdřív drenáž	EXT-PRODIGE4-2011	⚠
+VS-IO-01	*	IO	-	Transplantovaný orgán	hist.transplant	=ne	=ano	-	riziko rejekce štěpu	EXT-ESMO-IRAE-2022	⚠
+VS-IO-02	*	IO	-	Systémové kortikoidy (prednison mg/den)	med.pred_mg	<=10	>10	-	nižší účinnost; registrační studie je vylučovaly	EXT-ESMO-IRAE-2022	⚠
+VS-IO-03	*	IO	-	Předchozí irAE G4, myokarditida nebo těžká neurotoxicita	hist.irae_severe	=ne	-	=ano	ICI trvale ukončit	EXT-KEYTRUDA-SMPC	E
+VS-IO-04	*	IO	-	ILD nebo pneumonitida v anamnéze	lung.ild	=ne	=ano	-	vyšší riziko imunitní pneumonitidy	EXT-ESMO-IRAE-2022	⚠
+VS-IO-05	*	IO	-	ECOG lékaře	ecog.physician	<=1	>=2	-	u ECOG ≥2 omezený přínos; studie ECOG 0–1	OBC-1.3	⚠
+VS-IO-06	*	IO	-	TSH výchozí (mIU/l)	lab.tsh	0.27-4.2	*	-	výchozí porucha štítné žlázy → sledovat, substituce	EXT-ESMO-IRAE-2022	E
+VS-PLI-08	*	IO	-	Autoimunitní onemocnění se systémovou léčbou (2 roky)	aid.systemic	=ne	=ano	-	riziko vzplanutí; vyřazení z registračních studií	RKT-04/V2,EXT-ICI-AUTOIMMUNE-2018	⚠
+VS-TT-01	*	TT.EGFR.osi	-	QTc (ms)	ecg.qtc	<470	470-500	>500	>500 ms přerušit; vrozený dlouhý QT nepodávat	EXT-TAGRISSO-SMPC	E
+VS-TT-02	*	TT.EGFR,TT.mTOR	-	ILD nebo pneumonitida v anamnéze	lung.ild	=ne	=ano	-	riziko ILD	EXT-TAGRISSO-SMPC	E
+VS-TT-03	*	TT.ALK.lorla	-	Silné induktory CYP3A	med.cyp3a_inducer	=ne	-	=ano	SmPC kontraindikace (hepatotoxicita)	EXT-LORVIQUA-SMPC	E
+VS-TT-04	*	TT.VEGFR,TT.antiVEGF.ramu	-	Hypertenze a arteriální trombembolie (měsíce)	htn.uncontrolled	=ne&ate.months>=6	ate.months<6	=ano	nekontrolovaná hypertenze: nezahajovat; ATE <6 měsíců opatrnost	EXT-CABOMETYX-SMPC	⚠
+VS-TT-05	C34	TT.antiVEGF.bev	-	Skvamózní histologie nebo hemoptýza ≥2,5 ml	hist.squamous	=ne&lung.hemoptysis=ne	-	=ano;lung.hemoptysis=ano	riziko fatálního plicního krvácení	EXT-AVASTIN-FDA-2020	E
+VS-TT-06	*	TT.antiVEGF,TT.VEGFR	-	GI perforace, píštěl, nezhojená rána	gi.perforation	=ne	-	=ano	nepodávat nebo ukončit	EXT-AVASTIN-FDA-2020	E
+VS-TT-07	C22	TT.antiVEGF.bev	-	Jícnové varixy (gastroskopie ≤6 měsíců)	liver.varices	=ne|leceno	=nezn	=neleceno	před atezolizumab + bevacizumab varixy ošetřit	EXT-IMBRAVE150-2020	⚠
+VS-TT-08	*	TT.CDK46.palbo	-	Neutrofily (10^9/l)	lab.neu	>=1	-	<1	nezahajovat cyklus	EXT-IBRANCE-SMPC	E
+VS-TT-09	*	TT.CDK46.abema	-	VTE v anamnéze	hist.vte	=ne	=ano	-	vyšší riziko VTE	EXT-VERZENIOS-SMPC	E
+VS-TT-10	*	TT.PARP.ola	-	CrCl (ml/min)	lab.crcl	>50	31-50	<=30	31–50 snížit dávku; ≤30 nedoporučeno	EXT-LYNPARZA-SMPC	E
+VS-TT-11	*	TT.FGFR,ADC.FRa,ADC.TF	-	Oftalmologické vyšetření	eye.exam	=ano	=ne	-	oční toxicita → vstupní vyšetření	EXT-BALVERSA-SMPC,EXT-ELAHERE-SMPC	E
+VS-TT-12	*	TT.antiEGFR	-	Hořčík (mmol/l)	lab.mg	>=0.66	<0.66	-	hypomagnezémie → suplementace	EXT-ERBITUX-SMPC	E
+VS-TT-13	C18,C19,C20	TT.antiEGFR	-	Strana primárního nádoru	tumor.side	=L	=R	-	pravostranný: v 1. linii menší přínos anti-EGFR → bevacizumab	EXT-ESMO-MCRC-2023	E
+VS-TT-14	*	ADC.N4	-	Neuropatie a HbA1c	tox.neuropathy	<=1&lab.hba1c<64	*	-	neuropatie ≥G2 nebo HbA1c ≥64 (8 %) → vyšší riziko toxicity	EXT-PADCEV-SMPC	⚠
+VS-TT-15	*	ADC.TROP2.sg	-	Neutrofily v den 1 (10^9/l)	lab.neu	>=1.5	-	<1.5	nepodávat při ANC <1,5	EXT-TRODELVY-SMPC	E
+VS-TT-16	*	TT.BiTE	-	Riziko CRS a ICANS	-	-	*	-	1.–2. dávka s hospitalizační monitorací	EXT-IMDELLTRA-USPI	⚠
+VS-HT-01	C50	HT.AI	meno=pre	Ovariální suprese u premenopauzy	ofs	=ano	-	=ne	inhibitor aromatázy bez ovariální suprese je u premenopauzy kontraindikován	PRS-2.1,EXT-LETROZOLE-SPC	E
+VS-HT-02	*	HT.AI,HT.ADT	-	DXA T-skóre	bone.dxa_t	>-1	<=-1	-	osteopenie/osteoporóza → Ca + vit. D, zvážit antiresorpční léčbu	EXT-ESMO-BONE-2020	E
+VS-HT-03	*	HT.TAM	-	VTE v anamnéze	hist.vte	=ne	=ano	-	tamoxifen zvyšuje riziko VTE → zvážit inhibitor aromatázy	EXT-TAMOXIFEN-SPC	⚠
+VS-HT-04	*	HT.TAM	-	Silné inhibitory CYP2D6 (paroxetin, fluoxetin)	med.cyp2d6_inhib	=ne	=ano	-	nižší tvorba endoxifenu → změnit antidepresivum	EXT-TAMOXIFEN-SPC	E
+VS-HT-05	C61	HT.ARPI.abi	-	Child-Pugh třída	liver.child	=A	=B	=C	těžká jaterní porucha: kontraindikace	EXT-ZYTIGA-SMPC	E
+VS-HT-06	C61	HT.ARPI.abi	-	Draslík (mmol/l)	lab.k	>=3.5	<3.5	-	korigovat hypokalémii (mineralokortikoidní efekt)	EXT-ZYTIGA-SMPC	E
+VS-HT-07	C61	HT.ARPI.enza,HT.ARPI.apa	-	Epileptický záchvat nebo predispozice	neuro.seizure	=ne	=ano	-	nižší práh záchvatu → zvážit darolutamid	EXT-XTANDI-SMPC	E
+VS-NUK-01	C61	NUK.Ra223	-	Viscerální metastázy	visceral.mets	=ne	-	=ano	indikace jen kostní metastázy bez viscerálních	EXT-XOFIGO-SMPC	E
+VS-NUK-02	C61	NUK.Ra223	-	Současně abirateron + prednison	treatment.abi_current	=ne	-	=ano	kontraindikace (více fraktur a úmrtí)	EXT-XOFIGO-SMPC	E
+VS-NUK-03	C61	NUK.Ra223	-	Krevní obraz před 1. aplikací	lab.neu	>=1.5&lab.plt>=100&lab.hb>=100	*	-	pod prahem nezahajovat	EXT-XOFIGO-SMPC	E
+VS-NUK-04	C61	NUK.LuPSMA	-	PSMA PET pozitivita	bm.psma	=pos	=nezn	=neg	bez exprese PSMA není cíl	EXT-PLUVICTO-SMPC	E
+VS-NUK-05	C61	NUK.LuPSMA	-	Krevní obraz a CrCl (kritéria VISION)	lab.neu	>=1.5&lab.plt>=100&lab.hb>=90&lab.crcl>=50	*	-	mimo kritéria registrační studie → individuálně	EXT-VISION-2021	⚠
+VS-ABL-01	*	ABL.RFA	-	Velikost ložiska (mm)	lesion.max_mm	<=30	>30	-	>3 cm nižší úspěšnost; u velkých cév heat-sink → resekce nebo SBRT	KRC-2.5	D
+VS-ABL-02	C22	ABL.TACE	-	Child-Pugh (body)	liver.child_score	<=7	-	>=8	dekompenzovaná cirhóza: kontraindikace TACE	EXT-EASL-HCC-2018	E
+VS-ABL-03	C22	ABL.TACE	-	Trombóza kmene v. portae	liver.pvt_main	=ne	-	=ano	kontraindikace TACE	EXT-EASL-HCC-2018	E
+VS-ABL-04	C22	ABL.TACE	-	Bilirubin (µmol/l)	lab.bili	<=34	>34	>51	>51 µmol/l (3 mg/dl) relativní kontraindikace	EXT-EASL-HCC-2018	⚠
+VS-ABL-05	*	ABL.SIRT	-	Plicní shunt (%)	liver.lsf_pct	<10	>=10	>20	>20 % (dávka na plíce >30 Gy) kontraindikace	EXT-SIRSPHERES-IFU	⚠
+VS-HCC-01	C22	CHIR.jatra	-	Child-Pugh (body)	liver.child_score	<=6	=7	>=8	resekce u Child-Pugh A bez portální hypertenze	EXT-EASL-HCC-2018	⚠
+VS-HCC-02	C22	CHIR.jatra	-	Klinicky významná portální hypertenze	liver.portal_htn	=ne	=ano	-	vyšší riziko dekompenzace po resekci	EXT-EASL-HCC-2018	E
+VS-HCC-03	C22	CHIR.jatra.tx	-	Milánská kritéria	hcc.milan	=ano	=ne	-	mimo kritéria → downstaging nebo rozšířená kritéria centra	EXT-MILAN-1996	E
+VS-HCC-04	C22	TT,IO	-	Child-Pugh pro systémovou léčbu (body)	liver.child_score	<=6	>=7	-	registrační studie jen Child-Pugh A	EXT-EASL-HCC-2018	⚠
+VS-HCC-05	C22	RT.jatra	-	Child-Pugh pro RT jater (body)	liver.child_score	<=6	>=7	-	riziko radiačního poškození jater (RILD)	EXT-EASL-HCC-2018	⚠
+VS-PAN-01	C25	CHIR.pankreas	-	Kontakt tepny SMA/truncus (°)	pan.arterial_deg	=0	1-180	>180	>180° lokálně pokročilý → systémová léčba ± CHRT	EXT-ESMO-PANC-2023	E
+VS-PAN-02	C25	CHIR.pankreas	-	CA 19-9 bez cholestázy (kU/l)	lab.ca199	<=500	>500	-	biologicky hraničně resekabilní → neoadjuvance	EXT-IAP-2017	⚠
+VS-URO-01	C64	CHIR.ledvina	-	eGFR (ml/min/1,73 m²)	lab.egfr	>=60	<60	-	CKD → riziko zhoršení; preferovat záchovný výkon	EXT-EAU-RCC-2025	⚠
+VS-URO-02	C64	CHIR.ledvina	-	Solitární ledvina	ren.solitary	=ne	=ano	-	parciální nefrektomie nebo ablace	EXT-EAU-RCC-2025	E
+VS-URO-03	C64	CHIR.ledvina.cyto	-	IMDC skóre	rcc.imdc_score	<=2	>=3	-	poor risk: okamžitá cytoredukce bez přínosu	EXT-CARMENA-2018	⚠
+VS-URO-04	C67	RT.panev	-	Hydronefróza nebo rozsáhlý CIS	bladder.hydro_cis	=ne	=ano	-	nevhodné pro zachování měchýře	EXT-EAU-MIBC-2025	⚠
+VS-URO-05	C61	SLED	-	Rizikovost podle EAU	pros.risk	=low	=int	=high	aktivní sledování jen u nízkého (vybraně příznivého středního) rizika	EXT-EAU-PROSTATE-2025	E
+VS-PLI-12	C34	CHIR.plice.segment	-	Velikost tumoru (mm)	tumor.size_mm	<=20	>20	-	segmentektomie: periferní tumor ≤2 cm	EXT-JCOG0802-2022	E
+VS-PLI-13	C34	RT.SBRT.plice	-	Velikost tumoru (mm)	tumor.size_mm	<=50	>50	-	data SBRT hlavně do 5 cm	EXT-ESMO-NSCLC-EARLY-2017	⚠
+VS-PRS-16	C50	CHIR.prs.bcs	-	Multicentrické onemocnění, difuzní mikrokalcifikace	breast.multicentric	=ne	=ano	-	záchovná operace nemusí dosáhnout R0 → mastektomie	EXT-ESMO-EBC-2024	⚠
+VS-HN-01	C00-C14,C32	CHT.platina.cis	-	Věk	age	<=70	>70	-	přínos konkomitantní CHT nad 70 let nejistý	EXT-MACHNC-2021	E
+VS-GBM-01	C71	RT,CHT.TMZ	-	KPS (%)	kps	>=70	<70	-	KPS <70 nebo věk ≥70: hypofrakcionace nebo TMZ podle MGMT	EXT-EANO-GLIOMA-2021	E
+VS-BMA-01	*	SYS.BMA.deno	-	Korigovaný kalcium (mmol/l)	lab.ca_corr	>=2.1	1.75-2.09	<1.75	neléčená hypokalcémie: kontraindikace	EXT-XGEVA-SMPC	E
+VS-BMA-02	*	SYS.BMA	-	Nezhojená léze po stomatologickém výkonu	dental.unhealed	=ne	-	=ano	riziko osteonekrózy čelisti	EXT-XGEVA-SMPC	E
+VS-BMA-03	*	SYS.BMA.deno	-	CrCl (ml/min)	lab.crcl	>=30	<30	-	vyšší riziko hypokalcémie	EXT-XGEVA-SMPC	E
+VS-BM-01	*	*	-	Prediktivní biomarker postupu (sloupec marker)	marker	=ano	=nezn	=ne	marker postupu nesplněn → podle zdroje postupu není indikovaný	(zdroj postupu)	D
+VS-KRC-01	C18,C19,C20	CHIR.jatra	-	Budoucí jaterní remnant FLR (%)	liver.flr	>=40	30-39.9	<30	≥30 % stačí u zdravých jater bez intenzivní CHT	KRC-2.1,RKT-03/V4	D
+VS-KRC-02	C18,C19,C20	CHIR.jatra	-	Kompletní restaging (CT hrudníku, břicha, MR jater ≤6 týdnů)	staging.liver_complete	=ano	=ne	-	neúplný restaging, extrahepatální nemoc nevyloučena	KRC-2.4,KRC-2.1	D
+VS-KRC-03	C18,C19,C20	CHIR.jatra	-	Oba laloky, vymizelá ložiska, kontakt s cévami	liver.bilobar	=ne	=ano	-	dvoudobá hepatektomie; vymizelá ložiska plánovat podle původní lokalizace	KRC-2.4,KRC-2.5	D
+VS-KRC-05	*	CHT.platina.oxali	-	Neuropatie (CTCAE) a výpověď pacienta	tox.neuropathy	<=1&tox.neuro_conflict=ne	tox.neuro_conflict=ano	>=2	G2 → stop-and-go, pokračovat fluoropyrimidinem ± biologickou léčbou	KRC-3.2	D
+VS-KRC-06	C18,C19,C20	TT.antiEGFR	-	RAS	bm.ras	=wt	=nezn	=mut	anti-EGFR u RAS-mutovaného nádoru bez účinku	KRC-3.1	D
+VS-KRC-07	C18,C19,C20	IO	-	MMR/MSI	bm.mmr	=dmmr	-	-	u pMMR podklady mlčí → nelze posoudit	KRC-1.2	D
+VS-KRC-08	*	TT.antiVEGF.bev	-	Bevacizumab: hypertenze, ATE, proteinurie	htn.uncontrolled	=ne&ate.history=ne&urine.prot_g24<2	ate.history=ano	=ano;urine.prot_g24>=2	nekontrolovaná hypertenze nezahajovat; proteinurie ≥2 g/24 h přerušit	EXT-AVASTIN-FDA-2020	E
+VS-KRC-09	*	CHT.FP	-	Aktivita DPD	bm.dpd	=norm	=part	=def	částečný deficit → snížit úvodní dávku; úplný → nepodávat	EXT-EMA-DPD-2020	E
+VS-KRC-10	C18,C19,C20	KONV	liver.resectable=ano	Počet cyklů konverzní CHT	tx.cycles	<4	>=4	-	resekabilní → neprodlužovat (hepatotoxicita, vymizení ložisek)	KRC-2.2	D
+VS-PLI-01	C34	CHIR.plice	-	ppoFEV1/ppoDLCO, nižší z obou (%)	spiro.ppo_min	>=60	30-59.9	<30	<60 % zátěžový test; <30 % vysoké riziko	PLI-3.1	D
+VS-PLI-02	C34	CHIR.plice	-	VO2max (ml/kg/min)	spiro.vo2max	>20	10-20	<10	<10 vysoké riziko	EXT-VO2MAX-2016	⚠
+VS-PLI-03	C34	CHIR.plice	-	Dušnost v PROMs (0–10)	prom.dyspnea	<7	>=7	-	subjektivní tíže dušnosti ovlivní rozhodnutí o operaci	PLI-3.1,OBC-1.3	D
+VS-PLI-04	C34	RAD	-	Ložisko měnící stadium (M) ověřeno	lesion.unverified	=ne	=ano	-	bez ověření nelze stanovit M-kategorii	PLI-1.2	D
+VS-PLI-05	C34	RAD	-	MR mozku a invazivní staging mediastina	staging.brain_mr	=ano&staging.ebus=ano	*	-	chybí → doplnit před radikální léčbou	PLI-1.1	D
+VS-PLI-06	C34	IO	-	EGFR a ALK	bm.egfr_alk	=neg	=nezn	=pos	u EGFR/ALK+ imunoterapie bez přínosu	PLI-1.3,PLI-2.3,PLI-2.4,RKT-04/V1	D
+VS-PLI-07	C34	durvalumab	-	PD-L1 TPS (%)	bm.pdl1	>=1	=nezn	<1	v EU konsolidační durvalumab jen při TPS ≥1 %	PLI-2.4	D
+VS-PLI-09	C34	*	-	Sodík (mmol/l)	lab.na	>=136	<136	-	vyšetřit SIADH, upravit před léčbou	PLI-3.2	D
+VS-PLI-10	C34	RT.hrudnik	-	Plicní funkce pro radikální RT	-	-	-	-	práh v podkladech není, doplní radiační onkolog	PLI-2.4	D
+VS-PLI-11	*	CHT.platina.cis	-	Způsobilost k cisplatině (Galsky)	lab.crcl	>=60&tox.neuropathy<=1&tox.hearing<=1&ecog.physician<=1&card.nyha<=2	*	-	CrCl <60, neuropatie nebo sluch ≥G2, ECOG 2, NYHA ≥III → karboplatina	EXT-GALSKY-2011	⚠
+VS-PRS-01	*	TT.HER2,ADC.HER2	-	LVEF (%), pokles (body) a stáří echa (dny)	lvef	>=50&lvef.drop<10&lvef.age_days<=92	lvef.drop>=10;lvef.age_days>92	lvef.drop>=10&lvef<50;hf.symptomatic=ano	pokles ≥10 bodů pod 50 % nebo symptomatické SS → přerušit; echo á 3 měsíce	PRS-3.4	D
+VS-PRS-02	*	ADC.HER2.tdxd,ADC.TROP2.dato	-	ILD nebo pneumonitida v anamnéze	lung.ild	=ne	=ano	-	riziko ILD hodnotit před léčbou	PRS-2.3,RKT-02/V1	⚠
+VS-PRS-03	C50	ADC.HER2.tdxd.low	-	HER2-low ve vzorcích, diskordance	bm.her2	=low&bm.her2_discordant=ne	bm.her2_discordant=ano;=ultralow	=0	HER2 0 ve všech vzorcích → bez indikace; ultralow jen HR+ po endokrinní léčbě	PRS-1.1,PRS-1.2,PRS-2.3	D
+VS-PRS-04	C50	HT,TT.CDK46	-	Viscerální krize	visceral.crisis	=ne	-	=ano	→ chemoterapie nebo ADC	PRS-2.4,PRS-2.1	D
+VS-PRS-05	*	TT.CDK46.ribo	-	QTcF (ms)	ecg.qtc	<450	-	>=450	nezahajovat; >480 ms přerušit	EXT-KISQALI-SMPC-UK	E
+VS-PRS-06	*	TT.PI3K,TT.AKT	-	HbA1c (mmol/mol)	lab.hba1c	<48	>=48	-	diabetes → upravit glykémii před zahájením	EXT-PIQRAY-TGA-2020	⚠
+VS-PRS-07	*	TT.PARP	-	Hemoglobin (g/l)	lab.hb	>=90	80-89.9	<80	<80 přerušit; anémie G3 při 200 mg 2× ukončit	RKT-06/Z4	D
+VS-PRS-08	*	TT.PARP	-	MDS/AML v anamnéze	hist.mds_aml	=ne	-	=ano	riziko sekundární MDS/AML	RKT-06/V2	D
+VS-PRS-09	C50	TT.PARP,TT.CDK46,TT.mTOR	-	Induktory a inhibitory CYP3A	med.cyp3a	=ne	=ano	-	interakce → vyřešit	EXT-KISQALI-SMPC-UK	E
+VS-PRS-10	*	CHT.taxan	-	Neuropatie (CTCAE)	tox.neuropathy	<=1	>=2	-	≥G2 → redukce nebo vysazení taxanu	PRS-3.1	⚠
+VS-PRS-11	*	RT.SRS	-	Počet mozkových metastáz	brain.mets_n	<=4	>4	-	více ložisek → SRS podle objemu (do 10), HA-WBRT nebo systémová léčba	PRS-3.3	D
+VS-PRS-12	*	SYS.BMA.zol	-	CrCl (ml/min)	lab.crcl	>=60	30-59.9	<30	30–59 snížit dávku; <30 nedoporučeno	EXT-ZOMETA-SMPC-UK	E
+VS-PRS-13	*	SYS.BMA	-	Stomatologické vyšetření	dental.exam	=ano	=ne	-	prevence osteonekrózy čelisti	PRS-4.1	D

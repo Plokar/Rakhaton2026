@@ -1,0 +1,91 @@
+param	fakt	loinc	jedn	norma	pozn
+Hemoglobin	lab.hb	718-7	g/l	M135-175 Z120-160	ds; anémie WHO M <130, Ž <120; myelotox. léčba ≥90; RKT-06 <80 přerušit; 1 g/dl = 10 g/l
+Leukocyty	lab.leu	6690-2	10^9/l	4.0-10.0	ds
+Neutrofily	lab.neu	751-8	10^9/l	2.0-7.0	ds; myelotox. léčba ≥1,5; oxaliplatina 1. cyklus ≥2,0; palbociklib ≥1,0; /mm³ ÷ 1000 = 10^9/l
+Lymfocyty	-	-	10^9/l	0.8-4.0	lymfopenie <0,5 = CTCAE G3
+Trombocyty	lab.plt	777-3	10^9/l	150-400	ds; myelotox. léčba ≥100; invazivní výkon ≥50 (SIR); ×10³/µl = ×10^9/l
+INR	lab.inr	6301-6	-	0.8-1.2	výkon s vysokým rizikem krvácení ≤1,5 (max 1,8)
+aPTT ratio	-	-	-	0.8-1.2	absolutní sekundy podle laboratoře
+Fibrinogen	-	-	g/l	1.8-4.2	↓ u DIC
+D-dimery	-	-	mg/l FEU	<0.5	nad 50 let věkově upravený práh věk × 0,01
+Kreatinin	lab.krea	14682-9	µmol/l	44-104	ds (typicky M 62–106, Ž 44–80); 1 mg/dl = 88,4 µmol/l
+eGFR CKD-EPI	lab.egfr	-	ml/min/1,73 m²	>=90	1 ml/s = 60 ml/min; CKD G2 60–89, G3a 45–59, G3b 30–44, G4 15–29, G5 <15
+CrCl Cockcroft-Gault	lab.crcl	-	ml/min	>=90	odvoz.: (140 − věk) × kg × (M 1,23; Ž 1,04) / kreatinin µmol/l; cisplatina ≥60, pemetrexed ≥45, kapecitabin >50 plná dávka, oxaliplatina ≥30, karboplatina >20, zoledronát ≥60
+Urea	-	-	mmol/l	2.8-8.1	BUN mg/dl × 0,357
+Kyselina močová	-	-	µmol/l	M202-417 Z143-339	syndrom nádorového rozpadu; 1 mg/dl = 59,5 µmol/l
+Sodík	lab.na	2951-2	mmol/l	136-145	ds; <136 a klesá → vyšetřit SIADH (PLI-3.2)
+Draslík	lab.k	2823-3	mmol/l	3.5-5.1	ds; abirateron ≥3,5
+Chloridy	-	-	mmol/l	98-107	-
+Kalcium celkové	lab.ca	-	mmol/l	2.15-2.55	korigované = Ca + 0,02 × (40 − albumin g/l); hyperkalcémie u kostních mts; denosumab: hypokalcémii korigovat; 1 mg/dl = 0,25 mmol/l
+Kalcium ionizované	-	-	mmol/l	1.15-1.30	nezávislé na albuminu
+Hořčík	lab.mg	-	mmol/l	0.66-1.07	↓ po anti-EGFR a cisplatině; 1 mg/dl = 0,411 mmol/l
+Fosfor	-	-	mmol/l	0.81-1.45	↑ při erdafitinibu, nádorový rozpad; 1 mg/dl = 0,323 mmol/l
+Glukóza nalačno	lab.glu	15074-8	mmol/l	3.9-5.6	ds; při kortikoidech >10 upravit léčbu; mg/dl ÷ 18
+HbA1c	lab.hba1c	4548-4	mmol/mol	20-42	≥48 diabetes; alpelisib/capivasertib ≥48 upravit; ≥69 odložit elektivní operaci; % → mmol/mol: (% − 2,15) × 10,93
+Bilirubin celkový	lab.bili	14631-6	µmol/l	2-21	ds; pravidla v násobcích ULN; 1 mg/dl = 17,1 µmol/l (3 mg/dl = 51)
+Bilirubin konjugovaný	-	-	µmol/l	0-5	-
+ALT	lab.alt	1742-6	µkat/l	0.1-0.78	ds; 1 U/l = 0,0167 µkat/l (U/l ÷ 60)
+AST	lab.ast	1920-8	µkat/l	0.1-0.72	ds
+ALP	lab.alp	6768-6	µkat/l	0.66-2.2	ds; ↑ u kostních a jaterních mts
+GGT	-	-	µkat/l	M0.14-0.84 Z0.14-0.68	-
+Albumin	lab.alb	1751-7	g/l	35-52	ds; <35 nutriční riziko, <30 těžké (ESPEN); 1 g/dl = 10 g/l
+Celková bílkovina	-	-	g/l	64-83	-
+Prealbumin	-	-	g/l	0.2-0.4	rychlý marker výživy
+CRP	lab.crp	1988-5	mg/l	0-5	ds
+LD	lab.ld	14804-9	µkat/l	2.25-3.75	ds; prognostický u melanomu (M1), SCLC, lymfomů
+TSH	lab.tsh	3016-3	mIU/l	0.27-4.2	výchozí hodnota před imunoterapií
+fT4	-	-	pmol/l	12-22	-
+Kortizol ranní	-	-	nmol/l	166-507	hypofyzitida nebo adrenální insuficience po imunoterapii
+Testosteron	-	-	nmol/l	M8.6-29	kastrační hladina <1,7 nmol/l (50 ng/dl); 1 ng/dl = 0,0347 nmol/l
+Estradiol, FSH	-	-	-	dle lab.	ověření postmenopauzy před AI (rozmezí laboratoře)
+NT-proBNP	-	-	ng/l	<125	kardiotoxicita (ESC 2022)
+hs-troponin T	-	-	ng/l	<14	99. percentil; kardiotoxicita, myokarditida po imunoterapii
+Ferritin	-	-	µg/l	M30-400 Z13-150	<100 = deficit železa před operací (PBM)
+Saturace transferinu	-	-	%	20-45	<20 % deficit železa
+Vitamin D (25-OH)	-	-	nmol/l	75-250	<50 deficit; suplementace u AI, ADT a antiresorpční léčby
+Proteinurie	urine.prot_g24	-	g/24 h	<0.15	bevacizumab: ≥2 přerušit, nefrotický syndrom ukončit
+CEA	lab.cea	2039-6	µg/l	0-5	ds; u kuřáků až ~10; sledování KRC; ng/ml = µg/l
+CA 19-9	lab.ca199	24108-3	kU/l	0-37	ds; falešně ↑ při cholestáze; >500 u pankreatu = biologicky hraničně resekabilní; Lewis-negativní (5–10 %) netvoří
+CA 15-3	lab.ca153	6875-3	kU/l	0-31	ds; samotný vzestup bez zobrazení není progrese (PRS-4.2)
+CA-125	-	10334-1	kU/l	0-35	ovarium; odpověď podle GCIG
+PSA	lab.psa	2857-1	µg/l	<4	věkově: 40–49 <2,5; 50–59 <3,5; 60–69 <4,5; 70–79 <6,5; relaps po RP ≥0,2; po RT nadir + 2 (Phoenix)
+AFP	bm.afp	1834-1	µg/l	<7	HCC, germinální nádory; ramucirumab u HCC ≥400
+β-hCG	-	-	IU/l	<5	germinální nádory
+NSE	-	-	µg/l	<16.3	SCLC, NET
+CYFRA 21-1	-	-	µg/l	<3.3	NSCLC (hlavně skvamózní)
+SCC	-	-	µg/l	<1.5	skvamózní karcinomy (cervix, hlava a krk)
+Chromogranin A	-	-	µg/l	dle lab.	NET; falešně ↑ při PPI a renální insuficienci
+S100B	-	-	µg/l	<0.105	melanom
+BMI	-	-	kg/m²	18.5-24.9	<18,5 podvýživa
+Úbytek hmotnosti	wt.loss6m	-	% za 6 m	<5	≥5 % nutriční intervence (OBC-2.3)
+ECOG	ecog.physician	89247-1	0–5	0	0–1 fit; ≥3 intenzivní léčba výjimečně; ECOG 0 ≈ KPS 100–90, 1 ≈ 80–70, 2 ≈ 60–50, 3 ≈ 40–30, 4 ≈ 20–10
+Karnofsky	kps	-	%	100	≥70 soběstačný
+G8	geri.g8	-	0–17	>14	≤14 → komplexní geriatrické hodnocení
+Krevní tlak	-	-	mmHg	<140/90	bevacizumab a VEGFR-TKI: nekontrolovanou hypertenzi nezahajovat
+Tepová frekvence	-	-	/min	60-100	-
+SpO2	-	-	%	95-100	-
+LVEF	lvef	-	%	M52-72 Z54-74	ASE/EACVI 2015; <50 % vysoké riziko kardiotoxicity; pokles ≥10 bodů pod 50 % → přerušit anti-HER2 (PRS-3.4)
+GLS	-	-	%	<-18	relativní pokles >15 % = subklinická kardiotoxicita (ESC 2022)
+QTc (Fridericia)	ecg.qtc	-	ms	M<=450 Z<=460	>500 vysoké riziko; ribociklib ≥450 nezahajovat; osimertinib >500 přerušit
+FEV1	spiro.fev1	-	% náležité	>=80	FEV1/FVC ≥0,70; transtorakální biopsie <35 % relativní kontraindikace
+DLCO	-	-	% náležité	>=80	-
+ppoFEV1 / ppoDLCO	spiro.ppo_min	-	% náležité	>=60	PLI-3.1: <60 zátěžový test, <30 vysoké riziko
+VO2max	spiro.vo2max	-	ml/kg/min	>20	10–20 střední, <10 vysoké riziko resekce
+FLR	liver.flr	-	% objemu jater	>=30	≥40 po intenzivní CHT nebo při steatóze (KRC-2.1)
+Child-Pugh	liver.child_score	-	body	5-6	A 5–6, B 7–9, C 10–15
+Lymfatická uzlina (RECIST 1.1)	-	-	mm krátká osa	<10	10–14 patologická necílová, ≥15 cílová
+RECIST odpověď	recist.resp	-	% součtu průměrů	-	PR ≤−30 %; PD ≥+20 % a ≥5 mm absolutně, nebo nová léze
+SUVmax	-	-	-	není norma	srovnává se s pozadím jater a mediastina; ↑ i zánět
+Ki-67 (prs)	-	-	%	<=5	≥30 vysoký; mezi 5 a 30 nejisté (IKWG 2020)
+ER / PR	bm.er_pct	-	% jader	<1	1–10 % ER-low (ASCO/CAP 2020); RKT-01 ER ≥10 %
+HER2 IHC	bm.her2	-	skóre	0	1+ nebo 2+ ISH− = HER2-low; 3+ nebo 2+ ISH+ = pozitivní (PRS-1.2)
+PD-L1 TPS	bm.pdl1	-	%	<1	1–49 nízká, ≥50 vysoká; durvalumab v EU ≥1
+PD-L1 CPS	bm.cps	-	skóre	<1	prahy ≥1, ≥5, ≥10 podle indikace
+TMB	-	-	mut/Mb	<10	≥10 TMB-high
+PSADT	-	-	měsíce	-	≤10 měsíců vysoké riziko u nmCRPC
+Khoranovo skóre	vte.khorana	-	body	0	≥2 zvážit tromboprofylaxi
+SINS	spine.sins	-	body	0-6	7–12 nejistá stabilita, 13–18 nestabilní
+Mirelsovo skóre	bone.mirels	-	body	<=7	8 hraniční, ≥9 profylaktická fixace
+DXA T-skóre	bone.dxa_t	-	SD	>-1	−1 až −2,5 osteopenie; ≤−2,5 osteoporóza
+IPSS	pros.ipss	-	body	0-7	8–19 střední, ≥20 těžké symptomy
+IMDC	rcc.imdc_score	-	faktory	0	1–2 intermediární, ≥3 poor (KPS <80, <1 rok od dg do léčby, Hb <LLN, Ca kor. >ULN, neutrofily >ULN, trombocyty >ULN)

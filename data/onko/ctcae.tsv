@@ -1,0 +1,33 @@
+param	G1	G2	G3	G4
+anémie (Hb g/l)	<LLN–100	<100–80	<80, transfuze	život ohrožující
+neutrofily (10^9/l)	<LLN–1,5	<1,5–1,0	<1,0–0,5	<0,5
+trombocyty (10^9/l)	<LLN–75	<75–50	<50–25	<25
+leukocyty (10^9/l)	<LLN–3,0	<3,0–2,0	<2,0–1,0	<1,0
+lymfocyty (10^9/l)	<LLN–0,8	<0,8–0,5	<0,5–0,2	<0,2
+febrilní neutropenie	-	-	ANC <1,0 a T >38,3 °C nebo ≥38 °C >1 h	život ohrožující
+ALT/AST (normální výchozí)	>ULN–3× ULN	>3–5× ULN	>5–20× ULN	>20× ULN
+bilirubin (normální výchozí)	>ULN–1,5× ULN	>1,5–3× ULN	>3–10× ULN	>10× ULN
+kreatinin	>ULN–1,5× ULN	>1,5–3× ULN	>3–6× ULN	>6× ULN
+CKD (eGFR ml/min/1,73 m²)	-	59–30	29–15	<15
+hyponatrémie (mmol/l)	<LLN–130	125–129 asymptomatická	125–129 symptomatická; 120–124	<120
+hypokalémie (mmol/l)	<LLN–3,0	<LLN–3,0 symptomatická	<3,0–2,5	<2,5
+hyperkalémie (mmol/l)	>ULN–5,5	>5,5–6,0	>6,0–7,0	>7,0
+hypokalcémie, kor. Ca (mmol/l)	<LLN–2,0	<2,0–1,75	<1,75–1,5	<1,5
+hyperkalcémie, kor. Ca (mmol/l)	>ULN–2,9	>2,9–3,1	>3,1–3,4	>3,4
+hypomagnezémie (mmol/l)	<LLN–0,5	<0,5–0,4	<0,4–0,3	<0,3
+hypoalbuminémie (g/l)	<LLN–30	<30–20	<20	-
+hyperglykémie	bez intervence	změna diety nebo perorální léčba	inzulin	život ohrožující
+úbytek hmotnosti	5–<10 %	10–<20 %	≥20 %	-
+pokles EF	-	klidová EF 50–40 %, pokles 10–19 bodů	EF 39–20 %, pokles ≥20 bodů	EF <20 %
+prodloužení QTc (ms)	450–480	481–500	≥501 nebo +60 ms od výchozí	torsades de pointes, život ohrožující arytmie
+hypertenze (mmHg)	TKs 120–139 nebo TKd 80–89	TKs 140–159 nebo TKd 90–99	TKs ≥160 nebo TKd ≥100	život ohrožující
+proteinurie	1+; 0,15–1,0 g/24 h	2+–3+; 1,0–3,4 g/24 h	≥3,5 g/24 h	-
+periferní senzitivní neuropatie	asymptomatická	omezuje instrumentální ADL	omezuje sebeobsluhu	život ohrožující
+porucha sluchu	subjektivní změna	ztráta s pomůckou, omezuje instrumentální ADL	ztráta s indikovanou intervencí, omezuje sebeobsluhu	-
+pneumonitida	asymptomatická	symptomatická, omezuje instrumentální ADL	těžká, omezuje sebeobsluhu, O2	život ohrožující
+průjem (stolice/den nad výchozí)	<4	4–6	≥7, hospitalizace	život ohrožující
+nauzea	nechutenství	snížený příjem bez úbytku hmotnosti	nedostatečný příjem, sonda nebo TPN	-
+zvracení	bez intervence	ambulantní i.v. hydratace	sonda, TPN nebo hospitalizace	život ohrožující
+mukozitida	asymptomatická nebo mírná	střední bolest, příjem neomezen	silná bolest, omezuje příjem	život ohrožující
+hand-foot syndrom	změny kůže bez bolesti	s bolestí, omezuje instrumentální ADL	těžké, omezuje sebeobsluhu	-
+únava	ustoupí po odpočinku	neustoupí, omezuje instrumentální ADL	omezuje sebeobsluhu	-

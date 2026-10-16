@@ -1,0 +1,198 @@
+fakt	typ	jedn	zdroj	popis
+dg	k	MKN-10	Condition.code	hlavní diagnóza (filtr pravidel podle dg)
+age	n	roky	Patient.birthDate	věk k datu MDT
+sex	k:M|Z	-	Patient.gender	pohlaví
+meno	k:pre|post	-	text (LLM + citace)	menopauzální stav
+intent	k:C|P	-	form intent	záměr léčby: C kurativní, P paliativní (D-018)
+dm	b	-	Condition ICD E10–E14	diabetes mellitus
+pregnancy	k:ne|T1|T2|T3	-	form / Condition O	gravidita a trimestr
+ecog.physician	n	0–5	form ecog.physician; LOINC 89247-1	ECOG podle lékaře
+ecog.patient	n	0–5	form ecog.patient; PROMs	ECOG podle pacienta (samostatnost)
+ecog.diff	d	stupně	odvoz.	|ECOG lékař − ECOG pacient|
+kps	n	%	text	Karnofsky
+asa	n	1–5	text (anesteziolog)	ASA klasifikace
+geri.g8	n	0–17	form geri.g8	geriatrický screening G8
+weight	n	kg	form weight; LOINC 29463-7	hmotnost
+wt.loss6m	d	%	odvoz. z řady weight	úbytek hmotnosti za 183 dní
+lab.hb	n	g/l	LOINC 718-7	hemoglobin
+lab.hb_anemia	d	ano/ne	odvoz. lab.hb + sex	Hb pod normou WHO (M <130, Ž <120 g/l)
+lab.neu	n	10^9/l	LOINC 751-8	neutrofily absolutně
+lab.plt	n	10^9/l	LOINC 777-3	trombocyty
+lab.inr	n	-	LOINC 6301-6	INR
+lab.krea	n	µmol/l	LOINC 14682-9	kreatinin
+lab.crcl	d	ml/min	odvoz.	Cockcroft-Gault: (140 − věk) × kg × (M 1,23 / Ž 1,04) / kreatinin µmol/l
+lab.egfr	n	ml/min/1,73 m²	text nebo lab	eGFR CKD-EPI (1 ml/s = 60 ml/min)
+lab.bili	n	µmol/l	LOINC 14631-6	bilirubin celkový
+lab.bili_xuln	d	×ULN	odvoz. lab.bili / referenceRange.high	násobek horní hranice normy
+lab.alt_xuln	d	×ULN	odvoz. LOINC 1742-6	ALT / ULN
+lab.alp_xuln	d	×ULN	odvoz. LOINC 6768-6	ALP / ULN
+lab.alb	n	g/l	LOINC 1751-7	albumin
+lab.na	n	mmol/l	LOINC 2951-2	sodík
+lab.k	n	mmol/l	LOINC 2823-3	draslík
+lab.mg	n	mmol/l	lab	hořčík
+lab.ca_corr	d	mmol/l	odvoz.	korigované Ca = Ca + 0,02 × (40 − albumin g/l)
+lab.glu	n	mmol/l	LOINC 15074-8	glukóza
+lab.hba1c	n	mmol/mol	LOINC 4548-4	HbA1c (IFCC)
+lab.tsh	n	mIU/l	LOINC 3016-3	TSH
+lab.ca199	n	kU/l	LOINC 24108-3	CA 19-9 (hodnotit bez cholestázy)
+lab.leu	n	10^9/l	LOINC 6690-2	leukocyty
+lab.ca	n	mmol/l	lab	kalcium celkové
+lab.alt	n	µkat/l	LOINC 1742-6	ALT
+lab.ast	n	µkat/l	LOINC 1920-8	AST
+lab.alp	n	µkat/l	LOINC 6768-6	ALP
+lab.crp	n	mg/l	LOINC 1988-5	CRP
+lab.ld	n	µkat/l	LOINC 14804-9	laktátdehydrogenáza
+lab.cea	n	µg/l	LOINC 2039-6	CEA
+lab.ca153	n	kU/l	LOINC 6875-3	CA 15-3
+lab.psa	n	µg/l	LOINC 2857-1	PSA
+ecg.qtc	n	ms	text EKG (LLM + citace)	QTc (Fridericia)
+lvef	n	%	Observation LVEF (echo)	ejekční frakce levé komory
+lvef.drop	d	body	odvoz. z řady lvef	pokles LVEF od výchozí hodnoty
+lvef.age_days	d	dny	odvoz.	stáří posledního echa k datu MDT
+hf.symptomatic	b	-	Condition I50 / text	symptomatické srdeční selhání
+card.nyha	n	I–IV	text	NYHA třída
+card.mi_days	d	dny / ne	odvoz. Condition I21, I22, I25.2	dny od infarktu myokardu; ne = nebyl
+card.stent_days	d	dny / ne	odvoz. Procedure PCI	dny od koronárního stentu; ne = nebyl
+card.cad	b	-	Condition I20–I25	ICHS nebo koronární spazmy
+card.mets	n	METs	text (anamnéza)	funkční kapacita
+card.cied	b	-	Device / text	kardiostimulátor nebo ICD
+htn.uncontrolled	b	-	text + TK	nekontrolovaná hypertenze
+ate.history	b	-	Condition I21, I63, I64, I74, G45	arteriální trombembolie v anamnéze
+ate.months	d	měsíce / ne	odvoz.	měsíce od poslední arteriální trombembolie; ne = nebyla
+urine.prot_g24	n	g/24 h	lab	proteinurie
+med.cyp3a	b	-	MedicationStatement + text	byliny nebo léky ovlivňující CYP3A (třezalka, grapefruit)
+med.cyp3a_inducer	b	-	MedicationStatement	silné induktory CYP3A (rifampicin, karbamazepin, fenytoin, třezalka)
+med.cyp2d6_inhib	b	-	MedicationStatement	silné inhibitory CYP2D6 (paroxetin, fluoxetin, bupropion)
+med.warfarin	b	-	MedicationStatement ATC B01AA03	warfarin
+med.brivudine_4w	b	-	MedicationStatement	brivudin v posledních 4 týdnech
+med.anticoag	b	-	MedicationStatement ATC B01AA, B01AE, B01AF	antikoagulace
+med.antiplatelet	b	-	MedicationStatement ATC B01AC	antiagregace
+med.dapt	b	-	MedicationStatement	duální antiagregace
+med.brafi	b	-	MedicationStatement	BRAF/MEK inhibitor
+med.pred_mg	n	mg/den	MedicationStatement	ekvivalent prednisonu
+neuro.stroke_months	d	měsíce / ne	odvoz. Condition I63, I64, G45	měsíce od CMP/TIA; ne = nebyla
+neuro.seizure	b	-	Condition G40 / text	epileptický záchvat nebo predispozice
+smoking	b	-	form smoking	aktivní kuřák
+allergy	b	-	AllergyIntolerance	alergie nebo přecitlivělost
+prior.local	b	-	Procedure / text	předchozí výkon, RT nebo implantát v oblasti léčby
+spiro.fev1	n	% náležité	Observation FEV1	FEV1
+spiro.ppo_min	d	% náležité	odvoz. min(ppoFEV1, ppoDLCO)	nižší z predikovaných pooperačních hodnot
+spiro.vo2max	n	ml/kg/min	form spiro.vo2max	spiroergometrie
+spiro.exercise_ok	b	-	text (pneumolog)	vyhovující zátěžový test
+prom.dyspnea	n	0–10	QuestionnaireResponse	dušnost podle pacienta
+prom.symptom_max	d	0–10	odvoz. QuestionnaireResponse	nejvyšší symptom v PROMs (únava, bolest…)
+lung.ild	b	-	Condition J84 / text	ILD nebo pneumonitida v anamnéze
+lung.emphysema_ptx	b	-	Condition J43, J44 / Procedure	emfyzém, CHOPN nebo pneumotorax po biopsii
+lung.hemoptysis	b	-	text	hemoptýza ≥2,5 ml
+lung.ultracentral	b	-	text (radiolog)	ultracentrální lokalizace tumoru
+hist.squamous	b	-	histologie	skvamózní karcinom
+hist.transplant	b	-	Condition Z94	transplantovaný orgán
+hist.irae_severe	b	-	text	předchozí imunitní NÚ G4, myokarditida nebo těžká neurotoxicita
+hist.mds_aml	b	-	Condition D46, C92	MDS nebo AML v anamnéze
+hist.vte	b	-	Condition I26, I80	VTE v anamnéze
+aid.systemic	b	-	Condition + MedicationStatement	autoimunitní onemocnění se systémovou léčbou (2 roky)
+ctd.active	b	-	Condition M32, M34	sklerodermie nebo aktivní SLE
+inf.hbv	k:neg|pos|nezn	-	lab	HBsAg / anti-HBc
+staging.age_days	d	dny	odvoz. ImagingStudy / DiagnosticReport	stáří zobrazovacího stagingu k datu MDT
+staging.brain_mr	b	-	form staging.brain_mr	MR mozku provedena
+staging.ebus	b	-	form staging.ebus	invazivní staging mediastina provedený
+staging.liver_complete	b	-	form staging.chest_ct + staging.liver_mr	CT hrudníku + břicha a MR jater ≤6 týdnů
+tnm.m1	b	-	form staging.tnm	vzdálené metastázy
+lesion.unverified	b	-	text (radiolog)	nejasné ložisko měnící stadium nebo 2. nádor bez histologie
+lesion.max_mm	n	mm	text (radiolog)	největší ložisko k ablaci
+extrahep.disease	b	-	text (radiolog)	extrahepatální onemocnění
+liver.flr	n	%	form liver.flr	budoucí jaterní remnant
+liver.bilobar	b	-	text (radiolog)	oba laloky, vymizelá ložiska nebo kontakt s cévami
+liver.resectable	b	-	text (MDT, HPB chirurg)	metastázy resekabilní
+liver.child	k:A|B|C	-	odvoz. Child-Pugh	třída Child-Pugh
+liver.child_score	n	5–15	odvoz. Child-Pugh	body Child-Pugh
+liver.portal_htn	b	-	text	klinicky významná portální hypertenze
+liver.pvt_main	b	-	text (radiolog)	trombóza kmene v. portae
+liver.varices	k:ne|leceno|neleceno|nezn	-	gastroskopie	jícnové varixy
+liver.lsf_pct	n	%	scintigrafie MAA	plicní shunt před SIRT
+hcc.milan	b	-	odvoz.	splňuje Milánská kritéria
+treatment.bev_days	d	dny / ne	odvoz. MedicationAdministration ATC L01FG01	dny od poslední dávky bevacizumabu; ne = nepodán
+treatment.vegf_tki	b	-	MedicationStatement	probíhající anti-VEGF TKI
+treatment.abi_current	b	-	MedicationStatement	právě užívá abirateron + prednison
+tx.cycles	n	cykly	MedicationAdministration	počet cyklů současné CHT
+tx.active	b	-	CarePlan / MedicationStatement	plánovaná nebo probíhající protinádorová léčba
+tx.bsc_only	b	-	CarePlan	jen symptomatická léčba
+tx.lines_m1	n	linie	MedicationStatement	počet linií systémové léčby v M1
+tx.cht_lines_m1	n	linie	MedicationStatement	počet linií CHT v M1
+tx.prior_ai_cdk46	b	-	MedicationStatement	progrese na/po AI + CDK4/6
+tx.prior_serd	b	-	MedicationStatement	předchozí fulvestrant nebo SERD
+tx.prior_trastuzumab_taxane	b	-	MedicationStatement	progrese po trastuzumabu a taxanu v M1
+tx.prior_tdxd	b	-	MedicationStatement	předchozí T-DXd
+tx.prior_parpi	b	-	MedicationStatement	předchozí PARP inhibitor
+recist.resp	k:cr|pr|sd|pd	-	odvoz. RECIST 1.1 (T-304)	odpověď na léčbu
+tox.neuropathy	n	CTCAE 0–4	form tox.neuropathy	periferní neuropatie podle lékaře
+tox.neuro_conflict	b	-	odvoz. PROMs vs. lékař	pacient popisuje omezení (odpovídá G2), lékař G1
+tox.hearing	n	CTCAE 0–4	text	porucha sluchu
+nutr.ent_par	b	-	text	enterální nebo parenterální výživa
+walk.independent	b	-	PROMs / text	samostatná chůze
+visceral.crisis	b	-	odvoz. (PRS-2.4) + text	viscerální krize
+visceral.mets	b	-	text (radiolog)	viscerální metastázy
+brain.mets_n	n	počet	text (radiolog)	počet mozkových metastáz (0 = žádné)
+brain.max_mm	n	mm	text (radiolog)	největší mozkové ložisko
+brain.lmd	b	-	text	leptomeningeální postižení
+brain.untreated	b	-	text	neléčené nebo symptomatické mozkové metastázy
+spine.sins	n	0–18	text (radiolog)	Spinal Instability Neoplastic Score
+spine.mscc	b	-	text	komprese míchy
+bone.mirels	n	4–12	text	Mirelsovo skóre
+bone.dxa_t	n	SD	DXA	T-skóre
+dental.exam	b	-	text / Procedure	stomatologické vyšetření provedeno
+dental.unhealed	b	-	text	nezhojená léze po stomatologickém výkonu
+gi.ibd_obstruction	b	-	Condition K50, K51, K56	chronický střevní zánět nebo obstrukce
+gi.perforation	b	-	text	GI perforace, píštěl nebo nezhojená rána
+rt.prior_same_area	b	-	Procedure RT / text	předchozí RT téže nebo překrývající se oblasti
+rt.prior_months	d	měsíce / ne	odvoz. Procedure RT	měsíce od konce RT téže oblasti; ne = nebyla
+pros.ipss	n	0–35	PROMs	IPSS
+pros.risk	k:low|int|high	-	odvoz. (PSA, ISUP, cT)	riziková skupina EAU
+ren.solitary	b	-	text	solitární ledvina
+rcc.imdc_score	n	0–6	odvoz.	IMDC rizikové faktory
+bladder.hydro_cis	b	-	text	hydronefróza nebo rozsáhlý CIS
+pan.arterial_deg	n	°	text (radiolog)	kontakt nádoru s SMA/truncus
+breast.multicentric	b	-	text (radiolog)	multicentrické onemocnění nebo difuzní mikrokalcifikace
+tumor.size_mm	n	mm	text (radiolog)	největší rozměr primárního tumoru
+tumor.side	k:L|R	-	text	strana primárního KRC (L = sestupný tračník až rektum)
+tumor.luminal_gi_gu	b	-	Condition + text	neresekovaný luminální GI nebo GU nádor
+vte.khorana	n	body	odvoz.	Khoranovo skóre
+cht.fn_risk	n	%	katalog režimu	riziko febrilní neutropenie
+cht.antra_cum_dox	d	mg/m²	odvoz. MedicationAdministration	kumulativní dávka antracyklinů (doxorubicin-ekvivalent)
+fert.counsel	b	-	text	poradenství k fertilitě provedeno
+gen.indication	b	-	odvoz. (OBC-2.4)	indikace ke genetickému poradenství
+eye.exam	b	-	text	oftalmologické vyšetření provedeno
+ofs	b	-	MedicationStatement (GnRH)	ovariální suprese
+bm.ras	k:wt|mut|nezn	-	form bm.ras	KRAS/NRAS ex. 2–4
+bm.braf	k:wt|v600e|v600|nezn	-	form bm.braf	BRAF
+bm.kras	k:wt|g12c|mut|nezn	-	NGS	KRAS (G12C)
+bm.mmr	k:dmmr|pmmr|nezn	-	form bm.mmr	MMR/MSI
+bm.egfr	k:wt|mut|nezn	-	form bm.egfr	EGFR (ex19del/L858R)
+bm.alk	k:neg|pos|nezn	-	form bm.alk	přestavba ALK
+bm.egfr_alk	d	neg|pos|nezn	odvoz. bm.egfr + bm.alk	pos = kterýkoli pozitivní; nezn = kterýkoli neznámý
+bm.ros1	k:neg|pos|nezn	-	IHC/NGS	ROS1
+bm.met	k:wt|ex14|nezn	-	NGS	MET exon 14 skipping
+bm.ret	k:neg|pos|nezn	-	NGS	fúze RET
+bm.ntrk	k:neg|pos|nezn	-	NGS	fúze NTRK
+bm.her2mut	k:wt|mut|nezn	-	NGS	mutace HER2 (plíce)
+bm.pdl1	n	% TPS	form bm.pdl1	PD-L1 TPS
+bm.cps	n	CPS	IHC	PD-L1 CPS
+bm.hr	k:pos|neg	-	odvoz. ER/PR ≥1 %	hormonální receptory
+bm.er_pct	n	% jader	form bm.er	ER
+bm.her2	k:0|ultralow|low|pos|nezn	-	odvoz. form bm.her2 (IHC/ISH)	low = 1+ nebo 2+ ISH−; pos = 3+ nebo 2+ ISH+
+bm.her2_discordant	b	-	odvoz.	HER2 se liší mezi primárním nádorem a metastázou
+bm.esr1	k:wt|mut|nezn	-	form bm.esr1	mutace ESR1 (ctDNA)
+bm.esr1_age_days	d	dny	odvoz.	stáří vyšetření ESR1
+bm.pik3ca	k:wt|mut|nezn	-	form bm.pik3ca	PIK3CA / AKT1 / PTEN
+bm.brca	k:wt|mut|nezn	-	form bm.gbrca + NGS	patogenní varianta BRCA1/2 (zárodečná nebo somatická)
+bm.hrr	k:wt|mut|nezn	-	NGS	patogenní alterace HRR genu
+bm.hrd	k:neg|pos|nezn	-	test HRD	HRD status
+bm.dpd	k:norm|part|def	-	genotyp DPYD / fenotyp	aktivita DPD
+bm.ugt1a1	k:wt|het|hom	-	genotyp	UGT1A1*28
+bm.psma	k:pos|neg|nezn	-	PSMA PET	exprese PSMA
+bm.idh	k:wt|mut|nezn	-	IHC/NGS	IDH1/2
+bm.cldn18	k:neg|pos|nezn	-	IHC	CLDN18.2 (≥75 % buněk 2–3+)
+bm.fgfr	k:wt|mut|nezn	-	NGS	alterace FGFR3
+bm.fra	k:neg|pos|nezn	-	IHC	FRα vysoká exprese
+bm.afp	n	µg/l	LOINC 1834-1	AFP
+marker	d	ano|ne|nezn	odvoz. sloupec marker v postupy.tsv	splňuje prediktivní biomarker postupu

@@ -1,0 +1,229 @@
+studie	dg	kontext	marker	rameno	vs	vysledek	rok
+LACE	C34	NSCLC adj. po R0, II–III	-	cisplatinový dublet	observace	OS↑ (~5 % za 5 let, metaanalýza)	2008
+JCOG0802	C34	NSCLC IA periferní ≤2 cm	-	segmentektomie	lobektomie	OS↑ (non-inferiorita splněna)	2022
+CALGB140503	C34	NSCLC IA periferní ≤2 cm N0	-	sublobární resekce	lobektomie	DFS non-inferiorní	2023
+ADAURA	C34	NSCLC IB–IIIA po R0	EGFR=mut	osimertinib 3 roky	placebo	DFS↑ OS↑	2020
+ALINA	C34	NSCLC IB–IIIA po R0	ALK=pos	alektinib 2 roky	platinová CHT	DFS↑	2024
+IMpower010	C34	NSCLC II–IIIA po adj. CHT	PDL1>=1	atezolizumab 1 rok	BSC	DFS↑ (PD-L1 ≥50 % i OS↑)	2021
+PEARLS	C34	NSCLC IB–IIIA po R0	-	pembrolizumab 1 rok	placebo	DFS↑	2022
+CheckMate816	C34	NSCLC IB–IIIA resekabilní	-	neoadj. nivolumab + CHT	CHT	EFS↑ pCR↑	2022
+KEYNOTE-671	C34	NSCLC II–IIIB resekabilní	-	perioperační pembrolizumab + CHT	CHT	EFS↑ OS↑	2023
+AEGEAN	C34	NSCLC IIA–IIIB resekabilní	-	perioperační durvalumab + CHT	CHT	EFS↑ pCR↑	2023
+CheckMate77T	C34	NSCLC IIA–IIIB resekabilní	-	perioperační nivolumab + CHT	CHT	EFS↑	2024
+PACIFIC	C34	NSCLC III neresekabilní po CHRT	-	durvalumab 1 rok	placebo	PFS↑ OS↑	2017
+LAURA	C34	NSCLC III neresekabilní po CHRT	EGFR=mut	osimertinib	placebo	PFS↑	2024
+FLAURA	C34	NSCLC IV 1L	EGFR=mut	osimertinib	gefitinib / erlotinib	PFS↑ OS↑	2018
+FLAURA2	C34	NSCLC IV 1L	EGFR=mut	osimertinib + platina + pemetrexed	osimertinib	PFS↑	2023
+MARIPOSA	C34	NSCLC IV 1L	EGFR=mut	amivantamab + lazertinib	osimertinib	PFS↑ OS↑	2024
+ALEX	C34	NSCLC IV 1L	ALK=pos	alektinib	krizotinib	PFS↑	2017
+CROWN	C34	NSCLC IV 1L	ALK=pos	lorlatinib	krizotinib	PFS↑	2020
+CodeBreaK200	C34	NSCLC IV 2L	KRAS=g12c	sotorasib	docetaxel	PFS↑	2023
+LIBRETTO-431	C34	NSCLC IV 1L	RET=pos	selperkatinib	CHT ± pembrolizumab	PFS↑	2023
+DESTINY-Lung02	C34	NSCLC IV předléčený	HER2MUT=mut	T-DXd 5,4 mg/kg	T-DXd 6,4 mg/kg (fáze II)	ORR; nižší dávka méně ILD	2023
+KEYNOTE-024	C34	NSCLC IV 1L	PDL1>=50	pembrolizumab	platinová CHT	PFS↑ OS↑	2016
+IMpower110	C34	NSCLC IV 1L	PDL1>=50	atezolizumab	platinová CHT	OS↑	2020
+EMPOWER-Lung1	C34	NSCLC IV 1L	PDL1>=50	cemiplimab	platinová CHT	OS↑ PFS↑	2021
+KEYNOTE-189	C34	NSCLC IV 1L neskvamózní	-	pembrolizumab + platina + pemetrexed	CHT	OS↑ PFS↑	2018
+KEYNOTE-407	C34	NSCLC IV 1L skvamózní	-	pembrolizumab + karboplatina + taxan	CHT	OS↑ PFS↑	2018
+CheckMate9LA	C34	NSCLC IV 1L	-	nivolumab + ipilimumab + 2 cykly CHT	CHT	OS↑	2021
+CheckMate227	C34	NSCLC IV 1L	PDL1>=1	nivolumab + ipilimumab	CHT	OS↑	2019
+LUME-Lung1	C34	NSCLC IV 2L	-	docetaxel + nintedanib	docetaxel	OS↑ (adenokarcinom)	2014
+REVEL	C34	NSCLC IV 2L	-	docetaxel + ramucirumab	docetaxel	OS↑	2014
+IMpower133	C34	SCLC rozsáhlé 1L	-	atezolizumab + karboplatina + etoposid	CHT	OS↑	2018
+CASPIAN	C34	SCLC rozsáhlé 1L	-	durvalumab + platina + etoposid	CHT	OS↑	2019
+ADRIATIC	C34	SCLC omezené po CHRT	-	durvalumab	placebo	OS↑ PFS↑	2024
+DeLLphi-304	C34	SCLC 2L	-	tarlatamab	CHT (topotekan, lurbinektedin, amrubicin)	OS↑	2025
+START	C50	adj. RT po BCS	-	hypofrakcionace 40 Gy/15	50 Gy/25	lokální kontrola non-inferiorní	2008
+FAST-Forward	C50	adj. RT po BCS	-	26 Gy/5 frakcí (1 týden)	40 Gy/15	lokální kontrola non-inferiorní	2020
+PRIME-II	C50	≥65 let, HR+, pN0, ≤3 cm	HR=pos	HT bez RT	HT + RT	lokální recidiva↑, OS stejné	2015
+CALGB9343	C50	≥70 let, HR+, T1N0	HR=pos	tamoxifen bez RT	tamoxifen + RT	OS stejné	2004
+SOFT-TEXT	C50	premenopauza HR+	HR=pos	ovariální suprese + exemestan / tamoxifen	tamoxifen	DFS↑ (vyšší riziko)	2014
+monarchE	C50	časný HR+ HER2− vysoké riziko	HR=pos	abemaciklib 2 roky + HT	HT	iDFS↑	2020
+NATALEE	C50	časný HR+ HER2− II–III	HR=pos	ribociklib 3 roky + AI	AI	iDFS↑	2024
+OlympiA	C50	časný HER2− gBRCA vysoké riziko	BRCA=mut	olaparib 1 rok	placebo	iDFS↑ OS↑	2021
+TAILORx	C50	HR+ N0	HR=pos	HT (RS 11–25)	CHT + HT	non-inferiorní (>50 let)	2018
+RxPONDER	C50	HR+ N1–3 uzliny	HR=pos	HT (RS ≤25)	CHT + HT	postmenopauza bez přínosu CHT	2021
+MINDACT	C50	klinicky vysoké, genomicky nízké riziko	-	bez CHT	CHT	DMFS non-inferiorní	2016
+NeoSphere	C50	HER2+ neoadjuvance	HER2=pos	pertuzumab + trastuzumab + docetaxel	trastuzumab + docetaxel	pCR↑	2012
+APHINITY	C50	HER2+ adjuvance	HER2=pos	pertuzumab + trastuzumab + CHT	trastuzumab + CHT	iDFS↑ (N+)	2017
+KATHERINE	C50	HER2+ reziduum po neoadjuvanci	HER2=pos	T-DM1	trastuzumab	iDFS↑ OS↑	2019
+KEYNOTE-522	C50	TNBC II–III	-	pembrolizumab + CHT neoadj./adj.	CHT	pCR↑ EFS↑ OS↑	2020
+CREATE-X	C50	HER2− reziduum po neoadjuvanci	-	kapecitabin	observace	DFS↑ OS↑ (TNBC)	2017
+PALOMA-2	C50	M1 HR+ 1L	HR=pos	palbociklib + letrozol	letrozol	PFS↑	2016
+MONALEESA-2	C50	M1 HR+ 1L	HR=pos	ribociklib + letrozol	letrozol	PFS↑ OS↑	2016
+MONARCH-3	C50	M1 HR+ 1L	HR=pos	abemaciklib + AI	AI	PFS↑	2017
+MONALEESA-3	C50	M1 HR+ 1L/2L	HR=pos	ribociklib + fulvestrant	fulvestrant	PFS↑ OS↑	2018
+PALOMA-3	C50	M1 HR+ po endokrinní léčbě	HR=pos	palbociklib + fulvestrant	fulvestrant	PFS↑	2015
+EMERALD	C50	M1 HR+ po CDK4/6	ESR1=mut	elacestrant	standardní endokrinní léčba	PFS↑ (ESR1 mut)	2022
+SOLAR-1	C50	M1 HR+ po AI	PIK3CA=mut	alpelisib + fulvestrant	fulvestrant	PFS↑	2019
+CAPItello-291	C50	M1 HR+ po AI ± CDK4/6	PIK3CA=mut	capivasertib + fulvestrant	fulvestrant	PFS↑	2023
+BOLERO-2	C50	M1 HR+ po nesteroidním AI	HR=pos	everolimus + exemestan	exemestan	PFS↑	2012
+OlympiAD	C50	M1 HER2− gBRCA	BRCA=mut	olaparib	CHT podle lékaře	PFS↑	2017
+EMBRACA	C50	M1 HER2− gBRCA	BRCA=mut	talazoparib	CHT podle lékaře	PFS↑	2018
+DESTINY-Breast04	C50	M1 HER2-low po CHT	HER2=low	T-DXd	CHT podle lékaře	PFS↑ OS↑	2022
+DESTINY-Breast06	C50	M1 HR+ HER2-low/ultralow po endokrinní léčbě	HER2=low	T-DXd	CHT podle lékaře	PFS↑	2024
+TROPiCS-02	C50	M1 HR+ HER2− předléčený	HR=pos	sacituzumab govitekan	CHT podle lékaře	PFS↑ OS↑	2022
+TROPION-Breast01	C50	M1 HR+ HER2− předléčený	HR=pos	datopotamab deruxtekan	CHT podle lékaře	PFS↑	2024
+CLEOPATRA	C50	M1 HER2+ 1L	HER2=pos	pertuzumab + trastuzumab + docetaxel	trastuzumab + docetaxel	PFS↑ OS↑	2012
+DESTINY-Breast03	C50	M1 HER2+ 2L	HER2=pos	T-DXd	T-DM1	PFS↑ OS↑	2022
+HER2CLIMB	C50	M1 HER2+ předléčený vč. mozku	HER2=pos	tukatinib + trastuzumab + kapecitabin	placebo + trastuzumab + kapecitabin	PFS↑ OS↑	2020
+KEYNOTE-355	C50	M1 TNBC 1L	CPS>=10	pembrolizumab + CHT	CHT	PFS↑ OS↑	2020
+ASCENT	C50	M1 TNBC ≥2L	-	sacituzumab govitekan	CHT podle lékaře	PFS↑ OS↑	2021
+IDEA	C18	kolon III adjuvance	-	CAPOX/FOLFOX 3 měsíce	6 měsíců	non-inferiorní pro CAPOX u nízkého rizika	2018
+RAPIDO	C20	rektum lokálně pokročilé	-	krátká RT + CHT → TME	CHRT → TME	selhání léčby↓	2021
+PRODIGE23	C20	rektum lokálně pokročilé	-	neoadj. mFOLFIRINOX + CHRT	CHRT	DFS↑	2021
+OPRA	C20	rektum II–III po TNT	-	watch & wait	-	zachování rekta u ~50 % (fáze II)	2022
+Cercek2022	C20	rektum lokálně pokročilé dMMR	MMR=dmmr	dostarlimab 6 měsíců	-	klinická kompletní odpověď 100 % (fáze II)	2022
+EPOC	C18-C20	resekabilní jaterní metastázy	-	perioperační FOLFOX + resekce	resekce	PFS↑	2008
+TRIBE	C18-C20	M1 1L	-	FOLFOXIRI + bevacizumab	FOLFIRI + bevacizumab	PFS↑ OS↑	2014
+CAIRO5	C18-C20	neresekabilní jaterní mts, pravostranné nebo RAS mut	-	FOLFOXIRI + bevacizumab	dublet + bevacizumab	PFS↑	2023
+PARADIGM	C18-C20	M1 RAS wt levostranný	RAS=wt	panitumumab + mFOLFOX6	bevacizumab + mFOLFOX6	OS↑	2023
+FIRE-3	C18-C20	M1 RAS wt	RAS=wt	FOLFIRI + cetuximab	FOLFIRI + bevacizumab	OS↑	2014
+KEYNOTE-177	C18-C20	M1 dMMR 1L	MMR=dmmr	pembrolizumab	CHT	PFS↑	2020
+CheckMate8HW	C18-C20	M1 dMMR 1L	MMR=dmmr	nivolumab + ipilimumab	CHT	PFS↑	2024
+BEACON	C18-C20	M1 BRAF V600E 2L+	BRAF=v600e	enkorafenib + cetuximab	irinotekan / FOLFIRI + cetuximab	OS↑	2019
+BREAKWATER	C18-C20	M1 BRAF V600E 1L	BRAF=v600e	enkorafenib + cetuximab + mFOLFOX6	CHT ± bevacizumab	ORR↑ PFS↑ OS↑	2025
+MOUNTAINEER	C18-C20	M1 HER2+ RAS wt předléčený	HER2=pos	tukatinib + trastuzumab	- (fáze II)	ORR	2023
+DESTINY-CRC02	C18-C20	M1 HER2+ předléčený	HER2=pos	T-DXd 5,4 mg/kg	6,4 mg/kg (fáze II)	ORR	2024
+CodeBreaK300	C18-C20	M1 KRAS G12C předléčený	KRAS=g12c	sotorasib + panitumumab	trifluridin/tipiracil nebo regorafenib	PFS↑	2023
+SUNLIGHT	C18-C20	M1 3L	-	trifluridin/tipiracil + bevacizumab	trifluridin/tipiracil	OS↑	2023
+CORRECT	C18-C20	M1 refrakterní	-	regorafenib	placebo	OS↑	2013
+FRESCO-2	C18-C20	M1 refrakterní	-	fruquintinib	placebo	OS↑	2023
+KEYNOTE-564	C64	ccRCC po nefrektomii, vysoké riziko	-	pembrolizumab 1 rok	placebo	DFS↑ OS↑	2021
+KEYNOTE-426	C64	M1 ccRCC 1L	-	pembrolizumab + axitinib	sunitinib	OS↑ PFS↑	2019
+CheckMate9ER	C64	M1 ccRCC 1L	-	nivolumab + kabozantinib	sunitinib	PFS↑ OS↑	2021
+CLEAR	C64	M1 ccRCC 1L	-	pembrolizumab + lenvatinib	sunitinib	PFS↑ OS↑	2021
+CheckMate214	C64	M1 ccRCC 1L intermediární/poor	-	nivolumab + ipilimumab	sunitinib	OS↑	2018
+METEOR	C64	M1 po VEGFR-TKI	-	kabozantinib	everolimus	PFS↑ OS↑	2015
+LITESPARK-005	C64	M1 po IO a TKI	-	belzutifan	everolimus	PFS↑	2024
+CARMENA	C64	M1 intermediární/poor	-	sunitinib samotný	nefrektomie + sunitinib	OS non-inferiorní	2018
+ProtecT	C61	lokalizovaný	-	aktivní monitorace	RP / RT + ADT	OS stejné (15 let)	2016
+LATITUDE	C61	mHSPC vysoké riziko	-	ADT + abirateron	ADT	OS↑	2017
+STAMPEDE	C61	HSPC	-	ADT + abirateron	ADT	OS↑	2017
+ARCHES	C61	mHSPC	-	ADT + enzalutamid	ADT	rPFS↑ OS↑	2019
+ENZAMET	C61	mHSPC	-	ADT + enzalutamid	ADT + nesteroidní antiandrogen	OS↑	2019
+TITAN	C61	mHSPC	-	ADT + apalutamid	ADT	OS↑ rPFS↑	2019
+PEACE-1	C61	mHSPC de novo	-	ADT + docetaxel + abirateron	ADT ± docetaxel	rPFS↑ OS↑	2022
+ARASENS	C61	mHSPC	-	ADT + docetaxel + darolutamid	ADT + docetaxel	OS↑	2022
+STAMPEDE-H	C61	mHSPC nízký objem	-	RT prostaty + ADT	ADT	OS↑ (nízký objem)	2018
+SPARTAN	C61	nmCRPC, PSADT ≤10 měsíců	-	apalutamid	placebo	MFS↑ OS↑	2018
+PROSPER	C61	nmCRPC, PSADT ≤10 měsíců	-	enzalutamid	placebo	MFS↑ OS↑	2018
+ARAMIS	C61	nmCRPC, PSADT ≤10 měsíců	-	darolutamid	placebo	MFS↑ OS↑	2019
+TAX327	C61	mCRPC	-	docetaxel á 3 týdny + prednison	mitoxantron	OS↑	2004
+CARD	C61	mCRPC po docetaxelu a ARPI	-	kabazitaxel	jiný ARPI	rPFS↑ OS↑	2019
+PROfound	C61	mCRPC HRR po ARPI	HRR=mut	olaparib	jiný ARPI	rPFS↑ OS↑ (BRCA/ATM)	2020
+PROpel	C61	mCRPC 1L	-	olaparib + abirateron	abirateron	rPFS↑	2022
+TALAPRO-2	C61	mCRPC 1L	-	talazoparib + enzalutamid	enzalutamid	rPFS↑	2023
+MAGNITUDE	C61	mCRPC 1L HRR	HRR=mut	niraparib + abirateron	abirateron	rPFS↑ (BRCA)	2023
+VISION	C61	mCRPC PSMA+ po ARPI a taxanu	PSMA=pos	Lu-PSMA-617 + standard	standard	OS↑ rPFS↑	2021
+PSMAfore	C61	mCRPC PSMA+ po ARPI, bez taxanu	PSMA=pos	Lu-PSMA-617	jiný ARPI	rPFS↑	2024
+ALSYMPCA	C61	mCRPC kostní metastázy	-	radium-223	placebo	OS↑	2013
+NIAGARA	C67	MIBC způsobilý k cisplatině	-	perioperační durvalumab + GC	GC	EFS↑ OS↑	2024
+BC2001	C67	MIBC	-	CHRT (5-FU + mitomycin C)	RT	lokoregionální kontrola↑	2012
+CheckMate274	C67	MIUC po radikální operaci, vysoké riziko	-	nivolumab	placebo	DFS↑	2021
+EV-302	C67	la/mUC 1L	-	enfortumab vedotin + pembrolizumab	platinová CHT	PFS↑ OS↑	2024
+CheckMate901	C67	la/mUC 1L, způsobilý k cisplatině	-	nivolumab + GC	GC	OS↑ PFS↑	2023
+JAVELIN-Bladder100	C67	la/mUC bez progrese po platině	-	udržovací avelumab	BSC	OS↑	2020
+THOR	C67	mUC FGFR3 po IO	FGFR=mut	erdafitinib	CHT	OS↑	2023
+CROSS	C15	jícen lokalizovaný	-	neoadj. CHRT (karboplatina + paklitaxel, 41,4 Gy) + operace	operace	OS↑	2012
+ESOPEC	C15	adenokarcinom jícnu	-	perioperační FLOT	CROSS	OS↑	2025
+CheckMate577	C15	po CROSS a R0 s reziduem	-	nivolumab 1 rok	placebo	DFS↑	2021
+KEYNOTE-590	C15	jícen M1 1L	-	pembrolizumab + CHT	CHT	OS↑	2021
+CheckMate648	C15	SCC jícnu M1 1L	-	nivolumab + CHT / nivolumab + ipilimumab	CHT	OS↑	2022
+FLOT4	C16	žaludek ≥cT2 nebo N+	-	perioperační FLOT	ECF/ECX	OS↑	2019
+MATTERHORN	C16	žaludek lokalizovaný	-	durvalumab + FLOT	FLOT	EFS↑	2025
+ToGA	C16	M1 HER2+	HER2=pos	trastuzumab + CHT	CHT	OS↑	2010
+KEYNOTE-811	C16	M1 HER2+	HER2=pos	pembrolizumab + trastuzumab + CHT	trastuzumab + CHT	PFS↑ (CPS ≥1)	2023
+CheckMate649	C16	M1 HER2− 1L	CPS>=5	nivolumab + CHT	CHT	OS↑	2021
+KEYNOTE-859	C16	M1 HER2− 1L	-	pembrolizumab + CHT	CHT	OS↑	2023
+SPOTLIGHT	C16	M1 CLDN18.2+ HER2−	CLDN18=pos	zolbetuximab + mFOLFOX6	mFOLFOX6	PFS↑ OS↑	2023
+GLOW	C16	M1 CLDN18.2+ HER2−	CLDN18=pos	zolbetuximab + CAPOX	CAPOX	PFS↑ OS↑	2023
+RAINBOW	C16	M1 2L	-	ramucirumab + paklitaxel	paklitaxel	OS↑	2014
+DESTINY-Gastric01	C16	M1 HER2+ ≥3L	HER2=pos	T-DXd	CHT podle lékaře	OS↑	2020
+TAGS	C16	M1 ≥3L	-	trifluridin/tipiracil	placebo	OS↑	2018
+PRODIGE24	C25	po R0/R1 resekci	-	adj. mFOLFIRINOX	gemcitabin	DFS↑ OS↑	2018
+ESPAC-4	C25	po resekci	-	gemcitabin + kapecitabin	gemcitabin	OS↑	2017
+PRODIGE4	C25	M1, ECOG 0–1	-	FOLFIRINOX	gemcitabin	OS↑	2011
+MPACT	C25	M1	-	gemcitabin + nab-paklitaxel	gemcitabin	OS↑	2013
+NAPOLI-3	C25	M1 1L	-	NALIRIFOX	gemcitabin + nab-paklitaxel	OS↑	2023
+POLO	C25	M1 gBRCA po ≥16 týdnech platiny	BRCA=mut	udržovací olaparib	placebo	PFS↑	2019
+NAPOLI-1	C25	M1 po gemcitabinu	-	nal-IRI + 5-FU	5-FU	OS↑	2016
+Milan	C22	transplantace jater pro HCC	-	1 ložisko ≤5 cm nebo ≤3 ložiska ≤3 cm	-	4letá OS ~75 %	1996
+IMbrave150	C22	neresekabilní HCC 1L	-	atezolizumab + bevacizumab	sorafenib	OS↑ PFS↑	2020
+HIMALAYA	C22	neresekabilní HCC 1L	-	durvalumab + tremelimumab	sorafenib	OS↑	2022
+REFLECT	C22	neresekabilní HCC 1L	-	lenvatinib	sorafenib	OS non-inferiorní	2018
+SHARP	C22	pokročilý HCC	-	sorafenib	placebo	OS↑	2008
+RESORCE	C22	HCC po sorafenibu	-	regorafenib	placebo	OS↑	2017
+CELESTIAL	C22	HCC po sorafenibu	-	kabozantinib	placebo	OS↑	2018
+REACH-2	C22	HCC po sorafenibu, AFP ≥400	AFP>=400	ramucirumab	placebo	OS↑	2019
+EORTC55971	C56	ovarium IIIC–IV	-	NACT + intervalová cytoredukce	primární cytoredukce	OS non-inferiorní	2010
+CHORUS	C56	ovarium III–IV	-	NACT + intervalová cytoredukce	primární cytoredukce	OS non-inferiorní	2015
+OVHIPEC-1	C56	ovarium III po NACT	-	intervalová cytoredukce + HIPEC (cisplatina)	intervalová cytoredukce	RFS↑ OS↑	2018
+SOLO-1	C56	po 1L, BRCA	BRCA=mut	olaparib	placebo	PFS↑ OS↑	2018
+PRIMA	C56	po 1L	-	niraparib	placebo	PFS↑	2019
+PAOLA-1	C56	po 1L s bevacizumabem	HRD=pos	olaparib + bevacizumab	bevacizumab	PFS↑ OS↑ (HRD+)	2019
+ICON7	C56	1L	-	CHT + bevacizumab	CHT	PFS↑ (OS↑ u vysokého rizika)	2011
+GOG-218	C56	1L	-	CHT + bevacizumab → bevacizumab	CHT	PFS↑	2011
+SOLO-2	C56	relaps citlivý na platinu, BRCA	BRCA=mut	olaparib	placebo	PFS↑	2017
+NOVA	C56	relaps citlivý na platinu	-	niraparib	placebo	PFS↑	2016
+DESKTOP-III	C56	1. relaps citlivý na platinu, AGO skóre +	-	sekundární cytoredukce + CHT	CHT	OS↑	2021
+AURELIA	C56	relaps rezistentní na platinu	-	CHT + bevacizumab	CHT	PFS↑	2014
+MIRASOL	C56	relaps rezistentní na platinu, FRα vysoká	FRA=pos	mirvetuximab soravtansin	CHT podle lékaře	OS↑ PFS↑	2023
+LACC	C53	cervix IA1–IB1	-	miniinvazivní radikální hysterektomie	otevřená	DFS↓ OS↓ (MIS horší)	2018
+SHAPE	C53	cervix nízké riziko ≤2 cm	-	prostá hysterektomie	radikální hysterektomie	pánevní recidiva non-inferiorní	2024
+EMBRACE	C53	cervix lokálně pokročilý	-	MR navigovaná adaptivní brachyterapie	- (kohorta)	lokální kontrola↑	2021
+KEYNOTE-A18	C53	FIGO 2014 IB2–IIB N+, III–IVA	-	pembrolizumab + CHRT	CHRT	PFS↑ OS↑	2024
+INTERLACE	C53	cervix lokálně pokročilý	-	indukce karboplatina + paklitaxel 6 týdnů → CHRT	CHRT	PFS↑ OS↑	2024
+KEYNOTE-826	C53	perzistující, relaps nebo M1	CPS>=1	pembrolizumab + CHT ± bevacizumab	CHT ± bevacizumab	PFS↑ OS↑	2021
+EMPOWER-Cervical1	C53	relaps po platině	-	cemiplimab	CHT podle lékaře	OS↑	2022
+innovaTV301	C53	relaps 2L/3L	-	tisotumab vedotin	CHT podle lékaře	OS↑	2024
+PORTEC-1	C54	endometrium I, střední riziko	-	pánevní RT	observace	lokoregionální recidiva↓	2000
+PORTEC-2	C54	vysoce-střední riziko	-	vaginální brachyterapie	pánevní RT	non-inferiorní	2010
+PORTEC-3	C54	vysoké riziko	-	CHRT + CHT	RT	FFS↑ OS↑ (p53abn)	2018
+RUBY	C54	pokročilý nebo relaps 1L	-	dostarlimab + karboplatina + paklitaxel	CHT	PFS↑ OS↑	2023
+NRG-GY018	C54	pokročilý nebo relaps 1L	-	pembrolizumab + CHT	CHT	PFS↑	2023
+DUO-E	C54	pokročilý nebo relaps 1L	-	durvalumab + CHT (± olaparib u pMMR)	CHT	PFS↑	2024
+KEYNOTE-775	C54	po platině	MMR=pmmr	pembrolizumab + lenvatinib	CHT podle lékaře	OS↑ PFS↑	2022
+MSLT-II	C43	pozitivní sentinelová uzlina	-	sledování UZ	dokončení disekce	MSS stejné	2017
+KEYNOTE-054	C43	III po resekci	-	pembrolizumab 1 rok	placebo	RFS↑	2018
+KEYNOTE-716	C43	IIB–IIC po resekci	-	pembrolizumab	placebo	RFS↑	2022
+CheckMate238	C43	III–IV po resekci	-	nivolumab	ipilimumab	RFS↑	2017
+COMBI-AD	C43	III po resekci	BRAF=v600	dabrafenib + trametinib	placebo	RFS↑	2017
+S1801	C43	III–IV resekabilní	-	neoadj. + adj. pembrolizumab	adj. pembrolizumab	EFS↑	2023
+NADINA	C43	III makroskopické uzliny	-	neoadj. ipilimumab + nivolumab	adj. nivolumab	EFS↑	2024
+CheckMate067	C43	M1 1L	-	nivolumab + ipilimumab / nivolumab	ipilimumab	OS↑	2015
+RELATIVITY-047	C43	M1 1L	-	nivolumab + relatlimab	nivolumab	PFS↑	2022
+COMBI-d	C43	M1 BRAF V600	BRAF=v600	dabrafenib + trametinib	dabrafenib	PFS↑ OS↑	2014
+COLUMBUS	C43	M1 BRAF V600	BRAF=v600	enkorafenib + binimetinib	vemurafenib	PFS↑ OS↑	2018
+TIL-Rohaan	C43	M1 po anti-PD-1	-	TIL	ipilimumab	PFS↑	2022
+CheckMate204	C43	asymptomatické mozkové metastázy	-	nivolumab + ipilimumab	- (fáze II)	intrakraniální odpověď ~50 %	2018
+Bonner	C00-C14,C32	lokálně pokročilý	-	RT + cetuximab	RT	OS↑	2006
+RTOG1016	C00-C14,C32	HPV+ orofarynx	-	RT + cetuximab	RT + cisplatina	OS↓ (cetuximab horší)	2019
+JCOG1008	C00-C14,C32	pooperačně vysoké riziko	-	cisplatina 40 mg/m² týdně	100 mg/m² á 3 týdny	OS non-inferiorní	2022
+EORTC22931	C00-C14,C32	pooperačně	-	CHRT	RT	OS↑	2004
+RTOG9501	C00-C14,C32	pooperačně	-	CHRT	RT	lokoregionální kontrola↑	2004
+MACH-NC	C00-C14,C32	metaanalýza	-	konkomitantní CHT + RT	RT	OS↑ (přínos klesá s věkem)	2021
+KEYNOTE-048	C00-C14,C32	R/M 1L	CPS>=1	pembrolizumab ± CHT	EXTREME	OS↑	2019
+EXTREME	C00-C14,C32	R/M 1L	-	cetuximab + platina + 5-FU	platina + 5-FU	OS↑	2008
+CheckMate141	C00-C14,C32	R/M po platině	-	nivolumab	léčba podle lékaře	OS↑	2016
+Stupp	C71	glioblastom	-	RT 60 Gy + TMZ	RT	OS↑	2005
+EF-14	C71	glioblastom po CHRT	-	TTFields + TMZ	TMZ	OS↑	2017
+Perry2017	C71	glioblastom ≥65 let	-	RT 40 Gy/15 + TMZ	RT	OS↑	2017
+NOA-08	C71	GBM/AA ≥65 let	-	TMZ	RT	non-inferiorní; u MGMT metylace lepší TMZ	2012
+Nordic	C71	glioblastom ≥60 let	-	TMZ / hypofrakcionovaná RT	RT 60 Gy	OS↑ (≥70 let)	2012
+EORTC26101	C71	relaps glioblastomu	-	lomustin + bevacizumab	lomustin	OS bez rozdílu	2017
+INDIGO	C71	IDH mutovaný gliom G2 po operaci	IDH=mut	vorasidenib	placebo	PFS↑	2023
+JLGK0901	*	1–10 mozkových metastáz	-	SRS u 5–10 ložisek	SRS u 2–4 ložisek	OS non-inferiorní	2014
+NRG-CC001	*	mozkové metastázy, WBRT	-	WBRT se šetřením hipokampů + memantin	WBRT + memantin	kognitivní selhání↓	2020
+SC.20	*	re-RT bolestivých kostních metastáz	-	8 Gy / 1 frakce	20 Gy / 5 frakcí	bolest non-inferiorní	2014
+SC.24	*	bolestivé metastázy páteře	-	SBRT 24 Gy / 2 frakce	20 Gy / 5 frakcí	kompletní odpověď bolesti↑	2021
+Patchell2005	*	komprese míchy (MSCC)	-	dekomprese + RT	RT	zachování chůze↑	2005
+SABR-COMET	*	oligometastázy ≤5	-	SABR + standard	standard	OS↑ (fáze II)	2019
+AMPLE	*	maligní pleurální výpotek	-	tunelizovaný pleurální katetr	talková pleurodéza	dny v nemocnici↓	2017
+TIME2	*	maligní pleurální výpotek	-	tunelizovaný pleurální katetr	talek	dušnost stejná	2012
+Temel2010	*	metastatický NSCLC	-	časná paliativní péče	standardní péče	QoL↑ OS↑	2010
+AVERT	*	ambulantní CHT, Khorana ≥2	-	apixaban	placebo	VTE↓	2019
+CASSINI	*	ambulantní CHT, Khorana ≥2	-	rivaroxaban	placebo	VTE↓ (během léčby)	2019
+Hokusai-VTE-Cancer	*	VTE u nádoru	-	edoxaban	dalteparin	non-inferiorní; víc krvácení u GI nádorů	2018
+SELECT-D	*	VTE u nádoru	-	rivaroxaban	dalteparin	recidiva VTE↓, krvácení↑	2018
+Caravaggio	*	VTE u nádoru	-	apixaban	dalteparin	non-inferiorní, bez nárůstu velkého krvácení	2020

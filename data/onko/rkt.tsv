@@ -1,0 +1,53 @@
+id	typ	text	fakt	podm
+RKT-01	S	MERIDIAN-B · fáze II · prs HR+/HER2− M1, ESR1 mut, po AI + CDK4/6 · RKT-SERD 400 mg p.o. denně vs. fulvestrant 500 mg i.m.	C50	-
+RKT-01/Z1	Z	histologicky ověřený karcinom prsu, ER ≥10 %, HER2 negativní (IHC 0, 1+ nebo 2+ s negativní ISH)	bm.er_pct	>=10&bm.her2=0|ultralow|low
+RKT-01/Z2	Z	mutace ESR1 v ctDNA ne starší než 3 měsíce	bm.esr1	=mut&bm.esr1_age_days<=92
+RKT-01/Z3	Z	progrese během nebo po 1L AI + CDK4/6 v M1	tx.prior_ai_cdk46	=ano
+RKT-01/Z4	Z	nejvýše 1 linie CHT v M1	tx.cht_lines_m1	<=1
+RKT-01/Z5	Z	ECOG 0–1	ecog.physician	<=1
+RKT-01/V1	V	viscerální krize	visceral.crisis	=ano
+RKT-01/V2	V	neléčené nebo symptomatické mozkové metastázy	brain.untreated	=ano
+RKT-01/V3	V	bilirubin >1,5× ULN	lab.bili_xuln	>1.5
+RKT-01/V4	V	předchozí fulvestrant nebo jiný SERD	tx.prior_serd	=ano
+RKT-02	S	HELIX-2 · fáze III · prs HER2+ M1 po trastuzumabu a taxanu, vč. mozkových metastáz · RKT-ADC2 i.v. á 3 týdny vs. léčba podle lékaře (T-DXd nebo tukatinib + trastuzumab + kapecitabin)	C50	-
+RKT-02/Z1	Z	HER2 pozitivní (IHC 3+ nebo ISH+) z primárního nádoru nebo metastázy	bm.her2	=pos
+RKT-02/Z2	Z	progrese po trastuzumabu a taxanu v M1	tx.prior_trastuzumab_taxane	=ano
+RKT-02/Z3	Z	mozkové metastázy povoleny: léčené a stabilní, nebo neléčené asymptomatické bez dexametazonu >2 mg/den	-	-
+RKT-02/Z4	Z	ECOG 0–1	ecog.physician	<=1
+RKT-02/Z5	Z	LVEF ≥50 %	lvef	>=50
+RKT-02/V1	V	ILD nebo pneumonitida v anamnéze	lung.ild	=ano
+RKT-02/V2	V	předchozí trastuzumab deruxtekan	tx.prior_tdxd	=ano
+RKT-02/V3	V	leptomeningeální postižení	brain.lmd	=ano
+RKT-03	S	COLUMBA-LM · fáze III · KRC s jaterními metastázami po indukční CHT · resekce + peroperační UZ navigace + ablace ložisek ≤15 mm vs. standardní resekce	C18-C20	-
+RKT-03/Z1	Z	metastázy KRC omezené na játra	extrahep.disease	=ne
+RKT-03/Z2	Z	odpověď nebo stabilizace po ≥6 cyklech indukce s oxaliplatinou nebo irinotekanem	tx.cycles	>=6&recist.resp=cr|pr|sd
+RKT-03/Z3	Z	ECOG 0–1	ecog.physician	<=1
+RKT-03/Z4	Z	resekabilita potvrzená MDT s hepatobiliárním chirurgem	liver.resectable	=ano
+RKT-03/V1	V	extrahepatální onemocnění	extrahep.disease	=ano
+RKT-03/V2	V	MSI-H / dMMR	bm.mmr	=dmmr
+RKT-03/V3	V	periferní neuropatie ≥G2	tox.neuropathy	>=2
+RKT-03/V4	V	předpokládaný FLR <30 %	liver.flr	<30
+RKT-04	S	PULMO-NEO · fáze III · NSCLC II–IIIB resekabilní · 3 cykly CHT + RKT-PD1, operace, adj. RKT-PD1 1 rok vs. standardní perioperační chemoimunoterapie	C34	-
+RKT-04/Z1	Z	histologicky ověřený NSCLC II–IIIB (TNM 8), resekabilní podle hrudního chirurga; N2 jedné stanice povoleno	-	-
+RKT-04/Z2	Z	ECOG 0–1	ecog.physician	<=1
+RKT-04/Z3	Z	ppoFEV1 a ppoDLCO ≥40 %, nebo vyhovující zátěžový test	spiro.ppo_min	>=40;spiro.exercise_ok=ano
+RKT-04/Z4	Z	známý stav EGFR a ALK	bm.egfr_alk	=neg|pos
+RKT-04/V1	V	mutace EGFR nebo přestavba ALK	bm.egfr_alk	=pos
+RKT-04/V2	V	autoimunitní onemocnění se systémovou léčbou v posledních 2 letech	aid.systemic	=ano
+RKT-04/V3	V	vzdálené metastázy (M1)	tnm.m1	=ano
+RKT-05	S	VITALIS · podpůrná intervence · solidní nádory s úbytkem hmotnosti při léčbě · nutriční konzultace + ONS + pohybový program 12 týdnů vs. standardní péče	*	-
+RKT-05/Z1	Z	solidní nádor, plánovaná nebo probíhající protinádorová léčba	tx.active	=ano
+RKT-05/Z2	Z	nechtěný úbytek hmotnosti ≥5 % za 6 měsíců	wt.loss6m	>=5
+RKT-05/Z3	Z	ECOG 0–2	ecog.physician	<=2
+RKT-05/V1	V	pouze symptomatická léčba (BSC)	tx.bsc_only	=ano
+RKT-05/V2	V	enterální nebo parenterální výživa	nutr.ent_par	=ano
+RKT-05/V3	V	neschopnost samostatné chůze	walk.independent	=ne
+RKT-06	S	ORION-HRR · fáze II basket · pokročilé solidní nádory s alterací BRCA1/2 nebo HRR · RKT-PARPi 300 mg p.o. 2× denně, cyklus 28 dní	*	-
+RKT-06/Z1	Z	patogenní alterace BRCA1, BRCA2 nebo jiného HRR genu (NGS nádoru, somatická i zárodečná)	bm.hrr	=mut
+RKT-06/Z2	Z	≥1 předchozí linie systémové léčby v M1	tx.lines_m1	>=1
+RKT-06/Z3	Z	ECOG 0–1	ecog.physician	<=1
+RKT-06/Z4	Z	Hb ≥90 g/l, neutrofily ≥1,5 × 10^9/l, trombocyty ≥100 × 10^9/l při zařazení	lab.hb	>=90&lab.neu>=1.5&lab.plt>=100
+RKT-06/V1	V	předchozí PARP inhibitor	tx.prior_parpi	=ano
+RKT-06/V2	V	MDS nebo AML v anamnéze	hist.mds_aml	=ano
+RKT-06/V3	V	neléčené mozkové metastázy	brain.untreated	=ano
+RKT-06	P	protokol: Hb <80 g/l → přerušit, transfuze; po úpravě na ≥90 pokračovat 250 mg 2×, pak 200 mg 2×; anémie G3 při 200 mg 2× → ukončit	lab.hb	-

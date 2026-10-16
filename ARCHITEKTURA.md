@@ -1424,6 +1424,18 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   patient?: PatientListItem | null;             // jen v detailu boardu (hlavička z IRIS, §8.2)
 }
 
+// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[] }.
+// `acknowledge` = ID varování; server přidá { id, by, at } do acknowledged_warnings, nikdy neodebírá (D-019).
+// Změna `session` zapíše datum nového boardu do Task.restriction.period.start v IRIS (FR-P1).
+
+interface Me {                                  // GET /api/mdt/me/
+  user_id: number;
+  username: string;                             // demo: predseda | onkolog | pneumolog | chirurg | radiolog | patolog | radioterapeut
+  name: string;
+  role: "mdt_admin" | "mdt_doctor" | "mdt_viewer";   // superuser = mdt_admin, bez skupiny = mdt_viewer
+  specialty: RoleId | null;
+}
+
 interface MdtSession {                          // GET /api/mdt/sessions/ → (MdtSession & { patients: string[] })[]
   id: number;                                   // GET /api/mdt/sessions/{sid}/ → MdtSession & { cases: MdtCase[] } (agenda)
   date: string;                                 // místní čas "2026-10-21T14:00:00+02:00"

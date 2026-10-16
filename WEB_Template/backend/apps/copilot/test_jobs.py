@@ -30,22 +30,22 @@ def sync(settings, monkeypatch):
     monkeypatch.setitem(jobs.GENERATORS, 'brief', 'apps.copilot.test_jobs.fake_generate')
 
 
-def test_generate_then_poll_then_read_brief(authenticated_client, case, sync):
-    r = authenticated_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json')
+def test_generate_then_poll_then_read_brief(chair_client, case, sync):
+    r = chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json')
     assert r.status_code == 202
-    job = authenticated_client.get(f"/api/jobs/{r.json()['job_id']}/").json()
+    job = chair_client.get(f"/api/jobs/{r.json()['job_id']}/").json()
     assert (job['status'], job['progress'], job['error']) == ('done', 100, None)
-    brief = authenticated_client.get(f'/api/mdt/cases/{case.pk}/brief/').json()
+    brief = chair_client.get(f'/api/mdt/cases/{case.pk}/brief/').json()
     assert brief['patient_id'] == 'P03' and brief['brief_id'] == job['result_id'] and brief['config_name'] == 'Výchozí'
 
 
-def test_config_preset_and_inline(authenticated_client, case, sync):
+def test_config_preset_and_inline(chair_client, case, sync):
     preset = BriefConfig.objects.create(name='Chirurg', roles_present=['surgeon'])
-    authenticated_client.post(f'/api/mdt/cases/{case.pk}/brief/', {'config_id': preset.pk}, format='json')
+    chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {'config_id': preset.pk}, format='json')
     assert case.briefs.first().config_snapshot['roles_present'] == ['surgeon']
-    authenticated_client.post(f'/api/mdt/cases/{case.pk}/brief/', {'config': {'name': 'Ad hoc'}}, format='json')
+    chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {'config': {'name': 'Ad hoc'}}, format='json')
     assert case.briefs.first().config_snapshot == {**jobs_default(), 'name': 'Ad hoc'}
-    assert authenticated_client.post(f'/api/mdt/cases/{case.pk}/brief/', {'config': 'x'}, format='json').status_code == 400
+    assert chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {'config': 'x'}, format='json').status_code == 400
 
 
 def jobs_default():
@@ -57,20 +57,20 @@ def jobs_default():
     ('apps.copilot.test_jobs.failing_generate', 'LLM nevrátil validní JSON'),
     ('services.ai.neexistuje.generate_brief', 'zatím není k dispozici'),
 ])
-def test_generator_errors_end_in_error_state(authenticated_client, case, settings, monkeypatch, path, message):
+def test_generator_errors_end_in_error_state(chair_client, case, settings, monkeypatch, path, message):
     settings.MDT_JOBS_SYNC = True
     monkeypatch.setitem(jobs.GENERATORS, 'brief', path)
-    job_id = authenticated_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').json()['job_id']
-    job = authenticated_client.get(f'/api/jobs/{job_id}/').json()
+    job_id = chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').json()['job_id']
+    job = chair_client.get(f'/api/jobs/{job_id}/').json()
     assert job['status'] == 'error' and message in job['error']
-    assert authenticated_client.get(f'/api/mdt/cases/{case.pk}/brief/').status_code == 404
+    assert chair_client.get(f'/api/mdt/cases/{case.pk}/brief/').status_code == 404
 
 
 @pytest.mark.django_db(transaction=True)
-def test_runs_in_background_thread(authenticated_client, case, settings, monkeypatch):
+def test_runs_in_background_thread(chair_client, case, settings, monkeypatch):
     settings.MDT_JOBS_SYNC = False
     monkeypatch.setitem(jobs.GENERATORS, 'brief', 'apps.copilot.test_jobs.fake_generate')
-    job_id = authenticated_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').json()['job_id']
+    job_id = chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').json()['job_id']
     for _ in range(50):
         if GenerationJob.objects.get(pk=job_id).status in ('done', 'error'):
             break

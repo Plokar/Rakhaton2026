@@ -10,7 +10,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError as SchemaError
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -20,6 +20,7 @@ from apps.copilot.schemas import Decision as DecisionSchema
 from services import patients, tasks
 from services.fhir import export, writeback
 from services.fhir.client import FhirError
+from services.rules import intake
 
 from . import config as cfg
 from . import roles
@@ -138,28 +139,117 @@ def session_detail(request, sid):
 @permission_classes([IsAuthenticated])
 def case_detail(request, cid):
     """Přesun do jiného boardu (zapíše termín do `Task` v IRIS), ECOG, záměr C/P, checkbox snímku,
-    přeskočené údaje a `acknowledge: [warning_id]` (odkliknutí se jen přidává, D-019)."""
+    přeskočené údaje, `acknowledge: [warning_id]` (odkliknutí se jen přidává, D-019), `status` (jen předseda)."""
     case = get_object_or_404(MdtCase.objects.select_related('session', 'created_by'), pk=cid)
     _require_case_edit(request, case)
-    data = request.data
+    _validate_case_input(request, request.data)
+    with transaction.atomic():
+        written = _apply_case_input(request, case, request.data)
+    return Response({**_case(case), 'fhir_written': written})
+
+
+def _validate_case_input(request, data) -> None:
     if 'ecog' in data and data['ecog'] is not None and data['ecog'] not in range(5):
         raise ValidationError({'ecog': 'ECOG 0–4 nebo null.'})
     if 'intent' in data and data['intent'] not in ('C', 'P', None):
         raise ValidationError({'intent': 'C, P nebo null.'})
+    for field in ('skipped_fields', 'acknowledge'):
+        if field in data and not (isinstance(data[field], list) and all(isinstance(x, str) for x in data[field])):
+            raise ValidationError({field: 'Seznam ID.'})
+    if 'mdt.question' in data.get('skipped_fields', []):
+        raise ValidationError({'skipped_fields': 'Otázku pro MDT nelze přeskočit (OBC-1.1).'})
+    if 'status' in data:
+        _require(request, roles.ADMIN)
+        if data['status'] not in dict(MdtCase.STATUS):
+            raise ValidationError({'status': f'Jen {", ".join(dict(MdtCase.STATUS))}.'})
+
+
+def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None) -> list[str]:
+    """Společné pro zařazení (POST) i úpravu (PATCH). Ruční ECOG, záměr C/P a odkliknutá varování jdou do IRIS
+    (`writeback.write_intake`, s Provenance). Vrací zapsané FHIR resources."""
+    if 'session' in data and data['session'] != case.session_id:
+        target = get_object_or_404(MdtSession, pk=data['session'])
+        writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
+        case.session = target
+    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status'):
+        if field in data:
+            setattr(case, field, data[field])
+    known = {w['id'] for w in case.acknowledged_warnings}
+    now = timezone.localtime()
+    new_acks = [{'id': w, 'by': request.user.pk, 'at': now.isoformat()}
+                for w in dict.fromkeys(data.get('acknowledge', [])) if w not in known]
+    start = len(case.acknowledged_warnings)
+    case.acknowledged_warnings += new_acks
+    case.save()
+    ecog = data.get('ecog') if 'ecog' in data else None
+    intent = data.get('intent')
+    if ecog is None and not intent and not new_acks:
+        return []
+    if new_acks and warnings is None:
+        prefill = intake.intake_prefill(patients.load_patient(case.patient_fhir_id), case.skipped_fields)
+        warnings = {w['id']: w for w in prefill['warnings']}
+    return writeback.write_intake(
+        patient_id=case.patient_fhir_id, case_no=case.pk, service_request_id=case.service_request_fhir_id,
+        ecog=ecog, intent=intent, acknowledged=list(enumerate(new_acks, start + 1)), warnings=warnings or {},
+        entered_by=request.user.get_full_name() or request.user.username, now=now)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def patient_intake(request, pid):
+    """Předvyplnění formuláře zařazení (IntakePrefill §8.6): povinné údaje s citacemi a varování. `?skipped=a,b`."""
+    resources = _patient_resources(pid)
+    skipped = [s for s in request.query_params.get('skipped', '').split(',') if s]
+    return Response(intake.intake_prefill(resources, skipped))
+
+
+def _patient_resources(pid: str) -> list[dict]:
+    if not patients.VALID_ID.match(pid or ''):
+        raise ValidationError({'patient_id': 'Neplatné ID pacienta.'})
+    try:
+        resources = patients.load_patient(pid)
+    except FhirError as e:
+        if e.status != 404:
+            raise
+        resources = []
+    if not any(r['resourceType'] == 'Patient' for r in resources):
+        raise NotFound('Pacient v IRIS není.')
+    return resources
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_create(request):
+    """Zařazení pacienta do boardu (FR-P4): `{session, patient_id, ecog, intent, imaging_recent_checked,
+    skipped_fields, acknowledge}`. Nominace už má případ (seed_mdt) → doplní ho a přesune (200), jinak založí (201)."""
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    data = request.data
+    _validate_case_input(request, data)
+    session = get_object_or_404(MdtSession, pk=data.get('session'))
+    pid = data.get('patient_id')
+    prefill = intake.intake_prefill(_patient_resources(pid), data.get('skipped_fields', []))
+    question = next((f for f in prefill['fields'] if f['id'] == 'mdt.question'), {})
+    if question.get('status') != 'present':
+        raise ValidationError({'mdt.question': 'Bez otázky pro MDT nelze pacienta zařadit (OBC-1.1).'})
+    sr_id = data.get('service_request_id') or prefill['service_request_id']
     with transaction.atomic():
-        if 'session' in data and data['session'] != case.session_id:
-            target = get_object_or_404(MdtSession, pk=data['session'])
-            writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
-            case.session = target
-        for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields'):
-            if field in data:
-                setattr(case, field, data[field])
-        known = {w['id'] for w in case.acknowledged_warnings}
-        now = timezone.now().isoformat()
-        case.acknowledged_warnings += [{'id': w, 'by': request.user.pk, 'at': now}
-                                       for w in data.get('acknowledge', []) if w not in known]
-        case.save()
-    return Response(_case(case))
+        case = MdtCase.objects.select_for_update().filter(service_request_fhir_id=sr_id).first()
+        created = case is None
+        if created:
+            case = MdtCase.objects.create(session=session, patient_fhir_id=pid, service_request_fhir_id=sr_id,
+                                          question=question.get('value') or '', created_by=request.user,
+                                          order=session.cases.count())
+            writeback.set_mdt_date(pid, sr_id, timezone.localtime(session.date))
+        else:
+            _require_case_edit(request, case)
+        written = _apply_case_input(request, case, {**data, 'session': session.pk},
+                                    warnings={w['id']: w for w in prefill['warnings']})
+        if case.status in ('nominated', 'returned'):
+            case.status = 'ready'
+            case.save(update_fields=['status', 'updated_at'])
+    return Response({**_case(case), 'fhir_written': written}, status=201 if created else 200)
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])

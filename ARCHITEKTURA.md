@@ -1078,8 +1078,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
-| POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): ECOG, záměr C/P, `skipped_fields`, `acknowledged_warnings`, checkbox snímku; zápis FHIR (§4.3) |
-| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli) |
+| POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1). Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
+| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |

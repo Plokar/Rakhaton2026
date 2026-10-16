@@ -251,3 +251,68 @@ def _reindex_vectors(patient_id: str) -> None:
     except Exception:
         logger.warning('Reindex vektorů %s po zápisu závěru selhal (ručně: ingest_dataset --skip-fhir --patients %s)',
                        patient_id, patient_id, exc_info=True)
+
+
+# ── zařazení pacienta (T-211, FR-P4) ─────────────────────────────────────────
+INTENT_EXT = f'{SD}/mdt-predpokladany-zamer'
+INTENT_CODES = {'C': 'kurativni', 'P': 'paliativni'}
+
+
+def build_intake_bundle(*, patient_id: str, case_no: int, service_request: dict, ecog: int | None, intent: str | None,
+                        acknowledged: list[tuple[int, dict]], warnings: dict[str, dict], entered_by: str,
+                        now: datetime) -> tuple[dict, list[str]]:
+    """Ruční údaje ze zařazení → transaction: ECOG `Observation/Pxx-ecog-caseNN`, záměr C/P na nominaci,
+    odkliknutá varování `DetectedIssue/Pxx-caseNN-wNN` (mitigation, D-019) a `Provenance` ručního zadání."""
+    patient = _ref('Patient', patient_id)
+    author = service_request.get('requester') or {'display': entered_by}   # zadávající lékař nominace
+    prefix = f'{patient_id}-case{case_no:02d}'
+    resources = []
+    if ecog is not None:
+        resources.append({
+            'resourceType': 'Observation', 'id': f'{patient_id}-ecog-case{case_no:02d}', 'status': 'final',
+            'category': [{'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/observation-category', 'code': 'survey'}]}],
+            'code': {'coding': [{'system': 'http://loinc.org', 'code': '89247-1', 'display': 'ECOG Performance Status score'}],
+                     'text': 'ECOG – hodnoceno lékařem'},
+            'subject': patient, 'effectiveDateTime': now.isoformat(), 'valueInteger': ecog, 'performer': [author],
+            'note': [{'text': f'Zadáno při zařazení do MDT ({entered_by})'}],
+        })
+    if intent in INTENT_CODES:
+        code = INTENT_CODES[intent]
+        extensions = [e for e in service_request.get('extension', []) if e.get('url') != INTENT_EXT]
+        extensions.append({'url': INTENT_EXT, 'valueCodeableConcept': _coding('mdt-lecebny-zamer', code, INTENTS[code])})
+        resources.append({**service_request, 'extension': extensions})
+    for i, ack in acknowledged:     # (pořadí v MdtCase.acknowledged_warnings od 1, odkliknutí)
+        w = warnings.get(ack['id'], {})
+        issue = {
+            'resourceType': 'DetectedIssue', 'id': f'{prefix}-w{i:02d}', 'status': 'final',
+            'code': {'text': w.get('title') or ack['id']}, 'patient': patient, 'identifiedDateTime': ack.get('at') or now.isoformat(),
+            'detail': f"{w.get('detail') or ack['id']} [{ack['id']}]",
+            'mitigation': [{'action': {'text': 'Beru na vědomí'}, 'date': ack.get('at') or now.isoformat(), 'author': author}],
+        }
+        if w.get('severity') in SEVERITY:
+            issue['severity'] = SEVERITY[w['severity']]
+        if implicated := _cited_resources(w.get('citations', [])):
+            issue['implicated'] = implicated
+        resources.append(issue)
+    if resources:
+        resources.append({
+            'resourceType': 'Provenance', 'id': f'{prefix}-prov', 'recorded': now.isoformat(),
+            'target': [_ref(r['resourceType'], r['id']) for r in resources],
+            'activity': {'text': 'Ruční zadání při zařazení pacienta do MDT'},
+            'agent': [{'type': _participant('author', 'Author'), 'who': author}],
+        })
+    bundle = {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
+        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': r,
+         'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources
+    ]}
+    return bundle, [f"{r['resourceType']}/{r['id']}" for r in resources]
+
+
+def write_intake(*, patient_id: str, case_no: int, service_request_id: str, ecog: int | None, intent: str | None,
+                 acknowledged: list[tuple[int, dict]], warnings: dict[str, dict], entered_by: str, now: datetime) -> list[str]:
+    bundle, written = build_intake_bundle(
+        patient_id=patient_id, case_no=case_no, service_request=fhir.read('ServiceRequest', service_request_id),
+        ecog=ecog, intent=intent, acknowledged=acknowledged, warnings=warnings, entered_by=entered_by, now=now)
+    if bundle['entry']:
+        fhir.transaction(bundle)
+    return written

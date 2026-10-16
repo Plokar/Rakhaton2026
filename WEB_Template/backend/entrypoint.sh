@@ -49,6 +49,10 @@ echo "✅ Migrations complete"
 if [ -n "${IRIS_HOST}" ]; then
   echo "🏥 IRIS init (namespace FHIRSERVER, /fhir/r4)..."
   python manage.py iris_init || echo "⚠️  iris_init selhal, backend běží dál (ručně: python manage.py iris_init)"
+  if [ -n "${DATASET_DIR}" ]; then
+    echo "📥 Dataset do IRIS (jen to, co chybí: FHIR i vektory, DATASET §6.1)..."
+    python manage.py ingest_dataset --if-empty || echo "⚠️  ingest_dataset selhal, backend běží dál (ručně: python manage.py ingest_dataset)"
+  fi
 fi
 
 # ── Static files (only in production) ────────────────────────────────────────

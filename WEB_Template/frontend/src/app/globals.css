@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tmavý režim přepíná aplikace třídou .dark na <html> (ThemeContext), ne nastavení systému. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #fafafa;
   --foreground: #09090b;
@@ -67,8 +70,11 @@
   --color-ring: var(--ring);
 }
 
-* {
-  border-color: var(--border);
+/* V base vrstvě, aby barvy okrajů z utilit (border-l-purple-500…) měly přednost. */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 }
 
 body {

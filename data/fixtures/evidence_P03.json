@@ -1,0 +1,1816 @@
+{
+  "EXT-ACC-AHA-ESC-2022": {
+    "evidence_id": "EXT-ACC-AHA-ESC-2022",
+    "kind": "external",
+    "title": "EXT-ACC-AHA-ESC-2022 – Infarkt myokardu a koronární stent před velkou operací",
+    "text": "Velká operace: infarkt myokardu před > 60 dny a stent před > 6 měsíci → bez omezení. Lékový stent ≤ 6 měsíců → pozor. Infarkt myokardu ≤ 60 dní → vysoké riziko. [⚠ sekundární souhrny; pravidla VS-CHIR-01]",
+    "source": "ACC/AHA a ESC 2022 (sekundární souhrny: JAMA Surgery, The Hospitalist)",
+    "region": "INT"
+  },
+  "EXT-AVASTIN-FDA-2020": {
+    "evidence_id": "EXT-AVASTIN-FDA-2020",
+    "kind": "external",
+    "title": "EXT-AVASTIN-FDA-2020 – Bevacizumab: kontraindikace a interval před operací",
+    "text": "Bevacizumab: krevní tlak pod kontrolou, bez arteriální tromboembolie, proteinurie < 2 g/24 h → bez omezení. Arteriální tromboembolie nebo infarkt myokardu v anamnéze → opatrnost. Nekontrolovaná hypertenze → nezahajovat; proteinurie ≥ 2 g/24 h → přerušit; nefrotický syndrom → ukončit. Interval před operací uvádí americký příbalový text 28 dní; dodané guidelines jsou přísnější (≥ 6 týdnů, KRC-2.3). [ověřeno 16. 10. 2026; pravidla VS-KRC-08, VS-CHIR-03]",
+    "source": "příbalový text Avastin (FDA 2020); monografie Cancer Care Ontario",
+    "region": "US"
+  },
+  "EXT-EMA-DPD-2020": {
+    "evidence_id": "EXT-EMA-DPD-2020",
+    "kind": "external",
+    "title": "EXT-EMA-DPD-2020 – Deficit DPD před fluoropyrimidiny",
+    "text": "5-FU, kapecitabin: kontrola deficitu DPD. Normální aktivita DPD → bez omezení. Částečný deficit → snížit úvodní dávku. Úplný deficit → nepodávat. [ověřeno 16. 10. 2026; pravidla VS-KRC-09]",
+    "source": "EMA 2020, referral článek 31 (fluorouracil, kapecitabin, tegafur)",
+    "region": "EU"
+  },
+  "KRC-1.1": {
+    "evidence_id": "KRC-1.1",
+    "kind": "guideline",
+    "title": "KRC-1.1 – Povinné biomarkery",
+    "text": "U každého metastatického kolorektálního karcinomu se před volbou systémové léčby vyšetřuje RAS (KRAS a NRAS, exony 2–4), BRAF V600E a stav mismatch repair (imunohistochemicky MMR nebo molekulárně MSI). U RAS/BRAF wild-type lze zvážit vyšetření HER2.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-1.2": {
+    "evidence_id": "KRC-1.2",
+    "kind": "guideline",
+    "title": "KRC-1.2 – dMMR / MSI-H",
+    "text": "U nádorů s deficitem MMR / vysokou mikrosatelitovou nestabilitou je v první linii preferována imunoterapie inhibitorem kontrolního bodu. Nález dMMR je zároveň indikací ke genetickému poradenství (Lynchův syndrom), zejména při pozitivní rodinné anamnéze.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-2.1": {
+    "evidence_id": "KRC-2.1",
+    "kind": "guideline",
+    "title": "KRC-2.1 – Posouzení resekability",
+    "text": "O resekabilitě jaterních metastáz rozhoduje MDT za účasti hepatobiliárního chirurga a radiologa. Podmínkou je dosažitelná R0 resekce všech ložisek, zachování dostatečného budoucího jaterního remnantu (FLR; obvykle ≥ 30 % u zdravých jater, ≥ 40 % po intenzivní chemoterapii nebo při steatóze) s cévním přítokem, odtokem a žlučovou drenáží, a absence neresekabilního extrahepatálního onemocnění.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-2.2": {
+    "evidence_id": "KRC-2.2",
+    "kind": "guideline",
+    "title": "KRC-2.2 – Konverzní chemoterapie",
+    "text": "U potenciálně resekabilních metastáz se podává intenzivní chemoterapie (dublet či triplet ± biologická léčba podle RAS) s restagingem přibližně po 2–4 měsících (4–8 cyklů). Jakmile jsou metastázy resekabilní, má být resekce provedena bez zbytečného prodlužování chemoterapie (hepatotoxicita, riziko vymizení ložisek).",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-2.3": {
+    "evidence_id": "KRC-2.3",
+    "kind": "guideline",
+    "title": "KRC-2.3 – Bevacizumab a operace",
+    "text": "Bevacizumab se vysazuje nejméně 6 týdnů před plánovanou operací a znovu se zahajuje nejdříve 6–8 týdnů po ní (riziko poruchy hojení a krvácení).",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-2.4": {
+    "evidence_id": "KRC-2.4",
+    "kind": "guideline",
+    "title": "KRC-2.4 – Restaging před resekcí",
+    "text": "Před resekcí jater se provádí kompletní restaging: CT hrudníku, břicha a pánve a MR jater s hepatospecifickou kontrastní látkou, ne starší než 4–6 týdnů. Ložiska, která po chemoterapii vymizela („disappearing metastases“), se mají zahrnout do resekčního plánu podle původní lokalizace.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-2.5": {
+    "evidence_id": "KRC-2.5",
+    "kind": "guideline",
+    "title": "KRC-2.5 – Oboulalokové postižení",
+    "text": "Při postižení obou laloků lze zvážit dvoudobou hepatektomii, případně kombinaci resekce s ablací drobných ložisek (do cca 3 cm). Pořadí výkonů u synchronního primárního nádoru (játra první / primární tumor první / simultánně) určuje MDT podle symptomů primárního nádoru a rozsahu jaterního výkonu.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-3.1": {
+    "evidence_id": "KRC-3.1",
+    "kind": "guideline",
+    "title": "KRC-3.1 – RAS-mutovaný karcinom",
+    "text": "Standardem první linie je FOLFOX nebo FOLFIRI (event. FOLFOXIRI) s bevacizumabem. Anti-EGFR protilátky nejsou u RAS-mutovaného nádoru indikovány.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "KRC-3.2": {
+    "evidence_id": "KRC-3.2",
+    "kind": "guideline",
+    "title": "KRC-3.2 – Neuropatie po oxaliplatině",
+    "text": "Přetrvávající neuropatie stupně 2 (omezení instrumentálních denních činností – např. zapínání knoflíků, psaní, držení předmětů) vede k vysazení nebo přerušení oxaliplatiny (strategie „stop-and-go“), pokračuje se fluoropyrimidinem ± biologickou léčbou nebo režimem FOLFIRI. Hodnocení neuropatie má vycházet i z výpovědi pacienta.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – metastatický kolorektální karcinom (KRC)",
+    "region": "CZ"
+  },
+  "OBC-1.1": {
+    "evidence_id": "OBC-1.1",
+    "kind": "guideline",
+    "title": "OBC-1.1 – Nominace a úplnost podkladů",
+    "text": "Případ na MDT nominuje ošetřující lékař s konkrétní, jednoznačně formulovanou otázkou. Bez otázky je případ neúplný. Podklady pro rozhodnutí o léčbě zahrnují: histologii (typ, grade), aktuální staging (TNM), prediktivní biomarkery podle typu nádoru, výkonnostní stav (ECOG), relevantní komorbidity, dosavadní léčbu a preference pacienta. Neúplný případ lze vrátit k doplnění nebo projednat s podmíněným doporučením.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – obecné principy MDT a podpůrné péče (OBC)",
+    "region": "CZ"
+  },
+  "OBC-1.2": {
+    "evidence_id": "OBC-1.2",
+    "kind": "guideline",
+    "title": "OBC-1.2 – Aktuálnost stagingu (konvence pro hackathon)",
+    "text": "Zobrazovací staging, na jehož základě se rozhoduje o radikální léčbě (operace, radikální radioterapie) nebo o změně linie systémové léčby, by neměl být starší než 6 týdnů k datu MDT. Pro kontrolu připravenosti případu se starší staging označuje jako zastaralý.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – obecné principy MDT a podpůrné péče (OBC)",
+    "region": "CZ"
+  },
+  "OBC-1.3": {
+    "evidence_id": "OBC-1.3",
+    "kind": "guideline",
+    "title": "OBC-1.3 – Výkonnostní stav podle lékaře a pacienta",
+    "text": "Výkonnostní stav se hodnotí škálou ECOG lékařem; vhodné je porovnat jej s pacientem hlášenými údaji (PROMs). Rozdíl o 1 a více stupňů nebo výrazná symptomová zátěž (např. únava či bolest ≥ 7/10) se má na MDT výslovně zmínit, protože ovlivňuje volbu intenzity léčby.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – obecné principy MDT a podpůrné péče (OBC)",
+    "region": "CZ"
+  },
+  "OBC-2.3": {
+    "evidence_id": "OBC-2.3",
+    "kind": "guideline",
+    "title": "OBC-2.3 – Nutriční screening",
+    "text": "Nechtěný úbytek hmotnosti ≥ 5 % za 6 měsíců (nebo pokles albuminu) je indikací k nutričnímu vyšetření a intervenci, zejména před velkým chirurgickým výkonem.",
+    "source": "Rakathon 2026 – Výtah z doporučených postupů – obecné principy MDT a podpůrné péče (OBC)",
+    "region": "CZ"
+  },
+  "P03-bm01": {
+    "evidence_id": "P03-bm01",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-bm01",
+    "patient_id": "P03",
+    "title": "KRAS",
+    "date": "2026-05-12",
+    "department": " Biomarker / molekulární patologie",
+    "author": null,
+    "value": {
+      "text": "mutace c.35G>A p.(Gly12Asp) – G12D",
+      "value": null,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-pat02",
+        "kind": "resource",
+        "resource_type": "DiagnosticReport",
+        "resource_id": "P03-pat02",
+        "patient_id": "P03",
+        "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+        "date": "2026-05-12",
+        "department": "Patologie PAT-B – Patologie – molekulární patologie",
+        "author": {
+          "id": "LEK-P03-03",
+          "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+          "specialty": "patolog"
+        },
+        "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno."
+      }
+    ]
+  },
+  "P03-bm02": {
+    "evidence_id": "P03-bm02",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-bm02",
+    "patient_id": "P03",
+    "title": "NRAS",
+    "date": "2026-05-12",
+    "department": " Biomarker / molekulární patologie",
+    "author": null,
+    "value": {
+      "text": "bez mutace (wild-type)",
+      "value": null,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-pat02",
+        "kind": "resource",
+        "resource_type": "DiagnosticReport",
+        "resource_id": "P03-pat02",
+        "patient_id": "P03",
+        "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+        "date": "2026-05-12",
+        "department": "Patologie PAT-B – Patologie – molekulární patologie",
+        "author": {
+          "id": "LEK-P03-03",
+          "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+          "specialty": "patolog"
+        },
+        "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno."
+      }
+    ]
+  },
+  "P03-bm03": {
+    "evidence_id": "P03-bm03",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-bm03",
+    "patient_id": "P03",
+    "title": "BRAF V600E",
+    "date": "2026-05-12",
+    "department": " Biomarker / molekulární patologie",
+    "author": null,
+    "value": {
+      "text": "neprokázána (wild-type)",
+      "value": null,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-pat02",
+        "kind": "resource",
+        "resource_type": "DiagnosticReport",
+        "resource_id": "P03-pat02",
+        "patient_id": "P03",
+        "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+        "date": "2026-05-12",
+        "department": "Patologie PAT-B – Patologie – molekulární patologie",
+        "author": {
+          "id": "LEK-P03-03",
+          "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+          "specialty": "patolog"
+        },
+        "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno."
+      }
+    ]
+  },
+  "P03-bm04": {
+    "evidence_id": "P03-bm04",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-bm04",
+    "patient_id": "P03",
+    "title": "MMR / MSI",
+    "date": "2026-05-12",
+    "department": " Biomarker / molekulární patologie",
+    "author": null,
+    "value": {
+      "text": "nevyšetřeno",
+      "value": null,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-pat02",
+        "kind": "resource",
+        "resource_type": "DiagnosticReport",
+        "resource_id": "P03-pat02",
+        "patient_id": "P03",
+        "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+        "date": "2026-05-12",
+        "department": "Patologie PAT-B – Patologie – molekulární patologie",
+        "author": {
+          "id": "LEK-P03-03",
+          "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+          "specialty": "patolog"
+        },
+        "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno."
+      }
+    ]
+  },
+  "P03-dg1": {
+    "evidence_id": "P03-dg1",
+    "kind": "resource",
+    "resource_type": "Condition",
+    "resource_id": "P03-dg1",
+    "patient_id": "P03",
+    "title": "Zhoubný novotvar esovité kličky tlustého střeva (sigmatu)",
+    "date": "2026-04-24",
+    "department": "onkologická diagnóza",
+    "author": null
+  },
+  "P03-dg2": {
+    "evidence_id": "P03-dg2",
+    "kind": "resource",
+    "resource_type": "Condition",
+    "resource_id": "P03-dg2",
+    "patient_id": "P03",
+    "title": "Sekundární zhoubný novotvar jater a intrahepatálních žlučovodů",
+    "date": "2026-04-28",
+    "department": "onkologická diagnóza",
+    "author": null
+  },
+  "P03-doc01#3": {
+    "evidence_id": "P03-doc01#3",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc01",
+    "patient_id": "P03",
+    "title": "Koloskopie s biopsií",
+    "date": "2026-04-21",
+    "department": "A-GAST – Gastroenterologická ambulance – endoskopie",
+    "author": {
+      "id": "LEK-P03-02",
+      "text": "LEK-P03-02 (fiktivní lékař) – gastroenterolog",
+      "specialty": "gastroenterolog"
+    },
+    "text": "Indikace: pozitivní test na okultní krvácení (screening), anémie lehkého stupně, změna defekace posledních 3 měsíců.\n\nPrůběh: Přístroj zaveden do céka, ileocékální chlopeň identifikována. Příprava střeva dobrá (BBPS 8).\nV sigmatu ve vzdálenosti cca 25 cm od anu cirkulární exofytický, snadno krvácivý tumor zužující lumen asi na 2/3, endoskop prochází. Odebrány biopsie (6×).\nVe zbytku tračníku 2 drobné polypy do 4 mm v transverzu, odstraněny kleštěmi.\n\nZávěr: Tumor sigmatu suspektní z malignity – histologie odeslána. Polypy transverza odstraněny.\nDoporučení: CT hrudníku a břicha s k. l., CEA, kontrola v onkologické ambulanci po výsledku histologie.",
+    "highlight": {
+      "paragraph": 3,
+      "start": 455,
+      "end": 550
+    }
+  },
+  "P03-doc02#2": {
+    "evidence_id": "P03-doc02#2",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc02",
+    "patient_id": "P03",
+    "title": "Vstupní onkologické vyšetření",
+    "date": "2026-05-18",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby.",
+    "highlight": {
+      "paragraph": 2,
+      "start": 76,
+      "end": 214
+    }
+  },
+  "P03-doc02#3": {
+    "evidence_id": "P03-doc02#3",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc02",
+    "patient_id": "P03",
+    "title": "Vstupní onkologické vyšetření",
+    "date": "2026-05-18",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby.",
+    "highlight": {
+      "paragraph": 3,
+      "start": 215,
+      "end": 325
+    }
+  },
+  "P03-doc02#5": {
+    "evidence_id": "P03-doc02#5",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc02",
+    "patient_id": "P03",
+    "title": "Vstupní onkologické vyšetření",
+    "date": "2026-05-18",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby.",
+    "highlight": {
+      "paragraph": 5,
+      "start": 442,
+      "end": 459
+    }
+  },
+  "P03-doc02#6": {
+    "evidence_id": "P03-doc02#6",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc02",
+    "patient_id": "P03",
+    "title": "Vstupní onkologické vyšetření",
+    "date": "2026-05-18",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby.",
+    "highlight": {
+      "paragraph": 6,
+      "start": 460,
+      "end": 506
+    }
+  },
+  "P03-doc03#1": {
+    "evidence_id": "P03-doc03#1",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc03",
+    "patient_id": "P03",
+    "title": "Implantace venózního portu",
+    "date": "2026-05-28",
+    "department": "A-KTPP – Chirurgická ambulance – cévní přístupy",
+    "author": {
+      "id": "LEK-P03-05",
+      "text": "LEK-P03-05 (fiktivní lékař) – chirurg – hepatobiliární chirurgie",
+      "specialty": "chirurg – hepatobiliární chirurgie"
+    },
+    "text": "Výkon: implantace venózního portu cestou v. subclavia l. dx. v lokální anestezii pod skiaskopickou kontrolou.\nPrůběh bez komplikací, hrot katétru v úrovni kavoatriálního přechodu. Port funkční, propláchnut heparinovou zátkou.\nKyselinu acetylsalicylovou nebylo třeba vysadit.\nDoporučení: stehy extrahovat za 10 dní, port lze používat ihned.",
+    "highlight": {
+      "paragraph": 1,
+      "start": 0,
+      "end": 274
+    }
+  },
+  "P03-doc06#2": {
+    "evidence_id": "P03-doc06#2",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc06",
+    "patient_id": "P03",
+    "title": "Kontrola před 8. cyklem",
+    "date": "2026-09-07",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Subjektivně: Únava větší než na začátku léčby, chuť k jídlu horší. Brnění prstů rukou přetrvává i mezi cykly, chodidla bez potíží.\nObjektivně: ECOG 0–1, hmotnost 79 kg, TK 140/90.\nLaboratoř (24. 8.): Hb 113, neutrofily 1,7, Tr 151, CEA 11,2.\n\nZávěr: Neuropatie G1. Podán 8. cyklus s redukcí oxaliplatiny na 75 % (cca 64 mg/m²) pro přetrvávající parestezie prstů mezi cykly.\nBevacizumab podán (poslední dávka před restagingem).\nPlán: restagingové CT za 2 týdny, poté MR jater, re-MDT.",
+    "highlight": {
+      "paragraph": 2,
+      "start": 131,
+      "end": 179
+    }
+  },
+  "P03-doc06#4": {
+    "evidence_id": "P03-doc06#4",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc06",
+    "patient_id": "P03",
+    "title": "Kontrola před 8. cyklem",
+    "date": "2026-09-07",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Subjektivně: Únava větší než na začátku léčby, chuť k jídlu horší. Brnění prstů rukou přetrvává i mezi cykly, chodidla bez potíží.\nObjektivně: ECOG 0–1, hmotnost 79 kg, TK 140/90.\nLaboratoř (24. 8.): Hb 113, neutrofily 1,7, Tr 151, CEA 11,2.\n\nZávěr: Neuropatie G1. Podán 8. cyklus s redukcí oxaliplatiny na 75 % (cca 64 mg/m²) pro přetrvávající parestezie prstů mezi cykly.\nBevacizumab podán (poslední dávka před restagingem).\nPlán: restagingové CT za 2 týdny, poté MR jater, re-MDT.",
+    "highlight": {
+      "paragraph": 4,
+      "start": 243,
+      "end": 426
+    }
+  },
+  "P03-doc07#1": {
+    "evidence_id": "P03-doc07#1",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc07",
+    "patient_id": "P03",
+    "title": "Kontrola po restagingu, nominace na re-MDT",
+    "date": "2026-10-05",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti.",
+    "highlight": {
+      "paragraph": 1,
+      "start": 0,
+      "end": 92
+    }
+  },
+  "P03-doc07#2": {
+    "evidence_id": "P03-doc07#2",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc07",
+    "patient_id": "P03",
+    "title": "Kontrola po restagingu, nominace na re-MDT",
+    "date": "2026-10-05",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti.",
+    "highlight": {
+      "paragraph": 2,
+      "start": 94,
+      "end": 205
+    }
+  },
+  "P03-doc07#5": {
+    "evidence_id": "P03-doc07#5",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc07",
+    "patient_id": "P03",
+    "title": "Kontrola po restagingu, nominace na re-MDT",
+    "date": "2026-10-05",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti.",
+    "highlight": {
+      "paragraph": 5,
+      "start": 379,
+      "end": 428
+    }
+  },
+  "P03-doc07#6": {
+    "evidence_id": "P03-doc07#6",
+    "kind": "paragraph",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc07",
+    "patient_id": "P03",
+    "title": "Kontrola po restagingu, nominace na re-MDT",
+    "date": "2026-10-05",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti.",
+    "highlight": {
+      "paragraph": 6,
+      "start": 430,
+      "end": 664
+    }
+  },
+  "P03-ecog02": {
+    "evidence_id": "P03-ecog02",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-ecog02",
+    "patient_id": "P03",
+    "title": "ECOG – hodnoceno lékařem",
+    "date": "2026-09-07",
+    "department": null,
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "value": {
+      "text": "1",
+      "value": 1,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc06",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc06",
+        "patient_id": "P03",
+        "title": "Kontrola před 8. cyklem",
+        "date": "2026-09-07",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Subjektivně: Únava větší než na začátku léčby, chuť k jídlu horší. Brnění prstů rukou přetrvává i mezi cykly, chodidla bez potíží.\nObjektivně: ECOG 0–1, hmotnost 79 kg, TK 140/90.\nLaboratoř (24. 8.): Hb 113, neutrofily 1,7, Tr 151, CEA 11,2.\n\nZávěr: Neuropatie G1. Podán 8. cyklus s redukcí oxaliplatiny na 75 % (cca 64 mg/m²) pro přetrvávající parestezie prstů mezi cykly.\nBevacizumab podán (poslední dávka před restagingem).\nPlán: restagingové CT za 2 týdny, poté MR jater, re-MDT."
+      }
+    ]
+  },
+  "P03-ecog03": {
+    "evidence_id": "P03-ecog03",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-ecog03",
+    "patient_id": "P03",
+    "title": "ECOG – hodnoceno lékařem",
+    "date": "2026-10-05",
+    "department": null,
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "value": {
+      "text": "0",
+      "value": 0,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc07",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc07",
+        "patient_id": "P03",
+        "title": "Kontrola po restagingu, nominace na re-MDT",
+        "date": "2026-10-05",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti."
+      }
+    ]
+  },
+  "P03-img01": {
+    "evidence_id": "P03-img01",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img01",
+    "patient_id": "P03",
+    "title": "CT hrudníku, břicha a pánve s k. l. – staging",
+    "date": "2026-04-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Technika: CT hrudníku, břicha a pánve v portální fázi po i.v. aplikaci k. l.\n\nHrudník: Plicní parenchym bez ložiskových změn. Mediastinální a hilové uzliny nezvětšené. Bez fluidothoraxu.\n\nBřicho a pánev: V sigmatu cirkulární ztluštění stěny v délce cca 5 cm s mírnou infiltrací perikolického tuku, bez známek perforace. V mezosigmatu 3 uzliny do 9 mm v krátké ose, suspektní.\nJátra normální velikosti, v pravém laloku 4 hypodenzní ložiska charakteru metastáz:\n- S7: 48 mm (cílová léze 1)\n- S8: 35 mm (cílová léze 2), naléhá na pravou jaterní žílu\n- S6: 12 mm\n- S5: 10 mm\nLevý jaterní lalok bez ložiskových změn. Portální žíla průchodná. Žlučník, slinivka, slezina, nadledviny a ledviny bez patologie. Bez ascitu.\n\nZávěr: Tumor sigmatu (cT3 N1), 4 jaterní metastázy v pravém laloku (S5–S8), levý lalok bez ložisek. Hrudník bez metastáz.\nSoučet cílových lézí (RECIST 1.1): 83 mm."
+  },
+  "P03-img01#1": {
+    "evidence_id": "P03-img01#1",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img01",
+    "patient_id": "P03",
+    "title": "CT hrudníku, břicha a pánve s k. l. – staging",
+    "date": "2026-04-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Technika: CT hrudníku, břicha a pánve v portální fázi po i.v. aplikaci k. l.\n\nHrudník: Plicní parenchym bez ložiskových změn. Mediastinální a hilové uzliny nezvětšené. Bez fluidothoraxu.\n\nBřicho a pánev: V sigmatu cirkulární ztluštění stěny v délce cca 5 cm s mírnou infiltrací perikolického tuku, bez známek perforace. V mezosigmatu 3 uzliny do 9 mm v krátké ose, suspektní.\nJátra normální velikosti, v pravém laloku 4 hypodenzní ložiska charakteru metastáz:\n- S7: 48 mm (cílová léze 1)\n- S8: 35 mm (cílová léze 2), naléhá na pravou jaterní žílu\n- S6: 12 mm\n- S5: 10 mm\nLevý jaterní lalok bez ložiskových změn. Portální žíla průchodná. Žlučník, slinivka, slezina, nadledviny a ledviny bez patologie. Bez ascitu.\n\nZávěr: Tumor sigmatu (cT3 N1), 4 jaterní metastázy v pravém laloku (S5–S8), levý lalok bez ložisek. Hrudník bez metastáz.\nSoučet cílových lézí (RECIST 1.1): 83 mm.",
+    "highlight": {
+      "paragraph": 1,
+      "start": 0,
+      "end": 76
+    }
+  },
+  "P03-img01#2": {
+    "evidence_id": "P03-img01#2",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img01",
+    "patient_id": "P03",
+    "title": "CT hrudníku, břicha a pánve s k. l. – staging",
+    "date": "2026-04-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Technika: CT hrudníku, břicha a pánve v portální fázi po i.v. aplikaci k. l.\n\nHrudník: Plicní parenchym bez ložiskových změn. Mediastinální a hilové uzliny nezvětšené. Bez fluidothoraxu.\n\nBřicho a pánev: V sigmatu cirkulární ztluštění stěny v délce cca 5 cm s mírnou infiltrací perikolického tuku, bez známek perforace. V mezosigmatu 3 uzliny do 9 mm v krátké ose, suspektní.\nJátra normální velikosti, v pravém laloku 4 hypodenzní ložiska charakteru metastáz:\n- S7: 48 mm (cílová léze 1)\n- S8: 35 mm (cílová léze 2), naléhá na pravou jaterní žílu\n- S6: 12 mm\n- S5: 10 mm\nLevý jaterní lalok bez ložiskových změn. Portální žíla průchodná. Žlučník, slinivka, slezina, nadledviny a ledviny bez patologie. Bez ascitu.\n\nZávěr: Tumor sigmatu (cT3 N1), 4 jaterní metastázy v pravém laloku (S5–S8), levý lalok bez ložisek. Hrudník bez metastáz.\nSoučet cílových lézí (RECIST 1.1): 83 mm.",
+    "highlight": {
+      "paragraph": 2,
+      "start": 78,
+      "end": 186
+    }
+  },
+  "P03-img01#4": {
+    "evidence_id": "P03-img01#4",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img01",
+    "patient_id": "P03",
+    "title": "CT hrudníku, břicha a pánve s k. l. – staging",
+    "date": "2026-04-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Technika: CT hrudníku, břicha a pánve v portální fázi po i.v. aplikaci k. l.\n\nHrudník: Plicní parenchym bez ložiskových změn. Mediastinální a hilové uzliny nezvětšené. Bez fluidothoraxu.\n\nBřicho a pánev: V sigmatu cirkulární ztluštění stěny v délce cca 5 cm s mírnou infiltrací perikolického tuku, bez známek perforace. V mezosigmatu 3 uzliny do 9 mm v krátké ose, suspektní.\nJátra normální velikosti, v pravém laloku 4 hypodenzní ložiska charakteru metastáz:\n- S7: 48 mm (cílová léze 1)\n- S8: 35 mm (cílová léze 2), naléhá na pravou jaterní žílu\n- S6: 12 mm\n- S5: 10 mm\nLevý jaterní lalok bez ložiskových změn. Portální žíla průchodná. Žlučník, slinivka, slezina, nadledviny a ledviny bez patologie. Bez ascitu.\n\nZávěr: Tumor sigmatu (cT3 N1), 4 jaterní metastázy v pravém laloku (S5–S8), levý lalok bez ložisek. Hrudník bez metastáz.\nSoučet cílových lézí (RECIST 1.1): 83 mm.",
+    "highlight": {
+      "paragraph": 4,
+      "start": 714,
+      "end": 835
+    }
+  },
+  "P03-img01#5": {
+    "evidence_id": "P03-img01#5",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img01",
+    "patient_id": "P03",
+    "title": "CT hrudníku, břicha a pánve s k. l. – staging",
+    "date": "2026-04-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Technika: CT hrudníku, břicha a pánve v portální fázi po i.v. aplikaci k. l.\n\nHrudník: Plicní parenchym bez ložiskových změn. Mediastinální a hilové uzliny nezvětšené. Bez fluidothoraxu.\n\nBřicho a pánev: V sigmatu cirkulární ztluštění stěny v délce cca 5 cm s mírnou infiltrací perikolického tuku, bez známek perforace. V mezosigmatu 3 uzliny do 9 mm v krátké ose, suspektní.\nJátra normální velikosti, v pravém laloku 4 hypodenzní ložiska charakteru metastáz:\n- S7: 48 mm (cílová léze 1)\n- S8: 35 mm (cílová léze 2), naléhá na pravou jaterní žílu\n- S6: 12 mm\n- S5: 10 mm\nLevý jaterní lalok bez ložiskových změn. Portální žíla průchodná. Žlučník, slinivka, slezina, nadledviny a ledviny bez patologie. Bez ascitu.\n\nZávěr: Tumor sigmatu (cT3 N1), 4 jaterní metastázy v pravém laloku (S5–S8), levý lalok bez ložisek. Hrudník bez metastáz.\nSoučet cílových lézí (RECIST 1.1): 83 mm.",
+    "highlight": {
+      "paragraph": 5,
+      "start": 836,
+      "end": 877
+    }
+  },
+  "P03-img02#3": {
+    "evidence_id": "P03-img02#3",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img02",
+    "patient_id": "P03",
+    "title": "MR jater s hepatospecifickou k. l.",
+    "date": "2026-05-06",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Indikace: zpřesnění rozsahu jaterního postižení před MDT.\n\nNález: V pravém jaterním laloku potvrzena 4 ložiska popsaná na CT (S7 47 mm, S8 36 mm, S6 12 mm, S5 11 mm) s restrikcí difuze a defektem v hepatobiliární fázi.\nNově v levém laloku v segmentu S3 subkapsulárně ložisko 7 mm se stejnými charakteristikami – vysoce suspektní z metastázy, na CT nezachyceno.\nLožisko S8 naléhá na pravou jaterní žílu v délce cca 15 mm, střední jaterní žíla volná.\n\nZávěr: Celkem 5 jaterních metastáz (S5, S6, S7, S8 a S3). Postižení obou laloků.",
+    "highlight": {
+      "paragraph": 3,
+      "start": 450,
+      "end": 530
+    }
+  },
+  "P03-img03#1": {
+    "evidence_id": "P03-img03#1",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img03",
+    "patient_id": "P03",
+    "title": "CT břicha a pánve s k. l. – restaging po 8 cyklech",
+    "date": "2026-09-21",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s CT z 28. 4. 2026. Vyšetřeno břicho a pánev, hrudník nebyl požadován.\n\nJátra: Ložiska v pravém laloku zmenšena:\n- S7: 29 mm (dříve 48 mm) – cílová léze 1\n- S8: 21 mm (dříve 35 mm) – cílová léze 2, stále naléhá na pravou jaterní žílu\n- S6: 6 mm (dříve 12 mm)\n- S5: nezřetelné (dříve 10 mm)\nLevý lalok bez ložiskových změn.\nSigma: ztluštění stěny v délce cca 3 cm, perikolický tuk klidnější. Uzliny v mezosigmatu do 5 mm.\nBez ascitu, bez nových ložisek v břiše.\n\nZávěr: Parciální odpověď dle RECIST 1.1 – součet cílových lézí 50 mm (pokles o 40 %). Bez nových ložisek.",
+    "highlight": {
+      "paragraph": 1,
+      "start": 0,
+      "end": 79
+    }
+  },
+  "P03-img03#4": {
+    "evidence_id": "P03-img03#4",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img03",
+    "patient_id": "P03",
+    "title": "CT břicha a pánve s k. l. – restaging po 8 cyklech",
+    "date": "2026-09-21",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s CT z 28. 4. 2026. Vyšetřeno břicho a pánev, hrudník nebyl požadován.\n\nJátra: Ložiska v pravém laloku zmenšena:\n- S7: 29 mm (dříve 48 mm) – cílová léze 1\n- S8: 21 mm (dříve 35 mm) – cílová léze 2, stále naléhá na pravou jaterní žílu\n- S6: 6 mm (dříve 12 mm)\n- S5: nezřetelné (dříve 10 mm)\nLevý lalok bez ložiskových změn.\nSigma: ztluštění stěny v délce cca 3 cm, perikolický tuk klidnější. Uzliny v mezosigmatu do 5 mm.\nBez ascitu, bez nových ložisek v břiše.\n\nZávěr: Parciální odpověď dle RECIST 1.1 – součet cílových lézí 50 mm (pokles o 40 %). Bez nových ložisek.",
+    "highlight": {
+      "paragraph": 4,
+      "start": 471,
+      "end": 576
+    }
+  },
+  "P03-img04": {
+    "evidence_id": "P03-img04",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img04",
+    "patient_id": "P03",
+    "title": "MR jater s hepatospecifickou k. l. – restaging",
+    "date": "2026-09-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s MR z 6. 5. 2026.\n\nNález:\n- S7: 28 mm (dříve 47 mm)\n- S8: 22 mm (dříve 36 mm), kontakt s pravou jaterní žílou v délce cca 10 mm\n- S6: 6 mm\n- S5: v hepatobiliární fázi bez zřetelného ložiska – vymizelá metastáza (disappearing metastasis); pro plánování resekce je třeba počítat s původní lokalizací\n- S3: 4 mm (dříve 7 mm), stále s restrikcí difuze\n\nObjem levého laloku (S2–S4) odhadem 38 % celkového objemu jater.\n\nZávěr: Výrazná regrese všech ložisek. Jaterní postižení obou laloků trvá (S3)."
+  },
+  "P03-img04#2": {
+    "evidence_id": "P03-img04#2",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img04",
+    "patient_id": "P03",
+    "title": "MR jater s hepatospecifickou k. l. – restaging",
+    "date": "2026-09-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s MR z 6. 5. 2026.\n\nNález:\n- S7: 28 mm (dříve 47 mm)\n- S8: 22 mm (dříve 36 mm), kontakt s pravou jaterní žílou v délce cca 10 mm\n- S6: 6 mm\n- S5: v hepatobiliární fázi bez zřetelného ložiska – vymizelá metastáza (disappearing metastasis); pro plánování resekce je třeba počítat s původní lokalizací\n- S3: 4 mm (dříve 7 mm), stále s restrikcí difuze\n\nObjem levého laloku (S2–S4) odhadem 38 % celkového objemu jater.\n\nZávěr: Výrazná regrese všech ložisek. Jaterní postižení obou laloků trvá (S3).",
+    "highlight": {
+      "paragraph": 2,
+      "start": 29,
+      "end": 357
+    }
+  },
+  "P03-img04#3": {
+    "evidence_id": "P03-img04#3",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img04",
+    "patient_id": "P03",
+    "title": "MR jater s hepatospecifickou k. l. – restaging",
+    "date": "2026-09-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s MR z 6. 5. 2026.\n\nNález:\n- S7: 28 mm (dříve 47 mm)\n- S8: 22 mm (dříve 36 mm), kontakt s pravou jaterní žílou v délce cca 10 mm\n- S6: 6 mm\n- S5: v hepatobiliární fázi bez zřetelného ložiska – vymizelá metastáza (disappearing metastasis); pro plánování resekce je třeba počítat s původní lokalizací\n- S3: 4 mm (dříve 7 mm), stále s restrikcí difuze\n\nObjem levého laloku (S2–S4) odhadem 38 % celkového objemu jater.\n\nZávěr: Výrazná regrese všech ložisek. Jaterní postižení obou laloků trvá (S3).",
+    "highlight": {
+      "paragraph": 3,
+      "start": 359,
+      "end": 423
+    }
+  },
+  "P03-img04#4": {
+    "evidence_id": "P03-img04#4",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img04",
+    "patient_id": "P03",
+    "title": "MR jater s hepatospecifickou k. l. – restaging",
+    "date": "2026-09-28",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s MR z 6. 5. 2026.\n\nNález:\n- S7: 28 mm (dříve 47 mm)\n- S8: 22 mm (dříve 36 mm), kontakt s pravou jaterní žílou v délce cca 10 mm\n- S6: 6 mm\n- S5: v hepatobiliární fázi bez zřetelného ložiska – vymizelá metastáza (disappearing metastasis); pro plánování resekce je třeba počítat s původní lokalizací\n- S3: 4 mm (dříve 7 mm), stále s restrikcí difuze\n\nObjem levého laloku (S2–S4) odhadem 38 % celkového objemu jater.\n\nZávěr: Výrazná regrese všech ložisek. Jaterní postižení obou laloků trvá (S3).",
+    "highlight": {
+      "paragraph": 4,
+      "start": 425,
+      "end": 503
+    }
+  },
+  "P03-kom1": {
+    "evidence_id": "P03-kom1",
+    "kind": "resource",
+    "resource_type": "Condition",
+    "resource_id": "P03-kom1",
+    "patient_id": "P03",
+    "title": "Starý infarkt myokardu (2019, st. p. PCI RIA)",
+    "date": "2019-03",
+    "department": "komorbidita",
+    "author": null
+  },
+  "P03-kom2": {
+    "evidence_id": "P03-kom2",
+    "kind": "resource",
+    "resource_type": "Condition",
+    "resource_id": "P03-kom2",
+    "patient_id": "P03",
+    "title": "Esenciální hypertenze",
+    "date": null,
+    "department": "komorbidita",
+    "author": null
+  },
+  "P03-kom3": {
+    "evidence_id": "P03-kom3",
+    "kind": "resource",
+    "resource_type": "Condition",
+    "resource_id": "P03-kom3",
+    "patient_id": "P03",
+    "title": "Hypercholesterolémie",
+    "date": null,
+    "department": "komorbidita",
+    "author": null
+  },
+  "P03-lab05-cea": {
+    "evidence_id": "P03-lab05-cea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-cea",
+    "patient_id": "P03",
+    "title": "CEA",
+    "date": "2026-09-21",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "9.1 µg/l",
+      "value": 9.1,
+      "unit": "µg/l",
+      "ref_low": 0,
+      "ref_high": 5.0,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab06-cea": {
+    "evidence_id": "P03-lab06-cea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-cea",
+    "patient_id": "P03",
+    "title": "CEA",
+    "date": "2026-10-05",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "13.9 µg/l",
+      "value": 13.9,
+      "unit": "µg/l",
+      "ref_low": 0,
+      "ref_high": 5.0,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab06-hb": {
+    "evidence_id": "P03-lab06-hb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-hb",
+    "patient_id": "P03",
+    "title": "Hemoglobin",
+    "date": "2026-10-05",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "114 g/l",
+      "value": 114,
+      "unit": "g/l",
+      "ref_low": 135,
+      "ref_high": 175,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab06-neu": {
+    "evidence_id": "P03-lab06-neu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-neu",
+    "patient_id": "P03",
+    "title": "Neutrofily absolutně",
+    "date": "2026-10-05",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "2.9 10^9/l",
+      "value": 2.9,
+      "unit": "10^9/l",
+      "ref_low": 2.0,
+      "ref_high": 7.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-plt": {
+    "evidence_id": "P03-lab06-plt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-plt",
+    "patient_id": "P03",
+    "title": "Trombocyty",
+    "date": "2026-10-05",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "168 10^9/l",
+      "value": 168,
+      "unit": "10^9/l",
+      "ref_low": 150,
+      "ref_high": 400,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-mdt01": {
+    "evidence_id": "P03-mdt01",
+    "kind": "resource",
+    "resource_type": "Composition",
+    "resource_id": "P03-mdt01",
+    "patient_id": "P03",
+    "title": "Záznam MDT – GIT – kolorektální karcinom – 2026-05-20",
+    "date": "2026-05-20",
+    "department": "Primární projednání Zaměření MDT: GIT – kolorektální karcinom",
+    "author": {
+      "id": "LEK-P03-06",
+      "text": "LEK-P03-06 (fiktivní lékař) – klinický onkolog – předseda GIT komise",
+      "specialty": "klinický onkolog – předseda GIT komise"
+    },
+    "text": "Projednaná otázka: Léčebný plán u nově diagnostikovaného karcinomu sigmatu se synchronními jaterními metastázami.\n\nKlinické zhodnocení: Adenokarcinom sigmatu G2, cT3 N1 M1a, KRAS G12D, BRAF wt. Na CT 4 metastázy v pravém laloku, MR navíc ložisko S3 (7 mm). Ložisko S8 naléhá na pravou jaterní žílu. Primární tumor bez obstrukce a bez významného krvácení. ECOG 0, kardiálně kompenzován.\n\nLéčebný záměr: Kurativní\n\nDoporučený postup: 1. [Chemoterapie] Konverzní chemoterapie FOLFOX + bevacizumab – restaging CT a MR jater po 6–8 cyklech\n2. [Chirurgie] Při dostatečné odpovědi zvážit resekci jater (event. dvoudobě) a resekci primárního tumoru – rozhodne re-MDT\n\nKlinická studie: Nezvažována.\n\nPlánované re-MDT: Po restagingu po 6–8 cyklech chemoterapie; termín do 2026-10-31\n\nZávěr MDT: Potenciálně resekabilní jaterní metastázy – zahájit konverzní chemoterapii FOLFOX + bevacizumab, re-MDT po restagingu."
+  },
+  "P03-mdt01-careplan": {
+    "evidence_id": "P03-mdt01-careplan",
+    "kind": "resource",
+    "resource_type": "CarePlan",
+    "resource_id": "P03-mdt01-careplan",
+    "patient_id": "P03",
+    "title": "CarePlan",
+    "date": null,
+    "department": "Kurativní",
+    "author": null
+  },
+  "P03-med01": {
+    "evidence_id": "P03-med01",
+    "kind": "resource",
+    "resource_type": "MedicationRequest",
+    "resource_id": "P03-med01",
+    "patient_id": "P03",
+    "title": "kyselina acetylsalicylová",
+    "date": "2019-03-20",
+    "department": "chronická medikace",
+    "author": {
+      "id": "LEK-P03-08",
+      "text": "LEK-P03-08 (fiktivní lékař) – kardiolog",
+      "specialty": "kardiolog"
+    }
+  },
+  "P03-med02": {
+    "evidence_id": "P03-med02",
+    "kind": "resource",
+    "resource_type": "MedicationRequest",
+    "resource_id": "P03-med02",
+    "patient_id": "P03",
+    "title": "ramipril",
+    "date": "2019-03-20",
+    "department": "chronická medikace",
+    "author": {
+      "id": "LEK-P03-08",
+      "text": "LEK-P03-08 (fiktivní lékař) – kardiolog",
+      "specialty": "kardiolog"
+    }
+  },
+  "P03-med03": {
+    "evidence_id": "P03-med03",
+    "kind": "resource",
+    "resource_type": "MedicationRequest",
+    "resource_id": "P03-med03",
+    "patient_id": "P03",
+    "title": "atorvastatin",
+    "date": "2019-03-20",
+    "department": "chronická medikace",
+    "author": {
+      "id": "LEK-P03-08",
+      "text": "LEK-P03-08 (fiktivní lékař) – kardiolog",
+      "specialty": "kardiolog"
+    }
+  },
+  "P03-med04": {
+    "evidence_id": "P03-med04",
+    "kind": "resource",
+    "resource_type": "MedicationRequest",
+    "resource_id": "P03-med04",
+    "patient_id": "P03",
+    "title": "bisoprolol",
+    "date": "2019-03-20",
+    "department": "chronická medikace",
+    "author": {
+      "id": "LEK-P03-08",
+      "text": "LEK-P03-08 (fiktivní lékař) – kardiolog",
+      "specialty": "kardiolog"
+    }
+  },
+  "P03-med05": {
+    "evidence_id": "P03-med05",
+    "kind": "resource",
+    "resource_type": "MedicationRequest",
+    "resource_id": "P03-med05",
+    "patient_id": "P03",
+    "title": "metoklopramid",
+    "date": "2026-06-01",
+    "department": "chronická medikace",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    }
+  },
+  "P03-neuro01": {
+    "evidence_id": "P03-neuro01",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-neuro01",
+    "patient_id": "P03",
+    "title": "Periferní neuropatie (CTCAE) – hodnocení lékařem",
+    "date": "2026-10-05",
+    "department": "Toxicita léčby",
+    "author": null,
+    "value": {
+      "text": "grade 1",
+      "value": null,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc07",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc07",
+        "patient_id": "P03",
+        "title": "Kontrola po restagingu, nominace na re-MDT",
+        "date": "2026-10-05",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti."
+      }
+    ]
+  },
+  "P03-pat01#3": {
+    "evidence_id": "P03-pat01#3",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat01",
+    "patient_id": "P03",
+    "title": "Biopsie tumoru sigmatu",
+    "date": "2026-04-24",
+    "department": "Patologie PAT-B – Patologie – bioptická laboratoř",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Makroskopicky: 6 drobných fragmentů sliznice do 3 mm.\n\nMikroskopicky: Ve všech fragmentech infiltrace středně diferencovaným adenokarcinomem s tubulární stavbou, s ložisky nekrózy. Zastižena invaze do submukózy; hloubku invaze nelze v bioptickém vzorku plně hodnotit.\n\nZávěr: Adenokarcinom tlustého střeva, středně diferencovaný (G2).\nPolypy transverza: tubulární adenomy s low-grade dysplazií.\n\nDoporučení: molekulárně-genetické vyšetření (RAS, BRAF) bude provedeno na žádost onkologa.\n\nKLASIFIKACE: Topografie (ICD-O-3) C18.7, Morfologie (ICD-O-3) 8140/3",
+    "highlight": {
+      "paragraph": 3,
+      "start": 269,
+      "end": 334
+    }
+  },
+  "P03-pat01#6": {
+    "evidence_id": "P03-pat01#6",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat01",
+    "patient_id": "P03",
+    "title": "Biopsie tumoru sigmatu",
+    "date": "2026-04-24",
+    "department": "Patologie PAT-B – Patologie – bioptická laboratoř",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Makroskopicky: 6 drobných fragmentů sliznice do 3 mm.\n\nMikroskopicky: Ve všech fragmentech infiltrace středně diferencovaným adenokarcinomem s tubulární stavbou, s ložisky nekrózy. Zastižena invaze do submukózy; hloubku invaze nelze v bioptickém vzorku plně hodnotit.\n\nZávěr: Adenokarcinom tlustého střeva, středně diferencovaný (G2).\nPolypy transverza: tubulární adenomy s low-grade dysplazií.\n\nDoporučení: molekulárně-genetické vyšetření (RAS, BRAF) bude provedeno na žádost onkologa.\n\nKLASIFIKACE: Topografie (ICD-O-3) C18.7, Morfologie (ICD-O-3) 8140/3",
+    "highlight": {
+      "paragraph": 6,
+      "start": 488,
+      "end": 556
+    }
+  },
+  "P03-pat02": {
+    "evidence_id": "P03-pat02",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno."
+  },
+  "P03-pat02#2": {
+    "evidence_id": "P03-pat02#2",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno.",
+    "highlight": {
+      "paragraph": 2,
+      "start": 117,
+      "end": 163
+    }
+  },
+  "P03-pat02#4": {
+    "evidence_id": "P03-pat02#4",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno.",
+    "highlight": {
+      "paragraph": 4,
+      "start": 175,
+      "end": 240
+    }
+  },
+  "P03-pat02#5": {
+    "evidence_id": "P03-pat02#5",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno.",
+    "highlight": {
+      "paragraph": 5,
+      "start": 241,
+      "end": 270
+    }
+  },
+  "P03-pat02#6": {
+    "evidence_id": "P03-pat02#6",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno.",
+    "highlight": {
+      "paragraph": 6,
+      "start": 271,
+      "end": 304
+    }
+  },
+  "P03-pat02#7": {
+    "evidence_id": "P03-pat02#7",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno.",
+    "highlight": {
+      "paragraph": 7,
+      "start": 306,
+      "end": 376
+    }
+  },
+  "P03-pat02#8": {
+    "evidence_id": "P03-pat02#8",
+    "kind": "paragraph",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat02",
+    "patient_id": "P03",
+    "title": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "date": "2026-05-12",
+    "department": "Patologie PAT-B – Patologie – molekulární patologie",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Materiál: parafinový blok z biopsie tumoru sigmatu (pat. č. viz biopsie z 24. 4.), podíl nádorových buněk cca 60 %.\n\nMetoda: NGS panel (KRAS, NRAS exon 2–4, BRAF).\n\nVýsledek:\nKRAS: detekována patogenní varianta c.35G>A, p.(Gly12Asp) – G12D.\nNRAS: bez patogenní varianty.\nBRAF: varianta V600E neprokázána.\n\nInterpretace: Nádor je RAS mutovaný – anti-EGFR léčba není indikována.\n\nPozn.: Vyšetření MMR/MSI nebylo požadováno.",
+    "highlight": {
+      "paragraph": 8,
+      "start": 378,
+      "end": 421
+    }
+  },
+  "P03-proc01": {
+    "evidence_id": "P03-proc01",
+    "kind": "resource",
+    "resource_type": "Procedure",
+    "resource_id": "P03-proc01",
+    "patient_id": "P03",
+    "title": "Koloskopie s biopsií a polypektomií",
+    "date": "2026-04-21",
+    "department": "endoskopie",
+    "author": null
+  },
+  "P03-proc02": {
+    "evidence_id": "P03-proc02",
+    "kind": "resource",
+    "resource_type": "Procedure",
+    "resource_id": "P03-proc02",
+    "patient_id": "P03",
+    "title": "Implantace venózního portu (v. subclavia l. dx.)",
+    "date": "2026-05-28",
+    "department": "chirurgický výkon",
+    "author": null
+  },
+  "P03-proc03": {
+    "evidence_id": "P03-proc03",
+    "kind": "resource",
+    "resource_type": "Procedure",
+    "resource_id": "P03-proc03",
+    "patient_id": "P03",
+    "title": "PCI RIA s implantací lékového stentu",
+    "date": "2019-03-20",
+    "department": "kardiologický výkon",
+    "author": null
+  },
+  "P03-prom01": {
+    "evidence_id": "P03-prom01",
+    "kind": "resource",
+    "resource_type": "QuestionnaireResponse",
+    "resource_id": "P03-prom01",
+    "patient_id": "P03",
+    "title": "Dotazník pacienta (PROMs)",
+    "date": "2026-06-01",
+    "department": null,
+    "author": null,
+    "text": "Bolest za poslední týden (0–10): 1\nKde vás bolí? (vlastními slovy): občas tlak v podbřišku\nÚnava za poslední týden (0–10): 2\nNevolnost nebo zvracení (0–10): 0\nDušnost (0–10): 1\nNechutenství (0–10): 2\nBrnění, mravenčení nebo necitlivost rukou či nohou (0–10): 0\nPrůjem (0–10): 3\nPsychická zátěž – úzkost, smutek, starosti (0–10): 6\nPotíže se spánkem (0–10): 4\nJak zvládáte běžný den?: Zvládám vše jako před nemocí, i fyzicky náročné věci\nKolik zvládnete ujít?: Ujdu bez potíží delší vzdálenost i do schodů\nVaše současná hmotnost (kg): 83\nZměna hmotnosti za poslední 3 měsíce (kg, minus = úbytek): -4\nObjevily se od minulé návštěvy nové obtíže? Jaké?: nic nového\nAlergie nebo nesnášenlivost léků: nevím o žádné\nLéky, doplňky stravy nebo bylinky, které užíváte navíc: nic\nCo je pro vás v léčbě nejdůležitější?: Nejdůležitější je pro mě co nejdelší život, i za cenu náročnější léčby\nCo si přejete, aby lékaři při rozhodování věděli? (např. postoj k operaci, cestování, práce, rodina): Chci se vyléčit a vrátit se do práce. Operace se nebojím.\nPodpora v domácnosti: Mám dostatečnou podporu blízkých"
+  },
+  "P03-prom02": {
+    "evidence_id": "P03-prom02",
+    "kind": "resource",
+    "resource_type": "QuestionnaireResponse",
+    "resource_id": "P03-prom02",
+    "patient_id": "P03",
+    "title": "Dotazník pacienta (PROMs)",
+    "date": "2026-10-04",
+    "department": null,
+    "author": null,
+    "text": "Bolest za poslední týden (0–10): 1\nÚnava za poslední týden (0–10): 4\nNevolnost nebo zvracení (0–10): 1\nDušnost (0–10): 1\nNechutenství (0–10): 3\nBrnění, mravenčení nebo necitlivost rukou či nohou (0–10): 6\nPrůjem (0–10): 1\nPsychická zátěž – úzkost, smutek, starosti (0–10): 4\nPotíže se spánkem (0–10): 3\nJak zvládáte běžný den?: Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano\nKolik zvládnete ujít?: Vyjdu jedno patro bez zastavení\nVaše současná hmotnost (kg): 78\nZměna hmotnosti za poslední 3 měsíce (kg, minus = úbytek): -5\nObjevily se od minulé návštěvy nové obtíže? Jaké?: Brnění v prstech rukou nepřestává ani mezi cykly, špatně zapínám knoflíky a padají mi věci z ruky. V zimě je to horší.\nAlergie nebo nesnášenlivost léků: nevím o žádné\nLéky, doplňky stravy nebo bylinky, které užíváte navíc: hořčík, vitamin B (doporučila známá)\nCo je pro vás v léčbě nejdůležitější?: Obojí je pro mě stejně důležité\nCo si přejete, aby lékaři při rozhodování věděli? (např. postoj k operaci, cestování, práce, rodina): Operaci bych chtěl, pokud dává smysl. Potřebuji ale vědět, jak dlouho budu mimo práci – jsem řidič a s brněním rukou teď řídit nemůžu.\nPodpora v domácnosti: Mám dostatečnou podporu blízkých"
+  },
+  "P03-tnm01": {
+    "evidence_id": "P03-tnm01",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-tnm01",
+    "patient_id": "P03",
+    "title": "TNM (klinické)",
+    "date": "2026-05-20",
+    "department": "Staging",
+    "author": null,
+    "value": {
+      "text": "cT3 cN1 cM1a, stadium IVA (TNM 8. vyd.)",
+      "value": null,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-img01",
+        "kind": "resource",
+        "resource_type": "DiagnosticReport",
+        "resource_id": "P03-img01",
+        "patient_id": "P03",
+        "title": "CT hrudníku, břicha a pánve s k. l. – staging",
+        "date": "2026-04-28",
+        "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+        "author": {
+          "id": "LEK-P03-04",
+          "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+          "specialty": "radiolog"
+        },
+        "text": "Technika: CT hrudníku, břicha a pánve v portální fázi po i.v. aplikaci k. l.\n\nHrudník: Plicní parenchym bez ložiskových změn. Mediastinální a hilové uzliny nezvětšené. Bez fluidothoraxu.\n\nBřicho a pánev: V sigmatu cirkulární ztluštění stěny v délce cca 5 cm s mírnou infiltrací perikolického tuku, bez známek perforace. V mezosigmatu 3 uzliny do 9 mm v krátké ose, suspektní.\nJátra normální velikosti, v pravém laloku 4 hypodenzní ložiska charakteru metastáz:\n- S7: 48 mm (cílová léze 1)\n- S8: 35 mm (cílová léze 2), naléhá na pravou jaterní žílu\n- S6: 12 mm\n- S5: 10 mm\nLevý jaterní lalok bez ložiskových změn. Portální žíla průchodná. Žlučník, slinivka, slezina, nadledviny a ledviny bez patologie. Bez ascitu.\n\nZávěr: Tumor sigmatu (cT3 N1), 4 jaterní metastázy v pravém laloku (S5–S8), levý lalok bez ložisek. Hrudník bez metastáz.\nSoučet cílových lézí (RECIST 1.1): 83 mm."
+      }
+    ]
+  },
+  "P03-tx-bev-08": {
+    "evidence_id": "P03-tx-bev-08",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-08",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-09-07",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-01": {
+    "evidence_id": "P03-tx-oxa-01",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-01",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-06-01",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-08": {
+    "evidence_id": "P03-tx-oxa-08",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-08",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-09-07",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-vaha01": {
+    "evidence_id": "P03-vaha01",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-vaha01",
+    "patient_id": "P03",
+    "title": "Hmotnost",
+    "date": "2026-05-18",
+    "department": null,
+    "author": null,
+    "value": {
+      "text": "84 kg",
+      "value": 84,
+      "unit": "kg",
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc02",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc02",
+        "patient_id": "P03",
+        "title": "Vstupní onkologické vyšetření",
+        "date": "2026-05-18",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby."
+      }
+    ]
+  },
+  "P03-vaha04": {
+    "evidence_id": "P03-vaha04",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-vaha04",
+    "patient_id": "P03",
+    "title": "Hmotnost",
+    "date": "2026-10-05",
+    "department": null,
+    "author": null,
+    "value": {
+      "text": "78 kg",
+      "value": 78,
+      "unit": "kg",
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc07",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc07",
+        "patient_id": "P03",
+        "title": "Kontrola po restagingu, nominace na re-MDT",
+        "date": "2026-10-05",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti."
+      }
+    ]
+  },
+  "P03-zad01": {
+    "evidence_id": "P03-zad01",
+    "kind": "resource",
+    "resource_type": "ServiceRequest",
+    "resource_id": "P03-zad01",
+    "patient_id": "P03",
+    "title": "Nominace na MDT",
+    "date": "2026-10-06",
+    "department": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Otázka pro MDT: Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?\n\nHistologie a grade: Adenokarcinom sigmatu G2 (biopsie 24. 4. 2026)\n\nPředchozí onkologická léčba:\n- [Chemoterapie] FOLFOX + bevacizumab, 8 cyklů (8. cyklus s redukcí oxaliplatiny na 75 %) (2026-06-01 – 2026-09-07)\n\nRelevantní komorbidity a současný stav: IM 2019, st. p. PCI RIA, užívá kyselinu acetylsalicylovou; hypertenze (zhoršená při bevacizumabu); neuropatie G1 po oxaliplatině. ECOG 0.\n\nPreference a omezení pacienta: Přeje si operaci, pokud je možná; obává se dlouhé pracovní neschopnosti (profesionální řidič)."
+  },
+  "P03-zad01#1": {
+    "evidence_id": "P03-zad01#1",
+    "kind": "paragraph",
+    "resource_type": "ServiceRequest",
+    "resource_id": "P03-zad01",
+    "patient_id": "P03",
+    "title": "Nominace na MDT",
+    "date": "2026-10-06",
+    "department": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Otázka pro MDT: Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?\n\nHistologie a grade: Adenokarcinom sigmatu G2 (biopsie 24. 4. 2026)\n\nPředchozí onkologická léčba:\n- [Chemoterapie] FOLFOX + bevacizumab, 8 cyklů (8. cyklus s redukcí oxaliplatiny na 75 %) (2026-06-01 – 2026-09-07)\n\nRelevantní komorbidity a současný stav: IM 2019, st. p. PCI RIA, užívá kyselinu acetylsalicylovou; hypertenze (zhoršená při bevacizumabu); neuropatie G1 po oxaliplatině. ECOG 0.\n\nPreference a omezení pacienta: Přeje si operaci, pokud je možná; obává se dlouhé pracovní neschopnosti (profesionální řidič).",
+    "highlight": {
+      "paragraph": 1,
+      "start": 0,
+      "end": 217
+    }
+  },
+  "P03-zad01#2": {
+    "evidence_id": "P03-zad01#2",
+    "kind": "paragraph",
+    "resource_type": "ServiceRequest",
+    "resource_id": "P03-zad01",
+    "patient_id": "P03",
+    "title": "Nominace na MDT",
+    "date": "2026-10-06",
+    "department": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Otázka pro MDT: Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?\n\nHistologie a grade: Adenokarcinom sigmatu G2 (biopsie 24. 4. 2026)\n\nPředchozí onkologická léčba:\n- [Chemoterapie] FOLFOX + bevacizumab, 8 cyklů (8. cyklus s redukcí oxaliplatiny na 75 %) (2026-06-01 – 2026-09-07)\n\nRelevantní komorbidity a současný stav: IM 2019, st. p. PCI RIA, užívá kyselinu acetylsalicylovou; hypertenze (zhoršená při bevacizumabu); neuropatie G1 po oxaliplatině. ECOG 0.\n\nPreference a omezení pacienta: Přeje si operaci, pokud je možná; obává se dlouhé pracovní neschopnosti (profesionální řidič).",
+    "highlight": {
+      "paragraph": 2,
+      "start": 219,
+      "end": 285
+    }
+  },
+  "P03-zad01#3": {
+    "evidence_id": "P03-zad01#3",
+    "kind": "paragraph",
+    "resource_type": "ServiceRequest",
+    "resource_id": "P03-zad01",
+    "patient_id": "P03",
+    "title": "Nominace na MDT",
+    "date": "2026-10-06",
+    "department": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Otázka pro MDT: Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?\n\nHistologie a grade: Adenokarcinom sigmatu G2 (biopsie 24. 4. 2026)\n\nPředchozí onkologická léčba:\n- [Chemoterapie] FOLFOX + bevacizumab, 8 cyklů (8. cyklus s redukcí oxaliplatiny na 75 %) (2026-06-01 – 2026-09-07)\n\nRelevantní komorbidity a současný stav: IM 2019, st. p. PCI RIA, užívá kyselinu acetylsalicylovou; hypertenze (zhoršená při bevacizumabu); neuropatie G1 po oxaliplatině. ECOG 0.\n\nPreference a omezení pacienta: Přeje si operaci, pokud je možná; obává se dlouhé pracovní neschopnosti (profesionální řidič).",
+    "highlight": {
+      "paragraph": 3,
+      "start": 287,
+      "end": 431
+    }
+  },
+  "P03-zad01#5": {
+    "evidence_id": "P03-zad01#5",
+    "kind": "paragraph",
+    "resource_type": "ServiceRequest",
+    "resource_id": "P03-zad01",
+    "patient_id": "P03",
+    "title": "Nominace na MDT",
+    "date": "2026-10-06",
+    "department": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Otázka pro MDT: Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?\n\nHistologie a grade: Adenokarcinom sigmatu G2 (biopsie 24. 4. 2026)\n\nPředchozí onkologická léčba:\n- [Chemoterapie] FOLFOX + bevacizumab, 8 cyklů (8. cyklus s redukcí oxaliplatiny na 75 %) (2026-06-01 – 2026-09-07)\n\nRelevantní komorbidity a současný stav: IM 2019, st. p. PCI RIA, užívá kyselinu acetylsalicylovou; hypertenze (zhoršená při bevacizumabu); neuropatie G1 po oxaliplatině. ECOG 0.\n\nPreference a omezení pacienta: Přeje si operaci, pokud je možná; obává se dlouhé pracovní neschopnosti (profesionální řidič).",
+    "highlight": {
+      "paragraph": 5,
+      "start": 612,
+      "end": 737
+    }
+  },
+  "P03-zad01-task": {
+    "evidence_id": "P03-zad01-task",
+    "kind": "resource",
+    "resource_type": "Task",
+    "resource_id": "P03-zad01-task",
+    "patient_id": "P03",
+    "title": "Stav žádanky a termín MDT",
+    "date": "2026-10-06",
+    "department": null,
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    }
+  },
+  "RKT-03/V1": {
+    "evidence_id": "RKT-03/V1",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium vyřazení V1",
+    "text": "Extrahepatální onemocnění",
+    "study_id": "RKT-03",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-03/V2": {
+    "evidence_id": "RKT-03/V2",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium vyřazení V2",
+    "text": "MSI-H / dMMR",
+    "study_id": "RKT-03",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-03/V3": {
+    "evidence_id": "RKT-03/V3",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium vyřazení V3",
+    "text": "Periferní neuropatie ≥ G2",
+    "study_id": "RKT-03",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-03/V4": {
+    "evidence_id": "RKT-03/V4",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium vyřazení V4",
+    "text": "Předpokládaný budoucí jaterní remnant (FLR) < 30 %",
+    "study_id": "RKT-03",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-03/Z1": {
+    "evidence_id": "RKT-03/Z1",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium zařazení Z1",
+    "text": "Metastázy kolorektálního karcinomu omezené na játra",
+    "study_id": "RKT-03",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-03/Z2": {
+    "evidence_id": "RKT-03/Z2",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium zařazení Z2",
+    "text": "Odpověď nebo stabilizace po ≥ 6 cyklech indukční chemoterapie s oxaliplatinou nebo irinotekanem",
+    "study_id": "RKT-03",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-03/Z3": {
+    "evidence_id": "RKT-03/Z3",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium zařazení Z3",
+    "text": "ECOG 0–1",
+    "study_id": "RKT-03",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-03/Z4": {
+    "evidence_id": "RKT-03/Z4",
+    "kind": "trial_criterion",
+    "title": "RKT-03 – kritérium zařazení Z4",
+    "text": "Resekabilita potvrzená MDT s hepatobiliárním chirurgem",
+    "study_id": "RKT-03",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-05/V1": {
+    "evidence_id": "RKT-05/V1",
+    "kind": "trial_criterion",
+    "title": "RKT-05 – kritérium vyřazení V1",
+    "text": "Pouze symptomatická léčba (BSC)",
+    "study_id": "RKT-05",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-05/V2": {
+    "evidence_id": "RKT-05/V2",
+    "kind": "trial_criterion",
+    "title": "RKT-05 – kritérium vyřazení V2",
+    "text": "Enterální nebo parenterální výživa",
+    "study_id": "RKT-05",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-05/V3": {
+    "evidence_id": "RKT-05/V3",
+    "kind": "trial_criterion",
+    "title": "RKT-05 – kritérium vyřazení V3",
+    "text": "Neschopnost samostatné chůze",
+    "study_id": "RKT-05",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-05/Z1": {
+    "evidence_id": "RKT-05/Z1",
+    "kind": "trial_criterion",
+    "title": "RKT-05 – kritérium zařazení Z1",
+    "text": "Solidní nádor, plánovaná nebo probíhající protinádorová léčba",
+    "study_id": "RKT-05",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-05/Z2": {
+    "evidence_id": "RKT-05/Z2",
+    "kind": "trial_criterion",
+    "title": "RKT-05 – kritérium zařazení Z2",
+    "text": "Nechtěný úbytek hmotnosti ≥ 5 % za posledních 6 měsíců",
+    "study_id": "RKT-05",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-05/Z3": {
+    "evidence_id": "RKT-05/Z3",
+    "kind": "trial_criterion",
+    "title": "RKT-05 – kritérium zařazení Z3",
+    "text": "ECOG 0–2",
+    "study_id": "RKT-05",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-06/V1": {
+    "evidence_id": "RKT-06/V1",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium vyřazení V1",
+    "text": "Předchozí léčba PARP inhibitorem",
+    "study_id": "RKT-06",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-06/V2": {
+    "evidence_id": "RKT-06/V2",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium vyřazení V2",
+    "text": "Myelodysplastický syndrom nebo akutní myeloidní leukémie v anamnéze",
+    "study_id": "RKT-06",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-06/V3": {
+    "evidence_id": "RKT-06/V3",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium vyřazení V3",
+    "text": "Neléčené mozkové metastázy",
+    "study_id": "RKT-06",
+    "criterion_kind": "exclusion"
+  },
+  "RKT-06/Z1": {
+    "evidence_id": "RKT-06/Z1",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium zařazení Z1",
+    "text": "Patogenní alterace BRCA1, BRCA2 nebo jiného HRR genu prokázaná NGS v nádoru (somatická nebo zárodečná)",
+    "study_id": "RKT-06",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-06/Z2": {
+    "evidence_id": "RKT-06/Z2",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium zařazení Z2",
+    "text": "Alespoň 1 předchozí linie systémové léčby v metastatickém stadiu",
+    "study_id": "RKT-06",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-06/Z3": {
+    "evidence_id": "RKT-06/Z3",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium zařazení Z3",
+    "text": "ECOG 0–1",
+    "study_id": "RKT-06",
+    "criterion_kind": "inclusion"
+  },
+  "RKT-06/Z4": {
+    "evidence_id": "RKT-06/Z4",
+    "kind": "trial_criterion",
+    "title": "RKT-06 – kritérium zařazení Z4",
+    "text": "Hemoglobin ≥ 90 g/l, neutrofily ≥ 1,5 × 10^9/l, trombocyty ≥ 100 × 10^9/l při zařazení",
+    "study_id": "RKT-06",
+    "criterion_kind": "inclusion"
+  }
+}

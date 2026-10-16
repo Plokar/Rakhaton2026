@@ -5,7 +5,7 @@
  * src/fixtures/ je jejich kopie, protože frontend kontejner ani Vercel nevidí složky mimo
  * WEB_Template/frontend. Shodu kopie hlídá backend test test_frontend_copy_is_identical.
  */
-import type { Brief, Decision, IntakePrefill } from '@/types/mdt';
+import type { Brief, Decision, EvidenceSource, IntakePrefill } from '@/types/mdt';
 import briefJson from '@/fixtures/brief_P03.json';
 import decisionJson from '@/fixtures/decision_P03.json';
 import intakeJson from '@/fixtures/intake_P03.json';
@@ -14,3 +14,9 @@ import intakeJson from '@/fixtures/intake_P03.json';
 export const briefP03 = briefJson as Brief;
 export const decisionP03 = decisionJson as Decision;
 export const intakeP03 = intakeJson as IntakePrefill;
+
+/** Zdroje všech citací z fixtures (odpovědi resolveru T-104); načítá se až při otevření zdroje. */
+export async function evidenceP03(): Promise<Record<string, EvidenceSource>> {
+  const mod = await import('@/fixtures/evidence_P03.json');
+  return mod.default as Record<string, EvidenceSource>;
+}

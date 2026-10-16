@@ -176,7 +176,15 @@ class TestFixtures:
         bad = [e for e in evidence_ids(load_fixture(name)) if parse_evidence_id(e) is None]
         assert not bad
 
-    @pytest.mark.parametrize("name", FIXTURES)
+    def test_evidence_fixture(self):
+        """`evidence_P03.json` (zdroje pro UI bez backendu) pokrývá všechny citace a odpovídá EvidenceSource."""
+        sources = load_fixture("evidence_P03.json")
+        assert sorted(sources) == fixture_citations()
+        for evidence_id, source in sources.items():
+            assert source["evidence_id"] == evidence_id
+            assert_contract(schemas.EvidenceSource, source)
+
+    @pytest.mark.parametrize("name", [*FIXTURES, "evidence_P03.json"])
     def test_frontend_copy_is_identical(self, name):
         if not FRONTEND_FIXTURES_DIR:
             pytest.skip("chybí frontend")

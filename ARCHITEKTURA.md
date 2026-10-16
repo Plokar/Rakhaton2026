@@ -1079,6 +1079,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
 | `/dashboard/cases/[caseId]` | **podklad** v úzkém sloupci: hlavička (D-018) + A / red flags / anamnéza / B (sekce odborností s posouzením) / B2 (semafor, studie, otázky) / otázka pro MDT |
 | `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
+| `…/cases/demo`, `/brief/demo` | podklad P03 z fixtures (`data/fixtures/brief_P03.json` + zdroje citací `evidence_P03.json`), funguje bez backendu; obě stránky skládá `CaseBriefScreen` |
 | `/dashboard/cases/[caseId]/record` | **zápis závěru**: editor (sekce jako záznam MDT), úkoly, potvrzení, export |
 | `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |
 | `/dashboard/tasks` | úkoly po zasedání |

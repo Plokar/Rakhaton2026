@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ArrowUpRight, CalendarDays, ListChecks } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, FileText, ListChecks } from 'lucide-react';
 
 // Přehled MDT (ARCH §7.1): boardy = zasedání, případy a jejich stav, úkoly po termínu.
 // Data doplní T-109 (boardy a agenda) a T-511 (úkoly po zasedání).
@@ -24,6 +24,20 @@ export default function DashboardPage() {
             {user?.first_name ? `${user.first_name}, ` : ''}zasedání komise, zařazení pacienti a úkoly po termínu.
           </p>
         </div>
+
+        <Link
+          href="/dashboard/cases/demo"
+          className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card px-4 py-3 text-sm transition hover:border-primary hover:bg-muted/40"
+        >
+          <FileText className="h-5 w-5 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1">
+            <span className="font-semibold text-foreground">Ukázkový podklad P03</span>
+            <span className="block text-xs text-muted-foreground">
+              Kolorektální karcinom s jaterními metastázami, data z fixtures (funguje i bez backendu)
+            </span>
+          </span>
+          <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>

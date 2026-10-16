@@ -8,7 +8,7 @@ import type { NextRequest } from 'next/server';
  * Pokud uživatel nemá JWT cookie → přesměrovat na /login
  */
 
-const PROTECTED_PATHS = ['/dashboard'];
+const PROTECTED_PATHS = ['/dashboard', '/brief'];   // /brief/[caseId] = podklad v úzkém okně (ARCH §7.1)
 const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 

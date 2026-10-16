@@ -239,7 +239,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | T-305 | BON-3 **AI zapisovatel:** audio / text → Gemini přepis (mluvčí, `MM:SS`, JSON) → `DocumentReference/Pxx-mdtNN-prepis` → draft `Decision` s citacemi segmentů — ARCH §5.6 | AI + UI | T-208, T-012, T-314 | z nahrávky P03 vznikne editovatelný draft | `@?` | ⬜ |
 | T-306 | BON-4 **Shrnutí pro pacienta** (laický jazyk, zohlední PROMs `priorita` a `postoj`, po potvrzení) | AI + UI | T-209 | text se zobrazí a je v exportu | `@?` | ⬜ |
 | T-307 | BON-5 **mCODE:** `meta.profile` + kódy pro biomarkery a TNM v exportu (vstup je jen text); (stretch) import mCODE IG do IRIS + `$validate` | DATA | T-210 | export odkazuje profily; validace (pokud se stihne) projde | `@?` | ⬜ |
-| T-308 | **MCP server** nad IRIS (FastMCP: `get_patient_context`, `search_evidence`, `search_guidelines`, `fhir_query`), read-only — ARCH §4.7 | DATA | T-102 | dotaz z MCP klienta vrátí data | `@?` | ⬜ |
+| T-308 | **MCP server** nad IRIS (FastMCP: `get_patient_context`, `search_evidence`, `search_guidelines`, `fhir_query`), read-only — ARCH §4.7 | DATA | T-102 | dotaz z MCP klienta vrátí data | `@Maty+claude` | 🟨 |
 | T-309 | FHIR SQL Builder projekce (`Observation` labs, hmotnost, ECOG) a použití pro `TrendChart` / pravidla | DATA | T-101 | SQL dotaz nad projekcí vrací řady | `@?` | ⬜ |
 | T-310 | UI polish: prezentační režim, loading a empty stavy, projektor (kontrast, velikost), dark mode | UI | T-205 | projde kontrolou na projektoru / velkém monitoru | `@?` | ⬜ |
 | T-311 | **Demo fallback:** předgenerovaný a uložený podklad P03 (cache), přepínač „offline demo“ | INFRA + API | T-212 | demo jede i bez Gemini | `@?` | ⬜ |

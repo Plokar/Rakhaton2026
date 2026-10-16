@@ -837,7 +837,7 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
 - **Mock** je deterministický a bez sítě:
   - se schématem vrátí minimální validní instanci, nebo odpověď zaregistrovanou v `MockAIProvider(responses={"NázevSchématu": data})`;
   - `embed` vrací hashované bag-of-words vektory, takže podobné texty mají vyšší kosinovou podobnost (použitelné v testech groundingu);
-  - živý test: `AI_LIVE_TESTS=1 pytest -m integration services/tests/test_ai_service.py`, jen s placeným tierem (Q9).
+  - živý test: `AI_LIVE_TESTS=1 pytest -m integration services/tests/test_ai_service.py`, s klíčem Gemini (free tier jen nad syntetickým datasetem, D-021).
 
 | Účel | Model (výchozí) | Pozn. |
 |---|---|---|
@@ -851,7 +851,7 @@ Model ID se mohou měnit. Před použitím ověřit na [ai.google.dev/gemini-api
 
 **Podmínky Gemini API, které nás přímo ovlivňují:**
 
-- **V EHP (tedy i v ČR) smí aplikace používat jen placené služby.** Bezplatný tier smí data používat ke zlepšování produktů a k lidské revizi a výslovně se do něj nemají posílat osobní údaje. Proto je nutné **zapnout billing v AI Studio** (Q9).
+- **V EHP (tedy i v ČR) smí aplikace používat jen placené služby.** Bezplatný tier smí data používat ke zlepšování produktů a k lidské revizi a výslovně se do něj nemají posílat osobní údaje. Proto je nutné **zapnout billing v AI Studio** (Q9). **Výjimka týmu (D-021):** pro vývoj a demo nad syntetickým, veřejným datasetem hackathonu (žádné osobní údaje) smí běžet i free tier. Skutečná data pacientů nikdy, ta jen placený tier / Vertex AI EU.
 - V placeném tieru Google prompty k trénování nepoužívá, loguje je ale omezenou dobu kvůli zneužití. Data mohou být dočasně uložena v jakékoli zemi.
 - Podmínky **zakazují použití v klinické praxi a pro lékařské rady** a tam, kde je nutné schválení jako zdravotnický prostředek. Prototyp na fiktivních datech je v pořádku. **Cesta do produkce vede přes Vertex AI v EU regionu** (data residency, DPA) + certifikaci podle MDR. Tohle říct v pitchi.
 
@@ -1535,7 +1535,7 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 | `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4` |
 | `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1`; bez proměnné ho `ingest.dataset_dir()` najde v checkoutu repa (CI, testy) |
 | `AI_PROVIDER` | backend | `gemini` (prod) / `mock` (testy, CI) |
-| `GEMINI_API_KEY` | backend | Google AI Studio, **placený tier**; nikdy do gitu ani do frontendu |
+| `GEMINI_API_KEY` | backend | Google AI Studio (free tier jen nad syntetickým datasetem, D-021; jinak placený tier); nikdy do gitu ani do frontendu |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_MODEL_STRONG` | backend | `gemini-4-argon` (volitelně, pro porovnání a těžké sekce) |
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |
@@ -1613,7 +1613,7 @@ Rakhaton2026/
 | Q6 | Klinické prahy red flags: připomínky onkologů | ⬜ zatím nemáme; prahy bereme z guidelines OBC/KRC/PRS/PLI datasetu ([§5.4](#54-red-flags)) |
 | Q7 | Podpora `Patient/$everything` a import mCODE IG ve verzi IRIS | ✅ `$everything` funguje (bez `_count`), `$validate` funguje, mCODE IG není nahraný (import = T-307), viz §4.6 |
 | Q8 | Kdy a v jakém formátu bude oficiální ground truth? | ⬜ Ľ. Piljan |
-| Q9 | Kdo zapne billing (placený tier) v Google AI Studio? Bez něj nesmíme posílat data | ⬜ tým |
+| Q9 | Kdo zapne billing (placený tier) v Google AI Studio? Bez něj nesmíme posílat data | ✅ D-021: free tier smí nad syntetickým datasetem; billing až pro skutečná data |
 | Q10 | Sprint 0 (M0, Pá 18:00) nestihnutý: potvrdit nové časy sprintů | ✅ sprinty startují Pá 19:00, M0 co nejdřív, M1–M4 beze změny |
 | Q11 | Owneři lanes (PROGRESS §2) | ✅ Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH) |
 | Q12 | Windows + `core.autocrlf=true` rozbije `entrypoint.sh` (CRLF) → `.gitattributes` v T-001 | ✅ `.gitattributes` (T-001) |

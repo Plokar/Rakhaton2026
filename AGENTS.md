@@ -40,7 +40,7 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_da
 - **Secrets:** nikdy necommituj `.env`, API klíče ani hesla. Ve frontendu nesmí být žádné LLM klíče.
 - **LLM:** Google AI Studio (Gemini API).
   - V testech a CI jen `AI_PROVIDER=mock`.
-  - Reálná volání jen s **placeným tierem** (podmínky Gemini pro EHP).
+  - Reálná volání: **free tier jen nad syntetickým datasetem hackathonu** (D-021, Q9); skutečná pacientská data nikdy, ta jen placený tier / Vertex AI EU.
   - Model ID drž v env (`AI_MODEL`…), nehardcoduj je. Výchozí `AI_MODEL=gemini-3.8-flash` (nejlepší poměr ceny a výkonu), `gemini-4-argon` jen pro srovnání v evalu.
 - **Kontrakty** (API §6.3, JSON §8): změna jde nejdřív do ARCHITEKTURA.md, ve stejném PR jako kód, a do Deníku v PROGRESS.md jako `⚠️ KONTRAKT`.
 - **Dataset → FHIR:**

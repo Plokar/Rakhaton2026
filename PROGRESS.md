@@ -60,7 +60,7 @@
 - **Nikdy** necommituj `.env`, API klíče ani hesla. Nikdy nedělej `push --force` do `master`.
 - Neupravuj soubory jiné lane bez domluvy. Neformátuj hromadně cizí soubory. **Dataset neměň**, opravy patří do sanitizace v ingestu.
 - V tabulce úkolů **1 úkol = 1 řádek**. Deník je append-only (nové řádky na konec). Konflikty v tomto souboru řeš tak, že **ponecháš obě strany**.
-- Testy a vývoj pracují s `AI_PROVIDER=mock`. Gemini se volá jen ručně a **jen s placeným tierem** (Q9).
+- Testy a vývoj pracují s `AI_PROVIDER=mock`. Gemini se volá jen ručně; free tier smí **jen nad syntetickým datasetem** (D-021, Q9), skutečná data nikdy.
 - Když úkol nestihneš (např. musíš odejít), vrať ho na ⬜ a do Deníku napiš, v jakém je stavu a na jaké větvi.
 
 ### Sprinty a paralelní práce (víc lidí, strojů a agentů)
@@ -89,7 +89,7 @@
   2. na Windows **před prvním checkoutem** `git config --global core.autocrlf input`. Dokud T-001 nepřidá `.gitattributes`, dostane jinak `entrypoint.sh` CRLF a backend nenaběhne (Q12);
   3. `cd WEB_Template; .\dev.ps1 up` (vytvoří `.env` z `.env.dev.example`).
 
-  Node lokálně není nutný, frontend běží v Dockeru. Klíč Gemini mají jen lidé s placeným tierem (Q9), ostatní pracují s `AI_PROVIDER=mock`.
+  Node lokálně není nutný, frontend běží v Dockeru. Klíč Gemini (i free tier, D-021) patří jen do lokálního `.env`; bez klíče `AI_PROVIDER=mock`.
 - **Merge:**
   - úkol jen v mé lane → merge po lint a testech;
   - úkol přes víc lanes nebo se změnou kontraktu → PR a review od ownera dotčené lane.
@@ -275,7 +275,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | Q6 | Klinické prahy red flags: připomínky onkologů | T-202 | `@?` → mentoři | ⬜ zatím nemáme; prahy z guidelines OBC/KRC/PRS/PLI |
 | Q7 | `Patient/$everything` a import mCODE IG ve verzi IRIS | T-006, T-307 | `@?` → O. Hoferek (T-313) | ✅ `$everything` funguje (bez `_count`), `$validate` funguje, mCODE IG nenahraný (T-307); tabulka v ARCH §4.6 |
 | Q8 | Kdy a v jakém formátu bude oficiální ground truth? | T-301 | `@?` → Ľ. Piljan | ⬜ |
-| Q9 | **Zapnout billing (placený tier) v Google AI Studio.** Bez něj nesmíme posílat data (podmínky Gemini API pro EHP). Po zapnutí ověřit živě: `AI_LIVE_TESTS=1 pytest -m integration services/tests/test_ai_service.py` (T-012) | T-012 (živý test), T-102 | `@?` | ⬜ |
+| Q9 | **Zapnout billing (placený tier) v Google AI Studio.** Bez něj nesmíme posílat data (podmínky Gemini API pro EHP). Po zapnutí ověřit živě: `AI_LIVE_TESTS=1 pytest -m integration services/tests/test_ai_service.py` (T-012) | T-012 (živý test), T-102 | `@?` | ✅ D-021: free tier nad syntetickým datasetem povolen (klíč v lokálním `.env`); živý test `test_gemini_live_smoke` prošel (generate + embedding 1536). Billing až pro skutečná data |
 | Q10 | Sprint 0 (M0, Pá 18:00) nestihnutý: potvrdit nové časy sprintů | M1–M4 | tým | ✅ sprinty startují Pá 19:00, M0 co nejdřív, M1–M4 beze změny |
 | Q11 | Owneři lanes nejsou přiřazení (§2) | všechny | tým | ✅ Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH) |
 | Q12 | Na Windows s `core.autocrlf=true` má `entrypoint.sh` v pracovní kopii CRLF a backend kontejner nenaběhne. Řeší `.gitattributes` (T-001), do té doby `git config core.autocrlf input` | T-002, `dev.ps1 up` | INFRA | ✅ `.gitattributes` (T-001); stará pracovní kopie: smazat `*.sh` a `git checkout -- .` |
@@ -367,6 +367,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 - Pá 23:50 · @Seb+claude · T-304 · RECIST: LLM může vrátit `new_lesions` (citace zprávy po baseline) → odpověď PD bez ohledu na SLD (`evaluate_sld(new_lesions=)`), P02 s Gemini vyjde PD jako v dev GT (mock dál PR, deterministicky z textu nejde: P03 „Nově v S3“ je jen lepší zobrazení). RECIST extrakce běží souběžně s pohledem radiologa (NFR-1).
 - So 00:05 · @Seb+claude · T-207 · Commit @Jarda `50e77d9` (větev `t-207-config-ai`, ⛔ jen kvůli chybějícímu pytestu) přenesen na master: `services/ai/prompt_config.py` dává do promptů souhrnu, rolí a RF-LLM jazyk a detail (i po sekcích), výstup LLM se krátí podle detailu. Data z FHIR (fallback, chybějící údaje) se nekrátí. 410 testů ✅ v kontejneru. T-207 ✅.
 - So 00:20 · @Seb+claude · T-204 · Commit @Jarda `d04cf69` (větev `t-204-b2`, ⛔ jen kvůli testovacímu prostředí) přenesen na master: `services/ai/decision_support.py` (možnosti se semaforem, chybějící předpoklady, otázky k diskusi) + `services/rules/trials.py` (screening RKT po kritériích, RKT-06 protokol). Úpravy: B2 běží v poolu souběžně s ostatními LLM voláními (NFR-1), do promptu jde jazyk a detail (T-207), **co LLM nevybere, doplní katalog** (D-015: vždy všechny možnosti, i červené; test), text fallbacku česky. P03: RKT-03 Z1 a V2 `unknown`. T-204 ✅.
+- So 00:30 · @Seb+claude · Q9 / T-012 · Rozhodnutí D-021 (@Seb): Gemini free tier smí nad syntetickým datasetem, skutečná data jen placený tier / Vertex AI EU. Klíč jen v lokálním `WEB_Template/.env` (gitignored), výchozí `AI_PROVIDER` zůstává `mock`. Živý test `AI_LIVE_TESTS=1 pytest -m integration services/tests/test_ai_service.py` ✅ (opraven: autouse fixture mazala klíč, test nemohl projít nikdy). AGENTS.md, ARCH §5.7, §9, §11 upravené.
 
 ---
 
@@ -410,3 +411,4 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | D-018 | Hlavička `Pxx · pohlaví · věk` (bez jména a RČ), diagnóza + TNM, otázka, ECOG lékař velký + pacient, záměr C/P | Pá 18:54 | tým (požadavky lékaře) |
 | D-019 | Odkliknuté varování a přeskočený údaj se z podkladu neztratí | Pá 18:54 | tým |
 | D-020 | Práce ve sprintech = milníky M0–M4, pravidla paralelní práce v §1 | Pá 18:54 | tým |
+| D-021 | **Gemini free tier povolen jen nad syntetickým datasetem hackathonu** (žádné osobní údaje). Podmínky Gemini API v EHP free tier jinak nepovolují: skutečná data pacientů jen placený tier / Vertex AI EU. Testy a CI dál `AI_PROVIDER=mock` | So 00:30 | @Seb |

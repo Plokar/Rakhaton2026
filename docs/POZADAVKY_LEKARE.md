@@ -671,7 +671,7 @@ Převzato ze [stop-hallucination-guard](https://github.com/wreggyy/stop-hallucin
   - `gemini-3.5-flash-lite` je pro levné pomocné úlohy (klasifikace, normalizace textu), ARCH §5.7.
 - **Pravidla:** model drž jen v env, testy běží na `AI_PROVIDER=mock`.
 - **Embeddingy:** `gemini-embedding-001` v ceníku chybí, uvádí se `gemini-embedding-2`. Před T-102 ověřit, který použít (ARCH D-007).
-- **Placený tier** se zapne, až bude tento souhrn hotový (rozhodnutí týmu). Do té doby žádná data do Gemini (Q9).
+- **Placený tier** se zapne, až bude tento souhrn hotový (rozhodnutí týmu). Do té doby žádná data do Gemini (Q9). Změněno D-021: nad syntetickým datasetem smí free tier.
 - **Rychlost:** cíl NFR-1 (< 20 s) ověřit v evalu T-301.
 - **Pitch (ochrana údajů):** podle ARCH §5.7 může Google AI Studio data dočasně uložit v jakékoli zemi. V pitchi říkat: prototyp běží na fiktivních datech, produkční nasazení přes Vertex AI v EU (data residency, DPA).
 

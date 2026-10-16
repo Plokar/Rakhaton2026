@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
+from services.ai.decision_support import build_decision_support
 from services.ai.grounding import verify_claims
 from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.red_flags_llm import detect_llm_red_flags
@@ -102,15 +103,19 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
 
     enabled = {s["id"] for s in config["sections"] if s.get("enabled", True)}
     roles = list(dict.fromkeys(config.get("roles_present") or [])) if "role_views" in enabled else []
-    compatibility = evaluate_compatibility(resources, skipped_fields=skipped_fields) if roles else []
-    with ThreadPoolExecutor(max_workers=2 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
+    needs_decision_support = bool(enabled & {"decision_support", "trials", "questions"})
+    compatibility = evaluate_compatibility(resources, skipped_fields=skipped_fields) if roles or needs_decision_support else []
+    with ThreadPoolExecutor(max_workers=3 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
         summary_future = pool.submit(_summary_items, context, provider, log_call, config) if "summary" in enabled else None
         llm_flags_future = pool.submit(_llm_flags, context, provider, log_call, config) if "red_flags" in enabled else None
         role_futures = [pool.submit(role_section, role, context, data, compatibility, provider, log_call, config)
                         for role in roles]
+        ds_future = (pool.submit(build_decision_support, context, resources, compatibility, provider, log_call, config)
+                     if needs_decision_support else None)
         summary_items = summary_future.result() if summary_future else []
         llm_flags = llm_flags_future.result() if llm_flags_future else []
         role_sections = [future.result() for future in role_futures]
+        decision_support = ds_future.result() if ds_future else None
     progress(75)
 
     sections = []
@@ -134,6 +139,9 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     header = _header(data, context, intent_letter)
     header["alerts"] = [_public(c) for c in verify_claims(header["alerts"], context)]
     claims = [c for s in sections for c in s["items"]] + header["alerts"]
+    if decision_support:
+        claims += [c for option in decision_support["treatment_options"] for c in option["rationale"]]
+        claims += [c for option in decision_support["treatment_options"] for c in option["prerequisites_missing"]]
     red_flags = [f.as_dict() for f in flags + llm_flags] if "red_flags" in enabled else []
     brief = {
         "case_id": case_id,
@@ -145,7 +153,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         "header": header,
         "sections": sections,
         "red_flags": red_flags,
-        "decision_support": None,
+        "decision_support": decision_support,
         "stats": {
             "claims_total": sum(1 for c in claims if c["kind"] == "claim"),
             "claims_unverified": sum(1 for c in claims if c["kind"] == "claim" and c["verification"] == "unverified"),

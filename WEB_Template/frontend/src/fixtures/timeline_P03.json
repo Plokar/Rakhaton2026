@@ -1,0 +1,410 @@
+[
+  {
+    "date": "2019-03",
+    "type": "diagnosis",
+    "label": "Starý infarkt myokardu (2019, st. p. PCI RIA) (komorbidita)",
+    "citation": "P03-kom1"
+  },
+  {
+    "date": "2019-03-20",
+    "type": "medication",
+    "label": "kyselina acetylsalicylová",
+    "citation": "P03-med01"
+  },
+  {
+    "date": "2019-03-20",
+    "type": "medication",
+    "label": "ramipril",
+    "citation": "P03-med02"
+  },
+  {
+    "date": "2019-03-20",
+    "type": "medication",
+    "label": "atorvastatin",
+    "citation": "P03-med03"
+  },
+  {
+    "date": "2019-03-20",
+    "type": "medication",
+    "label": "bisoprolol",
+    "citation": "P03-med04"
+  },
+  {
+    "date": "2019-03-20",
+    "type": "procedure",
+    "label": "PCI RIA s implantací lékového stentu",
+    "citation": "P03-proc03"
+  },
+  {
+    "date": "2026-04-21",
+    "type": "document",
+    "label": "Koloskopie s biopsií",
+    "citation": "P03-doc01"
+  },
+  {
+    "date": "2026-04-21",
+    "type": "procedure",
+    "label": "Koloskopie s biopsií a polypektomií",
+    "citation": "P03-proc01"
+  },
+  {
+    "date": "2026-04-24",
+    "type": "diagnosis",
+    "label": "Zhoubný novotvar esovité kličky tlustého střeva (sigmatu)",
+    "citation": "P03-dg1"
+  },
+  {
+    "date": "2026-04-24",
+    "type": "pathology",
+    "label": "Biopsie tumoru sigmatu",
+    "citation": "P03-pat01"
+  },
+  {
+    "date": "2026-04-28",
+    "type": "diagnosis",
+    "label": "Sekundární zhoubný novotvar jater a intrahepatálních žlučovodů",
+    "citation": "P03-dg2"
+  },
+  {
+    "date": "2026-04-28",
+    "type": "imaging",
+    "label": "CT hrudníku, břicha a pánve s k. l. – staging",
+    "citation": "P03-img01"
+  },
+  {
+    "date": "2026-04-28",
+    "type": "lab",
+    "label": "Laboratorní vyšetření",
+    "citation": "P03-lab01"
+  },
+  {
+    "date": "2026-05-06",
+    "type": "imaging",
+    "label": "MR jater s hepatospecifickou k. l.",
+    "citation": "P03-img02"
+  },
+  {
+    "date": "2026-05-12",
+    "type": "pathology",
+    "label": "Molekulárně-genetické vyšetření (RAS, BRAF)",
+    "citation": "P03-pat02"
+  },
+  {
+    "date": "2026-05-18",
+    "type": "document",
+    "label": "Vstupní onkologické vyšetření",
+    "citation": "P03-doc02"
+  },
+  {
+    "date": "2026-05-20",
+    "type": "mdt",
+    "label": "Záznam MDT – GIT – kolorektální karcinom – 2026-05-20",
+    "citation": "P03-mdt01"
+  },
+  {
+    "date": "2026-05-25",
+    "type": "mdt",
+    "label": "Rozhodnutí o léčbě",
+    "citation": "P03-mdt01-rozhodnuti"
+  },
+  {
+    "date": "2026-05-28",
+    "type": "document",
+    "label": "Implantace venózního portu",
+    "citation": "P03-doc03"
+  },
+  {
+    "date": "2026-05-28",
+    "type": "procedure",
+    "label": "Implantace venózního portu (v. subclavia l. dx.)",
+    "citation": "P03-proc02"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "document",
+    "label": "Zahájení chemoterapie – FOLFOX + bevacizumab, 1. cyklus",
+    "citation": "P03-doc04"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "lab",
+    "label": "Laboratorní vyšetření",
+    "citation": "P03-lab02"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "medication",
+    "label": "metoklopramid",
+    "citation": "P03-med05"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "proms",
+    "label": "Dotazník pacienta (PROMs)",
+    "citation": "P03-prom01"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 1)",
+    "citation": "P03-tx-5fu-01"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 1)",
+    "citation": "P03-tx-bev-01"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 1)",
+    "citation": "P03-tx-lv-01"
+  },
+  {
+    "date": "2026-06-01",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 1)",
+    "citation": "P03-tx-oxa-01"
+  },
+  {
+    "date": "2026-06-15",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 2)",
+    "citation": "P03-tx-5fu-02"
+  },
+  {
+    "date": "2026-06-15",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 2)",
+    "citation": "P03-tx-bev-02"
+  },
+  {
+    "date": "2026-06-15",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 2)",
+    "citation": "P03-tx-lv-02"
+  },
+  {
+    "date": "2026-06-15",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 2)",
+    "citation": "P03-tx-oxa-02"
+  },
+  {
+    "date": "2026-06-29",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 3)",
+    "citation": "P03-tx-5fu-03"
+  },
+  {
+    "date": "2026-06-29",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 3)",
+    "citation": "P03-tx-bev-03"
+  },
+  {
+    "date": "2026-06-29",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 3)",
+    "citation": "P03-tx-lv-03"
+  },
+  {
+    "date": "2026-06-29",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 3)",
+    "citation": "P03-tx-oxa-03"
+  },
+  {
+    "date": "2026-07-13",
+    "type": "document",
+    "label": "Kontrola před 4. cyklem",
+    "citation": "P03-doc05"
+  },
+  {
+    "date": "2026-07-13",
+    "type": "lab",
+    "label": "Laboratorní vyšetření",
+    "citation": "P03-lab03"
+  },
+  {
+    "date": "2026-07-13",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 4)",
+    "citation": "P03-tx-5fu-04"
+  },
+  {
+    "date": "2026-07-13",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 4)",
+    "citation": "P03-tx-bev-04"
+  },
+  {
+    "date": "2026-07-13",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 4)",
+    "citation": "P03-tx-lv-04"
+  },
+  {
+    "date": "2026-07-13",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 4)",
+    "citation": "P03-tx-oxa-04"
+  },
+  {
+    "date": "2026-07-27",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 5)",
+    "citation": "P03-tx-5fu-05"
+  },
+  {
+    "date": "2026-07-27",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 5)",
+    "citation": "P03-tx-bev-05"
+  },
+  {
+    "date": "2026-07-27",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 5)",
+    "citation": "P03-tx-lv-05"
+  },
+  {
+    "date": "2026-07-27",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 5)",
+    "citation": "P03-tx-oxa-05"
+  },
+  {
+    "date": "2026-08-10",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 6)",
+    "citation": "P03-tx-5fu-06"
+  },
+  {
+    "date": "2026-08-10",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 6)",
+    "citation": "P03-tx-bev-06"
+  },
+  {
+    "date": "2026-08-10",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 6)",
+    "citation": "P03-tx-lv-06"
+  },
+  {
+    "date": "2026-08-10",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 6)",
+    "citation": "P03-tx-oxa-06"
+  },
+  {
+    "date": "2026-08-24",
+    "type": "lab",
+    "label": "Laboratorní vyšetření",
+    "citation": "P03-lab04"
+  },
+  {
+    "date": "2026-08-24",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 7)",
+    "citation": "P03-tx-5fu-07"
+  },
+  {
+    "date": "2026-08-24",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 7)",
+    "citation": "P03-tx-bev-07"
+  },
+  {
+    "date": "2026-08-24",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 7)",
+    "citation": "P03-tx-lv-07"
+  },
+  {
+    "date": "2026-08-24",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 7)",
+    "citation": "P03-tx-oxa-07"
+  },
+  {
+    "date": "2026-09-07",
+    "type": "document",
+    "label": "Kontrola před 8. cyklem",
+    "citation": "P03-doc06"
+  },
+  {
+    "date": "2026-09-07",
+    "type": "medication",
+    "label": "fluorouracil (FOLFOX + bevacizumab, podání 8)",
+    "citation": "P03-tx-5fu-08"
+  },
+  {
+    "date": "2026-09-07",
+    "type": "medication",
+    "label": "bevacizumab (FOLFOX + bevacizumab, podání 8)",
+    "citation": "P03-tx-bev-08"
+  },
+  {
+    "date": "2026-09-07",
+    "type": "medication",
+    "label": "kalcium-folinát (leukovorin) (FOLFOX + bevacizumab, podání 8)",
+    "citation": "P03-tx-lv-08"
+  },
+  {
+    "date": "2026-09-07",
+    "type": "medication",
+    "label": "oxaliplatina (FOLFOX + bevacizumab, podání 8 – redukce na 75 % – cca 64 mg/m² (přetrvávající parestezie mezi cykly))",
+    "citation": "P03-tx-oxa-08"
+  },
+  {
+    "date": "2026-09-21",
+    "type": "imaging",
+    "label": "CT břicha a pánve s k. l. – restaging po 8 cyklech",
+    "citation": "P03-img03"
+  },
+  {
+    "date": "2026-09-21",
+    "type": "lab",
+    "label": "Laboratorní vyšetření",
+    "citation": "P03-lab05"
+  },
+  {
+    "date": "2026-09-28",
+    "type": "imaging",
+    "label": "MR jater s hepatospecifickou k. l. – restaging",
+    "citation": "P03-img04"
+  },
+  {
+    "date": "2026-10-04",
+    "type": "proms",
+    "label": "Dotazník pacienta (PROMs)",
+    "citation": "P03-prom02"
+  },
+  {
+    "date": "2026-10-05",
+    "type": "document",
+    "label": "Kontrola po restagingu, nominace na re-MDT",
+    "citation": "P03-doc07"
+  },
+  {
+    "date": "2026-10-05",
+    "type": "lab",
+    "label": "Laboratorní vyšetření",
+    "citation": "P03-lab06"
+  },
+  {
+    "date": "2026-10-06",
+    "type": "mdt",
+    "label": "Nominace na MDT: Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?",
+    "citation": "P03-zad01"
+  },
+  {
+    "date": "2026-10-21",
+    "type": "mdt",
+    "label": "Zasedání MDT (plánováno)",
+    "citation": "P03-zad01-task"
+  }
+]

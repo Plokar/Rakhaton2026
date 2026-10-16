@@ -61,6 +61,11 @@ export function CitationProvider({
   return <CitationContext.Provider value={value}>{children}</CitationContext.Provider>;
 }
 
+/** Otevření zdroje citace z libovolné komponenty podkladu (graf, časová osa…). */
+export function useCitationOpen(): ((id: EvidenceId) => void) | undefined {
+  return React.useContext(CitationContext)?.open;
+}
+
 export function CitationChip({ id }: { id: EvidenceId }) {
   const ctx = React.useContext(CitationContext);
   const number = ctx?.numbers.get(id);

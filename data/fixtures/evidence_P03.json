@@ -297,6 +297,22 @@
     "department": "onkologická diagnóza",
     "author": null
   },
+  "P03-doc01": {
+    "evidence_id": "P03-doc01",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc01",
+    "patient_id": "P03",
+    "title": "Koloskopie s biopsií",
+    "date": "2026-04-21",
+    "department": "A-GAST – Gastroenterologická ambulance – endoskopie",
+    "author": {
+      "id": "LEK-P03-02",
+      "text": "LEK-P03-02 (fiktivní lékař) – gastroenterolog",
+      "specialty": "gastroenterolog"
+    },
+    "text": "Indikace: pozitivní test na okultní krvácení (screening), anémie lehkého stupně, změna defekace posledních 3 měsíců.\n\nPrůběh: Přístroj zaveden do céka, ileocékální chlopeň identifikována. Příprava střeva dobrá (BBPS 8).\nV sigmatu ve vzdálenosti cca 25 cm od anu cirkulární exofytický, snadno krvácivý tumor zužující lumen asi na 2/3, endoskop prochází. Odebrány biopsie (6×).\nVe zbytku tračníku 2 drobné polypy do 4 mm v transverzu, odstraněny kleštěmi.\n\nZávěr: Tumor sigmatu suspektní z malignity – histologie odeslána. Polypy transverza odstraněny.\nDoporučení: CT hrudníku a břicha s k. l., CEA, kontrola v onkologické ambulanci po výsledku histologie."
+  },
   "P03-doc01#3": {
     "evidence_id": "P03-doc01#3",
     "kind": "paragraph",
@@ -317,6 +333,22 @@
       "start": 455,
       "end": 550
     }
+  },
+  "P03-doc02": {
+    "evidence_id": "P03-doc02",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc02",
+    "patient_id": "P03",
+    "title": "Vstupní onkologické vyšetření",
+    "date": "2026-05-18",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby."
   },
   "P03-doc02#2": {
     "evidence_id": "P03-doc02#2",
@@ -402,6 +434,22 @@
       "end": 506
     }
   },
+  "P03-doc03": {
+    "evidence_id": "P03-doc03",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc03",
+    "patient_id": "P03",
+    "title": "Implantace venózního portu",
+    "date": "2026-05-28",
+    "department": "A-KTPP – Chirurgická ambulance – cévní přístupy",
+    "author": {
+      "id": "LEK-P03-05",
+      "text": "LEK-P03-05 (fiktivní lékař) – chirurg – hepatobiliární chirurgie",
+      "specialty": "chirurg – hepatobiliární chirurgie"
+    },
+    "text": "Výkon: implantace venózního portu cestou v. subclavia l. dx. v lokální anestezii pod skiaskopickou kontrolou.\nPrůběh bez komplikací, hrot katétru v úrovni kavoatriálního přechodu. Port funkční, propláchnut heparinovou zátkou.\nKyselinu acetylsalicylovou nebylo třeba vysadit.\nDoporučení: stehy extrahovat za 10 dní, port lze používat ihned."
+  },
   "P03-doc03#1": {
     "evidence_id": "P03-doc03#1",
     "kind": "paragraph",
@@ -422,6 +470,54 @@
       "start": 0,
       "end": 274
     }
+  },
+  "P03-doc04": {
+    "evidence_id": "P03-doc04",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc04",
+    "patient_id": "P03",
+    "title": "Zahájení chemoterapie – FOLFOX + bevacizumab, 1. cyklus",
+    "date": "2026-06-01",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Pacient po projednání na GIT komisi (20. 5. 2026) – indikována konverzní chemoterapie FOLFOX + bevacizumab, restaging po 6–8 cyklech.\n\nSubjektivně: bez obtíží, občas tlak v podbřišku. Váha 83 kg.\nObjektivně: ECOG 0, TK 135/85, port klidný.\nLaboratoř: Hb 119, neutrofily 4,8, Tr 312, kreatinin 88, bilirubin 11, CEA 79.\n\nPodán 1. cyklus: oxaliplatina 85 mg/m², leukovorin 400 mg/m², 5-FU 400 mg/m² bolus + 2400 mg/m² 46h infuze, bevacizumab 5 mg/kg. Interval 14 dní.\nEdukace o nežádoucích účincích (chladová neuropatie, průjem, hypertenze, krvácení, proteinurie). Pacient vyplnil vstupní dotazník.\n\nDalší cyklus 15. 6. 2026."
+  },
+  "P03-doc05": {
+    "evidence_id": "P03-doc05",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc05",
+    "patient_id": "P03",
+    "title": "Kontrola před 4. cyklem",
+    "date": "2026-07-13",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Subjektivně: Snáší léčbu dobře, 2–3 dny po infuzi únava a nechutenství. Chladová dysestezie prstů 2–3 dny po oxaliplatině, poté odezní. Stolice formovaná.\nObjektivně: ECOG 0, TK 150/95 (domácí měření 140–150/90).\nLaboratoř: Hb 118, neutrofily 2,1, Tr 180, CEA 31.\nMoč chemicky: bílkovina negativní.\n\nZávěr: Toxicita: neuropatie G1 (přechodná), hypertenze G2 – navýšen ramipril na 10 mg.\nPodán 4. cyklus v plné dávce. CEA klesá."
+  },
+  "P03-doc06": {
+    "evidence_id": "P03-doc06",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc06",
+    "patient_id": "P03",
+    "title": "Kontrola před 8. cyklem",
+    "date": "2026-09-07",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Subjektivně: Únava větší než na začátku léčby, chuť k jídlu horší. Brnění prstů rukou přetrvává i mezi cykly, chodidla bez potíží.\nObjektivně: ECOG 0–1, hmotnost 79 kg, TK 140/90.\nLaboratoř (24. 8.): Hb 113, neutrofily 1,7, Tr 151, CEA 11,2.\n\nZávěr: Neuropatie G1. Podán 8. cyklus s redukcí oxaliplatiny na 75 % (cca 64 mg/m²) pro přetrvávající parestezie prstů mezi cykly.\nBevacizumab podán (poslední dávka před restagingem).\nPlán: restagingové CT za 2 týdny, poté MR jater, re-MDT."
   },
   "P03-doc06#2": {
     "evidence_id": "P03-doc06#2",
@@ -464,6 +560,22 @@
       "start": 243,
       "end": 426
     }
+  },
+  "P03-doc07": {
+    "evidence_id": "P03-doc07",
+    "kind": "resource",
+    "resource_type": "DocumentReference",
+    "resource_id": "P03-doc07",
+    "patient_id": "P03",
+    "title": "Kontrola po restagingu, nominace na re-MDT",
+    "date": "2026-10-05",
+    "department": "A-ONK – Ambulance klinické onkologie",
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti."
   },
   "P03-doc07#1": {
     "evidence_id": "P03-doc07#1",
@@ -548,6 +660,47 @@
       "start": 430,
       "end": 664
     }
+  },
+  "P03-ecog01": {
+    "evidence_id": "P03-ecog01",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-ecog01",
+    "patient_id": "P03",
+    "title": "ECOG – hodnoceno lékařem",
+    "date": "2026-05-18",
+    "department": null,
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "value": {
+      "text": "0",
+      "value": 0,
+      "unit": null,
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc02",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc02",
+        "patient_id": "P03",
+        "title": "Vstupní onkologické vyšetření",
+        "date": "2026-05-18",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby."
+      }
+    ]
   },
   "P03-ecog02": {
     "evidence_id": "P03-ecog02",
@@ -731,6 +884,22 @@
       "end": 877
     }
   },
+  "P03-img02": {
+    "evidence_id": "P03-img02",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img02",
+    "patient_id": "P03",
+    "title": "MR jater s hepatospecifickou k. l.",
+    "date": "2026-05-06",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Indikace: zpřesnění rozsahu jaterního postižení před MDT.\n\nNález: V pravém jaterním laloku potvrzena 4 ložiska popsaná na CT (S7 47 mm, S8 36 mm, S6 12 mm, S5 11 mm) s restrikcí difuze a defektem v hepatobiliární fázi.\nNově v levém laloku v segmentu S3 subkapsulárně ložisko 7 mm se stejnými charakteristikami – vysoce suspektní z metastázy, na CT nezachyceno.\nLožisko S8 naléhá na pravou jaterní žílu v délce cca 15 mm, střední jaterní žíla volná.\n\nZávěr: Celkem 5 jaterních metastáz (S5, S6, S7, S8 a S3). Postižení obou laloků."
+  },
   "P03-img02#3": {
     "evidence_id": "P03-img02#3",
     "kind": "paragraph",
@@ -751,6 +920,22 @@
       "start": 450,
       "end": 530
     }
+  },
+  "P03-img03": {
+    "evidence_id": "P03-img03",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-img03",
+    "patient_id": "P03",
+    "title": "CT břicha a pánve s k. l. – restaging po 8 cyklech",
+    "date": "2026-09-21",
+    "department": "Zobrazovací metody RDG – Radiodiagnostické oddělení",
+    "author": {
+      "id": "LEK-P03-04",
+      "text": "LEK-P03-04 (fiktivní lékař) – radiolog",
+      "specialty": "radiolog"
+    },
+    "text": "Srovnání s CT z 28. 4. 2026. Vyšetřeno břicho a pánev, hrudník nebyl požadován.\n\nJátra: Ložiska v pravém laloku zmenšena:\n- S7: 29 mm (dříve 48 mm) – cílová léze 1\n- S8: 21 mm (dříve 35 mm) – cílová léze 2, stále naléhá na pravou jaterní žílu\n- S6: 6 mm (dříve 12 mm)\n- S5: nezřetelné (dříve 10 mm)\nLevý lalok bez ložiskových změn.\nSigma: ztluštění stěny v délce cca 3 cm, perikolický tuk klidnější. Uzliny v mezosigmatu do 5 mm.\nBez ascitu, bez nových ložisek v břiše.\n\nZávěr: Parciální odpověď dle RECIST 1.1 – součet cílových lézí 50 mm (pokles o 40 %). Bez nových ložisek."
   },
   "P03-img03#1": {
     "evidence_id": "P03-img03#1",
@@ -906,6 +1091,1141 @@
     "department": "komorbidita",
     "author": null
   },
+  "P03-lab01": {
+    "evidence_id": "P03-lab01",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-lab01",
+    "patient_id": "P03",
+    "title": "Laboratorní vyšetření",
+    "date": "2026-04-28",
+    "department": "Laboratoř",
+    "author": null
+  },
+  "P03-lab01-alb": {
+    "evidence_id": "P03-lab01-alb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-alb",
+    "patient_id": "P03",
+    "title": "Albumin",
+    "date": "2026-04-28",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "41 g/l",
+      "value": 41,
+      "unit": "g/l",
+      "ref_low": 35,
+      "ref_high": 52,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-alp": {
+    "evidence_id": "P03-lab01-alp",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-alp",
+    "patient_id": "P03",
+    "title": "ALP",
+    "date": "2026-04-28",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "1.6 µkat/l",
+      "value": 1.6,
+      "unit": "µkat/l",
+      "ref_low": 0.66,
+      "ref_high": 2.2,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-alt": {
+    "evidence_id": "P03-lab01-alt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-alt",
+    "patient_id": "P03",
+    "title": "ALT",
+    "date": "2026-04-28",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.41 µkat/l",
+      "value": 0.41,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.78,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-ast": {
+    "evidence_id": "P03-lab01-ast",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-ast",
+    "patient_id": "P03",
+    "title": "AST",
+    "date": "2026-04-28",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.39 µkat/l",
+      "value": 0.39,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.72,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-bili": {
+    "evidence_id": "P03-lab01-bili",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-bili",
+    "patient_id": "P03",
+    "title": "Bilirubin celkový",
+    "date": "2026-04-28",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "10 µmol/l",
+      "value": 10,
+      "unit": "µmol/l",
+      "ref_low": 2,
+      "ref_high": 21,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-ca199": {
+    "evidence_id": "P03-lab01-ca199",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-ca199",
+    "patient_id": "P03",
+    "title": "CA 19-9",
+    "date": "2026-04-28",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "64 kU/l",
+      "value": 64,
+      "unit": "kU/l",
+      "ref_low": 0,
+      "ref_high": 37,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab01-cea": {
+    "evidence_id": "P03-lab01-cea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-cea",
+    "patient_id": "P03",
+    "title": "CEA",
+    "date": "2026-04-28",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "86.0 µg/l",
+      "value": 86.0,
+      "unit": "µg/l",
+      "ref_low": 0,
+      "ref_high": 5.0,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab01-hb": {
+    "evidence_id": "P03-lab01-hb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-hb",
+    "patient_id": "P03",
+    "title": "Hemoglobin",
+    "date": "2026-04-28",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "121 g/l",
+      "value": 121,
+      "unit": "g/l",
+      "ref_low": 135,
+      "ref_high": 175,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab01-krea": {
+    "evidence_id": "P03-lab01-krea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-krea",
+    "patient_id": "P03",
+    "title": "Kreatinin",
+    "date": "2026-04-28",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "86 µmol/l",
+      "value": 86,
+      "unit": "µmol/l",
+      "ref_low": 44,
+      "ref_high": 104,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-leu": {
+    "evidence_id": "P03-lab01-leu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-leu",
+    "patient_id": "P03",
+    "title": "Leukocyty",
+    "date": "2026-04-28",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "7.9 10^9/l",
+      "value": 7.9,
+      "unit": "10^9/l",
+      "ref_low": 4.0,
+      "ref_high": 10.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-neu": {
+    "evidence_id": "P03-lab01-neu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-neu",
+    "patient_id": "P03",
+    "title": "Neutrofily absolutně",
+    "date": "2026-04-28",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "5.1 10^9/l",
+      "value": 5.1,
+      "unit": "10^9/l",
+      "ref_low": 2.0,
+      "ref_high": 7.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab01-plt": {
+    "evidence_id": "P03-lab01-plt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab01-plt",
+    "patient_id": "P03",
+    "title": "Trombocyty",
+    "date": "2026-04-28",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "338 10^9/l",
+      "value": 338,
+      "unit": "10^9/l",
+      "ref_low": 150,
+      "ref_high": 400,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02": {
+    "evidence_id": "P03-lab02",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-lab02",
+    "patient_id": "P03",
+    "title": "Laboratorní vyšetření",
+    "date": "2026-06-01",
+    "department": "Laboratoř",
+    "author": null
+  },
+  "P03-lab02-alb": {
+    "evidence_id": "P03-lab02-alb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-alb",
+    "patient_id": "P03",
+    "title": "Albumin",
+    "date": "2026-06-01",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "40 g/l",
+      "value": 40,
+      "unit": "g/l",
+      "ref_low": 35,
+      "ref_high": 52,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-alp": {
+    "evidence_id": "P03-lab02-alp",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-alp",
+    "patient_id": "P03",
+    "title": "ALP",
+    "date": "2026-06-01",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "1.7 µkat/l",
+      "value": 1.7,
+      "unit": "µkat/l",
+      "ref_low": 0.66,
+      "ref_high": 2.2,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-alt": {
+    "evidence_id": "P03-lab02-alt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-alt",
+    "patient_id": "P03",
+    "title": "ALT",
+    "date": "2026-06-01",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.45 µkat/l",
+      "value": 0.45,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.78,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-ast": {
+    "evidence_id": "P03-lab02-ast",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-ast",
+    "patient_id": "P03",
+    "title": "AST",
+    "date": "2026-06-01",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.4 µkat/l",
+      "value": 0.4,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.72,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-bili": {
+    "evidence_id": "P03-lab02-bili",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-bili",
+    "patient_id": "P03",
+    "title": "Bilirubin celkový",
+    "date": "2026-06-01",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "11 µmol/l",
+      "value": 11,
+      "unit": "µmol/l",
+      "ref_low": 2,
+      "ref_high": 21,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-ca199": {
+    "evidence_id": "P03-lab02-ca199",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-ca199",
+    "patient_id": "P03",
+    "title": "CA 19-9",
+    "date": "2026-06-01",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "58 kU/l",
+      "value": 58,
+      "unit": "kU/l",
+      "ref_low": 0,
+      "ref_high": 37,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab02-cea": {
+    "evidence_id": "P03-lab02-cea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-cea",
+    "patient_id": "P03",
+    "title": "CEA",
+    "date": "2026-06-01",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "79.0 µg/l",
+      "value": 79.0,
+      "unit": "µg/l",
+      "ref_low": 0,
+      "ref_high": 5.0,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab02-hb": {
+    "evidence_id": "P03-lab02-hb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-hb",
+    "patient_id": "P03",
+    "title": "Hemoglobin",
+    "date": "2026-06-01",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "119 g/l",
+      "value": 119,
+      "unit": "g/l",
+      "ref_low": 135,
+      "ref_high": 175,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab02-krea": {
+    "evidence_id": "P03-lab02-krea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-krea",
+    "patient_id": "P03",
+    "title": "Kreatinin",
+    "date": "2026-06-01",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "88 µmol/l",
+      "value": 88,
+      "unit": "µmol/l",
+      "ref_low": 44,
+      "ref_high": 104,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-leu": {
+    "evidence_id": "P03-lab02-leu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-leu",
+    "patient_id": "P03",
+    "title": "Leukocyty",
+    "date": "2026-06-01",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "7.4 10^9/l",
+      "value": 7.4,
+      "unit": "10^9/l",
+      "ref_low": 4.0,
+      "ref_high": 10.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-neu": {
+    "evidence_id": "P03-lab02-neu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-neu",
+    "patient_id": "P03",
+    "title": "Neutrofily absolutně",
+    "date": "2026-06-01",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "4.8 10^9/l",
+      "value": 4.8,
+      "unit": "10^9/l",
+      "ref_low": 2.0,
+      "ref_high": 7.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab02-plt": {
+    "evidence_id": "P03-lab02-plt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab02-plt",
+    "patient_id": "P03",
+    "title": "Trombocyty",
+    "date": "2026-06-01",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "312 10^9/l",
+      "value": 312,
+      "unit": "10^9/l",
+      "ref_low": 150,
+      "ref_high": 400,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03": {
+    "evidence_id": "P03-lab03",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-lab03",
+    "patient_id": "P03",
+    "title": "Laboratorní vyšetření",
+    "date": "2026-07-13",
+    "department": "Laboratoř",
+    "author": null
+  },
+  "P03-lab03-alb": {
+    "evidence_id": "P03-lab03-alb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-alb",
+    "patient_id": "P03",
+    "title": "Albumin",
+    "date": "2026-07-13",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "38 g/l",
+      "value": 38,
+      "unit": "g/l",
+      "ref_low": 35,
+      "ref_high": 52,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-alp": {
+    "evidence_id": "P03-lab03-alp",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-alp",
+    "patient_id": "P03",
+    "title": "ALP",
+    "date": "2026-07-13",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "2.0 µkat/l",
+      "value": 2.0,
+      "unit": "µkat/l",
+      "ref_low": 0.66,
+      "ref_high": 2.2,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-alt": {
+    "evidence_id": "P03-lab03-alt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-alt",
+    "patient_id": "P03",
+    "title": "ALT",
+    "date": "2026-07-13",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.58 µkat/l",
+      "value": 0.58,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.78,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-ast": {
+    "evidence_id": "P03-lab03-ast",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-ast",
+    "patient_id": "P03",
+    "title": "AST",
+    "date": "2026-07-13",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.52 µkat/l",
+      "value": 0.52,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.72,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-bili": {
+    "evidence_id": "P03-lab03-bili",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-bili",
+    "patient_id": "P03",
+    "title": "Bilirubin celkový",
+    "date": "2026-07-13",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "12 µmol/l",
+      "value": 12,
+      "unit": "µmol/l",
+      "ref_low": 2,
+      "ref_high": 21,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-ca199": {
+    "evidence_id": "P03-lab03-ca199",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-ca199",
+    "patient_id": "P03",
+    "title": "CA 19-9",
+    "date": "2026-07-13",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "30 kU/l",
+      "value": 30,
+      "unit": "kU/l",
+      "ref_low": 0,
+      "ref_high": 37,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-cea": {
+    "evidence_id": "P03-lab03-cea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-cea",
+    "patient_id": "P03",
+    "title": "CEA",
+    "date": "2026-07-13",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "31.0 µg/l",
+      "value": 31.0,
+      "unit": "µg/l",
+      "ref_low": 0,
+      "ref_high": 5.0,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab03-hb": {
+    "evidence_id": "P03-lab03-hb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-hb",
+    "patient_id": "P03",
+    "title": "Hemoglobin",
+    "date": "2026-07-13",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "118 g/l",
+      "value": 118,
+      "unit": "g/l",
+      "ref_low": 135,
+      "ref_high": 175,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab03-krea": {
+    "evidence_id": "P03-lab03-krea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-krea",
+    "patient_id": "P03",
+    "title": "Kreatinin",
+    "date": "2026-07-13",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "91 µmol/l",
+      "value": 91,
+      "unit": "µmol/l",
+      "ref_low": 44,
+      "ref_high": 104,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-leu": {
+    "evidence_id": "P03-lab03-leu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-leu",
+    "patient_id": "P03",
+    "title": "Leukocyty",
+    "date": "2026-07-13",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "4.6 10^9/l",
+      "value": 4.6,
+      "unit": "10^9/l",
+      "ref_low": 4.0,
+      "ref_high": 10.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-neu": {
+    "evidence_id": "P03-lab03-neu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-neu",
+    "patient_id": "P03",
+    "title": "Neutrofily absolutně",
+    "date": "2026-07-13",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "2.1 10^9/l",
+      "value": 2.1,
+      "unit": "10^9/l",
+      "ref_low": 2.0,
+      "ref_high": 7.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab03-plt": {
+    "evidence_id": "P03-lab03-plt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab03-plt",
+    "patient_id": "P03",
+    "title": "Trombocyty",
+    "date": "2026-07-13",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "180 10^9/l",
+      "value": 180,
+      "unit": "10^9/l",
+      "ref_low": 150,
+      "ref_high": 400,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04": {
+    "evidence_id": "P03-lab04",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-lab04",
+    "patient_id": "P03",
+    "title": "Laboratorní vyšetření",
+    "date": "2026-08-24",
+    "department": "Laboratoř",
+    "author": null
+  },
+  "P03-lab04-alb": {
+    "evidence_id": "P03-lab04-alb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-alb",
+    "patient_id": "P03",
+    "title": "Albumin",
+    "date": "2026-08-24",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "37 g/l",
+      "value": 37,
+      "unit": "g/l",
+      "ref_low": 35,
+      "ref_high": 52,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04-alp": {
+    "evidence_id": "P03-lab04-alp",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-alp",
+    "patient_id": "P03",
+    "title": "ALP",
+    "date": "2026-08-24",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "2.3 µkat/l",
+      "value": 2.3,
+      "unit": "µkat/l",
+      "ref_low": 0.66,
+      "ref_high": 2.2,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab04-alt": {
+    "evidence_id": "P03-lab04-alt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-alt",
+    "patient_id": "P03",
+    "title": "ALT",
+    "date": "2026-08-24",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.71 µkat/l",
+      "value": 0.71,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.78,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04-ast": {
+    "evidence_id": "P03-lab04-ast",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-ast",
+    "patient_id": "P03",
+    "title": "AST",
+    "date": "2026-08-24",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.63 µkat/l",
+      "value": 0.63,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.72,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04-bili": {
+    "evidence_id": "P03-lab04-bili",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-bili",
+    "patient_id": "P03",
+    "title": "Bilirubin celkový",
+    "date": "2026-08-24",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "14 µmol/l",
+      "value": 14,
+      "unit": "µmol/l",
+      "ref_low": 2,
+      "ref_high": 21,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04-ca199": {
+    "evidence_id": "P03-lab04-ca199",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-ca199",
+    "patient_id": "P03",
+    "title": "CA 19-9",
+    "date": "2026-08-24",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "22 kU/l",
+      "value": 22,
+      "unit": "kU/l",
+      "ref_low": 0,
+      "ref_high": 37,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04-cea": {
+    "evidence_id": "P03-lab04-cea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-cea",
+    "patient_id": "P03",
+    "title": "CEA",
+    "date": "2026-08-24",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "11.2 µg/l",
+      "value": 11.2,
+      "unit": "µg/l",
+      "ref_low": 0,
+      "ref_high": 5.0,
+      "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab04-hb": {
+    "evidence_id": "P03-lab04-hb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-hb",
+    "patient_id": "P03",
+    "title": "Hemoglobin",
+    "date": "2026-08-24",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "113 g/l",
+      "value": 113,
+      "unit": "g/l",
+      "ref_low": 135,
+      "ref_high": 175,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab04-krea": {
+    "evidence_id": "P03-lab04-krea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-krea",
+    "patient_id": "P03",
+    "title": "Kreatinin",
+    "date": "2026-08-24",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "90 µmol/l",
+      "value": 90,
+      "unit": "µmol/l",
+      "ref_low": 44,
+      "ref_high": 104,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab04-leu": {
+    "evidence_id": "P03-lab04-leu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-leu",
+    "patient_id": "P03",
+    "title": "Leukocyty",
+    "date": "2026-08-24",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "3.9 10^9/l",
+      "value": 3.9,
+      "unit": "10^9/l",
+      "ref_low": 4.0,
+      "ref_high": 10.0,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab04-neu": {
+    "evidence_id": "P03-lab04-neu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-neu",
+    "patient_id": "P03",
+    "title": "Neutrofily absolutně",
+    "date": "2026-08-24",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "1.7 10^9/l",
+      "value": 1.7,
+      "unit": "10^9/l",
+      "ref_low": 2.0,
+      "ref_high": 7.0,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab04-plt": {
+    "evidence_id": "P03-lab04-plt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab04-plt",
+    "patient_id": "P03",
+    "title": "Trombocyty",
+    "date": "2026-08-24",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "151 10^9/l",
+      "value": 151,
+      "unit": "10^9/l",
+      "ref_low": 150,
+      "ref_high": 400,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05": {
+    "evidence_id": "P03-lab05",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-lab05",
+    "patient_id": "P03",
+    "title": "Laboratorní vyšetření",
+    "date": "2026-09-21",
+    "department": "Laboratoř",
+    "author": null
+  },
+  "P03-lab05-alb": {
+    "evidence_id": "P03-lab05-alb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-alb",
+    "patient_id": "P03",
+    "title": "Albumin",
+    "date": "2026-09-21",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "36 g/l",
+      "value": 36,
+      "unit": "g/l",
+      "ref_low": 35,
+      "ref_high": 52,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-alp": {
+    "evidence_id": "P03-lab05-alp",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-alp",
+    "patient_id": "P03",
+    "title": "ALP",
+    "date": "2026-09-21",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "2.1 µkat/l",
+      "value": 2.1,
+      "unit": "µkat/l",
+      "ref_low": 0.66,
+      "ref_high": 2.2,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-alt": {
+    "evidence_id": "P03-lab05-alt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-alt",
+    "patient_id": "P03",
+    "title": "ALT",
+    "date": "2026-09-21",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.66 µkat/l",
+      "value": 0.66,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.78,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-ast": {
+    "evidence_id": "P03-lab05-ast",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-ast",
+    "patient_id": "P03",
+    "title": "AST",
+    "date": "2026-09-21",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.6 µkat/l",
+      "value": 0.6,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.72,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-bili": {
+    "evidence_id": "P03-lab05-bili",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-bili",
+    "patient_id": "P03",
+    "title": "Bilirubin celkový",
+    "date": "2026-09-21",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "13 µmol/l",
+      "value": 13,
+      "unit": "µmol/l",
+      "ref_low": 2,
+      "ref_high": 21,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-ca199": {
+    "evidence_id": "P03-lab05-ca199",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-ca199",
+    "patient_id": "P03",
+    "title": "CA 19-9",
+    "date": "2026-09-21",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "19 kU/l",
+      "value": 19,
+      "unit": "kU/l",
+      "ref_low": 0,
+      "ref_high": 37,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
   "P03-lab05-cea": {
     "evidence_id": "P03-lab05-cea",
     "kind": "resource",
@@ -923,6 +2243,237 @@
       "ref_low": 0,
       "ref_high": 5.0,
       "interpretation": "H"
+    },
+    "derived_from": []
+  },
+  "P03-lab05-hb": {
+    "evidence_id": "P03-lab05-hb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-hb",
+    "patient_id": "P03",
+    "title": "Hemoglobin",
+    "date": "2026-09-21",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "112 g/l",
+      "value": 112,
+      "unit": "g/l",
+      "ref_low": 135,
+      "ref_high": 175,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab05-krea": {
+    "evidence_id": "P03-lab05-krea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-krea",
+    "patient_id": "P03",
+    "title": "Kreatinin",
+    "date": "2026-09-21",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "92 µmol/l",
+      "value": 92,
+      "unit": "µmol/l",
+      "ref_low": 44,
+      "ref_high": 104,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-leu": {
+    "evidence_id": "P03-lab05-leu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-leu",
+    "patient_id": "P03",
+    "title": "Leukocyty",
+    "date": "2026-09-21",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "4.1 10^9/l",
+      "value": 4.1,
+      "unit": "10^9/l",
+      "ref_low": 4.0,
+      "ref_high": 10.0,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab05-neu": {
+    "evidence_id": "P03-lab05-neu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-neu",
+    "patient_id": "P03",
+    "title": "Neutrofily absolutně",
+    "date": "2026-09-21",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "1.8 10^9/l",
+      "value": 1.8,
+      "unit": "10^9/l",
+      "ref_low": 2.0,
+      "ref_high": 7.0,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab05-plt": {
+    "evidence_id": "P03-lab05-plt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab05-plt",
+    "patient_id": "P03",
+    "title": "Trombocyty",
+    "date": "2026-09-21",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "145 10^9/l",
+      "value": 145,
+      "unit": "10^9/l",
+      "ref_low": 150,
+      "ref_high": 400,
+      "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab06": {
+    "evidence_id": "P03-lab06",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-lab06",
+    "patient_id": "P03",
+    "title": "Laboratorní vyšetření",
+    "date": "2026-10-05",
+    "department": "Laboratoř",
+    "author": null
+  },
+  "P03-lab06-alb": {
+    "evidence_id": "P03-lab06-alb",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-alb",
+    "patient_id": "P03",
+    "title": "Albumin",
+    "date": "2026-10-05",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "37 g/l",
+      "value": 37,
+      "unit": "g/l",
+      "ref_low": 35,
+      "ref_high": 52,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-alp": {
+    "evidence_id": "P03-lab06-alp",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-alp",
+    "patient_id": "P03",
+    "title": "ALP",
+    "date": "2026-10-05",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "1.9 µkat/l",
+      "value": 1.9,
+      "unit": "µkat/l",
+      "ref_low": 0.66,
+      "ref_high": 2.2,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-alt": {
+    "evidence_id": "P03-lab06-alt",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-alt",
+    "patient_id": "P03",
+    "title": "ALT",
+    "date": "2026-10-05",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.62 µkat/l",
+      "value": 0.62,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.78,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-ast": {
+    "evidence_id": "P03-lab06-ast",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-ast",
+    "patient_id": "P03",
+    "title": "AST",
+    "date": "2026-10-05",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "0.55 µkat/l",
+      "value": 0.55,
+      "unit": "µkat/l",
+      "ref_low": 0.1,
+      "ref_high": 0.72,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-bili": {
+    "evidence_id": "P03-lab06-bili",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-bili",
+    "patient_id": "P03",
+    "title": "Bilirubin celkový",
+    "date": "2026-10-05",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "13 µmol/l",
+      "value": 13,
+      "unit": "µmol/l",
+      "ref_low": 2,
+      "ref_high": 21,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-ca199": {
+    "evidence_id": "P03-lab06-ca199",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-ca199",
+    "patient_id": "P03",
+    "title": "CA 19-9",
+    "date": "2026-10-05",
+    "department": " Imunochemie (nádorové markery)",
+    "author": null,
+    "value": {
+      "text": "21 kU/l",
+      "value": 21,
+      "unit": "kU/l",
+      "ref_low": 0,
+      "ref_high": 37,
+      "interpretation": null
     },
     "derived_from": []
   },
@@ -963,6 +2514,46 @@
       "ref_low": 135,
       "ref_high": 175,
       "interpretation": "L"
+    },
+    "derived_from": []
+  },
+  "P03-lab06-krea": {
+    "evidence_id": "P03-lab06-krea",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-krea",
+    "patient_id": "P03",
+    "title": "Kreatinin",
+    "date": "2026-10-05",
+    "department": " Biochemie",
+    "author": null,
+    "value": {
+      "text": "89 µmol/l",
+      "value": 89,
+      "unit": "µmol/l",
+      "ref_low": 44,
+      "ref_high": 104,
+      "interpretation": null
+    },
+    "derived_from": []
+  },
+  "P03-lab06-leu": {
+    "evidence_id": "P03-lab06-leu",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-lab06-leu",
+    "patient_id": "P03",
+    "title": "Leukocyty",
+    "date": "2026-10-05",
+    "department": " Hematologie",
+    "author": null,
+    "value": {
+      "text": "5.2 10^9/l",
+      "value": 5.2,
+      "unit": "10^9/l",
+      "ref_low": 4.0,
+      "ref_high": 10.0,
+      "interpretation": null
     },
     "derived_from": []
   },
@@ -1032,6 +2623,22 @@
     "date": null,
     "department": "Kurativní",
     "author": null
+  },
+  "P03-mdt01-rozhodnuti": {
+    "evidence_id": "P03-mdt01-rozhodnuti",
+    "kind": "resource",
+    "resource_type": "Composition",
+    "resource_id": "P03-mdt01-rozhodnuti",
+    "patient_id": "P03",
+    "title": "Rozhodnutí o léčbě",
+    "date": "2026-05-25",
+    "department": null,
+    "author": {
+      "id": "LEK-P03-01",
+      "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+      "specialty": "klinický onkolog (ošetřující lékař)"
+    },
+    "text": "Léčebný záměr: Kurativní\n\nZvolený postup: Zahájení FOLFOX + bevacizumab v 14denních cyklech\n\nVztah k doporučení MDT: v souladu s doporučením MDT\n\nStanovisko pacienta: Souhlasí"
   },
   "P03-med01": {
     "evidence_id": "P03-med01",
@@ -1144,6 +2751,22 @@
         "text": "Pacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je mírná.\nObjektivně: ECOG 0, hmotnost 78 kg, TK 135/85, bez ikteru, břicho klidné.\nLaboratoř: Hb 114, neutrofily 2,9, Tr 168, bilirubin 13, ALT 0,62, ALP 1,9, albumin 37, CEA 13,9.\n\nToxicita: neuropatie G1, hypertenze kompenzovaná.\n\nZávěr: Parciální odpověď jaterních metastáz po 8 cyklech konverzní chemoterapie (CT 21. 9., MR 28. 9.).\nNominován na re-MDT GIT s otázkou resekability. Pacient si přeje operaci, pokud bude možná; obává se dlouhé pracovní neschopnosti."
       }
     ]
+  },
+  "P03-pat01": {
+    "evidence_id": "P03-pat01",
+    "kind": "resource",
+    "resource_type": "DiagnosticReport",
+    "resource_id": "P03-pat01",
+    "patient_id": "P03",
+    "title": "Biopsie tumoru sigmatu",
+    "date": "2026-04-24",
+    "department": "Patologie PAT-B – Patologie – bioptická laboratoř",
+    "author": {
+      "id": "LEK-P03-03",
+      "text": "LEK-P03-03 (fiktivní lékař) – patolog",
+      "specialty": "patolog"
+    },
+    "text": "Makroskopicky: 6 drobných fragmentů sliznice do 3 mm.\n\nMikroskopicky: Ve všech fragmentech infiltrace středně diferencovaným adenokarcinomem s tubulární stavbou, s ložisky nekrózy. Zastižena invaze do submukózy; hloubku invaze nelze v bioptickém vzorku plně hodnotit.\n\nZávěr: Adenokarcinom tlustého střeva, středně diferencovaný (G2).\nPolypy transverza: tubulární adenomy s low-grade dysplazií.\n\nDoporučení: molekulárně-genetické vyšetření (RAS, BRAF) bude provedeno na žádost onkologa.\n\nKLASIFIKACE: Topografie (ICD-O-3) C18.7, Morfologie (ICD-O-3) 8140/3"
   },
   "P03-pat01#3": {
     "evidence_id": "P03-pat01#3",
@@ -1423,6 +3046,171 @@
       }
     ]
   },
+  "P03-tx-5fu-01": {
+    "evidence_id": "P03-tx-5fu-01",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-01",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-06-01",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-02": {
+    "evidence_id": "P03-tx-5fu-02",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-02",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-06-15",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-03": {
+    "evidence_id": "P03-tx-5fu-03",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-03",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-06-29",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-04": {
+    "evidence_id": "P03-tx-5fu-04",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-04",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-07-13",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-05": {
+    "evidence_id": "P03-tx-5fu-05",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-05",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-07-27",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-06": {
+    "evidence_id": "P03-tx-5fu-06",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-06",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-08-10",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-07": {
+    "evidence_id": "P03-tx-5fu-07",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-07",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-08-24",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-5fu-08": {
+    "evidence_id": "P03-tx-5fu-08",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-5fu-08",
+    "patient_id": "P03",
+    "title": "fluorouracil",
+    "date": "2026-09-07",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-01": {
+    "evidence_id": "P03-tx-bev-01",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-01",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-06-01",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-02": {
+    "evidence_id": "P03-tx-bev-02",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-02",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-06-15",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-03": {
+    "evidence_id": "P03-tx-bev-03",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-03",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-06-29",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-04": {
+    "evidence_id": "P03-tx-bev-04",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-04",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-07-13",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-05": {
+    "evidence_id": "P03-tx-bev-05",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-05",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-07-27",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-06": {
+    "evidence_id": "P03-tx-bev-06",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-06",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-08-10",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-bev-07": {
+    "evidence_id": "P03-tx-bev-07",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-bev-07",
+    "patient_id": "P03",
+    "title": "bevacizumab",
+    "date": "2026-08-24",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
   "P03-tx-bev-08": {
     "evidence_id": "P03-tx-bev-08",
     "kind": "resource",
@@ -1430,6 +3218,94 @@
     "resource_id": "P03-tx-bev-08",
     "patient_id": "P03",
     "title": "bevacizumab",
+    "date": "2026-09-07",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-01": {
+    "evidence_id": "P03-tx-lv-01",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-01",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-06-01",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-02": {
+    "evidence_id": "P03-tx-lv-02",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-02",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-06-15",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-03": {
+    "evidence_id": "P03-tx-lv-03",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-03",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-06-29",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-04": {
+    "evidence_id": "P03-tx-lv-04",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-04",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-07-13",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-05": {
+    "evidence_id": "P03-tx-lv-05",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-05",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-07-27",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-06": {
+    "evidence_id": "P03-tx-lv-06",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-06",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-08-10",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-07": {
+    "evidence_id": "P03-tx-lv-07",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-07",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
+    "date": "2026-08-24",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-lv-08": {
+    "evidence_id": "P03-tx-lv-08",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-lv-08",
+    "patient_id": "P03",
+    "title": "kalcium-folinát (leukovorin)",
     "date": "2026-09-07",
     "department": "protinádorová léčba – FOLFOX + bevacizumab",
     "author": null
@@ -1442,6 +3318,72 @@
     "patient_id": "P03",
     "title": "oxaliplatina",
     "date": "2026-06-01",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-02": {
+    "evidence_id": "P03-tx-oxa-02",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-02",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-06-15",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-03": {
+    "evidence_id": "P03-tx-oxa-03",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-03",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-06-29",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-04": {
+    "evidence_id": "P03-tx-oxa-04",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-04",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-07-13",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-05": {
+    "evidence_id": "P03-tx-oxa-05",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-05",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-07-27",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-06": {
+    "evidence_id": "P03-tx-oxa-06",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-06",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-08-10",
+    "department": "protinádorová léčba – FOLFOX + bevacizumab",
+    "author": null
+  },
+  "P03-tx-oxa-07": {
+    "evidence_id": "P03-tx-oxa-07",
+    "kind": "resource",
+    "resource_type": "MedicationAdministration",
+    "resource_id": "P03-tx-oxa-07",
+    "patient_id": "P03",
+    "title": "oxaliplatina",
+    "date": "2026-08-24",
     "department": "protinádorová léčba – FOLFOX + bevacizumab",
     "author": null
   },
@@ -1490,6 +3432,80 @@
           "specialty": "klinický onkolog (ošetřující lékař)"
         },
         "text": "Důvod: nově diagnostikovaný adenokarcinom sigmatu s jaterními metastázami.\n\nAnamnéza: Pracuje jako řidič městské dopravy, nyní v pracovní neschopnosti. Kouřil do r. 2019 (cca 20 balíčkoroků), alkohol příležitostně.\nOA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.\nFA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 5 mg 1-0-0, atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0.\nAlergie: neudává.\nRA: otec karcinom tlustého střeva v 72 letech.\n\nSubjektivně: Od zimy střídání zácpy a průjmu, občas příměs krve ve stolici. Za 3 měsíce zhubl cca 4 kg. Bolesti neudává.\n\nObjektivně: Výška 178 cm, hmotnost 84 kg. ECOG 0. Břicho měkké, nebolestivé, játra nehmatná. Bez ikteru, bez otoků.\n\nLaboratoř: Hb 121 g/l, CEA 86 µg/l, jaterní testy v normě.\n\nZávěr: Adenokarcinom sigmatu G2, cT3 N1 M1a (jaterní metastázy), KRAS G12D, BRAF wt.\nPlán: Projednat na GIT komisi – otázka resekability jaterních metastáz a pořadí léčby."
+      }
+    ]
+  },
+  "P03-vaha02": {
+    "evidence_id": "P03-vaha02",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-vaha02",
+    "patient_id": "P03",
+    "title": "Hmotnost",
+    "date": "2026-06-01",
+    "department": null,
+    "author": null,
+    "value": {
+      "text": "83 kg",
+      "value": 83,
+      "unit": "kg",
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc04",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc04",
+        "patient_id": "P03",
+        "title": "Zahájení chemoterapie – FOLFOX + bevacizumab, 1. cyklus",
+        "date": "2026-06-01",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Pacient po projednání na GIT komisi (20. 5. 2026) – indikována konverzní chemoterapie FOLFOX + bevacizumab, restaging po 6–8 cyklech.\n\nSubjektivně: bez obtíží, občas tlak v podbřišku. Váha 83 kg.\nObjektivně: ECOG 0, TK 135/85, port klidný.\nLaboratoř: Hb 119, neutrofily 4,8, Tr 312, kreatinin 88, bilirubin 11, CEA 79.\n\nPodán 1. cyklus: oxaliplatina 85 mg/m², leukovorin 400 mg/m², 5-FU 400 mg/m² bolus + 2400 mg/m² 46h infuze, bevacizumab 5 mg/kg. Interval 14 dní.\nEdukace o nežádoucích účincích (chladová neuropatie, průjem, hypertenze, krvácení, proteinurie). Pacient vyplnil vstupní dotazník.\n\nDalší cyklus 15. 6. 2026."
+      }
+    ]
+  },
+  "P03-vaha03": {
+    "evidence_id": "P03-vaha03",
+    "kind": "resource",
+    "resource_type": "Observation",
+    "resource_id": "P03-vaha03",
+    "patient_id": "P03",
+    "title": "Hmotnost",
+    "date": "2026-09-07",
+    "department": null,
+    "author": null,
+    "value": {
+      "text": "79 kg",
+      "value": 79,
+      "unit": "kg",
+      "ref_low": null,
+      "ref_high": null,
+      "interpretation": null
+    },
+    "derived_from": [
+      {
+        "evidence_id": "P03-doc06",
+        "kind": "resource",
+        "resource_type": "DocumentReference",
+        "resource_id": "P03-doc06",
+        "patient_id": "P03",
+        "title": "Kontrola před 8. cyklem",
+        "date": "2026-09-07",
+        "department": "A-ONK – Ambulance klinické onkologie",
+        "author": {
+          "id": "LEK-P03-01",
+          "text": "LEK-P03-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)",
+          "specialty": "klinický onkolog (ošetřující lékař)"
+        },
+        "text": "Subjektivně: Únava větší než na začátku léčby, chuť k jídlu horší. Brnění prstů rukou přetrvává i mezi cykly, chodidla bez potíží.\nObjektivně: ECOG 0–1, hmotnost 79 kg, TK 140/90.\nLaboratoř (24. 8.): Hb 113, neutrofily 1,7, Tr 151, CEA 11,2.\n\nZávěr: Neuropatie G1. Podán 8. cyklus s redukcí oxaliplatiny na 75 % (cca 64 mg/m²) pro přetrvávající parestezie prstů mezi cykly.\nBevacizumab podán (poslední dávka před restagingem).\nPlán: restagingové CT za 2 týdny, poté MR jater, re-MDT."
       }
     ]
   },

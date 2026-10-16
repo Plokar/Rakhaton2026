@@ -11,6 +11,8 @@ import type {
   MdtSession,
   MdtSessionDetail,
   MdtSessionListItem,
+  ObservationSeries,
+  TimelineEvent,
 } from '@/types/mdt';
 
 /** Úprava boardu (jen předseda); změna data přepíše termín v `Task` všech případů v IRIS. */
@@ -65,4 +67,14 @@ export const mdtApi = {
 
   getEvidence: (evidenceId: string) =>
     apiFetch<EvidenceSource>(`/api/evidence/?id=${encodeURIComponent(evidenceId)}`),
+
+  /** Časová osa pacienta z IRIS (seřazená podle data). */
+  getTimeline: (patientId: string) =>
+    apiFetch<TimelineEvent[]>(`/api/patients/${encodeURIComponent(patientId)}/timeline/`),
+
+  /** Číselné řady (labs, hmotnost, ECOG, PROMs `proms:<linkId>`). */
+  getObservations: (patientId: string, codes?: string[]) =>
+    apiFetch<ObservationSeries[]>(
+      `/api/patients/${encodeURIComponent(patientId)}/observations/${codes?.length ? `?code=${encodeURIComponent(codes.join(','))}` : ''}`,
+    ),
 };

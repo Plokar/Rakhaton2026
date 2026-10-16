@@ -50,6 +50,12 @@ FIXTURES = {
     "decision_P03.json": schemas.Decision,
     "intake_P03.json": schemas.IntakePrefill,
 }
+# Odpovědi API pacientů (T-103) pro demo bez backendu: seznam položek daného typu.
+LIST_FIXTURES = {
+    "timeline_P03.json": schemas.TimelineEvent,
+    "observations_P03.json": schemas.ObservationSeries,
+}
+DATA_FIXTURES = [*FIXTURES, *LIST_FIXTURES]
 
 # Klíče, jejichž hodnota je Evidence ID nebo seznam Evidence ID (ARCHITEKTURA §8).
 EVIDENCE_KEYS = {
@@ -90,7 +96,7 @@ def evidence_ids(node, key: str | None = None):
 
 def fixture_citations() -> list[str]:
     """Citace ze všech fixtures (bez resources, které vzniknou až v aplikaci)."""
-    ids = {e for name in FIXTURES for e in evidence_ids(load_fixture(name))}
+    ids = {e for name in DATA_FIXTURES for e in evidence_ids(load_fixture(name))}
     return sorted(e for e in ids if not APP_CREATED_RE.match(e))
 
 
@@ -171,7 +177,14 @@ class TestFixtures:
         """Fixture projde validací a nic se neztratí (odhalí překlepy v klíčích)."""
         assert_contract(schema, load_fixture(name))
 
-    @pytest.mark.parametrize("name", FIXTURES)
+    @pytest.mark.parametrize("name, schema", LIST_FIXTURES.items())
+    def test_list_fixture_valid_and_roundtrip(self, name, schema):
+        items = load_fixture(name)
+        assert items
+        for item in items:
+            assert_contract(schema, item)
+
+    @pytest.mark.parametrize("name", DATA_FIXTURES)
     def test_evidence_id_format(self, name):
         bad = [e for e in evidence_ids(load_fixture(name)) if parse_evidence_id(e) is None]
         assert not bad
@@ -184,7 +197,7 @@ class TestFixtures:
             assert source["evidence_id"] == evidence_id
             assert_contract(schemas.EvidenceSource, source)
 
-    @pytest.mark.parametrize("name", [*FIXTURES, "evidence_P03.json"])
+    @pytest.mark.parametrize("name", [*DATA_FIXTURES, "evidence_P03.json"])
     def test_frontend_copy_is_identical(self, name):
         if not FRONTEND_FIXTURES_DIR:
             pytest.skip("chybí frontend")

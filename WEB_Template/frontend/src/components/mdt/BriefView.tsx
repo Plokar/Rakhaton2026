@@ -1,15 +1,20 @@
 'use client';
 
 import * as React from 'react';
-import { CircleCheck, CircleQuestionMark, CircleX, ShieldAlert, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { Brief, BriefSection, Criterion, EvidenceId, RedFlag, RoleAssessment, SectionId } from '@/types/mdt';
+import { CalendarClock, ShieldAlert } from 'lucide-react';
+import { useApiData } from '@/lib/use-api-data';
+import type { Brief, EvidenceId, SectionId } from '@/types/mdt';
 import { AiBlock } from './AiBlock';
 import { CaseHeader } from './CaseHeader';
 import { CitationProvider, Citations, collectCitations } from './citations';
 import { ClaimList } from './ClaimList';
-import { ROLE_META } from './roles';
-import { SourceDrawer, type SourceLoader } from './SourceDrawer';
+import { BriefDataProvider, type BriefDataSource } from './data-source';
+import { RedFlagCard } from './RedFlagCard';
+import { RoleSection } from './RoleSection';
+import { SourceDrawer } from './SourceDrawer';
+import { Timeline } from './Timeline';
+import { TreatmentOptions } from './TreatmentOptions';
+import { TrialScreening } from './TrialScreening';
 
 const TEXT_SECTION_TITLE: Partial<Record<SectionId, string>> = {
   summary: 'Souhrn případu',
@@ -20,27 +25,106 @@ const TEXT_SECTION_TITLE: Partial<Record<SectionId, string>> = {
 
 /**
  * Podklad pro komisi v jednom sloupci (ARCH §7.1, §7.3): hlavička a bloky v pořadí podle
- * konfigurace předsedy. Klik na citaci otevře zdroj (`loadSource`: API nebo fixture).
+ * konfigurace předsedy. Klik na citaci otevře zdroj; data bere z `dataSource` (API nebo fixtures).
  */
-export function BriefView({ brief, loadSource }: { brief: Brief; loadSource: SourceLoader }) {
+export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: BriefDataSource }) {
   const [openId, setOpenId] = React.useState<EvidenceId | null>(null);
-  const order = React.useMemo(() => collectCitations(brief), [brief]);
+  const timeline = useApiData(dataSource.loadTimeline, brief.patient_id);
+  const series = useApiData(dataSource.loadObservations, brief.patient_id);
+  const order = React.useMemo(
+    () => collectCitations([brief, timeline.data ?? [], series.data ?? []]),
+    [brief, timeline.data, series.data],
+  );
   const close = React.useCallback(() => setOpenId(null), []);
   const hideUnverified = brief.config.hide_unverified;
+  const ds = brief.decision_support;
 
   const blocks = [...brief.config.sections]
     .filter((s) => s.enabled)
     .sort((a, b) => a.order - b.order)
     .map((s) => s.id);
 
-  const renderBlock = (id: SectionId) => {
+  const textSection = (id: SectionId) =>
+    brief.sections
+      .filter((s) => s.id === id)
+      .map((s) => (
+        <AiBlock key={`${id}-${s.title}`} id={id} title={s.title || TEXT_SECTION_TITLE[id] || id} status={brief.status}>
+          <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+        </AiBlock>
+      ));
+
+  const renderBlock = (id: SectionId): React.ReactNode => {
     switch (id) {
+      case 'timeline':
+        return (
+          <React.Fragment key={id}>
+            {textSection(id)}
+            {timeline.data && timeline.data.length > 0 && (
+              <section className="rounded-xl border border-border bg-card p-4">
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <CalendarClock className="h-4 w-4 text-muted-foreground" aria-hidden /> Události z dokumentace
+                  <span className="text-[11px] font-normal text-muted-foreground">(data z IRIS, ne AI)</span>
+                </h2>
+                <Timeline events={timeline.data} />
+              </section>
+            )}
+          </React.Fragment>
+        );
       case 'role_views':
         return brief.sections
           .filter((s) => s.id === 'role_views')
-          .map((s) => <RoleSection key={`role-${s.role}`} section={s} hideUnverified={hideUnverified} />);
+          .map((s) => (
+            <RoleSection
+              key={`role-${s.role}`}
+              section={s}
+              series={series.data ?? []}
+              hideUnverified={hideUnverified}
+              status={brief.status}
+            />
+          ));
       case 'red_flags':
-        return <RedFlagList key={id} flags={brief.red_flags} />;
+        return (
+          <section key={id} id="red-flags" className="scroll-mt-24 rounded-xl border border-border bg-card p-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <ShieldAlert className="h-4 w-4 text-destructive" aria-hidden /> Varovné signály ({brief.red_flags.length})
+            </h2>
+            {brief.red_flags.length === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">Pravidla nenašla žádný varovný signál.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {brief.red_flags.map((f) => (
+                  <RedFlagCard key={f.id} flag={f} />
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+      case 'decision_support':
+        return ds ? (
+          <AiBlock key={id} id={id} title="Možnosti léčby" status={brief.status}>
+            <TreatmentOptions options={ds.treatment_options} />
+          </AiBlock>
+        ) : null;
+      case 'trials':
+        return ds ? (
+          <AiBlock key={id} id={id} title="Klinické studie" status={brief.status}>
+            <TrialScreening trials={ds.trials} />
+          </AiBlock>
+        ) : null;
+      case 'questions':
+        return ds ? (
+          <AiBlock key={id} id={id} title="Otázky k diskusi" status={brief.status}>
+            <ol className="list-decimal space-y-1.5 pl-5 text-sm text-foreground">
+              {ds.discussion_questions.map((q) => (
+                <li key={q.text}>
+                  {q.text}
+                  <Citations ids={q.citations} />
+                </li>
+              ))}
+            </ol>
+            <p className="mt-2 text-[11px] text-muted-foreground">{ds.disclaimer}</p>
+          </AiBlock>
+        ) : null;
       case 'mdt_question':
         return (
           <section key={id} className="rounded-xl border border-border bg-card p-4">
@@ -51,140 +135,30 @@ export function BriefView({ brief, loadSource }: { brief: Brief; loadSource: Sou
             </p>
           </section>
         );
-      default: {
-        const sections = brief.sections.filter((s) => s.id === id);
-        return sections.map((s) => (
-          <AiBlock key={`${id}-${s.title}`} id={id} title={s.title || TEXT_SECTION_TITLE[id] || id} status={brief.status}>
-            <ClaimList claims={s.items} hideUnverified={hideUnverified} />
-          </AiBlock>
-        ));
-      }
+      default:
+        return <React.Fragment key={id}>{textSection(id)}</React.Fragment>;
     }
   };
 
   return (
-    <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
-      <div className="space-y-4">
-        <CaseHeader header={brief.header} redFlagCount={brief.red_flags.length} />
-        {blocks.map(renderBlock)}
-        <p className="text-center text-[11px] text-muted-foreground">
-          Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení.
-          {' '}Tvrzení: {brief.stats.claims_total}, neověřených: {brief.stats.claims_unverified}, chybějících údajů:{' '}
-          {brief.stats.missing_total}.
-        </p>
-      </div>
-      <SourceDrawer evidenceId={openId} loadSource={loadSource} onClose={close} />
-    </CitationProvider>
-  );
-}
-
-function RoleBadge({ role }: { role: NonNullable<BriefSection['role']> }) {
-  const meta = ROLE_META[role];
-  return (
-    <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold', meta.className)}>
-      {meta.label}
-    </span>
-  );
-}
-
-function RoleSection({ section, hideUnverified }: { section: BriefSection; hideUnverified: boolean }) {
-  return (
-    <AiBlock id={`role-${section.role}`} title={section.title} label={section.role && <RoleBadge role={section.role} />}>
-      <ClaimList claims={section.items} hideUnverified={hideUnverified} />
-      {section.assessment && <AssessmentSummary assessment={section.assessment} />}
-    </AiBlock>
-  );
-}
-
-const VERDICT_LABEL: Record<RoleAssessment['verdict'], string> = {
-  candidate: 'Kandidát',
-  conditional: 'Podmíněně',
-  not_candidate: 'Není kandidát',
-  insufficient_data: 'Nedostatek údajů',
-};
-
-const CRITERION_STATUS = {
-  met: { label: 'splněno', icon: CircleCheck, className: 'text-emerald-600 dark:text-emerald-400' },
-  not_met: { label: 'nesplněno', icon: CircleX, className: 'text-red-600 dark:text-red-400' },
-  unknown: { label: 'neznámé', icon: CircleQuestionMark, className: 'text-muted-foreground' },
-} as const;
-
-/** Posouzení role (FR-B7): podklad pro diskusi po kritériích s citacemi, rozhoduje lékař. */
-function AssessmentSummary({ assessment }: { assessment: RoleAssessment }) {
-  return (
-    <div className="mt-3 rounded-lg border border-border bg-background p-3">
-      <p className="text-sm font-semibold text-foreground">
-        {assessment.question} <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-xs">{VERDICT_LABEL[assessment.verdict]}</span>
-      </p>
-      <ul className="mt-2 space-y-1.5">
-        {assessment.criteria.map((c) => (
-          <CriterionRow key={c.text} criterion={c} />
-        ))}
-      </ul>
-      <p className="mt-2 text-[11px] text-muted-foreground">{assessment.note}</p>
-    </div>
-  );
-}
-
-function CriterionRow({ criterion }: { criterion: Criterion }) {
-  const status = CRITERION_STATUS[criterion.status];
-  const Icon = status.icon;
-  return (
-    <li className="flex gap-2 text-sm">
-      <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', status.className)} aria-hidden />
-      <div className="min-w-0">
-        <p>
-          <span className="sr-only">{status.label}: </span>
-          {criterion.text}
-          <Citations ids={[...criterion.citations, ...(criterion.guideline ? [criterion.guideline] : [])]} />
-        </p>
-        <p className="text-[11px] text-muted-foreground">
-          {status.label}
-          {criterion.missing && <> · chybí: {criterion.missing}</>}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-const SEVERITY = {
-  high: { label: 'vysoká závažnost', className: 'border-l-red-500' },
-  moderate: { label: 'střední závažnost', className: 'border-l-orange-500' },
-  low: { label: 'nízká závažnost', className: 'border-l-slate-400' },
-} as const;
-
-/** Varovné signály (FR-R2): závažnost, popis, oba zdroje a pasáž guidelines. */
-function RedFlagList({ flags }: { flags: RedFlag[] }) {
-  return (
-    <section id="red-flags" className="scroll-mt-24 rounded-xl border border-border bg-card p-4">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-        <ShieldAlert className="h-4 w-4 text-destructive" aria-hidden /> Varovné signály ({flags.length})
-      </h2>
-      {flags.length === 0 ? (
-        <p className="mt-2 text-sm text-muted-foreground">Pravidla nenašla žádný varovný signál.</p>
-      ) : (
-        <ul className="mt-3 space-y-2">
-          {flags.map((f) => (
-            <li key={f.id} className={cn('rounded-lg border border-border border-l-4 bg-background px-3 py-2', SEVERITY[f.severity].className)}>
-              <p className="text-sm font-semibold text-foreground">
-                {f.title}
-                {f.rule === 'RF-LLM' && (
-                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-purple-500/15 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-purple-700 dark:text-purple-300">
-                    <Sparkles className="h-3 w-3" aria-hidden /> AI návrh
-                  </span>
-                )}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {SEVERITY[f.severity].label} · {f.rule}
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                {f.description}
-                <Citations ids={[...f.citations, ...(f.guideline ? [f.guideline] : [])]} />
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <BriefDataProvider value={dataSource}>
+      <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
+        <div className="space-y-4">
+          <CaseHeader header={brief.header} redFlagCount={brief.red_flags.length} />
+          {blocks.map(renderBlock)}
+          {!ds && blocks.includes('decision_support') && (
+            <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
+              Možnosti léčby, studie a otázky k diskusi v tomto podkladu zatím nejsou.
+            </p>
+          )}
+          <p className="text-center text-[11px] text-muted-foreground">
+            Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení.
+            {' '}Tvrzení: {brief.stats.claims_total}, neověřených: {brief.stats.claims_unverified}, chybějících údajů:{' '}
+            {brief.stats.missing_total}.
+          </p>
+        </div>
+        <SourceDrawer evidenceId={openId} loadSource={dataSource.loadSource} onClose={close} />
+      </CitationProvider>
+    </BriefDataProvider>
   );
 }

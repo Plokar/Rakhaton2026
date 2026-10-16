@@ -6,21 +6,14 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api';
-import { briefP03, evidenceP03 } from '@/lib/fixtures';
+import { briefP03 } from '@/lib/fixtures';
 import { mdtApi, type StoredBrief } from '@/lib/mdt-api';
 import { BriefView } from './BriefView';
+import { apiDataSource, fixtureDataSource } from './data-source';
 import { JobProgress } from './JobProgress';
-import type { SourceLoader } from './SourceDrawer';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
-
-const loadFixtureSource: SourceLoader = async (id) => {
-  const source = (await evidenceP03())[id];
-  if (!source) throw new Error('Zdroj ve fixtures není.');
-  return source;
-};
-const loadApiSource: SourceLoader = (id) => mdtApi.getEvidence(id);
 
 type LoadState = { key: string; brief?: StoredBrief; missing?: boolean; error?: string };
 
@@ -129,7 +122,7 @@ export function CaseBriefScreen({
           {current.error}
         </p>
       )}
-      {current?.brief && <BriefView brief={current.brief} loadSource={isDemo ? loadFixtureSource : loadApiSource} />}
+      {current?.brief && <BriefView brief={current.brief} dataSource={isDemo ? fixtureDataSource : apiDataSource} />}
     </div>
   );
 }

@@ -1,0 +1,862 @@
+[
+  {
+    "code": "14631-6",
+    "label": "Bilirubin celkový",
+    "unit": "µmol/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 10,
+        "citation": "P03-lab01-bili",
+        "ref_low": 2,
+        "ref_high": 21
+      },
+      {
+        "date": "2026-06-01",
+        "value": 11,
+        "citation": "P03-lab02-bili",
+        "ref_low": 2,
+        "ref_high": 21
+      },
+      {
+        "date": "2026-07-13",
+        "value": 12,
+        "citation": "P03-lab03-bili",
+        "ref_low": 2,
+        "ref_high": 21
+      },
+      {
+        "date": "2026-08-24",
+        "value": 14,
+        "citation": "P03-lab04-bili",
+        "ref_low": 2,
+        "ref_high": 21
+      },
+      {
+        "date": "2026-09-21",
+        "value": 13,
+        "citation": "P03-lab05-bili",
+        "ref_low": 2,
+        "ref_high": 21
+      },
+      {
+        "date": "2026-10-05",
+        "value": 13,
+        "citation": "P03-lab06-bili",
+        "ref_low": 2,
+        "ref_high": 21
+      }
+    ]
+  },
+  {
+    "code": "14682-9",
+    "label": "Kreatinin",
+    "unit": "µmol/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 86,
+        "citation": "P03-lab01-krea",
+        "ref_low": 44,
+        "ref_high": 104
+      },
+      {
+        "date": "2026-06-01",
+        "value": 88,
+        "citation": "P03-lab02-krea",
+        "ref_low": 44,
+        "ref_high": 104
+      },
+      {
+        "date": "2026-07-13",
+        "value": 91,
+        "citation": "P03-lab03-krea",
+        "ref_low": 44,
+        "ref_high": 104
+      },
+      {
+        "date": "2026-08-24",
+        "value": 90,
+        "citation": "P03-lab04-krea",
+        "ref_low": 44,
+        "ref_high": 104
+      },
+      {
+        "date": "2026-09-21",
+        "value": 92,
+        "citation": "P03-lab05-krea",
+        "ref_low": 44,
+        "ref_high": 104
+      },
+      {
+        "date": "2026-10-05",
+        "value": 89,
+        "citation": "P03-lab06-krea",
+        "ref_low": 44,
+        "ref_high": 104
+      }
+    ]
+  },
+  {
+    "code": "1742-6",
+    "label": "ALT",
+    "unit": "µkat/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 0.41,
+        "citation": "P03-lab01-alt",
+        "ref_low": 0.1,
+        "ref_high": 0.78
+      },
+      {
+        "date": "2026-06-01",
+        "value": 0.45,
+        "citation": "P03-lab02-alt",
+        "ref_low": 0.1,
+        "ref_high": 0.78
+      },
+      {
+        "date": "2026-07-13",
+        "value": 0.58,
+        "citation": "P03-lab03-alt",
+        "ref_low": 0.1,
+        "ref_high": 0.78
+      },
+      {
+        "date": "2026-08-24",
+        "value": 0.71,
+        "citation": "P03-lab04-alt",
+        "ref_low": 0.1,
+        "ref_high": 0.78
+      },
+      {
+        "date": "2026-09-21",
+        "value": 0.66,
+        "citation": "P03-lab05-alt",
+        "ref_low": 0.1,
+        "ref_high": 0.78
+      },
+      {
+        "date": "2026-10-05",
+        "value": 0.62,
+        "citation": "P03-lab06-alt",
+        "ref_low": 0.1,
+        "ref_high": 0.78
+      }
+    ]
+  },
+  {
+    "code": "1751-7",
+    "label": "Albumin",
+    "unit": "g/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 41,
+        "citation": "P03-lab01-alb",
+        "ref_low": 35,
+        "ref_high": 52
+      },
+      {
+        "date": "2026-06-01",
+        "value": 40,
+        "citation": "P03-lab02-alb",
+        "ref_low": 35,
+        "ref_high": 52
+      },
+      {
+        "date": "2026-07-13",
+        "value": 38,
+        "citation": "P03-lab03-alb",
+        "ref_low": 35,
+        "ref_high": 52
+      },
+      {
+        "date": "2026-08-24",
+        "value": 37,
+        "citation": "P03-lab04-alb",
+        "ref_low": 35,
+        "ref_high": 52
+      },
+      {
+        "date": "2026-09-21",
+        "value": 36,
+        "citation": "P03-lab05-alb",
+        "ref_low": 35,
+        "ref_high": 52
+      },
+      {
+        "date": "2026-10-05",
+        "value": 37,
+        "citation": "P03-lab06-alb",
+        "ref_low": 35,
+        "ref_high": 52
+      }
+    ]
+  },
+  {
+    "code": "1920-8",
+    "label": "AST",
+    "unit": "µkat/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 0.39,
+        "citation": "P03-lab01-ast",
+        "ref_low": 0.1,
+        "ref_high": 0.72
+      },
+      {
+        "date": "2026-06-01",
+        "value": 0.4,
+        "citation": "P03-lab02-ast",
+        "ref_low": 0.1,
+        "ref_high": 0.72
+      },
+      {
+        "date": "2026-07-13",
+        "value": 0.52,
+        "citation": "P03-lab03-ast",
+        "ref_low": 0.1,
+        "ref_high": 0.72
+      },
+      {
+        "date": "2026-08-24",
+        "value": 0.63,
+        "citation": "P03-lab04-ast",
+        "ref_low": 0.1,
+        "ref_high": 0.72
+      },
+      {
+        "date": "2026-09-21",
+        "value": 0.6,
+        "citation": "P03-lab05-ast",
+        "ref_low": 0.1,
+        "ref_high": 0.72
+      },
+      {
+        "date": "2026-10-05",
+        "value": 0.55,
+        "citation": "P03-lab06-ast",
+        "ref_low": 0.1,
+        "ref_high": 0.72
+      }
+    ]
+  },
+  {
+    "code": "2039-6",
+    "label": "CEA",
+    "unit": "µg/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 86.0,
+        "citation": "P03-lab01-cea",
+        "ref_low": 0,
+        "ref_high": 5.0,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-06-01",
+        "value": 79.0,
+        "citation": "P03-lab02-cea",
+        "ref_low": 0,
+        "ref_high": 5.0,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-07-13",
+        "value": 31.0,
+        "citation": "P03-lab03-cea",
+        "ref_low": 0,
+        "ref_high": 5.0,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-08-24",
+        "value": 11.2,
+        "citation": "P03-lab04-cea",
+        "ref_low": 0,
+        "ref_high": 5.0,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-09-21",
+        "value": 9.1,
+        "citation": "P03-lab05-cea",
+        "ref_low": 0,
+        "ref_high": 5.0,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 13.9,
+        "citation": "P03-lab06-cea",
+        "ref_low": 0,
+        "ref_high": 5.0,
+        "interpretation": "H"
+      }
+    ]
+  },
+  {
+    "code": "24108-3",
+    "label": "CA 19-9",
+    "unit": "kU/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 64,
+        "citation": "P03-lab01-ca199",
+        "ref_low": 0,
+        "ref_high": 37,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-06-01",
+        "value": 58,
+        "citation": "P03-lab02-ca199",
+        "ref_low": 0,
+        "ref_high": 37,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-07-13",
+        "value": 30,
+        "citation": "P03-lab03-ca199",
+        "ref_low": 0,
+        "ref_high": 37
+      },
+      {
+        "date": "2026-08-24",
+        "value": 22,
+        "citation": "P03-lab04-ca199",
+        "ref_low": 0,
+        "ref_high": 37
+      },
+      {
+        "date": "2026-09-21",
+        "value": 19,
+        "citation": "P03-lab05-ca199",
+        "ref_low": 0,
+        "ref_high": 37
+      },
+      {
+        "date": "2026-10-05",
+        "value": 21,
+        "citation": "P03-lab06-ca199",
+        "ref_low": 0,
+        "ref_high": 37
+      }
+    ]
+  },
+  {
+    "code": "29463-7",
+    "label": "Hmotnost",
+    "unit": "kg",
+    "points": [
+      {
+        "date": "2026-05-18",
+        "value": 84,
+        "citation": "P03-vaha01"
+      },
+      {
+        "date": "2026-06-01",
+        "value": 83,
+        "citation": "P03-vaha02"
+      },
+      {
+        "date": "2026-09-07",
+        "value": 79,
+        "citation": "P03-vaha03"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 78,
+        "citation": "P03-vaha04"
+      }
+    ]
+  },
+  {
+    "code": "6690-2",
+    "label": "Leukocyty",
+    "unit": "10^9/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 7.9,
+        "citation": "P03-lab01-leu",
+        "ref_low": 4.0,
+        "ref_high": 10.0
+      },
+      {
+        "date": "2026-06-01",
+        "value": 7.4,
+        "citation": "P03-lab02-leu",
+        "ref_low": 4.0,
+        "ref_high": 10.0
+      },
+      {
+        "date": "2026-07-13",
+        "value": 4.6,
+        "citation": "P03-lab03-leu",
+        "ref_low": 4.0,
+        "ref_high": 10.0
+      },
+      {
+        "date": "2026-08-24",
+        "value": 3.9,
+        "citation": "P03-lab04-leu",
+        "ref_low": 4.0,
+        "ref_high": 10.0,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-09-21",
+        "value": 4.1,
+        "citation": "P03-lab05-leu",
+        "ref_low": 4.0,
+        "ref_high": 10.0
+      },
+      {
+        "date": "2026-10-05",
+        "value": 5.2,
+        "citation": "P03-lab06-leu",
+        "ref_low": 4.0,
+        "ref_high": 10.0
+      }
+    ]
+  },
+  {
+    "code": "6768-6",
+    "label": "ALP",
+    "unit": "µkat/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 1.6,
+        "citation": "P03-lab01-alp",
+        "ref_low": 0.66,
+        "ref_high": 2.2
+      },
+      {
+        "date": "2026-06-01",
+        "value": 1.7,
+        "citation": "P03-lab02-alp",
+        "ref_low": 0.66,
+        "ref_high": 2.2
+      },
+      {
+        "date": "2026-07-13",
+        "value": 2.0,
+        "citation": "P03-lab03-alp",
+        "ref_low": 0.66,
+        "ref_high": 2.2
+      },
+      {
+        "date": "2026-08-24",
+        "value": 2.3,
+        "citation": "P03-lab04-alp",
+        "ref_low": 0.66,
+        "ref_high": 2.2,
+        "interpretation": "H"
+      },
+      {
+        "date": "2026-09-21",
+        "value": 2.1,
+        "citation": "P03-lab05-alp",
+        "ref_low": 0.66,
+        "ref_high": 2.2
+      },
+      {
+        "date": "2026-10-05",
+        "value": 1.9,
+        "citation": "P03-lab06-alp",
+        "ref_low": 0.66,
+        "ref_high": 2.2
+      }
+    ]
+  },
+  {
+    "code": "718-7",
+    "label": "Hemoglobin",
+    "unit": "g/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 121,
+        "citation": "P03-lab01-hb",
+        "ref_low": 135,
+        "ref_high": 175,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-06-01",
+        "value": 119,
+        "citation": "P03-lab02-hb",
+        "ref_low": 135,
+        "ref_high": 175,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-07-13",
+        "value": 118,
+        "citation": "P03-lab03-hb",
+        "ref_low": 135,
+        "ref_high": 175,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-08-24",
+        "value": 113,
+        "citation": "P03-lab04-hb",
+        "ref_low": 135,
+        "ref_high": 175,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-09-21",
+        "value": 112,
+        "citation": "P03-lab05-hb",
+        "ref_low": 135,
+        "ref_high": 175,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 114,
+        "citation": "P03-lab06-hb",
+        "ref_low": 135,
+        "ref_high": 175,
+        "interpretation": "L"
+      }
+    ]
+  },
+  {
+    "code": "751-8",
+    "label": "Neutrofily absolutně",
+    "unit": "10^9/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 5.1,
+        "citation": "P03-lab01-neu",
+        "ref_low": 2.0,
+        "ref_high": 7.0
+      },
+      {
+        "date": "2026-06-01",
+        "value": 4.8,
+        "citation": "P03-lab02-neu",
+        "ref_low": 2.0,
+        "ref_high": 7.0
+      },
+      {
+        "date": "2026-07-13",
+        "value": 2.1,
+        "citation": "P03-lab03-neu",
+        "ref_low": 2.0,
+        "ref_high": 7.0
+      },
+      {
+        "date": "2026-08-24",
+        "value": 1.7,
+        "citation": "P03-lab04-neu",
+        "ref_low": 2.0,
+        "ref_high": 7.0,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-09-21",
+        "value": 1.8,
+        "citation": "P03-lab05-neu",
+        "ref_low": 2.0,
+        "ref_high": 7.0,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 2.9,
+        "citation": "P03-lab06-neu",
+        "ref_low": 2.0,
+        "ref_high": 7.0
+      }
+    ]
+  },
+  {
+    "code": "777-3",
+    "label": "Trombocyty",
+    "unit": "10^9/l",
+    "points": [
+      {
+        "date": "2026-04-28",
+        "value": 338,
+        "citation": "P03-lab01-plt",
+        "ref_low": 150,
+        "ref_high": 400
+      },
+      {
+        "date": "2026-06-01",
+        "value": 312,
+        "citation": "P03-lab02-plt",
+        "ref_low": 150,
+        "ref_high": 400
+      },
+      {
+        "date": "2026-07-13",
+        "value": 180,
+        "citation": "P03-lab03-plt",
+        "ref_low": 150,
+        "ref_high": 400
+      },
+      {
+        "date": "2026-08-24",
+        "value": 151,
+        "citation": "P03-lab04-plt",
+        "ref_low": 150,
+        "ref_high": 400
+      },
+      {
+        "date": "2026-09-21",
+        "value": 145,
+        "citation": "P03-lab05-plt",
+        "ref_low": 150,
+        "ref_high": 400,
+        "interpretation": "L"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 168,
+        "citation": "P03-lab06-plt",
+        "ref_low": 150,
+        "ref_high": 400
+      }
+    ]
+  },
+  {
+    "code": "89247-1",
+    "label": "ECOG – hodnoceno lékařem",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-05-18",
+        "value": 0,
+        "citation": "P03-ecog01"
+      },
+      {
+        "date": "2026-09-07",
+        "value": 1,
+        "citation": "P03-ecog02"
+      },
+      {
+        "date": "2026-10-05",
+        "value": 0,
+        "citation": "P03-ecog03"
+      }
+    ]
+  },
+  {
+    "code": "proms:bolest",
+    "label": "PROMs: bolest",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 1,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 1,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:brneni",
+    "label": "PROMs: brneni",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 0,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 6,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:chut",
+    "label": "PROMs: chut",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 2,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 3,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:dusnost",
+    "label": "PROMs: dusnost",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 1,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 1,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:hmotnost",
+    "label": "PROMs: hmotnost",
+    "unit": "kg",
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 83,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 78,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:hmotnost-zmena",
+    "label": "PROMs: hmotnost-zmena",
+    "unit": "kg",
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": -4,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": -5,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:nevolnost",
+    "label": "PROMs: nevolnost",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 0,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 1,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:prujem",
+    "label": "PROMs: prujem",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 3,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 1,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:psychika",
+    "label": "PROMs: psychika",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 6,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 4,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:samostatnost",
+    "label": "PROMs: samostatnost",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 0,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 1,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:spanek",
+    "label": "PROMs: spanek",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 4,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 3,
+        "citation": "P03-prom02"
+      }
+    ]
+  },
+  {
+    "code": "proms:unava",
+    "label": "PROMs: unava",
+    "unit": null,
+    "points": [
+      {
+        "date": "2026-06-01",
+        "value": 2,
+        "citation": "P03-prom01"
+      },
+      {
+        "date": "2026-10-04",
+        "value": 4,
+        "citation": "P03-prom02"
+      }
+    ]
+  }
+]

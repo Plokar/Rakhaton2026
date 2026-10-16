@@ -1,17 +1,15 @@
 """
 Načtení datasetu pro testy (AGENTS.md: JSON a .md datasetu jen pro ingest, testy a čtení člověkem).
 
-Sanitizace je tu jen zjednodušená (`_` → `-` v ID a referencích, prázdné stringy pryč),
-aby testy viděly stejná ID jako IRIS po ingestu (DATASET §6.2). Ostrá verze je v ingestu (T-101).
+Resources jsou sanitizované stejnou funkcí jako při ingestu do IRIS (`services.fhir.ingest`, T-101),
+takže testy vidí stejná ID a data jako aplikace za běhu.
 """
-import json
 import os
-import re
 from pathlib import Path
 
 import pytest
 
-_INVALID_ID_CHARS = re.compile(r"[^A-Za-z0-9.\-]")
+from services.fhir import ingest
 
 
 def dataset_dir() -> Path:
@@ -26,36 +24,12 @@ def dataset_dir() -> Path:
     return path
 
 
-def _sanitize(node):
-    if isinstance(node, dict):
-        out = {}
-        for key, value in node.items():
-            if key == "id" and isinstance(value, str):
-                value = _INVALID_ID_CHARS.sub("-", value)
-            elif key == "reference" and isinstance(value, str) and "/" in value:
-                rtype, rid = value.split("/", 1)
-                value = f"{rtype}/{_INVALID_ID_CHARS.sub('-', rid)}"
-            value = _sanitize(value)
-            if value == "" or value == [] or value == {}:
-                continue
-            out[key] = value
-        return out
-    if isinstance(node, list):
-        return [v for v in (_sanitize(v) for v in node) if v not in ("", [], {})]
-    return node
-
-
-def load_bundle_resources(relative_path: str) -> list[dict]:
-    bundle = json.loads((dataset_dir() / relative_path).read_text(encoding="utf-8"))
-    return [_sanitize(entry["resource"]) for entry in bundle["entry"]]
-
-
 def load_patient(patient_id: str) -> list[dict]:
-    return load_bundle_resources(f"pacienti/{patient_id}/{patient_id}_bundle.json")
+    return ingest.load_patient(dataset_dir(), patient_id)
 
 
 def load_studies() -> list[dict]:
-    return load_bundle_resources("studie/studie_ResearchStudy_bundle.json")
+    return ingest.load_studies(dataset_dir())
 
 
 def load_guideline_markdowns() -> dict[str, str]:

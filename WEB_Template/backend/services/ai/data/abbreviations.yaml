@@ -1,0 +1,99 @@
+# Zkratky v podkladech (FR-R5, docs/POZADAVKY_LEKARE.md §7, T-509).
+#
+# ambiguous: nejednoznačné zkratky (§7.2). Výklad podle kontextu (§7.1):
+#   1. `section_meaning` – zkratka hned před dvojtečkou je sekce anamnézy („OA:“);
+#   2. `cues` – nejbližší kontextové slovo v odstavci (okno `window` znaků) rozhodne;
+#   3. `title_cues` – název zprávy a oddělení, když v odstavci nic není.
+# Když nic nerozhodne nebo se dva výklady přetahují, výsledek je NEJISTOTA AI (nikdy odhad).
+# Kontextová slova: VELKÁ písmena / čísla / „%“ = přesný token, jinak začátek slova bez ohledu na velikost.
+
+window: 80
+tie_margin: 10
+
+ambiguous:
+  G:                       # G1–G4 (bez písmene)
+    pattern: "G[1-4]"
+    meanings:
+      - meaning: "grade nádoru"
+        cues: [karcinom, adenokarcinom, NST, grade, Nottingham, diferencovan, histolog, tumor, nádor]
+        title_cues: [PAT-B, PAT-M, Patologie, biopsie]
+      - meaning: "stupeň toxicity (CTCAE)"
+        cues: [CTCAE, toxicit, neutropeni, anémi, anemi, trombocytopeni, neuropati, artralgi, transamináz, průjem,
+               nauze, alopeci, mukositid, únav, hypertenz, exantém, parestez]
+  G-CKD:                   # G3a, G3b
+    pattern: "G[1-5][ab]"
+    meanings:
+      - meaning: "stadium chronického onemocnění ledvin (CKD)"
+        cues: [CKD, ledvin, eGFR, kreatinin, renáln]
+  PR:
+    pattern: "PR"
+    meanings:
+      - meaning: "progesteronový receptor"
+        cues: [ER, HER2, receptor, progesteron, "%", pozitiv, negativ, exprese, IHC, Ki-67]
+        title_cues: [PAT-B, PAT-M, Patologie]
+      - meaning: "parciální odpověď (RECIST)"
+        cues: [RECIST, odpověď, regres, parciální, SD, CR]
+  PD:
+    pattern: "PD"
+    meanings:
+      - meaning: "progrese (RECIST)"
+        cues: [RECIST, progres, odpověď, CR, SD]
+      - meaning: "PD-1 / PD-L1"
+        cues: [imunoterapi, pembrolizumab, nivolumab, durvalumab, inhibitor, TPS]
+  LDL:
+    pattern: "LDL"
+    meanings:
+      - meaning: "levý dolní plicní lalok"
+        cues: [PHL, PDL, LHL, ložisk, lalok, plic, uzlin]
+        title_cues: [CT hrudníku, RDG, plic]
+      - meaning: "LDL cholesterol"
+        cues: [cholesterol, mmol, statin, lipid, HDL, atorvastatin]
+  OA:
+    pattern: "OA"
+    section_meaning: "osobní anamnéza"
+    meanings:
+      - meaning: "osteoartróza"
+        cues: [kloub, artróz, kolen, kyčl, revmat]
+  RA:
+    pattern: "RA"
+    section_meaning: "rodinná anamnéza"
+    meanings:
+      - meaning: "revmatoidní artritida"
+        cues: [kloub, artrit, revmat, methotrexát]
+  PA:
+    pattern: "PA"
+    section_meaning: "pracovní anamnéza"
+    meanings:
+      - meaning: "RTG projekce zezadu dopředu (posteroanteriorní)"
+        cues: [RTG, bočn, projekc, snímek]
+        title_cues: [RTG]
+  PAD:
+    pattern: "PAD"
+    meanings:
+      - meaning: "perorální antidiabetika"
+        cues: [DM, diabet, metformin, glyk, inzulin, antidiabet]
+      - meaning: "onemocnění periferních tepen"
+        cues: [tepen, klaudikac, ischemi, ABI, bypass]
+  CMP:
+    pattern: "CMP"
+    meanings:
+      - meaning: "cévní mozková příhoda"
+        cues: [mozk, iktus, hemipar, neurolog, TIA, IM, embol]
+      - meaning: "kardiomyopatie"
+        cues: [kardiomyopati, dilatač, LVEF, EF, srdeční selhání, echokardiograf]
+  S:                       # segment S1–S10
+    pattern: "S(?:[1-9]|10)"
+    meanings:
+      - meaning: "jaterní segment"
+        cues: [jater, játr, jatern, hepat, levý lalok, pravý lalok, levém laloku, pravém laloku]
+        title_cues: [jater, játr, hepatobiliár]
+      - meaning: "plicní segment"
+        cues: [horní lalok, dolní lalok, střední lalok, horního laloku, dolního laloku, plic, bronch]
+        title_cues: [hrudník, plic]
+  PH:
+    pattern: "PH"
+    meanings:
+      - meaning: "pertuzumab + trastuzumab"
+        cues: [pertuzumab, trastuzumab, udržovac, podání, HER2, cykl, pokračov, "á 3 týdny"]
+      - meaning: "plicní hypertenze"
+        cues: [plicnic, PASP, plicní hypertenz, pravá komora]

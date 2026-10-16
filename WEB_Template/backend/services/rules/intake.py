@@ -19,6 +19,7 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
+from services.ai.abbreviations import uncertainty_warnings
 from services.rules.red_flags import STALE_DAYS, PatientData, RedFlag, _cc_text, _code, _date, _num, evaluate
 
 UNSKIPPABLE = {"mdt.question"}     # OBC-1.1: bez otázky je případ neúplný
@@ -375,6 +376,7 @@ def intake_prefill(resources: Iterable[dict], skipped_fields: Iterable[str] = ()
             continue
         warnings.append(_field_warning(f))
     warnings += _range_warnings(data)
+    warnings += [IntakeWarning(**w) for w in uncertainty_warnings(resources)]     # nejednoznačné zkratky (FR-R5)
     warnings += _lab_warnings(data, {c for f in flags if f.rule == "RF-LAB" for c in f.citations})
 
     severity = {"high": 0, "moderate": 1, "low": 2}

@@ -883,6 +883,13 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 5. Lékař varování může odkliknout (stačí klik, bez důvodu). Komise v podkladu dál vidí problém, ale ne to, kdo ho odklikl (D-019). Odkliknutí jde do auditu (`DetectedIssue.mitigation`).
 6. Lékař zadá nebo potvrdí ECOG (velká číslice) a záměr **C/P** a zaškrtne připomínku „Snímek mladší než 3 měsíce“. Záměr se předvyplní z poslední MDT; když minulá MDT rozhodnutí odložila, nepředvyplní se.
 
+**Zkratky (T-509, FR-R5):** `services/ai/abbreviations.py` a pravidla jako data v `services/ai/data/abbreviations.yaml` (docs/POZADAVKY_LEKARE.md §7.2).
+
+- Výklad je deterministický: sekce („OA:“), pak nejbližší kontextové slovo v odstavci, pak název zprávy a oddělení. Když se výklady přetahují nebo kontext chybí, je výsledek NEJISTOTA AI, nikdy odhad.
+- `uncertainty_warnings(resources)` dodává tato varování do intake.
+- `prompt_rules()` je text pravidel pro systémové prompty (T-106, T-201).
+- Na datasetu se všech 200+ výskytů vyloží jednoznačně.
+
 **Implementace (T-502):** `services/rules/intake.py`, `intake_prefill(resources, skipped_fields=[])` vrátí `IntakePrefill` (§8.6).
 
 - **Pole:** obecná (OBC-1.1: otázka, histologie a grade, TNM, zobrazení ≤ 6 týdnů, ECOG lékař i pacient, komorbidity, léčba, preference, alergie, hmotnost, G8 od 70 let) a podle diagnózy (plíce, prs, kolorektum, docs/POZADAVKY_LEKARE.md §4). Každé pole má citaci a `required_by`.

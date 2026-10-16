@@ -689,6 +689,20 @@ Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-
 
 Výstup se před potvrzením ukládá v draftu a po potvrzení jako `DetectedIssue` v IRIS.
 
+**Implementace (T-202):**
+
+- `services/rules/red_flags.py`:
+  - `evaluate(resources, roles_present=None)` vrátí `RedFlag[]` ve tvaru §8.2, seřazené podle závažnosti. `id` je stabilní (`RF-ECOG:P03-ecog03`) a hodí se pro `acknowledged_warnings` i `DetectedIssue`.
+  - Deterministické flagy mají `verification = "verified"`, citace jsou ID z datasetu včetně odstavců (`P03-img03#1`) a pasáž guidelines je vždy ze sady pacienta.
+  - Prahy jsou konstanty na začátku souboru; konvence týmu jsou v popisu flagu označené.
+  - `RF-ROLES` se vyhodnocuje jen s `roles_present` z konfigurace.
+  - `RF-IDENTITY`, `RF-PRIOR-PROC` a `RF-DATAQUALITY` patří do T-312.
+- `build_context()` pravidla spustí nad stejnými resources: `ctx.red_flags` a řádky v `ctx.rule_results` (sekce „Výsledky deterministických pravidel“ v kontextu).
+- `services/ai/red_flags_llm.py`:
+  - `detect_llm_red_flags(ctx, provider)` (prompt `services/ai/prompts/red_flags.md`) hledá jen další rozpory;
+  - citace mimo `ctx.allowed_ids` nebo méně než dva zdroje vedou na `unverified`;
+  - pasáž mimo sadu pacienta se zahodí.
+
 Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **neodstraní** (D-019). Přeskočený údaj se v podkladu zobrazí jako „Chybí (přeskočeno lékařem)“ a pravidla, která na něm závisí, jako „neposuzováno“.
 
 ### 5.5 B2 — podpora rozhodování a posouzení rolí
@@ -903,7 +917,7 @@ WEB_Template/backend/
 │   ├── ai_service.py            # providery; GeminiProvider přepsat (google-genai, schema, embed, transcribe)
 │   ├── fhir/                ★   # client.py, ingest.py (sanitize + to_transaction), writeback.py, export.py
 │   ├── iris/                ★   # db.py (connect ctx manager), vector_store.py
-│   ├── ai/                  ★   # context_builder.py, text.py (odstavce), guidelines.py, pseudonymize.py, grounding.py, anamnesis.py, prompts/*.md
+│   ├── ai/                  ★   # context_builder.py, text.py (odstavce), guidelines.py, pseudonymize.py, red_flags_llm.py, grounding.py, anamnesis.py, prompts/*.md
 │   └── rules/               ★   # red_flags.py, intake.py, compatibility.py (+ data/compatibility_rules.yaml), readiness.py, recist.py, scales.py, guideline_sets.py
 └── mcp_server.py            ★   # (SHOULD) FastMCP nad IRIS
 ```

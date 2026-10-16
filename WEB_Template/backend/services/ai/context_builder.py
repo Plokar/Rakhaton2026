@@ -22,6 +22,7 @@ from typing import Any, Callable, Iterable, Sequence
 from services.ai.guidelines import GuidelinePassage, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
 from services.ai.text import resource_paragraphs
+from services.rules import red_flags as rules
 from services.rules.guideline_sets import guideline_sets_for, trial_is_relevant
 
 LOINC_ECOG = "89247-1"
@@ -112,6 +113,7 @@ class PatientContext:
     trials: list[Trial]
     facts: dict[str, Any]
     rule_results: list[str] = field(default_factory=list)
+    red_flags: list[rules.RedFlag] = field(default_factory=list)   # deterministická pravidla (T-202)
     pseudonymized: int = 0      # počet náhrad pseudonymizace (audit)
 
     @property
@@ -172,8 +174,9 @@ class PatientContext:
 
 # ── Veřejné API ───────────────────────────────────────────────────────────────
 def build_context(patient_id: str, *, guidelines: list[GuidelinePassage] | None = None,
-                  rule_results: Iterable[str] = ()) -> PatientContext:
-    """Kontext pacienta z IRIS (FHIR REST + `MDT.GuidelineChunk`)."""
+                  rule_results: Iterable[str] = (), roles_present: Iterable[str] | None = None,
+                  evaluate_rules: bool = True) -> PatientContext:
+    """Kontext pacienta z IRIS (FHIR REST + `MDT.GuidelineChunk`) včetně deterministických red flags."""
     from services.fhir import client as fhir
 
     by_type = fhir.patient_everything(patient_id)
@@ -183,15 +186,18 @@ def build_context(patient_id: str, *, guidelines: list[GuidelinePassage] | None 
     studies = fhir.search("ResearchStudy") + fhir.search("Group")
     if guidelines is None:
         guidelines = load_guidelines(guideline_sets_for(_diagnosis_codes(resources)))
+    flags = rules.evaluate(resources, roles_present) if evaluate_rules else []
     return context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines,
-                                  rule_results=rule_results)
+                                  rule_results=rule_results, red_flags=flags)
 
 
 def context_from_resources(patient_id: str, resources: Iterable[dict], *, studies: Iterable[dict] = (),
                            guidelines: Iterable[GuidelinePassage] = (),
-                           rule_results: Iterable[str] = ()) -> PatientContext:
+                           rule_results: Iterable[str] = (),
+                           red_flags: Iterable[rules.RedFlag] = ()) -> PatientContext:
     """Čistá transformace FHIR resources → `PatientContext` (testovatelná bez IRIS)."""
     resources = _unique(resources)
+    red_flags = list(red_flags)
     pseudo = Pseudonymizer()
     for r in resources:
         if r.get("resourceType") in ("Patient", "Practitioner"):
@@ -220,7 +226,8 @@ def context_from_resources(patient_id: str, resources: Iterable[dict], *, studie
         guidelines=sorted((g for g in guidelines if g.guideline_set in sets), key=lambda g: g.sort_key),
         trials=_trials(studies, sets),
         facts=facts,
-        rule_results=list(rule_results),
+        rule_results=[f.render_line() for f in red_flags] + list(rule_results),
+        red_flags=red_flags,
         pseudonymized=pseudo.replacements,
     )
 

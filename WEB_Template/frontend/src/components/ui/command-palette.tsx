@@ -7,16 +7,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Search,
   LayoutDashboard,
-  FolderKanban,
-  Bot,
-  HardDrive,
-  Radio,
+  CalendarDays,
+  ListChecks,
   Settings,
   Sun,
   Moon,
   LogOut,
   ExternalLink,
 } from 'lucide-react';
+
+const isDev = process.env.NODE_ENV === 'development';
+
+const devTools = [
+  { label: 'Swagger UI (:8000/api/docs)', url: 'http://localhost:8000/api/docs/' },
+  { label: 'Django Admin (:8000/admin)', url: 'http://localhost:8000/admin/' },
+  { label: 'Mailhog E-maily (:8025)', url: 'http://localhost:8025' },
+  { label: 'Traefik Dashboard (:8080)', url: 'http://localhost:8080' },
+];
 
 interface CommandPaletteProps {
   open: boolean;
@@ -49,11 +56,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     {
       group: 'Navigace',
       items: [
-        { label: 'Přehled Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, href: '/dashboard' },
-        { label: 'Projekty & Úkoly', icon: <FolderKanban className="h-4 w-4" />, href: '/dashboard/projects' },
-        { label: 'AI Studio Playground', icon: <Bot className="h-4 w-4" />, href: '/dashboard/ai' },
-        { label: 'Správce souborů', icon: <HardDrive className="h-4 w-4" />, href: '/dashboard/storage' },
-        { label: 'WebSocket Live Monitor', icon: <Radio className="h-4 w-4" />, href: '/dashboard/realtime' },
+        { label: 'Přehled', icon: <LayoutDashboard className="h-4 w-4" />, href: '/dashboard' },
+        { label: 'Zasedání MDT', icon: <CalendarDays className="h-4 w-4" />, href: '/dashboard/mdt' },
+        { label: 'Úkoly po zasedání', icon: <ListChecks className="h-4 w-4" />, href: '/dashboard/tasks' },
         { label: 'Nastavení profilu', icon: <Settings className="h-4 w-4" />, href: '/dashboard/settings' },
       ],
     },
@@ -65,26 +70,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           icon: resolvedTheme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-indigo-500" />,
           action: () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'),
         },
-        {
-          label: 'Swagger UI (:8000/api/docs)',
-          icon: <ExternalLink className="h-4 w-4 text-cyan-400" />,
-          action: () => window.open('http://localhost:8000/api/docs/', '_blank'),
-        },
-        {
-          label: 'Django Admin (:8000/admin)',
-          icon: <ExternalLink className="h-4 w-4" />,
-          action: () => window.open('http://localhost:8000/admin/', '_blank'),
-        },
-        {
-          label: 'Mailhog E-maily (:8025)',
-          icon: <ExternalLink className="h-4 w-4" />,
-          action: () => window.open('http://localhost:8025', '_blank'),
-        },
-        {
-          label: 'Traefik Dashboard (:8080)',
-          icon: <ExternalLink className="h-4 w-4" />,
-          action: () => window.open('http://localhost:8080', '_blank'),
-        },
+        ...(isDev
+          ? devTools.map((tool) => ({
+              label: tool.label,
+              icon: <ExternalLink className="h-4 w-4" />,
+              action: () => window.open(tool.url, '_blank'),
+            }))
+          : []),
         {
           label: 'Odhlásit se',
           icon: <LogOut className="h-4 w-4 text-destructive" />,

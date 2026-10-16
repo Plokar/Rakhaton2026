@@ -11,12 +11,9 @@ import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropd
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  FolderKanban,
-  Bot,
-  HardDrive,
-  Radio,
+  CalendarDays,
+  ListChecks,
   Settings,
-  Bell,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -24,12 +21,15 @@ import {
   ExternalLink,
   LogOut,
   ShieldAlert,
-  Zap,
+  Stethoscope,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
+
+// Odkazy na localhost služby mají smysl jen při lokálním vývoji (ARCH §3.4)
+const isDev = process.env.NODE_ENV === 'development';
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
@@ -46,9 +46,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [user, isLoading, router]);
 
-  const navItems = [
+  // Template stránky (projects, ai, storage, realtime) zůstávají v kódu, jen nejsou v navigaci (ARCH §7.1)
+  const navItems: {
+    title: string;
+    items: { label: string; href: string; icon: React.ReactNode; exact?: boolean; badge?: string }[];
+  }[] = [
     {
-      title: 'Hlavní',
+      title: 'MDT',
       items: [
         {
           label: 'Přehled',
@@ -57,26 +61,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           exact: true,
         },
         {
-          label: 'Projekty & Úkoly',
-          href: '/dashboard/projects',
-          icon: <FolderKanban className="h-4 w-4" />,
+          label: 'Zasedání',
+          href: '/dashboard/mdt',
+          icon: <CalendarDays className="h-4 w-4" />,
         },
         {
-          label: 'AI Studio',
-          href: '/dashboard/ai',
-          icon: <Bot className="h-4 w-4" />,
-          badge: 'Live',
-        },
-        {
-          label: 'Úložiště souborů',
-          href: '/dashboard/storage',
-          icon: <HardDrive className="h-4 w-4" />,
-        },
-        {
-          label: 'WebSocket Monitor',
-          href: '/dashboard/realtime',
-          icon: <Radio className="h-4 w-4" />,
-          badge: 'WS',
+          label: 'Úkoly',
+          href: '/dashboard/tasks',
+          icon: <ListChecks className="h-4 w-4" />,
         },
       ],
     },
@@ -104,7 +96,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <span className="text-xs text-muted-foreground font-mono">Načítám Hackathon OS...</span>
+          <span className="text-xs text-muted-foreground font-mono">Načítám MDT Copilot...</span>
         </div>
       </div>
     );
@@ -135,12 +127,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex h-16 items-center justify-between border-b border-border px-4">
           <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-indigo-500/30">
-              <Zap className="h-5 w-5 fill-current" />
+              <Stethoscope className="h-5 w-5" />
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <span className="text-sm font-bold tracking-tight text-foreground">Hackathon OS</span>
-                <span className="text-[10px] font-mono text-muted-foreground">v2.0 • Django + Next</span>
+                <span className="text-sm font-bold tracking-tight text-foreground">MDT Copilot</span>
+                <span className="text-[10px] text-muted-foreground">Podklady pro onkologickou komisi</span>
               </div>
             )}
           </Link>
@@ -200,7 +192,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           ))}
 
           {/* External Dev Services */}
-          {!collapsed && (
+          {isDev && !collapsed && (
             <div className="space-y-1 pt-2 border-t border-border/60">
               <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Dev Služby
@@ -284,7 +276,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             >
               <div className="flex items-center gap-2">
                 <Search className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Hledat v projektu...</span>
+                <span className="hidden sm:inline">Hledat zasedání, úkoly...</span>
                 <span className="sm:hidden">Hledat...</span>
               </div>
               <kbd className="hidden sm:inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
@@ -294,38 +286,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-2.5">
-            {/* Quick links to localhost services */}
-            <a
-              href="http://localhost:8000/api/docs/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/50 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition"
-              title="Swagger UI / OpenAPI Dokumentace"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
-              Swagger UI
-            </a>
-            <a
-              href="http://localhost:8025"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/50 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition"
-              title="Mailhog e-mail schránka"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Mailhog
-            </a>
-
-            {/* Notification bell */}
-            <button
-              type="button"
-              onClick={() => router.push('/dashboard')}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card/60 text-muted-foreground hover:bg-accent hover:text-foreground transition"
-              title="Notifikace"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
-            </button>
+            {/* Quick link to Swagger (jen dev) */}
+            {isDev && (
+              <a
+                href="http://localhost:8000/api/docs/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden lg:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/50 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground transition"
+                title="Swagger UI / OpenAPI Dokumentace"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                Swagger UI
+              </a>
+            )}
 
             {/* Theme switcher */}
             <ThemeToggle />

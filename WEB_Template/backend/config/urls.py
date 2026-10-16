@@ -98,6 +98,7 @@ urlpatterns = [
     path('api/', api_root, name='api-root'),
     path('api/health/', health_check, name='health-check'),
     path('api/auth/', include('apps.authentication.urls')),
+    path('api/patients/', include('apps.patients.urls')),
     path('api/items/', include('apps.items.urls')),
 
     # API Documentation (Swagger & ReDoc)

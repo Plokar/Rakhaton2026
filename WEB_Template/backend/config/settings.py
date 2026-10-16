@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.items',            # Example domain module
     'apps.projects',         # Hackathon projects, tasks, notifs, storage, AI
     'apps.copilot',          # MDT Copilot (iris_init, ingest, AI orchestrace)
+    'apps.patients',         # Pacienti z IRIS FHIR (T-103)
 ]
 
 MIDDLEWARE = [

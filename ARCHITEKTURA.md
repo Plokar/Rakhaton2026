@@ -1186,11 +1186,39 @@ interface RedFlag {
   verification: Verification;
 }
 
-interface TimelineEvent {                       // GET /api/patients/{pid}/timeline/
-  date: string;
+interface TimelineEvent {                       // GET /api/patients/{pid}/timeline/ → TimelineEvent[] (seřazené podle data)
+  date: string;                                 // "2026-09-21", může být částečné "2019-03"
   type: "diagnosis" | "procedure" | "medication" | "imaging" | "pathology" | "lab" | "proms" | "mdt" | "document";
   label: string;
   citation: EvidenceId;
+}
+
+interface PatientListItem {                     // GET /api/patients/ → PatientListItem[]
+  id: string;                                   // "P03"
+  display_name: string;                         // "P03 · muž · 67 let"
+  sex: "male" | "female" | "other" | "unknown";
+  age: number | null;
+  diagnosis: { text: string; icd10: string; citation: EvidenceId } | null;   // první onkologická
+  mdt_question: string | null;                  // ServiceRequest.reasonCode.text
+  mdt_question_citation: EvidenceId | null;     // "P03-zad01"
+  mdt_date: string | null;                      // Task.restriction.period.start (ISO)
+}
+
+interface PatientDetail extends PatientListItem {   // GET /api/patients/{pid}/
+  diagnoses: { text: string; icd10: string; onset?: string; verification: string; stage: string | null; citation: EvidenceId }[];
+  comorbidities: { text: string; icd10: string | null; citation: EvidenceId }[];
+  tnm: { text: string; kind: string; date: string; citation: EvidenceId }[];   // Observation tnm, chronologicky
+  ecog: {
+    physician: { value: number; date: string; citation: EvidenceId } | null;                    // poslední Observation 89247-1
+    patient: { value: number; date: string; citation: EvidenceId; answer_text: string } | null;  // poslední PROMs samostatnost
+  };
+}
+
+interface ObservationSeries {                   // GET /api/patients/{pid}/observations/?code=718-7,lvef,proms:brneni → ObservationSeries[]
+  code: string;                                 // LOINC | druh z ID bez LOINC ("lvef") | "proms:<linkId>"
+  label: string;
+  unit: string | null;
+  points: { date: string; value: number; citation: EvidenceId; ref_low?: number; ref_high?: number; interpretation?: "H" | "L" }[];
 }
 ```
 

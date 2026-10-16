@@ -88,7 +88,9 @@ def check_claim(claim: dict, context: PatientContext) -> GroundingResult:
     if not citations:
         return GroundingResult(False, ["tvrzení bez citace"])
     sources = "\n".join(source_text(context, c) for c in citations if c in allowed)
-    missing_numbers = _numbers(claim.get("text", "")) - _numbers(sources) - set(claim.get("_derived") or [])
+    # Číslo z tokenu zdroje („G2“, „S3“) smí tvrzení napsat i slovy („grade 2“); opačně se nekontroluje.
+    source_numbers = _numbers(sources) | {str(int(d)) for tok in ID_LIKE.findall(sources) for d in re.findall(r"\d+", tok)}
+    missing_numbers = _numbers(claim.get("text", "")) - source_numbers - set(claim.get("_derived") or [])
     reasons += [f"číslo {n} není ve zdroji" for n in sorted(missing_numbers)]
     missing_dates = _dates(claim.get("text", "")) - _dates(sources)
     reasons += [f"datum {d}. {m}. není ve zdroji" for d, m in sorted(missing_dates)]

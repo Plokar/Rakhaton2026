@@ -560,6 +560,10 @@ ORDER BY Score DESC
 - Search parametry se liší od názvů elementů (`recorded-date` vs. `recordedDate`). `Task` a `ImagingStudy` se hledají přes `patient`.
 - Kódy: `Observation?patient=P03&code=http://loinc.org|718-7&_sort=date`.
 - **`Patient/$everything`:** podporu v naší verzi IRIS **ověřit** (komunita naznačuje, že není out-of-the-box). Fallback: paralelní searche přes typy z [DATASET.md §6.3](DATASET.md#63-čtení-za-běhu-context-builder).
+- **Kontrola serveru (T-313):** `python manage.py iris_check` (po `ingest_dataset`, logika `services/fhir/capabilities.py`) vypíše markdown tabulku:
+  - u každého search parametru, na kterém aplikace stojí (`patient` u 14 typů, `_id` i s čárkami, `code`, `subject`, `category`, `status`, `date`, `_tag`, `_sort`), se ptá hodnotou, která nemůže nic najít. Výsledek musí být 0, jinak IRIS parametr ignoruje a vrací cizí data. Povinné kontroly při selhání vrátí chybový kód;
+  - dál ověří `Patient/$everything` (a srovná ho s fallbackem), jestli jsou nahrané profily mCODE IG a `$validate`.
+  - **Výsledek z naší verze IRIS sem doplnit** (zatím nespuštěno, chybí stroj s Dockerem). Parametr, který IRIS ignoruje, je potřeba vyřadit z allowlistu MCP `fhir_query` (§4.7) a nepoužívat v kódu.
 - Validace: chyba 400 vrací `OperationOutcome`, logovat `issue[].details.text`.
 - **Community Edition má limit spojení.** DB-API spojení vždy zavírat (`try/finally` nebo context manager v `services/iris/db.py`) a nedržet je přes request.
 

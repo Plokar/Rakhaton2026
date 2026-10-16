@@ -12,10 +12,16 @@ kontrolují na existenci citací.
 """
 from __future__ import annotations
 
+import logging
+import math
+import os
 import re
 from dataclasses import dataclass, field
 
 from services.ai.context_builder import PatientContext
+
+log = logging.getLogger(__name__)
+DEFAULT_MIN_SIMILARITY = 0.55
 
 NUMBER = re.compile(r"(?<![\w.,])\d+(?:[.,]\d+)?(?![\w])")
 ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
@@ -74,10 +80,39 @@ def check_claim(claim: dict, context: PatientContext) -> GroundingResult:
 
 
 def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
-    """Nastaví `verification` u každého tvrzení; důvody neověření vrátí v `_grounding` (mimo kontrakt)."""
+    """Nastaví `verification` včetně sémantické kontroly přes IRIS Vector Search.
+
+    Důvody neověření vrátí v `_grounding` (mimo kontrakt). Chybějící údaje nepopisují
+    klinický fakt a zůstávají kontrolované pouze podle citací.
+    """
+    try:
+        min_similarity = float(os.environ.get("GROUNDING_MIN_SIMILARITY", DEFAULT_MIN_SIMILARITY))
+    except (TypeError, ValueError):
+        min_similarity = DEFAULT_MIN_SIMILARITY
+    if not 0 <= min_similarity <= 1:
+        min_similarity = DEFAULT_MIN_SIMILARITY
+
     out = []
     for claim in claims:
         result = check_claim(claim, context)
+        if result.verified and claim.get("kind") != "missing":
+            try:
+                from services.iris.vector_store import similarity
+
+                scores = similarity(claim.get("text", ""), claim.get("citations") or [])
+                valid_scores = [score for score in scores.values()
+                                if isinstance(score, (int, float)) and math.isfinite(score)]
+                if not valid_scores:
+                    result = GroundingResult(False, ["citované zdroje nemají dostupné vektory"])
+                elif max(valid_scores) < min_similarity:
+                    best = max(valid_scores)
+                    result = GroundingResult(False, [
+                        f"sémantická podobnost {best:.3f} je pod prahem {min_similarity:.3f}"
+                    ])
+            except Exception as exc:
+                # Selhání IRIS nesmí shodit celý podklad; tvrzení ale nelze označit jako ověřené.
+                log.warning("Grounding v2 nedostupný: %s", exc)
+                result = GroundingResult(False, ["sémantickou podobnost se nepodařilo ověřit"])
         item = {**claim, "verification": "verified" if result.verified else "unverified"}
         if result.reasons:
             item["_grounding"] = result.reasons

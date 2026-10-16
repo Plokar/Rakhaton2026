@@ -1,4 +1,4 @@
-"""Testy generátoru bloku A a grounding validátoru v1 (T-106, ARCHITEKTURA §5.3)."""
+"""Testy generátoru bloku A a grounding validátoru v2 (T-106, T-213, ARCHITEKTURA §5.3)."""
 import types
 
 import pytest
@@ -7,11 +7,22 @@ from apps.copilot import schemas
 from services.ai import brief as brief_module
 from services.ai.brief import build_brief, generate_brief
 from services.ai.context_builder import context_from_resources
-from services.ai.grounding import check_claim
+from services.ai.grounding import check_claim, verify_claims
 from services.ai_service import MockAIProvider
+from services.fhir import ingest
+from services.iris import indexing
 from services.tests.dataset import load_patient, load_studies
 
 PATIENTS = ["P01", "P02", "P03", "P04", "P05", "P06"]
+
+
+@pytest.fixture(autouse=True)
+def indexed_grounding_vectors(fake_iris, dataset_root):
+    """Podklady ověřují grounding proti stejným in-memory vektorům jako IRIS."""
+    for patient_id in PATIENTS:
+        indexing.index_patient(patient_id, ingest.load_patient(dataset_root, patient_id))
+    indexing.index_guidelines(indexing.guideline_chunks(dataset_root))
+    indexing.index_trials(indexing.trial_criteria(ingest.load_studies(dataset_root)))
 
 # Souhrn, jak by ho napsal LLM: čísla a data přesně podle zdrojů, citace odstavců
 P03_SUMMARY = {"items": [
@@ -146,3 +157,35 @@ def test_missing_items_only_need_existing_citations(p03_context):
     assert check_claim({"kind": "missing", "text": "MMR chybí 12", "citations": ["P03-bm04"]}, p03_context).verified
     assert check_claim({"kind": "missing", "text": "MMR chybí", "citations": []}, p03_context).verified
     assert not check_claim({"kind": "missing", "text": "x", "citations": ["P03-xx"]}, p03_context).verified
+
+
+def test_grounding_v2_rejects_semantically_wrong_citation(p03_context, monkeypatch):
+    from services.iris import vector_store
+
+    monkeypatch.setattr(vector_store, "similarity", lambda text, citations: {citations[0]: 0.21})
+    result = verify_claims([
+        {"kind": "claim", "text": "CEA 13,9 µg/l", "citations": ["P03-lab06-cea"]},
+    ], p03_context)[0]
+    assert result["verification"] == "unverified"
+    assert "sémantická podobnost" in result["_grounding"][0]
+
+
+def test_grounding_v2_rejects_wrong_citation_against_indexed_vectors(p03_context):
+    result = verify_claims([
+        {"kind": "claim", "text": "Pacient užívá tamoxifen.", "citations": ["P03-img03#1"]},
+    ], p03_context)[0]
+    assert result["verification"] == "unverified"
+
+
+def test_grounding_v2_accepts_matching_citation_and_keeps_missing_exempt(p03_context, monkeypatch):
+    from services.iris import vector_store
+
+    def matching_similarity(text, citations):
+        return {citations[0]: 0.81} if citations else {}
+
+    monkeypatch.setattr(vector_store, "similarity", matching_similarity)
+    result = verify_claims([
+        {"kind": "claim", "text": "CEA 13,9 µg/l", "citations": ["P03-lab06-cea"]},
+        {"kind": "missing", "text": "MMR chybí", "citations": []},
+    ], p03_context)
+    assert [item["verification"] for item in result] == ["verified", "verified"]

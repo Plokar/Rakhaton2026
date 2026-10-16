@@ -72,6 +72,7 @@ services:
       - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
       - ../data/fixtures:/data/fixtures:ro                    # testy kontraktů (T-009)
       - ./frontend/src/fixtures:/data/frontend-fixtures:ro
+      - ../data/dev_ground_truth:/data/dev_ground_truth:ro    # eval (T-013, T-301)
     env_file:
       - .env
     environment:

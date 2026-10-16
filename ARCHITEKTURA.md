@@ -1549,6 +1549,10 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_da
 docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_dataset --patients P03 --skip-vectors   # rychle, bez Gemini
 ```
 
+- **Demo (T-311):**
+  - `python manage.py demo reset P03`: z IRIS smaže jen zápisy aplikace (`Pxx-mdtNN…` nad rámec datasetu, `Pxx-ecog-caseNN`, `Pxx-caseNN-…`), pacienta znovu nahraje z datasetu (nominace zpět „naplánovaná“), případ založí znovu na původním boardu a načte podklad z cache. Použít před každou zkouškou dema;
+  - `python manage.py demo save P03` uloží poslední podklad do `data/demo_cache/brief_P03.json` (v gitu; po zapnutí placeného Gemini přegenerovat), `demo load P03` ho nahraje do případu;
+  - `MDT_DEMO_OFFLINE=True` (env backendu): `POST …/brief/` vrátí podklad z cache bez volání LLM; když cache chybí, generuje se normálně.
 - **Jen frontend** (doporučeno pro UI lane): `cd WEB_Template/frontend && npm run dev`. Pak buď `BACKEND_URL` na nasazený backend, nebo práce nad fixtures v `data/fixtures/`.
 - **Kontrola IRIS:**
   - `curl -u SuperUser:SYS http://localhost:52773/fhir/r4/metadata` vrátí 200;

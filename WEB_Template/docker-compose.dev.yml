@@ -73,6 +73,7 @@ services:
       - ../data/fixtures:/data/fixtures:ro                    # testy kontraktů (T-009)
       - ./frontend/src/fixtures:/data/frontend-fixtures:ro
       - ../data/dev_ground_truth:/data/dev_ground_truth:ro    # eval (T-013, T-301)
+      - ../data/demo_cache:/data/demo_cache                    # záloha dema (T-311), zapisuje `demo save`
     env_file:
       - .env
     environment:
@@ -81,6 +82,8 @@ services:
       DATASET_DIR: /data/dataset
       FIXTURES_DIR: /data/fixtures
       FRONTEND_FIXTURES_DIR: /data/frontend-fixtures
+      MDT_DEMO_CACHE_DIR: /data/demo_cache
+      MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
       IRIS_HOST: iris
       IRIS_PORT: "1972"
       IRIS_NAMESPACE: FHIRSERVER

@@ -45,7 +45,10 @@ def run(job_id: int) -> None:
             GenerationJob.objects.filter(pk=job_id).update(progress=max(0, min(100, int(pct))))
 
         try:
-            generate = import_string(GENERATORS[job.kind])
+            path = GENERATORS[job.kind]
+            if job.kind == 'brief' and getattr(settings, 'MDT_DEMO_OFFLINE', False):
+                path = 'apps.copilot.demo.cached_brief'     # T-311: uložený podklad bez LLM
+            generate = import_string(path)
         except (ImportError, KeyError):
             raise RuntimeError(f'Generátor „{job.kind}“ zatím není k dispozici (T-106).') from None
 

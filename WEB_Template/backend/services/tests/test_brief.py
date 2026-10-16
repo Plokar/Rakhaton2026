@@ -55,6 +55,28 @@ def test_p03_brief_valid_and_grounded():
     assert {"RF-TOX", "RF-ECOG", "RF-STALE", "RF-MISSING"} <= {f["rule"] for f in brief["red_flags"]}
 
 
+def test_p03_decision_support_screens_trials_and_has_discussion_questions():
+    decision = brief_for("P03")["decision_support"]
+    schemas.DecisionSupport.model_validate(decision)
+    rkt03 = next(trial for trial in decision["trials"] if trial["study_id"] == "RKT-03")
+    criteria = {criterion["criterion_id"]: criterion for criterion in rkt03["criteria"]}
+    assert criteria["RKT-03/Z1"]["status"] == "unknown"
+    assert criteria["RKT-03/V2"]["status"] == "unknown"
+    assert 2 <= len(decision["discussion_questions"]) <= 3
+    assert all("doporučujeme" not in option["title"].lower() for option in decision["treatment_options"])
+    assert all(c["status"] != "unknown" or c.get("missing") for trial in decision["trials"]
+               for c in trial["criteria"])
+
+
+def test_p05_decision_support_includes_basket_trial():
+    decision = brief_for("P05")["decision_support"]
+    rkt06 = next(trial for trial in decision["trials"] if trial["study_id"] == "RKT-06")
+    assert rkt06["criteria"]
+    assert all(c["criterion_id"].startswith("RKT-06/") for c in rkt06["criteria"])
+    assert any("dávkovací protokol" in question["text"] and "RKT-06" in question["citations"]
+               for question in decision["discussion_questions"])
+
+
 def test_hallucinated_number_is_unverified():
     wrong = {"items": [{"text": "Součet cílových lézí klesl na 45 mm.", "citations": ["P03-img03#4"]},
                        {"text": "ECOG 0 podle lékaře.", "citations": ["P03-ecog03", "P03-neexistuje"]}]}

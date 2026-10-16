@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext
+from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.recist import recist_claim
 from services.ai_service import BaseAIProvider
 from services.rules.compatibility import CHECKS, load_catalog
@@ -77,12 +78,13 @@ def role_question(role: str, guideline_sets: list[str]) -> str | None:
 
 # ── Sekce role ────────────────────────────────────────────────────────────────
 def role_section(role: str, context: PatientContext, data: PatientData, compatibility: list[dict],
-                 provider: BaseAIProvider, log_call: Callable[[str, dict], Any]) -> dict:
+                 provider: BaseAIProvider, log_call: Callable[[str, dict], Any],
+                 config: dict | None = None) -> dict:
     cfg = load_roles()[role]
     question = role_question(role, context.guideline_sets)
     system = (f"{ROLE_PROMPT}\n\nTvoje role: {cfg['title']}. Zaměř se na: {cfg['focus']}.\n"
               + (f"Otázka posouzení: {question}\n" if question else "Posouzení role (assessment) nevyplňuj.\n")
-              + "\n" + prompt_rules())
+              + "\n" + prompt_rules() + "\n" + prompt_settings(config, "role_views"))
     # RECIST extrakce běží souběžně s pohledem radiologa (NFR-1), ne až po něm.
     recist_pool = ThreadPoolExecutor(max_workers=1) if role == "radiologist" else None
     recist_future = recist_pool.submit(recist_claim, context, provider, log_call) if recist_pool else None
@@ -94,8 +96,9 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
     items = [{"id": f"{role}-{i:02d}", "kind": "claim", "text": item["text"].strip(),
               "citations": list(dict.fromkeys(item["citations"]))}
              for i, item in enumerate((output or {}).get("items") or [], 1) if item.get("text", "").strip()]
+    items = items[:output_limit(config, "role_views")]          # detail podle konfigurace (T-207)
     if not items:
-        items = _fallback_items(role, cfg, context, data)
+        items = _fallback_items(role, cfg, context, data)       # data z FHIR se nekrátí (chybějící údaje zůstanou)
     if recist_future:
         recist = recist_future.result()
         recist_pool.shutdown()

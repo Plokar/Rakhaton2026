@@ -25,6 +25,7 @@ from services.ai.context_builder import PatientContext, context_from_resources, 
 from services.ai.grounding import verify_claims
 from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.red_flags_llm import detect_llm_red_flags
+from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import role_section
 from services.ai_service import BaseAIProvider, get_ai_provider
 from services.rules import red_flags as rules
@@ -103,9 +104,9 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     roles = list(dict.fromkeys(config.get("roles_present") or [])) if "role_views" in enabled else []
     compatibility = evaluate_compatibility(resources, skipped_fields=skipped_fields) if roles else []
     with ThreadPoolExecutor(max_workers=2 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
-        summary_future = pool.submit(_summary_items, context, provider, log_call) if "summary" in enabled else None
-        llm_flags_future = pool.submit(_llm_flags, context, provider, log_call) if "red_flags" in enabled else None
-        role_futures = [pool.submit(role_section, role, context, data, compatibility, provider, log_call)
+        summary_future = pool.submit(_summary_items, context, provider, log_call, config) if "summary" in enabled else None
+        llm_flags_future = pool.submit(_llm_flags, context, provider, log_call, config) if "red_flags" in enabled else None
+        role_futures = [pool.submit(role_section, role, context, data, compatibility, provider, log_call, config)
                         for role in roles]
         summary_items = summary_future.result() if summary_future else []
         llm_flags = llm_flags_future.result() if llm_flags_future else []
@@ -178,9 +179,10 @@ def _llm_call_log(purpose: str, result: dict) -> None:
         log.exception("Nepodařilo se zapsat LlmCallLog (%s)", purpose)
 
 
-def _summary_items(context: PatientContext, provider: BaseAIProvider, log_call) -> list[dict]:
+def _summary_items(context: PatientContext, provider: BaseAIProvider, log_call, config: dict | None = None) -> list[dict]:
     prompt = context.render()
-    result = provider.generate(prompt, system_prompt=f"{SUMMARY_PROMPT}\n\n{prompt_rules()}",
+    system = f"{SUMMARY_PROMPT}\n\n{prompt_rules()}\n\n{prompt_settings(config, 'summary')}"
+    result = provider.generate(prompt, system_prompt=system,
                                response_schema=SummaryOutput, temperature=0.1)
     log_call("brief.summary", result)
     items = (result.get("data") or {}).get("items") or [] if result.get("status") == "success" else []
@@ -188,14 +190,15 @@ def _summary_items(context: PatientContext, provider: BaseAIProvider, log_call) 
                "citations": list(dict.fromkeys(item["citations"]))} for i, item in enumerate(items, 1)
               if item.get("text", "").strip()]
     if claims:
-        return claims
+        return claims[:output_limit(config, "summary")]
     if result.get("status") != "success":
         log.warning("Souhrn z LLM selhal (%s), použije se souhrn z dat", result.get("error"))
-    return _fallback_summary(context)
+    return _fallback_summary(context)[:output_limit(config, "summary")]
 
 
-def _llm_flags(context: PatientContext, provider: BaseAIProvider, log_call) -> list[rules.RedFlag]:
-    flags, result = detect_llm_red_flags(context, provider)
+def _llm_flags(context: PatientContext, provider: BaseAIProvider, log_call,
+               config: dict | None = None) -> list[rules.RedFlag]:
+    flags, result = detect_llm_red_flags(context, provider, config=config)
     log_call("brief.rf_llm", result)
     return flags
 

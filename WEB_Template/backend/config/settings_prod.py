@@ -74,7 +74,6 @@ MIDDLEWARE = [
 
 # ── Static files ──────────────────────────────────────────────────────────────
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # noqa
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 LOGS_DIR = BASE_DIR / 'logs'  # noqa

@@ -19,7 +19,7 @@
 - **Co stavíme:** webovou aplikaci, která z dat onkologického pacienta během pár sekund připraví podklad pro multidisciplinární komisi (MDT). Podklad má čtyři bloky: **A** souhrn, **B** pohledy odborníků, **B2** podpora rozhodování a **C** závěr a akční plán. Každé tvrzení AI má klikací citaci zdroje, AI hlásí rozpory (red flags) a **rozhoduje vždy lékař** (human-in-the-loop).
 - **Stack:**
   - **Next.js 16** na **Vercelu** (`WEB_Template/frontend`);
-  - **Django 4.2 + DRF** na **VPS** (`WEB_Template/backend`) v Dockeru s Traefikem;
+  - **Django 5.2 + DRF** na **VPS** (`WEB_Template/backend`) v Dockeru s Traefikem;
   - vedle běží **InterSystems IRIS for Health** jako **nemocniční databáze** (FHIR R4 server + Vector Search);
   - PostgreSQL drží jen stav aplikace.
 - **AI:** **Google AI Studio (Gemini API, placený tier)**: LLM, embeddingy i přepis audia ([§5.7](#57-model-a-ochrana-údajů)).
@@ -278,7 +278,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 │  Traefik v3 (TLS Let's Encrypt, api.<doména>)                                           │
 │      │                                                                                  │
 │      ▼                                                                                  │
-│  Django 4.2 + DRF (ASGI/Daphne) – WEB_Template/backend                                  │
+│  Django 5.2 + DRF (ASGI/Daphne) – WEB_Template/backend                                  │
 │  ├─ apps/patients   – čtení pacientů z FHIR, časová osa, evidence resolver              │
 │  ├─ apps/mdt        – zasedání, případy, konfigurace, závěry, export                    │
 │  ├─ apps/copilot    – AI orchestrace (A, B, B2, C, red flags, scribe), joby             │

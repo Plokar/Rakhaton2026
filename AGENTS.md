@@ -14,7 +14,7 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 ## Mapa repa
 
 - `WEB_Template/frontend/`: Next.js 16 (→ Vercel). **Před psaním frontend kódu přečti `WEB_Template/frontend/AGENTS.md`**, protože Next 16 má breaking changes.
-- `WEB_Template/backend/`: Django 4.2 + DRF (→ VPS). Je to modulární monolit: `apps/` (HTTP vrstva), `services/` (logika).
+- `WEB_Template/backend/`: Django 5.2 + DRF (→ VPS). Je to modulární monolit: `apps/` (HTTP vrstva), `services/` (logika).
 - IRIS for Health (FHIR R4 + Vector Search): služba `iris` v docker-compose, viz ARCHITEKTURA §4.
 - `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`: dataset od Asseco (= `DATASET_DIR`). **Neměnit**, opravy patří do sanitizace v ingestu.
 - `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele.

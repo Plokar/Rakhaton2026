@@ -572,6 +572,22 @@ ORDER BY Score DESC
   - `search_guidelines(query, icd10)`.
 - Copilot ho může používat interně. V pitchi ukážeme, že stejné nástroje fungují i v libovolném MCP klientovi.
 - Read-only: jen `SELECT` a jen `GET`, dedikovaný IRIS uživatel s právy pro čtení.
+- **Implementace (T-308):** `fastmcp` 4, nástroje v `services/mcp/server.py` (obyčejné funkce, jdou volat i z Pythonu), spouštění `mcp_server.py`.
+  - Nástroje (všechny s anotací `readOnlyHint`):
+    - `get_patient_context(patient_id, focus)` = text kontextu z T-105 (`build_context().render()`); `focus` seřadí nejrelevantnější odstavce vektorovým hledáním;
+    - `search_evidence(patient_id, query, top_k)`, `search_guidelines(query, icd10, top_k)`, `search_trial_criteria(query, study_id, top_k)` nad `MDT.*` (§4.5);
+    - `get_evidence(evidence_id)` = zdroj citace: odstavec s offsety, resource, pasáž nebo kritérium;
+    - `fhir_query(resource_type, params)` = FHIR search s **allowlistem typů a parametrů** (`_id`, `patient`, `subject`, `code`, `category`, `date`, `status`, `_sort`, `_tag`). Jiné parametry odmítne, protože IRIS by je tiše ignoroval a vrátil všechno. Vrací nejvýš 100 resources.
+  - **Ochrana údajů (NFR-3):** výstup jde do cizího LLM klienta, proto se u `Patient` a `Practitioner` zahodí jména, kontakty, adresy, identifikátory a datum narození, base64 přílohy se neposílají a všechny texty projdou `services/ai/pseudonymize.py`. Mimo fiktivní dataset smí být klientem jen schválený LLM (EU, DPA), stejně jako u Gemini (§5.7).
+  - Spuštění a připojení klienta (dev stack musí běžet):
+
+    ```bash
+    docker compose -f docker-compose.dev.yml exec -T backend python mcp_server.py                  # stdio
+    claude mcp add mdt-iris -- docker compose -f WEB_Template/docker-compose.dev.yml exec -T backend python mcp_server.py
+    docker compose -f docker-compose.dev.yml exec backend python mcp_server.py --http --port 8765  # HTTP /mcp, jen lokálně
+    ```
+
+    Claude Desktop (`claude_desktop_config.json`): `{"mcpServers": {"mdt-iris": {"command": "docker", "args": ["compose", "-f", "<repo>/WEB_Template/docker-compose.dev.yml", "exec", "-T", "backend", "python", "mcp_server.py"]}}}`.
 
 ### 4.8 Pro AI agenty v týmu
 

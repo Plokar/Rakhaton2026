@@ -42,6 +42,9 @@ gunicorn>=21.0.0
 # InterSystems IRIS (DB-API + native API)
 intersystems-irispython>=5.0
 
+# MCP server nad IRIS (mcp_server.py, ARCHITEKTURA §4.7)
+fastmcp>=4.1,<5
+
 # Security
 cryptography>=41.0.0
 

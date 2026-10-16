@@ -226,7 +226,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | T-504 | **Externí zdroje `EXT-…`** jako `MDT.GuidelineChunk` (`GuidelineSet = "EXT"`, D-016) + resolver | DATA | T-203, T-104 | `GET /api/evidence/?id=EXT-EMA-DPD-2020` vrátí znění a odkaz | `@Maty+claude` | 👀 |
 | T-505 | **Úzké rozložení** (FR-U2, D-017): od 360 px, bloky pod sebou ve výchozím pořadí ARCH §7.3, `/brief/[caseId]` v samostatném okně, barvy odborností, `CompatibilityLight` | UI | T-108, T-205 | podklad P03 jde číst v okně 360 px bez vodorovného posouvání | `@Mira+claude` | ✅ |
 | T-506 | **Údaje podle diagnózy a katalog metod** (FR-B8, FR-D5): bloky pro plíce, prs a kolorektum v sekcích odborností + `ModalityCatalog` | AI + UI | T-105, T-205 | P04 ukáže spirometrii, P02 LVEF, P03 FLR a bevacizumab | `@?` | ⬜ |
-| T-511 | **Úkoly po zasedání** (FR-P3): `GET /api/mdt/tasks/`, `/dashboard/tasks`, stav úkolů, termín re-MDT | API + UI | T-209 | po potvrzení P03 se jeho úkoly objeví v přehledu | UI `@?` (API ✅ `@Seb+claude`) | ⬜ |
+| T-511 | **Úkoly po zasedání** (FR-P3): `GET /api/mdt/tasks/`, `/dashboard/tasks`, stav úkolů, termín re-MDT | API + UI | T-209 | po potvrzení P03 se jeho úkoly objeví v přehledu | UI `@Mira+claude` (API ✅ `@Seb+claude`) | 🟨 |
 
 ### M3 — Spolehlivost a bonusy (do So 09:00)
 

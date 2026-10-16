@@ -76,6 +76,42 @@ def test_p03_brief_valid_and_grounded():
     assert {"RF-TOX", "RF-ECOG", "RF-STALE", "RF-MISSING"} <= {f["rule"] for f in brief["red_flags"]}
 
 
+def test_p03_decision_support_screens_trials_and_has_discussion_questions():
+    decision = brief_for("P03")["decision_support"]
+    schemas.DecisionSupport.model_validate(decision)
+    rkt03 = next(trial for trial in decision["trials"] if trial["study_id"] == "RKT-03")
+    criteria = {criterion["criterion_id"]: criterion for criterion in rkt03["criteria"]}
+    assert criteria["RKT-03/Z1"]["status"] == "unknown"
+    assert criteria["RKT-03/V2"]["status"] == "unknown"
+    assert 2 <= len(decision["discussion_questions"]) <= 3
+    assert all("doporučujeme" not in option["title"].lower() for option in decision["treatment_options"])
+    assert all(c["status"] != "unknown" or c.get("missing") for trial in decision["trials"]
+               for c in trial["criteria"])
+
+
+class LiveLikeProvider(MockAIProvider):
+    is_mock = False                                               # B2 volá LLM jen mimo mock
+
+
+def test_decision_support_keeps_every_option_even_when_llm_picks_two():
+    """D-015: LLM vybere 2 možnosti, podklad i tak ukáže všechny postupy ze sady guidelines (i červené)."""
+    all_ids = [o["id"] for o in brief_for("P03")["decision_support"]["treatment_options"]]
+    picked = {"options": [{"procedure_id": pid, "title": pid, "rationale": [], "guideline_citations": [],
+                           "considerations": []} for pid in all_ids[:2]]}
+    decision = brief_for("P03", LiveLikeProvider(responses={"OptionsDraft": picked}))["decision_support"]
+    assert sorted(o["id"] for o in decision["treatment_options"]) == sorted(all_ids)
+    assert any(o["compatibility"]["overall"] == "red" for o in decision["treatment_options"])
+
+
+def test_p05_decision_support_includes_basket_trial():
+    decision = brief_for("P05")["decision_support"]
+    rkt06 = next(trial for trial in decision["trials"] if trial["study_id"] == "RKT-06")
+    assert rkt06["criteria"]
+    assert all(c["criterion_id"].startswith("RKT-06/") for c in rkt06["criteria"])
+    assert any("dávkovací protokol" in question["text"] and "RKT-06" in question["citations"]
+               for question in decision["discussion_questions"])
+
+
 def test_hallucinated_number_is_unverified():
     wrong = {"items": [{"text": "Součet cílových lézí klesl na 45 mm.", "citations": ["P03-img03#4"]},
                        {"text": "ECOG 0 podle lékaře.", "citations": ["P03-ecog03", "P03-neexistuje"]}]}

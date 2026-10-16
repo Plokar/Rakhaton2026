@@ -828,6 +828,12 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - draft `Decision` (rozhodnutí, zdůvodnění, úkoly s vlastníkem a termínem, re-MDT) s citacemi na segmenty přepisu (`P03-mdt02-prepis#12`);
   - přepis se uloží jako `DocumentReference/Pxx-mdtNN-prepis`.
 - Vždy jen **draft**. Předseda edituje a potvrzuje.
+- **Implementace (T-305):** `POST /api/mdt/cases/{cid}/scribe/` (předseda, lékař; multipart `audio` ≤ 20 MB, nebo JSON `{transcript}` „MM:SS mluvčí: text“ / `{segments}`) → job `scribe` → `services/ai/scribe.py:generate_scribe`.
+  1. Audio přepíše `provider.transcribe` (Gemini, `Transcript`).
+  2. Přepis se uloží jako `DocumentReference/{next_mdt_id}-prepis` (text/plain, úsek = odstavec, takže `#n` = n-tý úsek a resolver citací ho umí); vazba `context.related` na nominaci `ServiceRequest`, protože `Composition` vznikne až potvrzením.
+  3. LLM (`ScribeDraft`) z přepisu a kontextu pacienta sestaví draft `Decision`. Citace mimo přepis a kontext se zahodí, úkol bez termínu dostane termín re-MDT (jinak MDT + 14 dní), `study_ids` jen `RKT-nn`, `transcript_ref` = ID přepisu.
+  4. Bez LLM (mock) se nic nevymýšlí: závěr = poslední slovo předsedy s citací, úkoly prázdné.
+  5. Potvrzený závěr zapisovatel nepřepíše (409). Živě s Gemini: nahrávka P03 (3:01) → 13 úseků a draft se 4 úkoly jako v `expected_decision` za 54 s.
 
 ### 5.7 Model a ochrana údajů
 

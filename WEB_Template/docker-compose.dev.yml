@@ -74,6 +74,7 @@ services:
       - ./frontend/src/fixtures:/data/frontend-fixtures:ro
       - ../data/dev_ground_truth:/data/dev_ground_truth:ro    # eval (T-013, T-301)
       - ../data/demo_cache:/data/demo_cache                    # záloha dema (T-311), zapisuje `demo save`
+      - ../data/audio:/data/audio:ro                          # AI zapisovatel (T-305), simulovaná diskuse P03
     env_file:
       - .env
     environment:
@@ -83,6 +84,7 @@ services:
       FIXTURES_DIR: /data/fixtures
       FRONTEND_FIXTURES_DIR: /data/frontend-fixtures
       MDT_DEMO_CACHE_DIR: /data/demo_cache
+      AUDIO_DIR: /data/audio
       MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
       IRIS_HOST: iris
       IRIS_PORT: "1972"

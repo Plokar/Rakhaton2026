@@ -15,7 +15,7 @@ from .models import Brief, GenerationJob
 
 log = logging.getLogger(__name__)
 
-GENERATORS = {'brief': 'services.ai.brief.generate_brief'}
+GENERATORS = {'brief': 'services.ai.brief.generate_brief', 'scribe': 'services.ai.scribe.generate_scribe'}
 
 # ponytail: in-process pool, joby běžící při restartu backendu zůstanou "running"; Celery/RQ až bude potřeba
 _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='mdt-job')
@@ -52,6 +52,10 @@ def run(job_id: int) -> None:
         except (ImportError, KeyError):
             raise RuntimeError(f'Generátor „{job.kind}“ zatím není k dispozici (T-106).') from None
 
+        if job.kind != 'brief':                      # zapisovatel (T-305) ukládá draft Decision sám
+            result = generate(job.case, job.params, progress)
+            GenerationJob.objects.filter(pk=job_id).update(status='done', progress=100, result_id=result['result_id'])
+            return
         config = job.params.get('config', {})
         content = generate(job.case, config, progress)
         brief = Brief.objects.create(case=job.case, config_snapshot=config, content=content,

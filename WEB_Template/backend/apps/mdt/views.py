@@ -1,4 +1,5 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
+import base64
 import json
 
 from django.db import transaction
@@ -285,6 +286,36 @@ def case_brief(request, cid):
     _require(request, roles.ADMIN, roles.DOCTOR)
     job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
                                        created_by=request.user)
+    jobs.start(job)
+    return Response({'job_id': job.pk}, status=202)
+
+
+AUDIO_MAX_BYTES = 20 * 1024 * 1024          # inline limit Gemini (ARCH §5.6)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_scribe(request, cid):
+    """AI zapisovatel (BON-3): multipart `audio` nebo JSON `{transcript}` / `{segments}` → job → draft závěru (202 `{job_id}`)."""
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    case = get_object_or_404(MdtCase, pk=cid)
+    if Decision.objects.filter(case=case, status='confirmed').exists():
+        return Response({'detail': 'Závěr je potvrzený, zapisovatel ho nemůže přepsat.'}, status=409)
+    audio = request.FILES.get('audio')
+    if audio:
+        if audio.size > AUDIO_MAX_BYTES:
+            raise ValidationError({'audio': 'Nahrávka je větší než 20 MB.'})
+        # ponytail: audio jako base64 v params jobu (≤ 20 MB); větší soubory až přes úložiště
+        params = {'audio_b64': base64.b64encode(audio.read()).decode(), 'mime_type': audio.content_type or 'audio/mp4'}
+    elif isinstance(request.data.get('segments'), list) and request.data['segments']:
+        params = {'segments': [{'speaker': str(s.get('speaker', '')), 'start': str(s.get('start', '')),
+                                'text': str(s.get('text', ''))} for s in request.data['segments'] if isinstance(s, dict)]}
+    elif str(request.data.get('transcript', '')).strip():
+        params = {'transcript': str(request.data['transcript'])}
+    else:
+        raise ValidationError({'audio': 'Pošli nahrávku (`audio`), nebo přepis (`transcript` / `segments`).'})
+    job = GenerationJob.objects.create(case=case, kind='scribe', params=params, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
 

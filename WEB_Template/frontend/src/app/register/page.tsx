@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
-  Zap,
+  Stethoscope,
   Eye,
   EyeOff,
   User,
@@ -84,41 +84,40 @@ export default function RegisterPage() {
 
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-indigo-500/30">
-            <Zap className="h-5 w-5 fill-current" />
+            <Stethoscope className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-base font-bold tracking-tight">Hackathon OS</span>
-            <span className="block text-xs font-mono text-muted-foreground">Vytvořte si vývojářský účet</span>
+            <span className="text-base font-bold tracking-tight">MDT Copilot</span>
+            <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>
           </div>
         </div>
 
         <div className="space-y-6 max-w-md">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Okamžitý start týmu
+            <Sparkles className="h-3.5 w-3.5" /> AI připravuje, rozhoduje lékař
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight">
-            Připoj se k projektu <br />
-            a začněte vyvíjet.
+            Připravte se <br />
+            na zasedání komise.
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Každý nový uživatel získá přístup k projektovému dashboardu, sdílenému Kanbanu úkolů,
-            AI Studiu a real-time WebSocket komunikačnímu kanálu.
+            Zařazení pacientů do boardů, podklady s citacemi zdrojů a úkoly po zasedání na jednom místě.
           </p>
 
           <div className="space-y-2 pt-4 border-t border-border text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>Automatické přihlášení a nastavení JWT tokenu</span>
+              <span>Po registraci se rovnou přihlásíte</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>Plný přístup k API a WebSocket endpointům</span>
+              <span>Prototyp pracuje jen s fiktivními pacienty</span>
             </div>
           </div>
         </div>
 
         <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Hackathon OS • Django 4.2 &amp; Next.js 16
+          © {new Date().getFullYear()} MDT Copilot • Rakathon 2026
         </div>
       </div>
 
@@ -127,9 +126,9 @@ export default function RegisterPage() {
         <div className="flex items-center justify-between">
           <Link href="/" className="lg:hidden flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Zap className="h-4 w-4 fill-current" />
+              <Stethoscope className="h-4 w-4" />
             </div>
-            <span className="font-bold text-sm">Hackathon OS</span>
+            <span className="font-bold text-sm">MDT Copilot</span>
           </Link>
           <div className="ml-auto">
             <ThemeToggle />
@@ -140,7 +139,7 @@ export default function RegisterPage() {
           <div className="mb-6">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Vytvořit nový účet</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Zaregistrujte se a vyzkoušejte Hackathon OS v plné parádě.
+              Zaregistrujte se do MDT Copilot.
             </p>
           </div>
 
@@ -267,7 +266,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="text-center text-xs text-muted-foreground">
-          Hackathon OS v2.0 • Django 4.2 REST + Next.js 16
+          MDT Copilot • Rakathon 2026
         </div>
       </div>
     </div>

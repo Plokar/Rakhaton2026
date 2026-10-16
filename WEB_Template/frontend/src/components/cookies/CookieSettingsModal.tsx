@@ -73,7 +73,7 @@ export function CookieSettingsModal() {
                     </Badge>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    Nezbytné pro základní chod Hackathon OS, udržení přihlašovací relace (JWT),
+                    Nezbytné pro základní chod MDT Copilot, udržení přihlašovací relace (JWT),
                     zabezpečení proti CSRF útokům a správu uživatelských práv. Bez těchto údajů web nemůže bezpečně fungovat.
                   </p>
                 </div>

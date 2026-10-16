@@ -66,7 +66,7 @@ export default function PrivacyPolicyPage() {
               Zásady ochrany osobních údajů
             </h1>
             <p className="mt-3 text-base text-muted-foreground leading-relaxed">
-              V Hackathon OS klademe maximální důraz na bezpečnost vašich dat, transparentnost
+              V MDT Copilot klademe maximální důraz na bezpečnost vašich dat, transparentnost
               jejich zpracování a respekt k soukromí vývojářů i uživatelů.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
@@ -123,7 +123,7 @@ export default function PrivacyPolicyPage() {
                 1. Správce osobních údajů
               </h2>
               <p>
-                Správcem osobních údajů zpracovávaných v rámci projektu <strong>Hackathon OS</strong> je
+                Správcem osobních údajů zpracovávaných v rámci projektu <strong>MDT Copilot</strong> je
                 provozovatel a organizátorský tým této instalace webové aplikace (dále jen „Správce“).
               </p>
               <p>
@@ -350,7 +350,7 @@ export default function PrivacyPolicyPage() {
       {/* Footer */}
       <footer className="py-6 text-center text-xs text-muted-foreground border-t border-border">
         <div className="mx-auto max-w-7xl px-4">
-          <p>© {new Date().getFullYear()} Hackathon OS • Veškerá práva vyhrazena</p>
+          <p>© {new Date().getFullYear()} MDT Copilot • Veškerá práva vyhrazena</p>
         </div>
       </footer>
     </div>

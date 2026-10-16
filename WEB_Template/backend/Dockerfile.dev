@@ -1,0 +1,24 @@
+# =============================================================================
+# Backend – Development Dockerfile (hot-reload)
+# =============================================================================
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /code
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    netcat-traditional \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+
+# Kód se připojí přes bind mount v docker-compose.dev.yml
+EXPOSE 8000

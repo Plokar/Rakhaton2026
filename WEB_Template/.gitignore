@@ -1,0 +1,64 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/backend/staticfiles/
+/backend/media/
+/backend/logs/*.log
+
+# ── Node.js / Next.js ────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.npm
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# ── Environment ───────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# NEVER commit these:
+# .env.dev  (use .env.dev.example instead)
+# .env.prod (use .env.prod.example instead)
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# Traefik TLS certifikáty – NIKDY necommitovat!
+traefik/acme.json
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+.coverage
+.pytest_cache/
+htmlcov/
+.mypy_cache/
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.bak
+*.tmp

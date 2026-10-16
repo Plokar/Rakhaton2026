@@ -1,0 +1,287 @@
+services:
+
+  # ===========================================================================
+  # TRAEFIK – Reverse Proxy & Load Balancer
+  # Dashboard: https://traefik.yourdomain.com (chráněn basicAuth)
+  # ===========================================================================
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - traefik_certs:/acme.json
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      # Dashboard route (chráněn basicAuth)
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.yourdomain.com`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+      # - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth@file"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================================================
+  # DATABASE – PostgreSQL 16
+  # ===========================================================================
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Nepublikujeme port ven v produkci!
+
+  # ===========================================================================
+  # CACHE & MESSAGE BROKER – Redis 7
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --loglevel warning
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Nepublikujeme port ven v produkci!
+
+  # ===========================================================================
+  # BACKEND – Django ASGI (Daphne) – HTTP + WebSockets
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings_prod
+      DJANGO_DEBUG: "False"
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - backend_static:/code/staticfiles
+      - backend_media:/code/media
+    labels:
+      - "traefik.enable=true"
+      # API routes
+      - "traefik.http.routers.backend.rule=Host(`yourdomain.com`) && PathPrefix(`/api`, `/admin`, `/ws`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.backend.middlewares=security-headers@file,rate-limit-api@file"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+      # WebSocket podpora
+      - "traefik.http.routers.backend.rule=Host(`yourdomain.com`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/ws`))"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ===========================================================================
+  # FRONTEND – Next.js (production build)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    expose:
+      - "3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`yourdomain.com`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.middlewares=security-headers@file,compress@file"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      # www redirect
+      - "traefik.http.routers.frontend-www.rule=Host(`www.yourdomain.com`)"
+      - "traefik.http.routers.frontend-www.entrypoints=websecure"
+      - "traefik.http.routers.frontend-www.middlewares=redirect-www@file"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ===========================================================================
+  # VECTOR DATABASE – Qdrant (zakomentováno – odkomentovat pro AI/RAG features)
+  # ===========================================================================
+  # qdrant:
+  #   image: qdrant/qdrant:latest
+  #   restart: unless-stopped
+  #   volumes:
+  #     - qdrant_data:/qdrant/storage
+  #   networks:
+  #     - app-network
+  #   environment:
+  #     QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
+  #   # Nepublikovat port ven v produkci!
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.qdrant.rule=Host(`qdrant.yourdomain.com`)"
+  #     - "traefik.http.routers.qdrant.entrypoints=websecure"
+  #     - "traefik.http.routers.qdrant.tls.certresolver=letsencrypt"
+  #     - "traefik.http.services.qdrant.loadbalancer.server.port=6333"
+
+  # ===========================================================================
+  # TASK QUEUE – Celery Worker (zakomentováno – pro async úlohy)
+  # ===========================================================================
+  # celery-worker:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #     target: production
+  #   command: celery -A config worker --loglevel=info --concurrency=4
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DJANGO_SETTINGS_MODULE: config.settings_prod
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+  #   volumes:
+  #     - backend_media:/code/media
+
+  # ===========================================================================
+  # CELERY BEAT – Periodic Tasks (zakomentováno)
+  # ===========================================================================
+  # celery-beat:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #     target: production
+  #   command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DJANGO_SETTINGS_MODULE: config.settings_prod
+  #   depends_on:
+  #     - celery-worker
+  #   networks:
+  #     - app-network
+
+  # ===========================================================================
+  # CELERY MONITORING – Flower (zakomentováno)
+  # ===========================================================================
+  # flower:
+  #   image: mher/flower:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+  #     FLOWER_BASIC_AUTH: ${FLOWER_USER}:${FLOWER_PASSWORD}
+  #   depends_on:
+  #     - celery-worker
+  #   networks:
+  #     - app-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.flower.rule=Host(`flower.yourdomain.com`)"
+  #     - "traefik.http.routers.flower.entrypoints=websecure"
+  #     - "traefik.http.routers.flower.tls.certresolver=letsencrypt"
+  #     - "traefik.http.services.flower.loadbalancer.server.port=5555"
+
+  # ===========================================================================
+  # OBJECT STORAGE – MinIO (zakomentováno – S3-compatible storage)
+  # ===========================================================================
+  # minio:
+  #   image: minio/minio:latest
+  #   restart: unless-stopped
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+  #     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+  #   volumes:
+  #     - minio_data:/data
+  #   networks:
+  #     - app-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     # API
+  #     - "traefik.http.routers.minio.rule=Host(`storage.yourdomain.com`)"
+  #     - "traefik.http.routers.minio.entrypoints=websecure"
+  #     - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+  #     - "traefik.http.services.minio.loadbalancer.server.port=9000"
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  traefik_certs:
+    driver: local
+  backend_static:
+    driver: local
+  backend_media:
+    driver: local
+  # qdrant_data:
+  #   driver: local
+  # minio_data:
+  #   driver: local
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

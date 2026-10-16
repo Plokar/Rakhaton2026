@@ -1,0 +1,89 @@
+# =============================================================================
+# Traefik – Dynamická konfigurace (middlewares)
+# =============================================================================
+
+http:
+  middlewares:
+
+    # ── Security Headers ──────────────────────────────────────────────────────
+    security-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+          - POST
+          - DELETE
+          - PATCH
+        accessControlMaxAge: 100
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        stsSeconds: 63072000          # 2 roky HSTS
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        frameDeny: true               # X-Frame-Options: DENY
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        contentSecurityPolicy: >
+          default-src 'self';
+          script-src 'self' 'unsafe-inline' 'unsafe-eval';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data: blob:;
+          font-src 'self';
+          connect-src 'self' ws: wss:;
+          frame-ancestors 'none';
+        permissionsPolicy: >
+          camera=(), microphone=(), geolocation=()
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow"   # Změnit pro produkci!
+          Server: ""                           # Skrýt verzi serveru
+
+    # ── Rate Limiting ─────────────────────────────────────────────────────────
+    rate-limit-api:
+      rateLimit:
+        average: 100    # 100 req/s průměr
+        period: "1s"
+        burst: 50       # burst povolení
+
+    rate-limit-auth:
+      rateLimit:
+        average: 10     # Přísnější limit pro auth endpointy
+        period: "1m"
+        burst: 5
+
+    # ── CORS (pokud Traefik řeší CORS místo Djanga) ───────────────────────────
+    # Pozn: Většinou lepší řešit na úrovni Djanga/Next.js
+    # cors-api:
+    #   headers:
+    #     accessControlAllowOriginList:
+    #       - "https://yourdomain.com"
+    #     accessControlAllowHeaders:
+    #       - "Content-Type"
+    #       - "Authorization"
+    #     accessControlAllowMethods:
+    #       - GET
+    #       - POST
+    #       - PUT
+    #       - DELETE
+    #       - OPTIONS
+    #     accessControlAllowCredentials: true
+
+    # ── Redirect www → non-www ────────────────────────────────────────────────
+    redirect-www:
+      redirectRegex:
+        regex: "^https://www\\.(.+)"
+        replacement: "https://${1}"
+        permanent: true
+
+    # ── Compress ──────────────────────────────────────────────────────────────
+    compress:
+      compress: {}
+
+    # ── Basic Auth pro Traefik Dashboard (produkce) ───────────────────────────
+    # Generování: echo $(htpasswd -nb admin yourpassword) | sed -e s/\\$/\\$\\$/g
+    # dashboard-auth:
+    #   basicAuth:
+    #     users:
+    #       - "admin:$$apr1$$..."

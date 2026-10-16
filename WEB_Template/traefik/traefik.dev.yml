@@ -1,0 +1,33 @@
+# =============================================================================
+# Traefik – Dev konfigurace (bez HTTPS, dashboard otevřený)
+# =============================================================================
+
+api:
+  dashboard: true
+  insecure: true   # V dev módu otevřený dashboard
+
+entryPoints:
+  web:
+    address: ":80"   # V dev bez redirect na HTTPS
+
+  websecure:
+    address: ":443"
+
+  traefik:
+    address: ":8080"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: app-network
+
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: "DEBUG"
+  format: "common"
+
+accessLog: {}

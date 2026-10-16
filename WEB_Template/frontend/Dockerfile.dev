@@ -1,0 +1,15 @@
+# =============================================================================
+# Frontend – Development Dockerfile (hot-reload)
+# =============================================================================
+FROM node:20-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Kód se připojí přes bind mount v docker-compose.dev.yml
+EXPOSE 3000
+ENV NEXT_TELEMETRY_DISABLED=1

@@ -1,0 +1,31 @@
+# =============================================================================
+# Backend – Dev Dependencies
+# =============================================================================
+-r requirements.txt
+
+# Development & debugging
+django-debug-toolbar>=4.2
+django-extensions>=3.2.0
+ipython>=8.0.0
+Werkzeug>=3.0.0
+
+# Code quality
+black>=23.0.0
+flake8>=6.0.0
+isort>=5.12.0
+mypy>=1.0.0
+django-stubs>=4.2.0
+djangorestframework-stubs>=3.14.0
+
+# Testing
+pytest>=7.4.0
+pytest-django>=4.5.0
+pytest-asyncio>=0.23.0  # Pro testování async consumers
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+factory-boy>=3.3.0
+Faker>=19.0.0
+channels[daphne]>=4.0.0  # Pro testování WS consumers
+
+# API testing
+httpx>=0.24.0

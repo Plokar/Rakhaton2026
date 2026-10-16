@@ -704,12 +704,18 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
 
 **Provider: Google AI Studio, Gemini API** (D-008). SDK `google-genai` (`from google import genai`).
 
-> Existující `GeminiProvider` v `WEB_Template/backend/services/ai_service.py` volá **vypnutý model `gemini-1.5-flash`** a system prompt jen simuluje. Přepsat ho v úkolu T-012:
->
-> - `system_instruction`;
-> - `response_schema` (structured output);
-> - `embed()`;
-> - `transcribe()`.
+**Rozhraní provideru** (`WEB_Template/backend/services/ai_service.py`, T-012). `get_ai_provider()` vrátí `GeminiProvider` nebo `MockAIProvider` podle `AI_PROVIDER`. Jiné providery nejsou, data smí jen do Gemini. `gemini` bez klíče spadne na mock a výsledek má `is_mock: true`.
+
+- `generate(prompt, system_prompt=…, response_schema=PydanticModel)` vrátí dict:
+  - `status`, `response` (text), `data`, `model`, `tokens_in`, `tokens_out`, `latency_ms`, `prompt_hash` (pro `LlmCallLog`);
+  - `data` je vždy zvalidované pydantic schématem. Nevalidní nebo uříznutý výstup (`MAX_TOKENS`) vrátí `status: "error"`, nikdy `success`;
+  - Gemini dostane system prompt v `system_instruction` a schéma jako `response_json_schema`. Schéma se nejdřív očistí na podmnožinu, kterou Gemini přijme (bez `const`, `default`, `pattern`, `minLength`, sourozenců `$ref`), a přidá se `propertyOrdering`. Omezení pak hlídá až validace pydantic.
+- `embed(texts, task_type=…)` vrátí `EMBEDDING_DIM` čísel na text s L2 normalizací, po dávkách 100. Konstanty `TASK_RETRIEVAL_DOCUMENT`, `TASK_RETRIEVAL_QUERY`, `TASK_FACT_VERIFICATION`.
+- `transcribe(audio, mime_type)` vrátí totéž co `generate`, `data` podle schématu `Transcript` (`segments[]`: `speaker`, `start` `MM:SS`, `text`). Audio nad 20 MB jde přes Files API.
+- **Mock** je deterministický a bez sítě:
+  - se schématem vrátí minimální validní instanci, nebo odpověď zaregistrovanou v `MockAIProvider(responses={"NázevSchématu": data})`;
+  - `embed` vrací hashované bag-of-words vektory, takže podobné texty mají vyšší kosinovou podobnost (použitelné v testech groundingu);
+  - živý test: `AI_LIVE_TESTS=1 pytest -m integration services/tests/test_ai_service.py`, jen s placeným tierem (Q9).
 
 | Účel | Model (výchozí) | Pozn. |
 |---|---|---|
@@ -1280,6 +1286,8 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
 | `AI_MODEL_STRONG` | backend | `gemini-4-argon` (volitelně, pro porovnání a těžké sekce) |
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |
 | `TRANSCRIBE_MODEL` | backend | `gemini-3.8-flash` |
+| `AI_TIMEOUT_S` | backend | `90` (timeout jednoho volání Gemini; SDK opakuje 408, 429 a 5xx, celkem 3 pokusy) |
+| `AI_THINKING_LEVEL` | backend | nenastaveno = výchozí podle modelu; `minimal` / `low` / `medium` / `high` (latence vs. kvalita, NFR-1, ladí T-302) |
 | `GROUNDING_MIN_SIMILARITY` | backend | `0.55` (ladit podle evalu) |
 | `INTAKE_ANAMNESIS_MAX_CHARS` | backend | `600` (FR-A5: delší anamnéza se zkrátí na shrnutí) |
 | `COMPATIBILITY_RULES_FILE` | backend | `services/rules/data/compatibility_rules.yaml` (D-015) |

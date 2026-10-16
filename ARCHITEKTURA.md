@@ -598,7 +598,7 @@ ORDER BY Score DESC
 
 ### 4.8 Pro AI agenty v týmu
 
-- Do repa zkopírovat skills z kitu (`skills/iris-fhir`, `iris-vector-search`, `iris-sql-python`, `iris-ai-agents`, `iris-environment`) do `.claude/skills/` (úkol T-011).
+- Skills z kitu (`iris-fhir`, `iris-vector-search`, `iris-sql-python`, `iris-ai-agents`, `iris-environment`) jsou v `.claude/skills/` (T-011, MIT, kit V2 commit `3ebaee2`). Každý začíná blokem **„V MDT Copilot“**, který má přednost před textem kitu: odkazuje na naše implementace (`services/fhir`, `services/iris`, `services/mcp`) a vypisuje rozdíly (žádná Synthea ani POST, Gemini místo OpenAI, bez LangChain, compose služba `iris`).
   - Obsahují ověřené snippety a gotchas.
   - **Pozor: kit používá OpenAI** (`text-embedding-3-small`, `gpt-5-nano`). U nás se embeddingy i LLM volají přes Gemini ([§5.7](#57-model-a-ochrana-údajů)). IRIS část (SQL, `TO_VECTOR`, `VECTOR_COSINE`) platí beze změny.
 - Volitelně MCP [iris-agentic-dev](https://github.com/intersystems-community/iris-agentic-dev) pro živý přístup agenta k IRIS (`iris-agentic-dev init` detekuje Docker kontejner).

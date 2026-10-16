@@ -11,5 +11,7 @@ urlpatterns = [
     path('cases/<int:cid>/', views.case_detail, name='case-detail'),
     path('cases/<int:cid>/decision/', views.case_decision, name='case-decision'),
     path('cases/<int:cid>/decision/confirm/', views.case_decision_confirm, name='case-decision-confirm'),
+    path('cases/<int:cid>/export.fhir.json', views.case_export_fhir, name='case-export-fhir'),
+    path('cases/<int:cid>/export.pdf', views.case_export_pdf, name='case-export-pdf'),
     path('cases/<int:cid>/brief/', views.case_brief, name='case-brief'),
 ]

@@ -78,3 +78,28 @@ def test_next_number_after_existing(case, decision):
     """P05 má mdt01 a mdt02 → další je mdt03."""
     from services.fhir.writeback import next_mdt_id
     assert next_mdt_id('P05') == 'P05-mdt03' and next_mdt_id('P03') == 'P03-mdt02'
+
+
+def test_export_fhir_document_and_pdf(case, decision):
+    """T-210: document Bundle z IRIS + PDF; potvrzené PDF se uloží jako DocumentReference/P03-mdt02-pdf."""
+    from services.ai.text import resource_text
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json')
+    assert as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/export.fhir.json').status_code == 409
+    draft_pdf = as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/export.pdf')
+    assert draft_pdf.status_code == 200 and draft_pdf.content.startswith(b'%PDF')
+    assert not client.search('DocumentReference', _id='P03-mdt02-pdf')        # návrh se do IRIS nepíše
+
+    as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
+    pdf = as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/export.pdf')
+    assert pdf['Content-Disposition'] == 'attachment; filename="P03-mdt02.pdf"' and pdf.content.startswith(b'%PDF')
+    doc = client.read('DocumentReference', 'P03-mdt02-pdf')
+    assert doc['content'][0]['attachment']['contentType'] == 'application/pdf' and resource_text(doc) is None
+    assert as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/decision/').json()['fhir_ids']['document_reference_pdf'] == 'P03-mdt02-pdf'
+
+    r = as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/export.fhir.json')
+    bundle = json.loads(r.content)
+    assert r['Content-Type'] == 'application/fhir+json' and bundle['type'] == 'document'
+    refs = [e['fullUrl'].split('/fhir/', 1)[1] for e in bundle['entry']]
+    assert refs[0] == 'Composition/P03-mdt02'
+    assert {'Patient/P03', 'Practitioner/LEK-P03-06', 'Observation/P03-neuro01', 'ResearchStudy/RKT-03',
+            'DocumentReference/P03-mdt02-pdf', 'Provenance/P03-mdt02-prov'} <= set(refs)

@@ -33,6 +33,7 @@ WORKDIR /code
 # Runtime závislosti
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    fonts-dejavu-core \
     netcat-traditional \
     curl \
     && rm -rf /var/lib/apt/lists/*

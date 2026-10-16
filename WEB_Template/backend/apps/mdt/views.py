@@ -1,22 +1,24 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
+import json
+
 from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from pydantic import ValidationError as SchemaError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from pydantic import ValidationError as SchemaError
-
 from apps.copilot import jobs
-from apps.copilot.schemas import Decision as DecisionSchema
 from apps.copilot.models import GenerationJob
+from apps.copilot.schemas import Decision as DecisionSchema
 from services import patients
-from services.fhir import writeback
+from services.fhir import export, writeback
 from services.fhir.client import FhirError
 
 from . import config as cfg
@@ -256,3 +258,41 @@ def case_decision_confirm(request, cid):
         case.status = 'confirmed'
         case.save(update_fields=['status', 'updated_at'])
     return Response(decision.content)
+
+
+def _attachment(content, content_type: str, filename: str) -> HttpResponse:
+    response = HttpResponse(content, content_type=content_type)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@extend_schema(responses={(200, 'application/fhir+json'): OpenApiTypes.OBJECT}, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_export_fhir(request, cid):
+    """FHIR document Bundle potvrzeného záznamu z IRIS (FR-C4)."""
+    decision = get_object_or_404(Decision, case_id=cid)
+    if decision.status != 'confirmed':
+        return Response({'detail': 'FHIR export je až po potvrzení závěru.'}, status=409)
+    bundle = export.document_bundle(decision.fhir_ids, timezone.localtime())
+    return _attachment(json.dumps(bundle, ensure_ascii=False, indent=1), 'application/fhir+json',
+                       f"{decision.fhir_ids['composition']}.fhir.json")
+
+
+@extend_schema(responses={(200, 'application/pdf'): OpenApiTypes.BINARY}, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_export_pdf(request, cid):
+    """PDF závěru; potvrzený závěr se poprvé uloží i jako `DocumentReference/Pxx-mdtNN-pdf` do IRIS."""
+    decision = get_object_or_404(Decision.objects.select_related('case__session'), case_id=cid)
+    case = decision.case
+    patient = next((p for p in patients.list_patients() if p['id'] == case.patient_fhir_id), None)
+    pdf = export.decision_pdf(decision.content, title=case.session.title,
+                              mdt_date=timezone.localtime(case.session.date), patient=patient)
+    if decision.status == 'confirmed' and not decision.fhir_ids.get('document_reference_pdf'):
+        rid = export.store_pdf(case.patient_fhir_id, decision.fhir_ids['composition'], pdf, timezone.localtime())
+        decision.fhir_ids = {**decision.fhir_ids, 'document_reference_pdf': rid}
+        decision.content = {**decision.content, 'fhir_ids': decision.fhir_ids}
+        decision.save(update_fields=['fhir_ids', 'content', 'updated_at'])
+    name = decision.fhir_ids.get('composition') or f'{case.patient_fhir_id}-navrh'
+    return _attachment(pdf, 'application/pdf', f'{name}.pdf')

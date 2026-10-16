@@ -49,14 +49,20 @@ def strip_xhtml(div: str | None) -> str:
     return "\n".join(line.strip() for line in text.splitlines()).strip()
 
 
+def _is_text(attachment: dict) -> bool:
+    """Jen textové přílohy; PDF závěru MDT (`Pxx-mdtNN-pdf`, T-210) se nedekóduje."""
+    return attachment.get("contentType", "text/plain").startswith("text/")
+
+
 def resource_text(resource: dict) -> str | None:
     """Kanonický text resource, ze kterého se počítají odstavce. `None` = resource nemá text."""
     rtype = resource.get("resourceType")
     if rtype == "DocumentReference":
-        parts = [decode_base64(c.get("attachment", {}).get("data")) for c in resource.get("content", [])]
+        parts = [decode_base64(c.get("attachment", {}).get("data")) for c in resource.get("content", [])
+                 if _is_text(c.get("attachment", {}))]
         text = "\n\n".join(p for p in parts if p.strip())
     elif rtype == "DiagnosticReport":
-        parts = [decode_base64(f.get("data")) for f in resource.get("presentedForm", [])]
+        parts = [decode_base64(f.get("data")) for f in resource.get("presentedForm", []) if _is_text(f)]
         text = "\n\n".join(p for p in parts if p.strip()) or resource.get("conclusion", "")
     elif rtype == "Composition":
         sections = []

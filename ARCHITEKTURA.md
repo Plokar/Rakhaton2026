@@ -467,8 +467,8 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 | **Původ a potvrzení** | `Provenance/Pxx-mdtNN-prov` | `target` = vše výše; `agent[]`: `Device/mdt-copilot` (model Gemini, typ `assembler`) + `Practitioner` předseda (`verifier` / `attester`); `entity[]` (`role=source`) = citované zdroje; `recorded` |
 | AI systém | `Device/mdt-copilot` (jednou při `iris_init`) | `deviceName` „MDT Copilot“, `version` = model |
 | Označení AI obsahu | `meta.security` `AIAST` (`http://terminology.hl7.org/CodeSystem/v3-ObservationValue`) na resources s AI draftem | podle HL7 *AI Transparency on FHIR* (draft IG, **ověřit stav**) |
-| PDF | `DocumentReference/Pxx-mdtNN-pdf` | `application/pdf`, `relatesTo` → Composition |
-| **FHIR export** | `Bundle` `type=document` | `Composition` jako 1. entry + všechny odkazované resources |
+| PDF | `DocumentReference/Pxx-mdtNN-pdf` | `application/pdf` (base64 v `attachment.data`), `context.related` → Composition (R4 `relatesTo` jen na DocumentReference); vzniká při prvním `GET …/export.pdf` potvrzeného závěru |
+| **FHIR export** | `Bundle` `type=document` | `Composition` jako 1. entry + zápis komise + resources, na které přímo odkazuje (pacient, lékaři, citované zdroje, studie); jde znovu nahrát `POST /Bundle` |
 
 ### 4.4 ID a idempotentní ingest
 

@@ -39,6 +39,9 @@ whitenoise>=6.5.0
 uvicorn[standard]>=0.24.0
 gunicorn>=21.0.0
 
+# PDF export závěru MDT (T-210)
+reportlab>=4.0
+
 # InterSystems IRIS (DB-API + native API)
 intersystems-irispython>=5.0
 

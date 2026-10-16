@@ -208,8 +208,8 @@ def test_ingest_if_empty_skips_loaded_data_and_rebuilds_for_new_model(fake_fhir,
     out = StringIO()
     call_command('ingest_dataset', '--if-empty', patients='P03', dataset_dir=str(dataset_root), stdout=out)
     assert 'MDT.EvidenceChunk P03: 85 odstavců' in out.getvalue()                    # nový model → přepočítat
-    assert {r['EmbeddingModel'] for r in fake_iris.rows('MDT.EvidenceChunk')} == {'jiny:hashed@1536'}
-    assert len(fake_iris.rows('MDT.EvidenceChunk')) == rows
+    models = [r['EmbeddingModel'] for r in fake_iris.rows('MDT.EvidenceChunk')]
+    assert models.count('jiny:hashed@1536') == rows and models.count('mock:hashed@1536') == rows   # modely vedle sebe
 
 
 def test_ingest_if_empty_loads_missing_fhir(fake_fhir, fake_iris, dataset_root):

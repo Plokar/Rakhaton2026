@@ -271,3 +271,11 @@ def test_llm_error_returns_empty(p03_context):
     provider = MockAIProvider(responses={"LlmRedFlags": {"flags": [{"title": "bez povinných polí"}]}})
     flags, result = detect_llm_red_flags(p03_context, provider)
     assert flags == [] and result["status"] == "error"
+
+
+def test_lynch_family_history_without_mmr_is_genetic_flag(flags):
+    """T-302 (eval P03-RF08): otec s karcinomem tlustého střeva + MMR nevyšetřeno → RF-GENETIC (OBC-2.4)."""
+    lynch = [f for f in flags["P03"] if f.rule == "RF-GENETIC"]
+    assert len(lynch) == 1 and lynch[0].guideline == "OBC-2.4"
+    assert "P03-bm04" in lynch[0].citations and any(c.startswith("P03-doc02#") for c in lynch[0].citations)
+    assert not [f for f in flags["P04"] if f.rule == "RF-GENETIC"]                 # plíce: Lynch se netýká

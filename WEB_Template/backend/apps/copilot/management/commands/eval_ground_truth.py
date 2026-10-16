@@ -11,7 +11,7 @@ from datetime import datetime
 from django.core.management.base import BaseCommand
 
 from services.ai.brief import build_brief
-from services.ai.context_builder import load_resources
+from services.ai.context_builder import context_from_resources, load_resources
 from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai_service import ai_model, get_ai_provider
 from services.eval import ground_truth
@@ -45,7 +45,8 @@ class Command(BaseCommand):
             except GuidelinesUnavailable:
                 passages = []
             brief = build_brief(pid, resources, studies=studies, guidelines=passages, provider=provider, case_id='eval')
-            result = score(gts[pid], brief, intake_prefill(resources))
+            context = context_from_resources(pid, resources, studies=studies, guidelines=passages)
+            result = score(gts[pid], brief, intake_prefill(resources), context)
             result['seconds'] = time.monotonic() - started
             results.append(result)
             self.stderr.write(f"{pid}: RF key {result['red_flags_key']}, neověřeno {result['unverified']} "

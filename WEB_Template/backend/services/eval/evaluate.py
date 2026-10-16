@@ -11,6 +11,7 @@ Každá metrika je `(shoda, celkem)`; `misses` vyjmenuje, co chybí (vstup pro l
 """
 from __future__ import annotations
 
+from services.ai.grounding import check_claim, has_vector
 from services.eval.ground_truth import PatientGroundTruth, same_source, source_of
 
 
@@ -35,9 +36,25 @@ def _cited_sources(brief: dict) -> set[str]:
     return {source_of(i) for i in ids if i}
 
 
-def score(gt: PatientGroundTruth, brief: dict, prefill: dict) -> dict:
+def unverified_reasons(brief: dict, context) -> list[str]:
+    """Proč tvrzení neprošla groundingem (body 1–3 deterministicky; jinak sémantika / chybějící vektory)."""
+    out = []
+    for c in _claims(brief):
+        if c["kind"] != "claim" or c.get("verification") != "unverified":
+            continue
+        reasons = check_claim(c, context).reasons
+        if not reasons:
+            reasons = ["sémantická podobnost pod prahem" if all(has_vector(context, x) for x in c["citations"])
+                       else "?"]
+        out.append(f"{c['id']}: {', '.join(reasons)}")
+    return out
+
+
+def score(gt: PatientGroundTruth, brief: dict, prefill: dict, context=None) -> dict:
     cited = _cited_sources(brief)
     misses: dict[str, list[str]] = {}
+    if context is not None:
+        misses["unverified"] = unverified_reasons(brief, context)
 
     def found_flag(rf) -> bool:
         rules = {rf.rule, *rf.also_rules}
@@ -139,5 +156,5 @@ def report(results: list[dict], title: str) -> str:
     lines += ["", "U „Neověřená tvrzení“ je cíl 0 %, u ostatních 100 %.", "", "### Nesoulady (vstup pro T-302)", ""]
     for r in results:
         for metric, items in r["misses"].items():
-            lines += [f"- **{r['patient_id']} · {metric}:** " + "; ".join(items[:6]) + (" …" if len(items) > 6 else "")]
+            lines += [f"- **{r['patient_id']} · {metric}:** " + "; ".join(items[:8]) + (" …" if len(items) > 8 else "")]
     return "\n".join(lines) + "\n"

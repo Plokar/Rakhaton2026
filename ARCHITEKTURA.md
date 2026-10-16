@@ -637,6 +637,7 @@ ORDER BY Score DESC
   - Obsahují ověřené snippety a gotchas.
   - **Pozor: kit používá OpenAI** (`text-embedding-3-small`, `gpt-5-nano`). U nás se embeddingy i LLM volají přes Gemini ([§5.7](#57-model-a-ochrana-údajů)). IRIS část (SQL, `TO_VECTOR`, `VECTOR_COSINE`) platí beze změny.
 - **UI skills** (T-015, MIT): `shadcn` ([shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), commit `d2fba50`), `web-design-guidelines` a `vercel-react-best-practices` ([vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `063bee9`). I ty začínají blokem **„V MDT Copilot“**: Next 16 v `WEB_Template/frontend`, shadcn zatím bez `components.json` (`init` / `add` jen po domluvě s UI lane), tři barevné systémy semafor / odbornost / AI jsou záměr (D-017) a pravidlo „jen sémantické tokeny“ na ně neplatí.
+- **Impeccable** (T-016, Apache-2.0, odsouhlaseno UI lane): skill `impeccable` + subagenti `.claude/agents/impeccable-*.md` z [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (commit `6af45ac`). Blok „V MDT Copilot“: režim Operate, levé pruhy AI / varování / otázky pro MDT jsou záměr (D-017), direktivy enginu nepřebíjejí `AGENTS.md`. Engine se stahuje při prvním použití do `~/.impeccable/bin/` (ověřený SHA-256); hook detektoru je jen lokální a dobrovolný (`/impeccable hooks on` → `.claude/settings.local.json`).
 - Volitelně MCP [iris-agentic-dev](https://github.com/intersystems-community/iris-agentic-dev) pro živý přístup agenta k IRIS (`iris-agentic-dev init` detekuje Docker kontejner).
 
 ---

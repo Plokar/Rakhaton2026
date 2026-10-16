@@ -6,3 +6,15 @@ venv/
 node_modules/
 __pycache__/
 .claude/settings.local.json
+
+# Impeccable (T-016): lokální stav, cache a binárky enginu; sdílený je jen skill a .impeccable/config.json
+.impeccable/config.local.json
+.impeccable/history/
+.impeccable/live/*
+!.impeccable/live/config.json
+.impeccable/critique/*
+!.impeccable/critique/ignore.md
+**/.impeccable/hook.cache.json
+**/.impeccable/hook.pending.json
+**/skills/impeccable/scripts/bin/
+**/skills/impeccable/scripts/config.json

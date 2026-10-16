@@ -2,3 +2,7 @@
 *.sh text eol=lf
 Makefile text eol=lf
 *.ps1 text eol=crlf
+
+# Impeccable (T-016): launcher je sh skript bez přípony, vždy LF (jinak s autocrlf=true na Windows spadne); .cmd pro cmd.exe CRLF
+.claude/skills/impeccable/scripts/impeccable text eol=lf
+.claude/skills/impeccable/scripts/impeccable.cmd text eol=crlf

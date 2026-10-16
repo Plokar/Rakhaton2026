@@ -142,12 +142,12 @@ def test_verify_reports_missing_and_tolerates_extra(fake_fhir_dataset, dataset_r
 def test_command_dry_run(dataset_root):
     out = StringIO()
     call_command('ingest_dataset', '--dry-run', dataset_dir=str(dataset_root), stdout=out)
-    assert 'Celkem 1091 unikátních resources připraveno' in out.getvalue()
+    assert 'FHIR: celkem 1091 unikátních resources připraveno' in out.getvalue()
 
 
 def test_command_ingests_selected_patients(fake_fhir, dataset_root):
     out = StringIO()
-    call_command('ingest_dataset', patients='P03,P05', dataset_dir=str(dataset_root), stdout=out)
+    call_command('ingest_dataset', '--skip-vectors', patients='P03,P05', dataset_dir=str(dataset_root), stdout=out)
     assert 'nahráno a ověřeno' in out.getvalue()
     assert len([k for k in fake_fhir.store if k.startswith('Patient/')]) == 2
     assert 'ResearchStudy/RKT-03' in fake_fhir.store and 'Questionnaire/MDT-PROMS-1' in fake_fhir.store

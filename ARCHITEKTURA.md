@@ -484,13 +484,16 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 CREATE TABLE MDT.EvidenceChunk (
     EvidenceId   VARCHAR(200),        -- "P03-img03#2"  (ID zdroje # pořadí odstavce)
     PatientId    VARCHAR(16),         -- "P03"  (POVINNÝ filtr při hledání)
-    ResourceType VARCHAR(64),         -- DocumentReference | DiagnosticReport | Composition
+    ResourceType VARCHAR(64),         -- DocumentReference | DiagnosticReport | Composition | ServiceRequest
     ResourceId   VARCHAR(128),        -- "P03-img03"
-    ChunkIndex   INTEGER,
+    ChunkIndex   INTEGER,             -- číslo odstavce = část za "#" (services/ai/text.py)
+    CharStart    INTEGER,             -- offset odstavce v resource_text() (zvýraznění v UI)
+    CharEnd      INTEGER,
     DocDate      DATE,
-    Title        VARCHAR(500),        -- type.text / code.text
+    Title        VARCHAR(500),        -- type.text / code.text / název záznamu MDT
     Department   VARCHAR(200),        -- category[].text (A-ONK, RDG, PAT-B…)
     Text         VARCHAR(10000),
+    EmbeddingModel VARCHAR(100),      -- "gemini:gemini-embedding-001@1536" | "mock:hashed@1536"
     Embedding    VECTOR(DOUBLE, 1536)
 );
 
@@ -502,6 +505,7 @@ CREATE TABLE MDT.GuidelineChunk (
     Region       VARCHAR(20),         -- "CZ"  (konzultace: zdroj a region postupu)
     IcdPrefixes  VARCHAR(100),        -- "C18,C19,C20" | "C50" | "C34" | "*" (OBC)
     Text         VARCHAR(5000),
+    EmbeddingModel VARCHAR(100),
     Embedding    VECTOR(DOUBLE, 1536)
 );
 
@@ -510,29 +514,42 @@ CREATE TABLE MDT.TrialCriterion (
     StudyId      VARCHAR(16),         -- "RKT-03"
     Kind         VARCHAR(10),         -- inclusion | exclusion   (Group.characteristic.exclude)
     Text         VARCHAR(2000),
+    EmbeddingModel VARCHAR(100),
     Embedding    VECTOR(DOUBLE, 1536)
 );
+-- indexy: EvidenceChunk (PatientId), (ResourceId) · GuidelineChunk (GuidelineSet) · TrialCriterion (StudyId)
 ```
 
 ```sql
 -- hledání v datech pacienta (grounding = WHERE PatientId)
 SELECT TOP 8 EvidenceId, Text, VECTOR_COSINE(Embedding, TO_VECTOR(?, DOUBLE)) AS Score
 FROM MDT.EvidenceChunk
-WHERE PatientId = ?
+WHERE PatientId = ? AND EmbeddingModel = ?
 ORDER BY Score DESC
 ```
+
+- **Implementace (T-102, T-203):** tabulky a dotazy `services/iris/vector_store.py`, plnění `services/iris/indexing.py`, příkazy `ingest_dataset` (FHIR + vektory) a `search_iris` (ruční ověření).
+  - Řádky: `MDT.EvidenceChunk` 665 (555 odstavců zpráv a nálezů + 81 sekcí záznamů MDT + 29 odstavců nominací; P03 má 85), `MDT.GuidelineChunk` 42, `MDT.TrialCriterion` 45 kritérií v 6 studiích.
+  - **`EmbeddingModel`:** hledá se jen mezi řádky aktuálního modelu (`provider:model@dim`), takže se vektory z mocku a z Gemini nikdy nesmíchají. Po přepnutí `AI_PROVIDER` nebo `EMBEDDING_MODEL` je potřeba reindex: `ingest_dataset --skip-fhir`. Dokud neproběhne, hledání vrací prázdný seznam a loguje varování.
+  - **API pro ostatní úkoly:**
+    - `search_evidence(pid, q, top_k)` → řádky se `Score`, `EvidenceId` se rovnou hodí do `PatientContext.render(highlight=…)` (T-105). Bez `pid` vyhodí `ValueError` (NFR-2);
+    - `search_guidelines(q, guideline_sets)`, `search_trial_criteria(q, study_ids)` (B2, T-204);
+    - `get_evidence_chunks(pid, resource_id)`, `get_guideline(id)`, `get_trial_criterion(id)` pro resolver citací (T-104);
+    - `similarity(claim, evidence_ids)` = kosinová podobnost s citovanými zdroji pro grounding v2 (T-213, `FACT_VERIFICATION`). Resource bez `#` porovná s nejlepším odstavcem, ID bez textu (např. `Observation`) ve výsledku chybí;
+    - `indexing.index_patient(pid)` přečte pacienta z IRIS FHIR a přepočítá jeho odstavce. **Volat po zápisu závěru komise (T-209)**, aby šel `Composition/Pxx-mdtNN` vyhledat.
+  - **Testy bez IRIS:** fixture `fake_iris` (`services/conftest.py`) nahradí `services.iris.db.connect` in-memory IRIS SQL (podmnožina SQL včetně `VECTOR_COSINE`, hlídá zavírání spojení), funguje i pro `services/ai/guidelines.py:load_guidelines`. Proti živému IRIS (schéma `MDTTEST`): `pytest -m integration services/iris`.
 
 - **Chunking:** texty jsou krátké (93 dokumentů, max ~1 900 znaků), takže **1 odstavec = 1 chunk**. Kvůli zvýraznění v UI ukládáme i offset v textu.
   - **Jediný zdroj číslování odstavců** je `services/ai/text.py`: `resource_text(resource)` + `split_paragraphs(text)` (nebo `resource_paragraphs(resource)`). Používá ho context builder (T-105) a **musí** ho použít i `MDT.EvidenceChunk` (T-102) a resolver citací (T-104). Jinak `P03-img03#2` ukáže v každé části aplikace na jiný text.
   - Text resource: DocumentReference `content[].attachment.data`, DiagnosticReport `presentedForm[].data` (bez něj `conclusion`), Composition sekce jako `Název: text`, ServiceRequest otázka pro MDT (`#1`) + poznámky `note[]`.
-  - Nový odstavec začíná za prázdným řádkem a na řádku s nadpisem (`Závěr:`, `Nález:`, `Subjektivně:`, `OA:`…, regex `^[A-ZÁ-Ž][^:]{0,40}:`). Číslování je od 1. Na datasetu to dává 555 odstavců, nejdelší má 542 znaků.
+  - Nový odstavec začíná za prázdným řádkem a na řádku s nadpisem (`Závěr:`, `Nález:`, `Subjektivně:`, `OA:`…, regex `^[A-ZÁ-Ž][^:]{0,40}:`). Číslování je od 1. Na datasetu to dává 555 odstavců zpráv a nálezů (s Composition a ServiceRequest 665), nejdelší má 542 znaků.
 - **Embeddingy:**
   - `gemini-embedding-001`, `output_dimensionality=1536`;
   - **L2 normalizovat** (pod 3072 dimenzí to Google vyžaduje);
   - `task_type`: `RETRIEVAL_DOCUMENT` pro chunky, `RETRIEVAL_QUERY` pro dotazy a `FACT_VERIFICATION` pro ověření tvrzení;
   - max 2 048 tokenů na vstup;
   - volat dávkově.
-- Vkládání: `INSERT … VALUES (?, …, TO_VECTOR(?))` s `str(list_of_floats)`; batch přes `executemany`.
+- Vkládání: `INSERT … VALUES (?, …, TO_VECTOR(?, DOUBLE))` s `str(list_of_floats)`; batch přes `executemany`. Embedduje se `Title: Text` (u kritérií jen `Text`).
 - IRIS SQL používá `SELECT TOP n`, ne `LIMIT`. Parametry vždy přes `?`.
 
 ### 4.6 FHIR REST klient — pravidla a gotchas

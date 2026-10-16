@@ -287,7 +287,11 @@ def to_transaction(bundle: dict) -> dict:
   python manage.py ingest_dataset --patients P03,P05    # Questionnaire + studie + vybraní pacienti
   python manage.py ingest_dataset --dry-run             # bez sítě: sanitizace + počty ze souborů
   python manage.py ingest_dataset --bundle-type batch   # když IRIS transakci odmítne: chyby po resources
+  python manage.py ingest_dataset --skip-fhir           # jen vektory MDT.* znovu (např. po přepnutí na Gemini)
+  python manage.py ingest_dataset --skip-vectors        # jen FHIR, bez embeddingů
+  python manage.py search_iris "neuropatie" --patient P03            # ruční kontrola vektorového hledání
   ```
+- Kroky 5 a 6 (vektory, T-102 a T-203) dělá stejný příkaz po FHIR části: odstavce pacientů čte zpět z IRIS FHIR a čísluje je `services/ai/text.py`, guidelines bere z markdownu a kritéria studií z `Group.characteristic`. Výsledek: 665 odstavců, 42 pasáží a 45 kritérií v 6 studiích. Detail a API jsou v [ARCHITEKTURA §4.5](ARCHITEKTURA.md#45-vektorové-tabulky-iris-sql-namespace-fhirserver).
 - Entries v transakci jsou seřazené tak, aby odkazované resources byly před těmi, které na ně odkazují (`order_by_references`), a mají `fullUrl` `https://rakathon.example.org/fhir/Type/id`.
 - Kontrola počtů: každý resource přes `GET Type?_id=…&_summary=count` (přesně) a pacientské typy přes `?patient=Pxx` (aspoň tolik, víc je v pořádku, protože aplikace zapisuje `Pxx-mdtNN…`).
 - Index `ID → ResourceType` je funkce `services/fhir/ids.py` `resource_type_for_id` podle konvence z §3 (+ výstupy z ARCHITEKTURA §4.3). Test ověřuje, že sedí pro všech 1 091 resources. `parse_evidence_id` rozloží citaci (`P03-img03#2`, `KRC-2.4`, `RKT-03/V3`, `EXT-…`).

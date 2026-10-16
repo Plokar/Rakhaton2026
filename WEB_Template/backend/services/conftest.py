@@ -6,6 +6,8 @@ import pytest
 
 from services.fhir import client
 from services.fhir.testing import FakeFhirServer
+from services.iris import db
+from services.iris.testing import FakeIris
 
 
 def _repo_dataset() -> Path | None:
@@ -37,3 +39,15 @@ def fake_fhir(monkeypatch) -> FakeFhirServer:
 def fake_fhir_dataset(fake_fhir, dataset_root) -> FakeFhirServer:
     """FHIR server s celým sanitizovaným datasetem (1 091 resources), jako po ``ingest_dataset``."""
     return fake_fhir.load(dataset_root)
+
+
+@pytest.fixture
+def fake_iris(monkeypatch) -> FakeIris:
+    """IRIS SQL v paměti místo ``services.iris.db.connect`` (vektorové tabulky MDT.*).
+
+    Vynutí ``AI_PROVIDER=mock``: embeddingy jsou deterministické a nic neodchází do Gemini.
+    """
+    monkeypatch.setenv('AI_PROVIDER', 'mock')
+    server = FakeIris()
+    monkeypatch.setattr(db, 'connect', server.connect)
+    return server

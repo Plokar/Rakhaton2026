@@ -20,7 +20,8 @@ from apps.copilot.schemas import Decision as DecisionSchema
 from services import patients, tasks
 from services.fhir import export, writeback
 from services.fhir.client import FhirError
-from services.rules import intake
+from services.rules import intake, readiness
+from services.rules.compatibility import evaluate_compatibility
 
 from . import config as cfg
 from . import roles
@@ -202,6 +203,24 @@ def patient_intake(request, pid):
     resources = _patient_resources(pid)
     skipped = [s for s in request.query_params.get('skipped', '').split(',') if s]
     return Response(intake.intake_prefill(resources, skipped))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_readiness(request, cid):
+    """Kontrola připravenosti (BON-1, `Readiness` §8.6): checklist OBC-1.1, staging ≤ 42 dní (OBC-1.2), biomarkery."""
+    case = get_object_or_404(MdtCase, pk=cid)
+    return Response(readiness.evaluate_readiness(_patient_resources(case.patient_fhir_id), case.skipped_fields))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_compatibility(request, cid):
+    """Semafor souladu postupů se stavem pacienta (FR-D4, §8.3): všechny postupy ze sady guidelines, i červené."""
+    case = get_object_or_404(MdtCase, pk=cid)
+    return Response(evaluate_compatibility(_patient_resources(case.patient_fhir_id), skipped_fields=case.skipped_fields))
 
 
 def _patient_resources(pid: str) -> list[dict]:

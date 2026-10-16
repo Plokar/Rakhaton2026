@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from django.core.management import call_command
 
+from apps.copilot import schemas
 from apps.mdt.models import MdtCase
 from apps.mdt.test_roles import as_user
 from services.fhir import client
@@ -111,6 +112,7 @@ def test_tasks_after_confirmation(case, decision):
     as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json')
     as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
     items = as_user('chirurg').get('/api/mdt/tasks/').json()
+    [schemas.MdtTask.model_validate(t) for t in items]
     assert [t['id'] for t in items] == ['P03-mdt02-task01', 'P03-mdt02-task03', 'P03-mdt02-task02', 'P03-mdt02-task04']
     first = items[0]
     assert first['case_id'] == case.pk and first['mdt_record'] == 'P03-mdt02' and first['due_date'] == '2026-10-28'

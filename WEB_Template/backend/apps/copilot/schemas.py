@@ -517,6 +517,51 @@ class IntakePrefill(BaseModel):
     )
 
 
+class ReadinessScore(BaseModel):
+    present: int
+    total: int
+    percent: int
+
+
+class StaleStaging(BaseModel):
+    id: str
+    age_days: int
+    citation: EvidenceId | None = None
+
+
+class Readiness(BaseModel):
+    """GET /api/mdt/cases/{cid}/readiness/ (BON-1, T-303)."""
+    patient_id: str
+    status: Literal["ready", "incomplete"]
+    score: ReadinessScore
+    unresolved: list[IntakeField]
+    stale_staging: list[StaleStaging]
+
+
+class TaskOwner(BaseModel):
+    id: str | None = None
+    name: str
+
+
+class TaskReMdt(BaseModel):
+    date: str | None = None
+    reason: str
+
+
+class MdtTask(BaseModel):
+    """GET /api/mdt/tasks/ → MdtTask[] (FR-P3, T-511)."""
+    id: str = Field(description='"P03-mdt02-task01" (FHIR Task)')
+    patient_id: str
+    mdt_record: str
+    case_id: int | None = None
+    description: str
+    owner: TaskOwner
+    due_date: str | None = None
+    status: Literal["requested", "in-progress", "completed"]
+    authored_on: str | None = None
+    re_mdt: TaskReMdt | None = None
+
+
 class CaseAuthor(BaseModel):
     user_id: int
     name: str

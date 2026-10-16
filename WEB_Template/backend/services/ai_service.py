@@ -44,6 +44,8 @@ DEFAULT_TEMPERATURE = 0.2          # ARCHITEKTURA §5.1: teplota 0–0.2
 DEFAULT_TIMEOUT_S = 90
 RETRY_ATTEMPTS = 3                 # včetně prvního pokusu; SDK opakuje 408, 429 a 5xx
 EMBED_BATCH_SIZE = 100
+EMBED_RATE_RETRIES = 3                                  # 429 free tieru: čekat podle „retry in Ns“
+RETRY_IN = re.compile(r"retry in (\d+(?:\.\d+)?)s", re.IGNORECASE)
 INLINE_AUDIO_MAX_BYTES = 20 * 1024 * 1024   # větší audio jde přes Files API
 
 # task_type pro embeddingy (ARCHITEKTURA §4.5)
@@ -377,10 +379,18 @@ class GeminiProvider(BaseAIProvider):
         vectors: list[list[float]] = []
         for i in range(0, len(texts), EMBED_BATCH_SIZE):
             batch = texts[i:i + EMBED_BATCH_SIZE]
-            try:
-                resp = self.client.models.embed_content(model=model_name, contents=batch, config=config)
-            except errors.APIError as exc:
-                raise AIProviderError(f"Gemini embed HTTP {exc.code}: {_short(exc)}") from exc
+            for attempt in range(EMBED_RATE_RETRIES + 1):
+                try:
+                    resp = self.client.models.embed_content(model=model_name, contents=batch, config=config)
+                    break
+                except errors.APIError as exc:
+                    # Free tier (D-021): 100 textů za minutu; 429 nese „retry in Ns“ → počkat a zkusit znovu.
+                    delay = RETRY_IN.search(str(exc)) if exc.code == 429 else None
+                    if delay is None or attempt == EMBED_RATE_RETRIES:
+                        raise AIProviderError(f"Gemini embed HTTP {exc.code}: {_short(exc)}") from exc
+                    wait = min(float(delay.group(1)) + 1, 65)
+                    logger.warning("Gemini embed 429, čekám %.0f s (pokus %d)", wait, attempt + 1)
+                    time.sleep(wait)
             embeddings = resp.embeddings or []
             if len(embeddings) != len(batch):
                 raise AIProviderError(f"Gemini vrátil {len(embeddings)} embeddingů pro {len(batch)} textů")

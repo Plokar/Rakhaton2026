@@ -2,6 +2,7 @@
 import pytest
 from django.core.management import call_command
 
+from apps.copilot import schemas
 from apps.mdt.models import MdtCase, MdtSession
 from apps.mdt.test_roles import as_user
 from services.fhir import client
@@ -69,3 +70,16 @@ def test_new_case_and_return_for_completion(seeded):
     cid = r.json()['id']
     assert as_user('onkolog').patch(f'/api/mdt/cases/{cid}/', {'status': 'returned'}, format='json').status_code == 403
     assert as_user('predseda').patch(f'/api/mdt/cases/{cid}/', {'status': 'returned'}, format='json').json()['status'] == 'returned'
+
+
+def test_case_readiness_and_compatibility(seeded):
+    """BON-1 a FR-D4 přes API: P03 chybí MMR a CT hrudníku; semafor ukáže všechny postupy, anti-EGFR červeně."""
+    cid = MdtCase.objects.get(patient_fhir_id='P03').pk
+    r = as_user('radiolog').get(f'/api/mdt/cases/{cid}/readiness/').json()
+    schemas.Readiness.model_validate(r)
+    assert r['patient_id'] == 'P03' and r['status'] == 'incomplete'
+    assert {'bm.mmr', 'staging.chest_ct'} <= {f['id'] for f in r['unresolved']}
+    procedures = as_user('radiolog').get(f'/api/mdt/cases/{cid}/compatibility/').json()
+    lights = {p['id']: p['compatibility']['overall'] for p in procedures}
+    assert 'red' in lights.values() and 'orange' in lights.values()
+    assert as_user('radiolog').get('/api/mdt/cases/9999/readiness/').status_code == 404

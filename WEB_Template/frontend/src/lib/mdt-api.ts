@@ -10,7 +10,11 @@ import type {
   IntakePrefill,
   Me,
   MdtCase,
+  MdtTask,
   PatientListItem,
+  ProcedureCompatibility,
+  Readiness,
+  TaskStatus,
   MdtSession,
   MdtSessionDetail,
   MdtSessionListItem,
@@ -104,6 +108,23 @@ export const mdtApi = {
   /** Zařazení pacienta do boardu (FR-P4); ruční ECOG a záměr se zapíší do IRIS s Provenance. */
   createCase: (body: MdtCase & { acknowledge?: string[] }) =>
     apiFetch<MdtCase>('/api/mdt/cases/', { method: 'POST', body: JSON.stringify(body) }),
+
+  /** Kontrola připravenosti případu (BON-1): skóre úplnosti, nevyřešené údaje, zastaralý staging. */
+  getReadiness: (caseId: number) => apiFetch<Readiness>(`/api/mdt/cases/${caseId}/readiness/`),
+
+  /** Semafor souladu všech postupů se stavem pacienta (FR-D4), i červené. */
+  getCompatibility: (caseId: number) =>
+    apiFetch<ProcedureCompatibility[]>(`/api/mdt/cases/${caseId}/compatibility/`),
+
+  /** Úkoly po zasedání z IRIS (FR-P3), filtr `status` a `patient`. */
+  getTasks: (filter: { status?: TaskStatus; patient?: string } = {}) => {
+    const query = new URLSearchParams(Object.entries(filter).filter(([, v]) => v) as [string, string][]).toString();
+    return apiFetch<MdtTask[]>(`/api/mdt/tasks/${query ? `?${query}` : ''}`);
+  },
+
+  /** Změna stavu úkolu → `Task.status` v IRIS (předseda, lékař). */
+  updateTask: (taskId: string, status: TaskStatus) =>
+    apiFetch<MdtTask>(`/api/mdt/tasks/${encodeURIComponent(taskId)}/`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 
   /** Časová osa pacienta z IRIS (seřazená podle data). */
   getTimeline: (patientId: string) =>

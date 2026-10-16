@@ -495,3 +495,35 @@ export type MdtSessionListItem = MdtSession & { patients: string[] };
 
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };
+
+/** GET /api/mdt/cases/{cid}/readiness/ (BON-1, OBC-1.1 / OBC-1.2) */
+export interface Readiness {
+  patient_id: string;
+  status: 'ready' | 'incomplete';
+  score: { present: number; total: number; percent: number };
+  /** missing, pending nebo skipped; se zachovaným stavem (D-019). */
+  unresolved: IntakeField[];
+  stale_staging: { id: string; age_days: number; citation?: EvidenceId }[];
+}
+
+export type TaskStatus = 'requested' | 'in-progress' | 'completed';
+
+/** GET /api/mdt/tasks/ → MdtTask[] (FR-P3) */
+export interface MdtTask {
+  /** "P03-mdt02-task01" (FHIR Task) */
+  id: string;
+  patient_id: string;
+  /** "P03-mdt02" (Composition) */
+  mdt_record: string;
+  /** MdtCase s potvrzeným závěrem. */
+  case_id: number | null;
+  description: string;
+  /** LEK-… / role */
+  owner: { id: string | null; name: string };
+  /** Task.restriction.period.end */
+  due_date: string | null;
+  status: TaskStatus;
+  authored_on: string | null;
+  /** Z CarePlan (activity „Plánované re-MDT“, scheduledPeriod.start). */
+  re_mdt: { date: string | null; reason: string } | null;
+}

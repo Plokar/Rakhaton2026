@@ -69,11 +69,19 @@ services:
     volumes:
       - ./backend:/code        # Hot-reload: zmeny se okamžite projeví
       - /code/__pycache__      # Vyloučit cache z bind mountu
+      - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
     env_file:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings_dev
       DJANGO_DEBUG: "True"
+      DATASET_DIR: /data/dataset
+      IRIS_HOST: iris
+      IRIS_PORT: "1972"
+      IRIS_NAMESPACE: FHIRSERVER
+      IRIS_USER: ${IRIS_USER:-SuperUser}
+      IRIS_PASSWORD: ${IRIS_PASSWORD:-SYS}
+      FHIR_BASE_URL: http://iris:52773/fhir/r4
     ports:
       - "8000:8000"   # Přímý přístup pro debugging
     depends_on:
@@ -88,6 +96,24 @@ services:
       - "traefik.http.routers.backend-dev.rule=PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/ws`)"
       - "traefik.http.routers.backend-dev.entrypoints=web"
       - "traefik.http.services.backend-dev.loadbalancer.server.port=8000"
+
+  # ===========================================================================
+  # IRIS for Health – FHIR R4 (nemocniční DB) + Vector Search (ARCH §4.2)
+  # FHIR: http://localhost:52773/fhir/r4 (po iris_init) · Portal: /csp/sys/UtilHome.csp
+  # Dev login SuperUser / SYS
+  # ===========================================================================
+  iris:
+    build: ./iris
+    restart: unless-stopped
+    environment:
+      ISC_DATA_DIRECTORY: /durable
+    volumes:
+      - iris_data_dev:/durable
+    ports:
+      - "1972:1972"     # superserver (DB-API)
+      - "52773:52773"   # web (FHIR, Management Portal)
+    networks:
+      - app-network
 
   # ===========================================================================
   # FRONTEND – Next.js dev server s hot-reload (Turbopack)
@@ -208,6 +234,7 @@ services:
 volumes:
   postgres_data_dev:
   redis_data_dev:
+  iris_data_dev:
   # qdrant_data_dev:
   # minio_data_dev:
 

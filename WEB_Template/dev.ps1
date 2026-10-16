@@ -34,6 +34,7 @@ switch ($Command) {
         Write-Host "   Django Admin:      http://localhost:8000/admin/ (admin / admin123456)" -ForegroundColor White
         Write-Host "   Mailhog E-maily:   http://localhost:8025" -ForegroundColor White
         Write-Host "   Traefik Dashboard: http://localhost:8080" -ForegroundColor White
+        Write-Host "   IRIS Portal:       http://localhost:52773/csp/sys/UtilHome.csp (SuperUser / SYS)" -ForegroundColor White
     }
 
     "down" {

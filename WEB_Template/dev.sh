@@ -24,6 +24,7 @@ case "$CMD" in
     echo "   Django Admin:      http://localhost:8000/admin/ (admin / admin123456)"
     echo "   Mailhog:           http://localhost:8025"
     echo "   Traefik Dashboard: http://localhost:8080"
+    echo "   IRIS Portal:       http://localhost:52773/csp/sys/UtilHome.csp (SuperUser / SYS)"
     ;;
 
   down)

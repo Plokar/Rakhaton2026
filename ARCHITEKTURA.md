@@ -1091,7 +1091,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids` |
 | GET | `/api/mdt/cases/{cid}/export.pdf` | PDF |
 | GET | `/api/mdt/cases/{cid}/export.fhir.json` | FHIR document Bundle |
-| GET | `/api/mdt/tasks/?status=…` | úkoly po zasedání (z FHIR `Task`) |
+| GET | `/api/mdt/tasks/?status=…&patient=…` | úkoly po zasedání (z FHIR `Task/Pxx-mdtNN-taskNN`, `MdtTask[]` §8.6), seřazené podle stavu a termínu |
+| PATCH | `/api/mdt/tasks/{tid}/` | `{status}` → `Task.status` v IRIS (předseda, lékař) |
 
 ---
 
@@ -1483,6 +1484,19 @@ interface Me {                                  // GET /api/mdt/me/
   name: string;
   role: "mdt_admin" | "mdt_doctor" | "mdt_viewer";   // superuser = mdt_admin, bez skupiny = mdt_viewer
   specialty: RoleId | null;
+}
+
+interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTask[] (FR-P3)
+  id: string;                                   // "P03-mdt02-task01" (FHIR Task)
+  patient_id: string;
+  mdt_record: string;                           // "P03-mdt02" (Composition)
+  case_id: number | null;                       // MdtCase s potvrzeným závěrem
+  description: string;
+  owner: { id: string | null; name: string };   // LEK-… / role
+  due_date: string | null;                      // Task.restriction.period.end
+  status: "requested" | "in-progress" | "completed";
+  authored_on: string | null;
+  re_mdt: { date: string | null; reason: string } | null;   // z CarePlan (activity „Plánované re-MDT“, scheduledPeriod.start)
 }
 
 interface MdtSession {                          // GET /api/mdt/sessions/ → (MdtSession & { patients: string[] })[]

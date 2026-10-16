@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from apps.copilot import jobs
 from apps.copilot.models import GenerationJob
 from apps.copilot.schemas import Decision as DecisionSchema
-from services import patients
+from services import patients, tasks
 from services.fhir import export, writeback
 from services.fhir.client import FhirError
 
@@ -296,3 +296,36 @@ def case_export_pdf(request, cid):
         decision.save(update_fields=['fhir_ids', 'content', 'updated_at'])
     name = decision.fhir_ids.get('composition') or f'{case.patient_fhir_id}-navrh'
     return _attachment(pdf, 'application/pdf', f'{name}.pdf')
+
+
+def _with_case(items: list[dict]) -> list[dict]:
+    case_by_record = {d.fhir_ids.get('composition'): d.case_id for d in Decision.objects.filter(status='confirmed')}
+    return [{**i, 'case_id': case_by_record.get(i['mdt_record'])} for i in items]
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def task_list(request):
+    """Úkoly po zasedání z IRIS (FR-P3): `?status=requested|in-progress|completed&patient=P03`."""
+    status = request.query_params.get('status') or None
+    if status and status not in tasks.STATUSES:
+        raise ValidationError({'status': f'Jen {", ".join(tasks.STATUSES)}.'})
+    return Response(_with_case(tasks.list_tasks(status, request.query_params.get('patient') or None)))
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def task_detail(request, tid):
+    """Změna stavu úkolu `{status}` (předseda, lékař) → `Task.status` v IRIS."""
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    try:
+        item = tasks.set_status(tid, request.data.get('status'))
+    except ValueError:
+        raise ValidationError({'status': f'Jen {", ".join(tasks.STATUSES)} a ID úkolu Pxx-mdtNN-taskNN.'})
+    except FhirError as e:
+        if e.status == 404:
+            return Response({'detail': 'Úkol v IRIS není.'}, status=404)
+        raise
+    return Response(_with_case([item])[0])

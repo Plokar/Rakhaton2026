@@ -103,3 +103,25 @@ def test_export_fhir_document_and_pdf(case, decision):
     assert refs[0] == 'Composition/P03-mdt02'
     assert {'Patient/P03', 'Practitioner/LEK-P03-06', 'Observation/P03-neuro01', 'ResearchStudy/RKT-03',
             'DocumentReference/P03-mdt02-pdf', 'Provenance/P03-mdt02-prov'} <= set(refs)
+
+
+def test_tasks_after_confirmation(case, decision):
+    """T-511: po potvrzení P03 jsou jeho úkoly v přehledu, stav jde změnit (zapíše se do IRIS)."""
+    assert as_user('chirurg').get('/api/mdt/tasks/').json() == []
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json')
+    as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
+    items = as_user('chirurg').get('/api/mdt/tasks/').json()
+    assert [t['id'] for t in items] == ['P03-mdt02-task01', 'P03-mdt02-task03', 'P03-mdt02-task02', 'P03-mdt02-task04']
+    first = items[0]
+    assert first['case_id'] == case.pk and first['mdt_record'] == 'P03-mdt02' and first['due_date'] == '2026-10-28'
+    assert first['owner']['id'] == 'LEK-P03-01' and first['owner']['name'].startswith('LEK-P03-01')
+    assert first['re_mdt']['date'] == '2026-11-04'
+
+    assert as_user('radiolog').patch('/api/mdt/tasks/P03-mdt02-task01/', {'status': 'completed'}, format='json').status_code == 403
+    assert as_user('onkolog').patch('/api/mdt/tasks/P03-mdt02-task01/', {'status': 'hotovo'}, format='json').status_code == 400
+    done = as_user('onkolog').patch('/api/mdt/tasks/P03-mdt02-task01/', {'status': 'completed'}, format='json').json()
+    assert done['status'] == 'completed' and client.read('Task', 'P03-mdt02-task01')['status'] == 'completed'
+    assert [t['id'] for t in as_user('chirurg').get('/api/mdt/tasks/?status=completed').json()] == ['P03-mdt02-task01']
+    assert as_user('chirurg').get('/api/mdt/tasks/?status=x').status_code == 400
+    assert as_user('chirurg').get('/api/mdt/tasks/?patient=P04').json() == []
+    assert as_user('onkolog').patch('/api/mdt/tasks/P03-zad01-task/', {'status': 'completed'}, format='json').status_code == 400

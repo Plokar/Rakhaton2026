@@ -24,6 +24,7 @@ ROLES_CS = {'chair': 'předseda komise', 'surgeon': 'chirurg', 'oncologist': 'kl
             'radiation_oncologist': 'radiační onkolog', 'radiologist': 'radiolog', 'pathologist': 'patolog',
             'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient'}
 SEVERITY = {'high': 'high', 'moderate': 'moderate', 'low': 'low'}
+RE_MDT = 'Plánované re-MDT'
 _FOCUS_PREFIX = 'Požadované zaměření MDT:'
 
 
@@ -111,7 +112,8 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
                               'description': f"{i}. {r['text']}"}}
                   for i, r in enumerate(s['recommendation'], 1)]
     if s.get('re_mdt'):
-        activities.append({'detail': {'status': 'scheduled', 'code': {'text': 'Plánované re-MDT'},
+        activities.append({'detail': {'status': 'scheduled', 'code': {'text': RE_MDT},
+                                      'scheduledPeriod': {'start': s['re_mdt']['date']},
                                       'description': f"{s['re_mdt']['reason']} ({s['re_mdt']['date']})"}})
     careplan = {
         'resourceType': 'CarePlan', 'id': ids['careplan'], 'status': 'active', 'intent': 'plan',

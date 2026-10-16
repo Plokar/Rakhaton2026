@@ -8,6 +8,7 @@
 > - Úkoly a stav: [PROGRESS.md](PROGRESS.md)
 > - Pravidla pro AI agenty: [AGENTS.md](AGENTS.md)
 > - Přehled a poznámky z konzultace: [MYSLENKOVA_MAPA.md](MYSLENKOVA_MAPA.md)
+> - Požadavky lékaře (detail obrazovek, katalog pravidel semaforu, škály, zkratky): [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md)
 >
 > Změnu kontraktu ([§8](#8-datové-kontrakty-fe--be)) nebo API ([§6.3](#63-rest-api)) udělej **nejdřív tady**, ve stejném PR jako kód, a zapiš ji do Deníku v PROGRESS.md.
 
@@ -34,6 +35,11 @@
   - potvrzený závěr komise se **zapisuje zpět do IRIS** ve stejné struktuře, jakou mají předchozí záznamy MDT v datasetu (`Composition` „Záznam MDT“ + `CarePlan` + `CareTeam`), doplněné o `Task`, `DetectedIssue` a `Provenance`;
   - export je FHIR document Bundle a PDF.
 - **Harmonogram:** [§1.9](#19-harmonogram). Odevzdání zatím neřešíme (rozhodnutí týmu).
+- **Požadavky lékaře** (budoucího uživatele, [§1.10](#110-požadavky-budoucího-uživatele-lékaře)):
+  - role předseda (administrátor) / zadávající lékař / prohlížející;
+  - boardy = zasedání, pacient se do boardu zařazuje formulářem s kontrolou úplnosti a varováními;
+  - úzké rozložení do jednoho sloupce se sekcemi odborností;
+  - u léčebných postupů semafor souladu se stavem pacienta (počítají ho pravidla, ne AI).
 
 ---
 
@@ -167,6 +173,19 @@ Podrobně v **[DATASET.md](DATASET.md)**. Shrnutí:
 
 **Kontakty:** Ľuboslav Piljan (Asseco CE, monitor zadání) a Ondřej Hoferek (InterSystems / HL7 ČR, mentor). Obracet se na ně kdykoli: se zadáním, daty, klinickým kontextem, FHIR i směrem řešení.
 
+### 1.10 Požadavky budoucího uživatele (lékaře)
+
+Tým dostal poznámky od lékaře, který by aplikaci používal (Pá 16. 10.). Jsou sladěné se zadáním a promítnuté do požadavků v §2: FR-U1, FR-U2, FR-P4, FR-B8, FR-D4, FR-D5, FR-A5, FR-R5, BON-6 a BON-7. Detail je v [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md).
+
+| Požadavek lékaře | Jak je sladěný se zadáním |
+|---|---|
+| 3 role: administrátor MDT, zadávající lékař, prohlížející | administrátor = předseda: zakládá boardy, mění termíny, **nastavuje podklad** (nastavitelnost, §1.4) a potvrzuje závěr (D-014) |
+| zařazení pacienta s varováním, když něco chybí, je mimo normu nebo v rozporu | fáze „před zasedáním“ (§1.1). Odkliknuté varování ani přeskočený údaj **z podkladu nezmizí** (D-019). |
+| hlavička s rodným číslem, velkým ECOG a záměrem | místo RČ `P03 · muž · 67 let` (pseudonymizace). Diagnóza, TNM a hlavní otázka jsou nahoře (orientace do 30 s). ECOG lékaře je velký **a vedle něj ECOG pacienta** (D-018). |
+| barvy u léčebných postupů | semafor **souladu se stavem pacienta**, ne doporučení. Vždy se ukážou všechny možnosti a barvu počítají pravidla s citací (D-015). |
+| úzké okno, všichni na jednom projektoru, údaje podle odborností u sebe | jeden sloupec od 360 px, sekce odborností (min. 3 role, blok B) s barvou odbornosti (D-017) |
+| Lung-RADS a Fleischner; vstup přes PDF nebo vložený text | bonusy BON-6 a BON-7, až po povinných blocích |
+
 ---
 
 ## 2. Katalog požadavků
@@ -183,10 +202,11 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 
 | ID | Požadavek | Priorita | Krit. |
 |---|---|---|---|
-| **FR-A1** | Executive summary: diagnóza (MKN-10 + slovně), stadium (TNM), hlavní otázka komise (`ServiceRequest.reasonCode.text`), čitelné do 30 s | MUST | UX |
-| **FR-A2** | ECOG lékař (`Observation` LOINC 89247-1) vs. pacient (PROMs `samostatnost` 0–4) vedle sebe s datem a citací; **rozdíl ≥ 1 znamená red flag** (OBC-1.3) | MUST | UX, AI |
+| **FR-A1** | Executive summary: diagnóza (MKN-10 + slovně), stadium (TNM), hlavní otázka komise (`ServiceRequest.reasonCode.text`), čitelné do 30 s. **Diagnóza, TNM a hlavní otázka jsou v hlavičce nahoře**, ne až pod bloky. Místo jména a RČ `Pxx · pohlaví · věk` (D-018). | MUST | UX |
+| **FR-A2** | ECOG lékař (`Observation` LOINC 89247-1) vs. pacient (PROMs `samostatnost` 0–4) vedle sebe s datem a citací; **rozdíl ≥ 1 znamená red flag** (OBC-1.3). ECOG lékaře je velkou číslicí (zadává nebo potvrzuje zadávající lékař, předvyplněno z IRIS), vedle něj vždy ECOG pacienta a velké písmeno záměru **C** (kurativní) / **P** (paliativní). | MUST | UX, AI |
 | **FR-A3** | Časová osa: diagnóza, výkony, linie léčby, zobrazení, PROMs, předchozí MDT; každý bod klikací | MUST | UX |
 | **FR-A4** | Hlavička: **komorbidity** (`Condition` „komorbidita“), **alergie** (PROMs `alergie` + text zpráv), **předchozí výkony a implantáty** (`Procedure`: port, stent, operace) *(konzultace)* | MUST | UX |
+| **FR-A5** | Anamnéza: krátký text doslovně, dlouhý (nad `INTAKE_ANAMNESIS_MAX_CHARS`) jako shrnutí AI s citacemi; lékař může přepnout. Sekce OA, FA, RA, SA, GA, NO ze zpráv. *(lékař)* | SHOULD | UX |
 | **FR-B1** | Pohled chirurga: resekabilita, TNM, rozsah, předchozí operace v oblasti, operační riziko | MUST | UX |
 | **FR-B2** | Pohled onkologa: biomarkery (včetně „nevyšetřeno“), linie léčby (`MedicationAdministration`), odpověď, toxicita (lékař vs. PROMs) | MUST | UX |
 | **FR-B3** | Pohled radiologa: vývoj nálezů a rozměrů lézí v čase, srovnání posledních vyšetření, aktuálnost stagingu | MUST (≥ 3 role) | UX |
@@ -194,20 +214,27 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | **FR-B5** | Pohled pacienta: trend PROMs (2 vyplnění), nové obtíže, priorita (`delka`/`kvalita`), postoj, podpora doma | MUST | UX, PROC |
 | **FR-B6** | Pohled radiačního onkologa: předchozí RT, oblasti, dávky | SHOULD | UX |
 | **FR-B7** | **Posouzení role („match“):** pro každou přítomnou roli předběžný verdikt `candidate` / `conditional` / `not_candidate` / `insufficient_data` po kritériích s citací (např. chirurg: resekabilita, FLR, ECOG, komorbidity). Jen podklad, potvrzuje lékař dané role *(konzultace)* | SHOULD | UX, AI |
-| **FR-D1** | Možnosti léčby z **dodaných** guidelines s citací **ID pasáže** (`KRC-2.4`); AI nevybírá, předkládá alternativy | MUST | AI, STD |
+| **FR-B8** | Údaje podle diagnózy v sekcích odborností: plíce (spirometrie, ppoFEV1/ppoDLCO, kouření), prs (receptory, HER2, LVEF), kolorektum (RAS/BRAF/MMR, FLR, bevacizumab). Seznam: [docs/POZADAVKY_LEKARE.md §4](docs/POZADAVKY_LEKARE.md#4-povinné-a-důležité-údaje-podle-diagnózy). *(lékař)* | MUST | UX |
+| **FR-D1** | Možnosti léčby z **dodaných** guidelines s citací **ID pasáže** (`KRC-2.4`); AI nevybírá, předkládá alternativy. Patří k nim i podpůrná péče z OBC-2.x (včasná paliativní péče, geriatrické a nutriční vyšetření, genetické poradenství), když ji pacient splňuje. | MUST | AI, STD |
 | **FR-D2** | Screening studií `RKT-01…06`: pro každé kritérium `met` / `not_met` / `unknown` + citace (`RKT-03/V3` ↔ fakt pacienta); celkový stav | MUST | AI |
 | **FR-D3** | 2–3 klíčové otázky k diskusi | MUST | UX |
-| **FR-C1** | Strukturovaný zápis rozhodnutí ve struktuře datasetu (Projednaná otázka, Klinické zhodnocení, Léčebný záměr, Doporučený postup, Doplňující diagnostika, Klinická studie, Plánované re-MDT, Závěr MDT) + přítomní | MUST | PROC, STD |
+| **FR-D4** | **Semafor souladu léčebného postupu se stavem pacienta** (🟢 nevylučuje · 🟠 pozor · 🔴 vylučuje · ⚪ nelze posoudit) po pravidlech s citací faktu pacienta i pravidla ([§5.9](#59-semafor-souladu-léčebných-postupů-se-stavem-pacienta)). Vždy se zobrazí všechny možnosti, barvu počítá kód, ne LLM (D-015). *(lékař)* | MUST | AI, UX |
+| **FR-D5** | Katalog léčebných metod pro diagnózu: u každé metody odborník, který se k ní musí vyjádřit, a data, která má mít u sebe. *(lékař)* | SHOULD | UX |
+| **FR-C1** | Strukturovaný zápis rozhodnutí ve struktuře datasetu (Projednaná otázka, Klinické zhodnocení, Léčebný záměr, Doporučený postup, Doplňující diagnostika, Klinická studie, Plánované re-MDT, Závěr MDT) + přítomní. U neúplného případu příznak **podmíněné doporučení** (OBC-1.1), u duplicity malignit **priorita léčby a plán druhého nádoru** (OBC-1.4). | MUST | PROC, STD |
 | **FR-C2** | Úkoly (kdo, co, do kdy), kontrola, termín opětovného posouzení | MUST | PROC |
 | **FR-C3** | Potvrzení předsedou udělá z draftu oficiální záznam (zápis do IRIS FHIR) | MUST | PROC |
 | **FR-C4** | Export PDF + HL7 FHIR (document Bundle) | MUST | STD |
-| **FR-R1** | Konfigurátor: sekce zap/vyp, pořadí, přítomné role, úroveň detailu; ukládání presetů | MUST | CFG |
-| **FR-R2** | Red flags: rozpory mezi zdroji, závažnost (high/moderate/low), citace **obou** zdrojů, odkaz na pasáž guidelines | MUST | AI |
-| **FR-R3** | Klikací citace u každého tvrzení otevře zdroj se zvýrazněnou pasáží; chybějící údaj explicitně „Údaj chybí v podkladech“ | MUST | AI |
+| **FR-R1** | Konfigurátor: sekce zap/vyp, pořadí, přítomné role, úroveň detailu; ukládání presetů. Nastavuje předseda (`mdt_admin`) pro zasedání. Ostatní si bloky mohou jen sbalit nebo přeskládat u sebe (lokálně). Konfigurátor upozorní, když v přítomných rolích chybí role, kterou guidelines pro danou otázku vyžadují (`RF-ROLES`: KRC-2.1, PLI-2.1, PRS-1.4). | MUST | CFG |
+| **FR-R2** | Red flags: rozpory mezi zdroji, závažnost (high/moderate/low), citace **obou** zdrojů, odkaz na pasáž guidelines. Odkliknutí varování při zařazení pacienta red flag z podkladu **neodstraní** (D-019). | MUST | AI |
+| **FR-R3** | Klikací citace u každého tvrzení otevře zdroj se zvýrazněnou pasáží; chybějící údaj explicitně „Údaj chybí v podkladech“. Údaj, který lékař při zařazení přeskočil, se ukáže jako „Chybí (přeskočeno lékařem)“. | MUST | AI |
 | **FR-R4** | AI text vizuálně odlišen (badge „AI návrh“, styl); po potvrzení „Potvrzeno: LEK-…, čas“ | MUST | PROC |
-| **FR-P1** | Před zasedáním: nominace (`ServiceRequest` + `Task`), agenda zasedání (`Task.restriction.period.start`) | SHOULD | PROC |
+| **FR-R5** | Výklad zkratek podle kontextu (sekce zprávy, oddělení, orgán). Rozmezí („ECOG 0–1“) a nejednoznačné zkratky vyvolají varování NEJISTOTA AI, nikdy odhad. *(lékař)* | SHOULD | AI |
+| **FR-P1** | Před zasedáním: **boardy = zasedání MDT** (předseda zakládá board a mění termín), agenda (`Task.restriction.period.start`), zadávající lékař přesouvá své pacienty mezi boardy | MUST | PROC |
 | **FR-P2** | Během zasedání: přepínání pacientů v agendě, prezentační režim (velké písmo, projektor) | SHOULD | UX |
 | **FR-P3** | Po zasedání: přehled úkolů a jejich stav, naplánování re-MDT | SHOULD | PROC |
+| **FR-P4** | **Zařazení pacienta do boardu:** formulář předvyplněný z IRIS; chybějící údaj Doplnit / Přeskočit; varování CHYBÍ, MIMO NORMU, ROZPOR, NEJISTOTA AI (lze odkliknout); ECOG + záměr C/P; checkbox „Snímek mladší než 3 měsíce“ (připomínka; automatická kontrola stagingu zůstává ≤ 6 týdnů, OBC-1.2); ruční údaje se zapíší do IRIS jako FHIR + `Provenance` ([§5.10](#510-zařazení-pacienta-a-kontrola-úplnosti)). **Otázku pro MDT přeskočit nelze** (OBC-1.1). *(lékař)* | MUST | PROC, AI |
+| **FR-U1** | Role podle oprávnění: `mdt_admin` (předseda), `mdt_doctor` (zadávající lékař), `mdt_viewer` (člen komise) + odbornost uživatele (D-014). *(lékař)* | MUST | PROC |
+| **FR-U2** | Úzké rozložení: použitelné od 360 px, jeden sloupec, bloky pod sebou; podklad jde otevřít v samostatném úzkém okně bez navigace (D-017). *(lékař)* | MUST | UX |
 
 ### 2.2 Bonusy
 
@@ -218,6 +245,8 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | **BON-3** | **AI zapisovatel**: přepis diskuse převede na draft rozhodnutí + úkoly (s citací na úsek přepisu) | **Dataset přepis neobsahuje.** Nahrajeme vlastní simulovanou diskusi (audio) a přepíšeme ji Gemini ([§5.6](#56-ai-zapisovatel-bon-3)) |
 | **BON-4** | **Shrnutí pro pacienta** v laickém jazyce | po potvrzení závěru; zohlednit `priorita` a `postoj` z PROMs |
 | **BON-5** | **Export mapovaný na mCODE / ECCDM** (`meta.profile`, kódy pro biomarkery a TNM, které jsou v datasetu jen textem), případně validace `$validate` v IRIS | zároveň bod pro InterSystems |
+| **BON-6** | **Karta Lung-RADS / Fleischner** s kontrolou použitelnosti: Lung-RADS jen pro screeningové CT, Fleischner jen pro náhodný uzel bez známého nádoru | u všech 6 pacientů ukáže „nelze použít“ s důvodem; požadavek lékaře |
+| **BON-7** | **Vstup PDF nebo vloženého textu:** překladač do FHIR (Gemini extrakce s odkazem na zdrojový `DocumentReference`) → validace → potvrzení lékařem → IRIS | až po povinných blocích; potřebuje placený tier (Q9); požadavek lékaře |
 
 ### 2.3 Nefunkční požadavky
 
@@ -294,6 +323,13 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | D-008 | **LLM provider = Google AI Studio (Gemini API), placený tier** | rozhodnutí týmu; LLM, embeddingy i přepis audia od jednoho providera; v EHP smí být jen placený tier |
 | D-009 | **Výstup komise kopíruje strukturu předchozích MDT v datasetu** (`Composition` `mdt-zaznam` + `CarePlan` + `CareTeam` + lokální číselníky) | konzistence se „systémem nemocnice“, nový záznam vypadá jako ty předchozí; snadné porovnání s předchozím MDT |
 | D-010 | **Do LLM jde kompletní kontext pacienta** (je malý, cca 8–12 tisíc tokenů); **IRIS Vector Search** slouží k výběru a řazení pasáží, k ověřování citací (podobnost tvrzení a zdroje) a ke škálování | spolehlivější než top-k RAG na malých datech, a přitom smysluplné využití IRIS |
+| D-014 | **Role podle oprávnění** (`mdt_admin` = předseda, `mdt_doctor`, `mdt_viewer`) + odbornost u uživatele; **board = zasedání MDT** (`MdtSession`) | požadavek lékaře; předseda drží nastavitelnost a potvrzení závěru (§1.4) |
+| D-015 | **Semafor souladu postupů se stavem pacienta počítají deterministická pravidla** (`services/rules/compatibility.py` + datový soubor pravidel s prahy a zdroji). LLM barvu nikdy nepřiřazuje. Vždy se ukážou všechny možnosti. | zadání: „AI předkládá, nevybírá“; dohledatelnost |
+| D-016 | **Evidence ID pro externí zdroje `EXT-…`** (EMA, SmPC, ERS…) v `MDT.GuidelineChunk` s `GuidelineSet = "EXT"`, v UI označené „externí zdroj“. Demo stojí hlavně na pravidlech z dodaných guidelines. | grounding (§1.4); porota hodnotí podle dodaných guidelines |
+| D-017 | **Úzké rozložení** (od 360 px, jeden sloupec) a **sekce odborností** s barvou odbornosti. Tři oddělené barevné systémy: semafor, odbornost, AI. | lékař má aplikaci v úzkém okně vedle PACS; všichni sledují jeden projektor |
+| D-018 | **Hlavička:** `Pxx · pohlaví · věk` (žádné jméno ani RČ), diagnóza + TNM, hlavní otázka, ECOG lékaře velký + ECOG pacienta, záměr **C/P** | orientace do 30 s, ECOG lékař i pacient (§1.3), pseudonymizace |
+| D-019 | **Nic se z podkladu neztratí:** odkliknuté varování jen umlčí upozornění při zařazení, přeskočený údaj se ukáže jako „Chybí (přeskočeno lékařem)“ | red flags a „údaj chybí“ (§1.4) |
+| D-020 | **Práce ve sprintech** = milníky M0–M4. Na konci sprintu merge do `master`, smoke test a přeplánování v PROGRESS.md. | víc lidí, strojů a agentů paralelně |
 
 ### 3.4 Nasazení
 
@@ -423,6 +459,10 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 | Red flags | `DetectedIssue/Pxx-mdtNN-rf01…` | `severity` high/moderate/low, `implicated[]` = **oba zdroje**, `detail`, `reference` = pasáž guidelines (text), `patient` |
 | Vhodnost do studie | `ResearchSubject/Pxx-mdtNN-rs01` | `status=candidate`, `study` → `ResearchStudy/RKT-0n`; jen pokud komise potvrdí |
 | Stav nominace | `Task/Pxx-zad01-task` (update) + `ServiceRequest/Pxx-zad01` (update) | `businessStatus` → `projednana` (nový kód), `status` → `completed` |
+| ECOG zadaný lékařem (FR-P4) | `Observation/Pxx-ecog-caseNN` | LOINC 89247-1, `valueInteger`, `performer` = zadávající lékař, `note` „Zadáno při zařazení do MDT“; + `Provenance` (ruční zadání) |
+| Předpokládaný záměr C/P (FR-P4) | `ServiceRequest/Pxx-zad01` (update) | extension `…/mdt-predpokladany-zamer`, `valueCodeableConcept` z `mdt-lecebny-zamer` (`kurativni` / `paliativni`) |
+| Přesun mezi boardy (FR-P1) | `Task/Pxx-zad01-task` (update) | `restriction.period.start` = datum nového zasedání |
+| Odkliknuté varování (FR-P4) | `DetectedIssue/Pxx-caseNN-wNN` | `mitigation[]` (`action.text` „Beru na vědomí“, `author`, `date`); v podkladu se zobrazuje dál (D-019) |
 | Přepis diskuse (BON-3) | `DocumentReference/Pxx-mdtNN-prepis` | `type` text „Přepis diskuse MDT“, `content.attachment` (text, base64) |
 | **Původ a potvrzení** | `Provenance/Pxx-mdtNN-prov` | `target` = vše výše; `agent[]`: `Device/mdt-copilot` (model Gemini, typ `assembler`) + `Practitioner` předseda (`verifier` / `attester`); `entity[]` (`role=source`) = citované zdroje; `recorded` |
 | AI systém | `Device/mdt-copilot` (jednou při `iris_init`) | `deviceName` „MDT Copilot“, `version` = model |
@@ -455,7 +495,7 @@ CREATE TABLE MDT.EvidenceChunk (
 
 CREATE TABLE MDT.GuidelineChunk (
     EvidenceId   VARCHAR(50),         -- "KRC-2.4"
-    GuidelineSet VARCHAR(10),         -- KRC | PRS | PLI | OBC
+    GuidelineSet VARCHAR(10),         -- KRC | PRS | PLI | OBC | EXT (externí zdroje prahů, D-016)
     Title        VARCHAR(300),        -- "Restaging před resekcí"
     Source       VARCHAR(200),        -- "Rakathon 2026 – výtah (inspirováno ESMO a národními standardy)"
     Region       VARCHAR(20),         -- "CZ"  (konzultace: zdroj a region postupu)
@@ -561,6 +601,7 @@ ORDER BY Score DESC
   | `Pxx-…#n` | `P03-img03#4` | n-tý odstavec textu |
   | `KRC-2.4` | `KRC-2.4` | pasáž guidelines |
   | `RKT-03` / `RKT-03/V3` | `RKT-03/V3` | studie / kritérium |
+  | `EXT-…` | `EXT-EMA-DPD-2020` | externí zdroj prahu (D-016); jen pro pravidla semaforu, nikdy pro fakta pacienta |
 
   Citace pro guidelines a kritéria studií ukazují na znění guideline nebo studie. Faktům pacienta se vždy cituje ID pacienta.
 - LLM dostane **jen povolená ID** (z evidence listu) a smí citovat **pouze je**.
@@ -587,31 +628,37 @@ Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-
 **Hybrid: deterministická pravidla (`services/rules/red_flags.py`) + LLM detekce rozporů.**
 
 - Každý flag má `severity`, `title`, `description`, **≥ 2 citace** (oba zdroje) a **citaci pasáže guidelines**.
-- **Prahy jsou převzaté z guidelines datasetu** (OBC = konvence hackathonu). Připomínky onkologů zatím nemáme (Q6).
+- **Prahy jsou převzaté z guidelines datasetu** (OBC = konvence hackathonu) všude, kde guidelines číslo uvádějí. Prahy označené *(konvence týmu)* guidelines neuvádějí a tým je zvolil sám. Připomínky onkologů zatím nemáme (Q6).
+- Úplné pokrytí 42 pasáží guidelines: [§5.11](#511-pokrytí-guidelines).
 - Ruční průzkum a očekávané nálezy jsou v [DATASET.md §9](DATASET.md#9-vložené-nesrovnalosti--pracovní-hypotézy-týmu).
 
 | Pravidlo | Podmínka | Severity | Guidelines |
 |---|---|---|---|
 | `RF-ECOG` | \|poslední ECOG lékaře − `samostatnost` z posledních PROMs\| ≥ 1 | moderate (≥ 2: high) | OBC-1.3 |
-| `RF-PROMS` | symptom ≥ 7/10 v posledních PROMs, nebo nárůst ≥ 3 body mezi vyplněními | moderate | OBC-1.3 |
-| `RF-TOX` | toxicita podle lékaře (`neuro`, `anem`) nižší než podle pacienta (`brneni` ≥ 5 nebo popis omezení instrumentálních činností: knoflíky, psaní, držení předmětů) | high | KRC-3.2, OBC-1.3 |
-| `RF-STALE` | poslední zobrazení (`DiagnosticReport` RAD) starší než **42 dní** k datu MDT (`Task.restriction.period.start`); u plánované resekce jater chybí CT hrudníku | moderate (resekce: high) | OBC-1.2, KRC-2.4 |
+| `RF-PROMS` | symptom ≥ 7/10 v posledních PROMs, nebo nárůst ≥ 3 body mezi vyplněními *(konvence týmu)* | moderate | OBC-1.3 |
+| `RF-TOX` | toxicita podle lékaře (`neuro`, `anem`) nižší než podle pacienta (`brneni` ≥ 5 *(konvence týmu)* nebo popis omezení instrumentálních činností: knoflíky, psaní, držení předmětů) | high | KRC-3.2, OBC-1.3 |
+| `RF-STALE` | poslední zobrazení (`DiagnosticReport` RAD) starší než **42 dní** k datu MDT (`Task.restriction.period.start`); u plánované resekce jater chybí CT hrudníku, břicha a pánve **nebo MR jater s hepatospecifickou k. l.** ne starší než 4–6 týdnů | moderate (resekce: high) | OBC-1.2, KRC-2.4 |
 | `RF-MISSING` | biomarker s hodnotou /nevyšetřeno\|probíhá\|nedostupn/; povinné podle dg.: C18 → RAS, BRAF, MMR/MSI · C50 HR+/HER2− při progresi → ESR1, PIK3CA/AKT1/PTEN, gBRCA · C34 neskvamózní → EGFR, ALK, PD-L1; dále checklist OBC-1.1 | moderate | OBC-1.1, KRC-1.1, PRS-1.3, PLI-1.3 |
 | `RF-MED` | PROMs `leky-mimo` není „nic“ a lék / doplněk / bylina chybí v medikaci; známé interakce (třezalka + CYP3A substrát, např. PARPi) | moderate (interakce: high) | P05-doc03 |
 | `RF-NEWSYMPTOM` | PROMs `nove-obtize` obsahuje nový symptom (bolest kosti, neurologický, dušnost) a poslední zpráva na něj nereaguje (LLM) | high | PRS-4.2 |
-| `RF-LAB` | Hb pokles ≥ 20 g/l nebo < 100 (< 80: high); marker vzestup ≥ 25 % proti nadiru; Na < 135 s klesajícím trendem; glykémie > 10 při kortikoidech u DM; LVEF pokles ≥ 10 bodů nebo < 50 % | moderate / high | PLI-3.2, OBC-3.1, PRS-3.4, PRS-4.2 |
+| `RF-LAB` | Hb pokles ≥ 20 g/l nebo < 100, < 80: high *(konvence týmu)*; vzestup markeru ≥ 25 % proti nadiru *(konvence týmu)* = důvod k časnějšímu zobrazení, **nikdy „progrese“** (PRS-4.2); Na pod `referenceRange` (v datasetu 136 mmol/l) a klesá → vyšetřit SIADH (osmolalita séra a moči, natriurie) a upravit před léčbou (PLI-3.2); glykémie > 10 mmol/l při kortikoidech u DM *(konvence týmu)*; LVEF pokles ≥ 10 bodů nebo < 50 % | moderate / high | PLI-3.2, OBC-3.1, PRS-3.4, PRS-4.2 |
 | `RF-WEIGHT` | úbytek hmotnosti ≥ 5 % za 6 měsíců (`vaha` + PROMs `hmotnost`) nebo pokles albuminu | moderate | OBC-2.3 |
 | `RF-GERI` | věk ≥ 70 (extension `vek-k-datu-mdt`) a v dokumentaci chybí G8 / geriatrický screening | low | OBC-2.2 |
 | `RF-LESION` | `Condition.verificationStatus = provisional` nebo zobrazení uvádí „nejasné / nelze vyloučit / k dořešení“ bez následné histologie | high | OBC-1.4, PLI-1.2 |
 | `RF-GENETIC` | indikace genetického poradenství (rodinná anamnéza v textu, BRCA z NGS nádoru bez germinálního testu) nesplněna | moderate | OBC-2.4, PRS-1.3, PRS-1.4 |
-| `RF-NOMINATION` | údaj v nominaci (`ServiceRequest.note`: ECOG, LVEF, toxicita) neodpovídá poslednímu strukturovanému měření | moderate | OBC-1.1 |
+| `RF-NOMINATION` | údaj v nominaci (`ServiceRequest.note`: ECOG, LVEF, toxicita) neodpovídá poslednímu strukturovanému měření; při duplicitě malignit nominace neuvádí všechny nádory | moderate | OBC-1.1, OBC-1.4 |
 | `RF-TNM` | více `tnm` Observation se stejným typem a odlišným stadiem | moderate | OBC-1.1 |
 | `RF-IDENTITY` *(konzultace)* | dokument nesedí k pacientovi: strana těla (vlevo/vpravo vs. `Condition.bodySite`), pohlaví, věk, datum mimo časovou osu | high | — |
 | `RF-PRIOR-PROC` *(konzultace)* | předchozí výkon v oblasti plánované operace / RT, implantát (port, stent), alergie: informační flag pro chirurga a radiačního onkologa | low (info) | — |
 | `RF-DATAQUALITY` *(konzultace)* | data mimo pořadí, nesoulad jednotek, duplicitní nálezy, `Observation` bez `derivedFrom` (mezera v dohledatelnosti) | low | — |
+| `RF-PALIATIVE` | pokročilé onemocnění a zároveň symptom ≥ 7/10, zhoršení ECOG (lékař nebo pacient) nebo progrese, a v dokumentaci chybí zapojení paliativního týmu | moderate | OBC-2.1 |
+| `RF-ROLES` | v přítomných rolích (`roles_present`) chybí role, kterou guidelines vyžadují: resekabilita jaterních metastáz → hepatobiliární chirurg + radiolog (KRC-2.1); NSCLC st. III → hrudní chirurg, radiační onkolog, klinický onkolog, pneumolog, radiolog (PLI-2.1); výsledek NGS → molekulární tumor board (PRS-1.4) | moderate | KRC-2.1, PLI-2.1, PRS-1.4 |
+| `RF-STEROID` | kortikoid bez plánu snižování dávky, nebo bez symptomatického edému | low | OBC-3.1, PRS-3.3 |
 | `RF-LLM` | LLM porovná páry zdrojů (zpráva vs. lab, zpráva vs. PROMs, nominace vs. data) a vrátí rozpory s citacemi; prochází validátorem | podle LLM | — |
 
 Výstup se před potvrzením ukládá v draftu a po potvrzení jako `DetectedIssue` v IRIS.
+
+Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **neodstraní** (D-019). Přeskočený údaj se v podkladu zobrazí jako „Chybí (přeskočeno lékařem)“ a pravidla, která na něm závisí, jako „neposuzováno“.
 
 ### 5.5 B2 — podpora rozhodování a posouzení rolí
 
@@ -625,7 +672,9 @@ Výstup se před potvrzením ukládá v draftu a po potvrzení jako `DetectedIss
 - **Možnosti léčby:**
   1. LLM vrátí **2–4 možnosti**, každou s citací pasáže (`PRS-3.3`) a s vazbou na fakta pacienta (citace);
   2. u každé možnosti uvede, co pro ni chybí (např. „EGFR neznámý, viz PLI-1.3“);
-  3. **žádné pořadí jako doporučení** a žádné „doporučujeme“.
+  3. **žádné pořadí jako doporučení** a žádné „doporučujeme“;
+  4. mezi možnosti patří i **podpůrná péče**, když ji pacient splňuje: včasná paliativní péče (OBC-2.1), geriatrické (OBC-2.2) a nutriční vyšetření (OBC-2.3), genetické poradenství (OBC-2.4);
+  5. u každé možnosti je semafor souladu se stavem pacienta (§5.9).
 - **Klinické studie** (`RKT-01…06`):
   1. pro studie odpovídající diagnóze (a vždy RKT-05 podpůrná a RKT-06 basket) se vyhodnotí každé kritérium `Zn` / `Vn` (`met` / `not_met` / `unknown`) s citací faktu pacienta;
   2. celkový stav: `eligible` / `potentially_eligible` (chybí data) / `not_eligible`;
@@ -707,6 +756,95 @@ Oficiální ground truth zatím **není** (organizátor ho zveřejní po odevzd�
    - **přesnost screeningu studií** (shoda `met` / `not_met` / `unknown`).
 3. Výsledek se zapíše do `docs/EVAL.md`. Čísla jdou do pitche (kritérium 20 %). Až přijde oficiální ground truth, jen se přepne `--gt`.
 
+### 5.9 Semafor souladu léčebných postupů se stavem pacienta
+
+Požadavek lékaře (FR-D4, D-015). Barva **není doporučení**. Říká, jestli stav pacienta postup nevylučuje (např. pacientovi se špatnou spirometrií nelze odebrat plíci).
+
+- **Stavy:**
+  - 🟢 nevylučuje;
+  - 🟠 pozor: hraniční hodnota, relativní kontraindikace, nutné další vyšetření nebo rozpor;
+  - 🔴 vylučuje (podle zdroje);
+  - ⚪ nelze posoudit: chybí údaj nebo práh;
+  - „neposuzováno“: lékař údaj přeskočil.
+- **Vyhodnocení:**
+  1. počítá ho `services/rules/compatibility.py` nad fakty z IRIS. LLM jen extrahuje hodnoty z textu s citací;
+  2. pravidla jsou data (`services/rules/data/compatibility_rules.yaml`), katalog je v [docs/POZADAVKY_LEKARE.md §5.3](docs/POZADAVKY_LEKARE.md#53-pravidla);
+  3. každá barva má citaci faktu pacienta a citaci pravidla (pasáž guidelines, kritérium studie nebo `EXT-…`);
+  4. červená jen tam, kde zdroj říká „vylučuje / nepodávat / vysoké riziko“, nebo kde práh potvrdil tým (značka ⚠ v katalogu);
+  5. celková barva postupu = nejhorší z pravidel: 🔴 > 🟠 > ⚪ > 🟢;
+  6. odvozené hodnoty (CrCl podle Cockcrofta-Gaulta, % úbytku hmotnosti, dny od bevacizumabu) se ukazují se vzorcem a citacemi vstupů;
+  7. preference pacienta barvu nemění, zobrazí se jako štítek.
+- **Zobrazení:** v B2 u každé možnosti léčby (`DecisionSupport.treatment_options[].compatibility`, §8.3). **Vždy se zobrazí všechny možnosti** z guidelines, i červené. Nadpis zní „Soulad se stavem pacienta“, nikdy „doporučujeme“.
+- **Očekávané barvy pro P03 a P04** (dev ground truth, T-013): [docs/POZADAVKY_LEKARE.md §5.4](docs/POZADAVKY_LEKARE.md#54-očekávané-barvy-pro-demo-podklad-pro-dev-ground-truth-t-013).
+
+### 5.10 Zařazení pacienta a kontrola úplnosti
+
+Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze zadání a základ readiness (BON-1).
+
+1. Zadávající lékař vybere board a pacienta z IRIS.
+2. `services/rules/intake.py` předvyplní povinné údaje podle diagnózy ([docs/POZADAVKY_LEKARE.md §4](docs/POZADAVKY_LEKARE.md#4-povinné-a-důležité-údaje-podle-diagnózy)), každý s citací.
+3. Chybějící údaj lékař buď **doplní** (uloží se do IRIS jako FHIR + `Provenance`), nebo **přeskočí** (nevyvolá varování, v podkladu „Chybí (přeskočeno lékařem)“). **Otázku pro MDT přeskočit nelze** (OBC-1.1: bez otázky je případ neúplný). Neúplný případ může předseda vrátit k doplnění (`MdtCase.status = returned`), nebo ho komise projedná s podmíněným doporučením (OBC-1.1).
+4. Varování se počítají deterministicky, LLM jen u volného textu:
+
+   | Typ | Kdy |
+   |---|---|
+   | CHYBÍ | povinný údaj chybí nebo má hodnotu „nevyšetřeno / probíhá“ |
+   | MIMO NORMU | hodnota mimo `referenceRange` nebo nepravděpodobná (skok, nesedí jednotka, datum mimo časovou osu) |
+   | ROZPOR | pravidla RF-* (§5.4) |
+   | NEJISTOTA AI | rozmezí („ECOG 0–1“), nejednoznačná zkratka, neověřené tvrzení (FR-R5) |
+
+5. Lékař varování může odkliknout (stačí klik, bez důvodu). Komise v podkladu dál vidí problém, ale ne to, kdo ho odklikl (D-019). Odkliknutí jde do auditu (`DetectedIssue.mitigation`).
+6. Lékař zadá nebo potvrdí ECOG (velká číslice) a záměr **C/P** a zaškrtne připomínku „Snímek mladší než 3 měsíce“. Záměr se předvyplní z poslední MDT; když minulá MDT rozhodnutí odložila, nepředvyplní se.
+
+### 5.11 Pokrytí guidelines
+
+Guidelines datasetu jsou závazný obsah aplikace (zadání: možnosti léčby z dodaných guidelines s citací). Každá ze 42 pasáží má v aplikaci své místo:
+
+| Pasáž | Co aplikace dělá | Kde |
+|---|---|---|
+| OBC-1.1 | úplnost podkladů (otázka, histologie + grade, TNM, biomarkery, ECOG, komorbidity, léčba, preference); otázku nelze přeskočit; neúplný případ vrátit, nebo podmíněné doporučení | `RF-MISSING`, §5.10, FR-P4, FR-C1, BON-1 |
+| OBC-1.2 | staging ≤ 6 týdnů k datu MDT | `RF-STALE`, VS-OBC-09 |
+| OBC-1.3 | ECOG lékař vs. pacient ≥ 1 a symptom ≥ 7/10 výslovně ukázat | `RF-ECOG`, `RF-PROMS`, hlavička (D-018), otázky k diskusi |
+| OBC-1.4 | nové ložisko ověřit histologicky + IHC; duplicita: priorita a plán druhého nádoru, oba nádory v nominaci | `RF-LESION`, `RF-NOMINATION`, VS-OBC-10, FR-C1 |
+| OBC-2.1 | včasná paliativní péče | `RF-PALIATIVE`, podpůrná péče v B2 |
+| OBC-2.2 | G8 u věku ≥ 70 | `RF-GERI`, VS-OBC-03 |
+| OBC-2.3 | úbytek ≥ 5 % za 6 měsíců → nutriční vyšetření | `RF-WEIGHT`, VS-OBC-04, studie RKT-05 |
+| OBC-2.4 | indikace genetického poradenství | `RF-GENETIC` |
+| OBC-3.1 | kortikoidy v nejnižší dávce s plánem snižování, glykémie u diabetiků | `RF-STEROID`, `RF-LAB`, VS-OBC-05 |
+| KRC-1.1 | RAS, BRAF, MMR/MSI povinně; HER2 u RAS/BRAF wild-type | `RF-MISSING` |
+| KRC-1.2 | dMMR → imunoterapie v 1. linii a genetika | VS-KRC-07, `RF-GENETIC` |
+| KRC-2.1 | resekabilita: HPB chirurg + radiolog, R0, FLR ≥ 30 / 40 %, cévy a žlučová drenáž, bez extrahepatálního onemocnění | `RF-ROLES`, VS-KRC-01 až 03 |
+| KRC-2.2 | konverzní chemo, restaging po 4–8 cyklech, po dosažení resekability neprodlužovat | VS-KRC-10 |
+| KRC-2.3 | bevacizumab ≥ 6 týdnů před operací | VS-CHIR-03 |
+| KRC-2.4 | restaging CT hrudník, břicho, pánev + MR jater ≤ 4–6 týdnů; vymizelá ložiska do plánu | `RF-STALE`, VS-KRC-02, VS-KRC-03 |
+| KRC-2.5 | oba laloky: dvoudobá hepatektomie nebo ablace; pořadí výkonů | možnosti v B2 |
+| KRC-3.1 | RAS mutovaný: FOLFOX / FOLFIRI ± bevacizumab, ne anti-EGFR | VS-KRC-06 |
+| KRC-3.2 | neuropatie G2 → stop-and-go oxaliplatiny, hodnotit i podle pacienta | `RF-TOX`, VS-KRC-05 |
+| PLI-1.1 | staging PET-CT, MR mozku, invazivní staging mediastina | VS-PLI-05, `RF-MISSING` |
+| PLI-1.2 | ložisko měnící stadium ověřit, jinak nelze stanovit M | `RF-LESION`, VS-PLI-04 |
+| PLI-1.3 | EGFR, ALK, PD-L1; při nedostatku tkáně rebiopsie nebo tekutá biopsie | `RF-MISSING`, VS-PLI-06 |
+| PLI-2.1 | složení MDT u st. III | `RF-ROLES` |
+| PLI-2.2 | resekabilní II–IIIB bez EGFR/ALK: neoadjuvantní chemoimunoterapie + lobektomie | možnost v B2 + semafor |
+| PLI-2.3 | EGFR+ po resekci: osimertinib, ne imunoterapie | možnost v B2, VS-PLI-06 |
+| PLI-2.4 | inoperabilní: CHRT + durvalumab (PD-L1 ≥ 1 %, ne EGFR/ALK+) | možnost v B2, VS-PLI-06, VS-PLI-07 |
+| PLI-3.1 | funkční operabilita: ppo < 60 % → zátěžový test, < 30 % vysoké riziko, subjektivní dušnost | VS-PLI-01 až 03 |
+| PLI-3.2 | hyponatrémie → vyšetřit SIADH, upravit před léčbou | `RF-LAB`, VS-PLI-09 |
+| PLI-3.3 | odvykání kouření před operací i radioterapií | VS-CHIR-02 |
+| PRS-1.1 | rebiopsie metastázy, nejaktuálnější vzorek, HER2-low z kteréhokoli vzorku | `RF-LESION`, VS-PRS-03 |
+| PRS-1.2 | definice HER2-low | VS-PRS-03 |
+| PRS-1.3 | ESR1 (ctDNA), PIK3CA / AKT1 / PTEN, gBRCA | `RF-MISSING` |
+| PRS-1.4 | NGS → molekulární komise; BRCA z nádoru → genetika; doporučení komise je podklad, ne rozhodnutí | `RF-GENETIC`, `RF-ROLES` |
+| PRS-2.1 | endokrinní léčba + CDK4/6, pokud nejde o viscerální krizi; premenopauza | VS-PRS-04 |
+| PRS-2.2 | linie po CDK4/6 podle biomarkerů, účast ve studii | možnosti v B2, screening studií |
+| PRS-2.3 | HER2-low → T-DXd po vyčerpání endokrinní léčby, riziko ILD | VS-PRS-02, VS-PRS-03 |
+| PRS-2.4 | definice viscerální krize | VS-PRS-04 |
+| PRS-3.1 | HER2+ 1. linie pertuzumab + trastuzumab + taxan, pak udržovací PH | možnost v B2 |
+| PRS-3.2 | 2. linie trastuzumab deruxtekan | možnost v B2 |
+| PRS-3.3 | mozkové metastázy: SRS, pokračovat anti-HER2, celomozkovou RT odložit, kortikoidy jen při edému | VS-PRS-11, `RF-STEROID` |
+| PRS-3.4 | LVEF á 3 měsíce, pokles ≥ 10 bodů | VS-PRS-01, `RF-LAB` |
+| PRS-4.1 | kostní metastázy: denosumab / zoledronát, Ca + D, stomatologie; RT nebo ortopedie | VS-PRS-12, VS-PRS-13 |
+| PRS-4.2 | nový lokalizovaný symptom → cílené zobrazení; vzestup markeru bez zobrazení není progrese | `RF-NEWSYMPTOM`, `RF-LAB` |
+
 ---
 
 ## 6. Backend (Django) — struktura
@@ -720,7 +858,7 @@ WEB_Template/backend/
 ├── apps/
 │   ├── authentication/          # beze změny (JWT httpOnly cookies) + role uživatelů (Group)
 │   ├── patients/            ★   # čtení z FHIR: seznam, detail, časová osa, evidence resolver
-│   ├── mdt/                 ★   # MdtSession, MdtCase, BriefConfig, Decision; potvrzení; export
+│   ├── mdt/                 ★   # boardy (MdtSession), MdtCase (zařazení, ECOG, C/P, varování), role, BriefConfig, Decision; potvrzení; export
 │   ├── copilot/             ★   # Brief, GenerationJob, LlmCallLog; endpointy generování
 │   │   └── management/commands/ ★ iris_init, ingest_dataset, eval_ground_truth, seed_mdt
 │   ├── projects/ items/ ws/     # z templatu – skrýt z UI, nemazat (nerozbíjet seed/migrace)
@@ -728,8 +866,8 @@ WEB_Template/backend/
 │   ├── ai_service.py            # providery; GeminiProvider přepsat (google-genai, schema, embed, transcribe)
 │   ├── fhir/                ★   # client.py, ingest.py (sanitize + to_transaction), writeback.py, export.py
 │   ├── iris/                ★   # db.py (connect ctx manager), vector_store.py
-│   ├── ai/                  ★   # context_builder.py, pseudonymize.py, grounding.py, prompts/*.md
-│   └── rules/               ★   # red_flags.py, readiness.py, recist.py, guideline_sets.py
+│   ├── ai/                  ★   # context_builder.py, pseudonymize.py, grounding.py, anamnesis.py, prompts/*.md
+│   └── rules/               ★   # red_flags.py, intake.py, compatibility.py (+ data/compatibility_rules.yaml), readiness.py, recist.py, scales.py, guideline_sets.py
 └── mcp_server.py            ★   # (SHOULD) FastMCP nad IRIS
 ```
 
@@ -748,13 +886,14 @@ Nové závislosti v `requirements.txt`:
 
 | Model | Pole (hlavní) |
 |---|---|
-| `MdtSession` | `date`, `title` (zaměření komise), `chair` (User), `status` (planned/in_progress/closed) |
-| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed) |
+| `MdtSession` (= board) | `date`, `title` (zaměření komise), `chair` (User), `status` (planned/in_progress/closed), `config` → `BriefConfig` (výchozí podklad nastavený předsedou); zakládá a mění jen `mdt_admin` |
+| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`) |
 | `BriefConfig` | `name`, `owner`, `is_preset`, `sections` JSON (`[{id, enabled, order, detail}]`), `roles_present` JSON, `detail_level` (brief/standard/detailed), `language`, `hide_unverified` |
 | `Brief` | `case` FK, `config_snapshot` JSON, `content` JSON (schéma [§8.2](#82-brief-podklad)), `model`, `created_at` |
 | `GenerationJob` | `case` FK, `kind` (brief/scribe/patient_summary), `status` (queued/running/done/error), `progress` (0–100), `result_id`, `error` |
 | `Decision` | `case` FK, `content` JSON (schéma [§8.4](#84-decision-závěr-komise)), `status` (draft/confirmed), `confirmed_by`, `confirmed_at`, `fhir_ids` JSON, `fhir_bundle` JSON |
 | `LlmCallLog` | `purpose`, `provider`, `model`, `prompt_hash`, `tokens_in`, `tokens_out`, `latency_ms`, `ok` |
+| `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
 
 `seed_mdt` vytvoří zasedání a případy **z nominací v IRIS**: `ServiceRequest.category` (zaměření komise) + `Task.restriction.period.start` (datum MDT). Vzniknou 4 zasedání:
 
@@ -765,11 +904,14 @@ Nové závislosti v `requirements.txt`:
 | 2026-10-21 14:00 | GIT – kolorektální / hepatobiliární | P03 |
 | 2026-10-21 14:00 | Hrudní – karcinom plic | P04 |
 
-Demo uživatelé:
+Demo uživatelé (1-click přihlášení jako v templatu):
 
-- `predseda` (předseda komise);
-- `chirurg`, `onkolog`, `radiolog`, `patolog`, `radioterapeut`;
-- 1-click přihlášení jako v templatu.
+| Účet | Skupina | Odbornost |
+|---|---|---|
+| `predseda` | `mdt_admin` | klinický onkolog, předseda komise |
+| `onkolog` | `mdt_doctor` | klinický onkolog, zadávající lékař (P01, P02, P03, P05, P06) |
+| `pneumolog` | `mdt_doctor` | pneumolog, zadávající lékař (P04) |
+| `chirurg`, `radiolog`, `patolog`, `radioterapeut` | `mdt_viewer` | podle názvu účtu |
 
 ### 6.3 REST API
 
@@ -784,9 +926,14 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/evidence/?id={EvidenceId}` | zdroj citace (text + zvýraznění / hodnota / pasáž guidelines / kritérium studie) |
 | GET, POST | `/api/mdt/sessions/` | zasedání |
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
-| POST | `/api/mdt/cases/` | nominace (vytvoří FHIR `ServiceRequest` + `Task`) |
+| PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
+| GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
+| GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
+| POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): ECOG, záměr C/P, `skipped_fields`, `acknowledged_warnings`, checkbox snímku; zápis FHIR (§4.3) |
+| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli) |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
+| GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4, `TreatmentCompatibility[]` §8.3) |
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
@@ -808,10 +955,12 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | Route | Obsah |
 |---|---|
 | `/login` | z templatu + 1-click demo účty (předseda, chirurg, onkolog…) |
-| `/dashboard` | přehled: zasedání (2026-10-14, 2026-10-21), případy a jejich stav, úkoly po termínu |
-| `/dashboard/mdt/[sessionId]` | agenda zasedání: pacienti, readiness, stav |
+| `/dashboard` | **boardy** (zasedání 2026-10-14 a 2026-10-21), případy a jejich stav, úkoly po termínu; předseda zakládá board a mění termín |
+| `/dashboard/mdt/[sessionId]` | agenda zasedání: pacienti, readiness, stav, přesun pacienta do jiného boardu, tlačítko „Zařadit pacienta“ |
+| `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4): předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
-| `/dashboard/cases/[caseId]` | **podklad**: hlavička případu + A / B (záložky rolí s posouzením) / B2 / red flags |
+| `/dashboard/cases/[caseId]` | **podklad** v úzkém sloupci: hlavička (D-018) + A / red flags / anamnéza / B (sekce odborností s posouzením) / B2 (semafor, studie, otázky) / otázka pro MDT |
+| `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
 | `/dashboard/cases/[caseId]/record` | **zápis závěru**: editor (sekce jako záznam MDT), úkoly, potvrzení, export |
 | `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |
 | `/dashboard/tasks` | úkoly po zasedání |
@@ -822,7 +971,7 @@ Template stránky `projects`, `storage`, `realtime` a `ai` skrýt z navigace (`D
 
 | Komponenta | Účel |
 |---|---|
-| `CaseHeader` | sticky hlavička: pacient, věk, diagnóza + TNM, **ECOG lékař vs. pacient**, otázka komise, **komorbidity, alergie, implantáty / předchozí výkony**, počet red flags (orientace do 30 s) |
+| `CaseHeader` | sticky hlavička (D-018): `Pxx · pohlaví · věk`, diagnóza + TNM, **hlavní otázka**, **ECOG lékaře velkou číslicí + ECOG pacienta**, velké **C/P**, komorbidity, alergie, implantáty / předchozí výkony, počet red flags (orientace do 30 s) |
 | `AiBlock` | obal AI obsahu: badge „AI návrh“, odlišný styl (např. fialový levý okraj + ikona ✨ + jemné pozadí), stav `draft` / `confirmed` |
 | `Claim` + `CitationChip` | věta s čísly citací `[1]`; `unverified` se zobrazí s varováním |
 | `SourceDrawer` | boční panel: zdroj citace se zvýrazněným odstavcem / hodnota + referenční rozsah + zdrojový dokument (`derivedFrom`) / znění pasáže guidelines / kritéria |
@@ -831,21 +980,35 @@ Template stránky `projects`, `storage`, `realtime` a `ai` skrýt z navigace (`D
 | `EcogCompare` | dvě hodnoty + rozdíl + data + text odpovědi pacienta |
 | `Timeline` | horizontální časová osa (dg., léčba, zobrazení, PROMs, předchozí MDT) |
 | `TrendChart` | Hb, markery, Na, hmotnost, LVEF, skóre PROMs v čase (doporučení: `recharts`) |
-| `RoleTabs` + `RoleAssessmentCard` | záložky podle přítomných rolí; verdikt role po kritériích (FR-B7) |
-| `TreatmentOptions` / `TrialScreening` | B2: možnosti s citací pasáží; tabulka kritérií `Zn`/`Vn` × met / not_met / unknown |
+| `RoleSection` + `RoleAssessmentCard` | sekce odborností pod sebou (v úzkém rozložení místo záložek), štítek a barva odbornosti; údaje podle diagnózy (FR-B8); verdikt role po kritériích (FR-B7) |
+| `TreatmentOptions` / `TrialScreening` | B2: možnosti s citací pasáží a semaforem `CompatibilityLight` u každé; tabulka kritérií `Zn`/`Vn` × met / not_met / unknown |
 | `SectionConfigurator` | zap/vyp sekce, drag & drop pořadí, role, detail; uložit preset |
 | `DecisionEditor` | sekce záznamu MDT (jako v datasetu), úkoly (owner, termín), re-MDT; AI předvyplnění odlišené |
 | `ConfirmDialog` | potvrzení: kdo potvrzuje, co se zapíše (výpis FHIR resources s ID `Pxx-mdtNN-…`) |
 | `JobProgress` | průběh generování (polling `/api/jobs/{id}`) |
+| `CompatibilityLight` | semafor 🟢/🟠/🔴/⚪ s ikonou a textem, rozbalení na pravidla s citacemi (FR-D4) |
+| `IntakeForm` + `IntakeWarning` | formulář zařazení: předvyplněné údaje s citací, Doplnit / Přeskočit, varování s „Beru na vědomí“, ECOG + C/P, checkbox snímku (FR-P4) |
+| `AnamnesisBlock` | anamnéza doslovně nebo jako shrnutí s citacemi, přepínač (FR-A5) |
+| `ModalityCatalog` | léčebné metody pro diagnózu s odborníkem a daty k ruce (FR-D5) |
+| `ScaleCard` | Lung-RADS / Fleischner s kontrolou použitelnosti (BON-6) |
+| `BoardList` / `BoardEditor` | boardy, termíny (mění jen předseda), přesun pacientů (FR-P1) |
 
 ### 7.3 UX principy
 
-1. **30 sekund:** `CaseHeader` a 3–5 odrážek souhrnu nad ohybem stránky, bez scrollování.
+1. **30 sekund:** `CaseHeader` (s diagnózou, TNM a hlavní otázkou) a 3–5 odrážek souhrnu nahoře, bez scrollování. Otázku lze zopakovat velkým písmem na konci podkladu.
 2. **Každé tvrzení je ověřitelné jedním klikem.** Citace jsou čísla, ne dlouhé odkazy.
 3. **AI vs. člověk je vidět na první pohled** (barva, badge, stav).
 4. **Prezentační režim** pro projektor: velké písmo, tmavé téma (theme toggle je v templatu).
 5. Ovládání klávesnicí: Ctrl+K (command palette z templatu) pro přepínání pacientů v agendě.
 6. Typy `src/types/mdt.ts` přesně odpovídají [§8](#8-datové-kontrakty-fe--be). Pro vývoj UI bez backendu existují fixtures `data/fixtures/*.json` (demo pacient P03).
+7. **Úzké rozložení** (FR-U2, D-017): od 360 px, jeden sloupec, bloky pod sebou, každý jde sbalit. Výchozí obsah a pořadí nastavuje předseda (FR-R1).
+8. **Tři barevné systémy se nesmí plést:**
+   - semafor: zelená, oranžová, červená, šedá;
+   - odbornost: štítek s textem v jiných odstínech;
+   - AI: fialový okraj + „AI návrh“.
+
+   Barva nikdy nenese informaci sama, vždy je u ní i text nebo ikona.
+9. **Výchozí pořadí bloků:** hlavička → souhrn A (+ časová osa) → red flags → anamnéza → sekce odborností (B, včetně hlasu pacienta) → léčebné metody a odborníci → možnosti léčby se semaforem, studie a otázky k diskusi (B2) → otázka pro MDT → po zasedání závěr (C). Detail: [docs/POZADAVKY_LEKARE.md §3](docs/POZADAVKY_LEKARE.md#3-obrazovka-podkladu-úzké-rozložení).
 
 ---
 
@@ -856,11 +1019,12 @@ Template stránky `projects`, `storage`, `realtime` a `ai` skrýt z navigace (`D
 ### 8.1 Společné typy
 
 ```ts
-type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#4" | "KRC-2.4" | "RKT-03/V3"
+type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#4" | "KRC-2.4" | "RKT-03/V3" | "EXT-EMA-DPD-2020"
 type Verification = "verified" | "unverified";
 type Severity = "high" | "moderate" | "low";
-type RoleId = "surgeon" | "oncologist" | "radiation_oncologist" | "radiologist" | "pathologist" | "patient";
-type SectionId = "summary" | "timeline" | "role_views" | "red_flags" | "decision_support" | "trials" | "questions";
+type Light = "green" | "orange" | "red" | "grey" | "skipped";   // semafor souladu (§5.9)
+type RoleId = "surgeon" | "oncologist" | "radiation_oncologist" | "radiologist" | "pathologist" | "pulmonologist" | "cardiologist" | "patient";
+type SectionId = "summary" | "timeline" | "role_views" | "red_flags" | "decision_support" | "trials" | "questions" | "anamnesis" | "modalities" | "mdt_question";
 
 interface Claim {
   id: string;
@@ -893,15 +1057,16 @@ interface Brief {
   config: BriefConfig;                          // snapshot
   status: "draft" | "confirmed";
   header: {
-    display_name: string;                       // "Pacient P03"
+    display_name: string;                       // "P03 · muž · 67 let" (žádné jméno ani RČ, D-018)
     age: number;                                // extension vek-k-datu-mdt
     sex: "male" | "female" | "other" | "unknown";
     diagnosis: { text: string; icd10: string; citation: EvidenceId };
     tnm?: { text: string; stage?: string; citation: EvidenceId };   // dataset má TNM jako text
     ecog: {
-      physician?: { value: number; date: string; citation: EvidenceId };   // Observation 89247-1
+      physician?: { value: number; date: string; citation: EvidenceId; entered_by?: string };   // Observation 89247-1; entered_by = zadávající lékař (FR-P4)
       patient?:   { value: number; date: string; citation: EvidenceId; answer_text: string };  // PROMs samostatnost
     };
+    intent?: { letter: "C" | "P"; code: "kurativni" | "paliativni"; source: "previous_mdt" | "physician" | "mdt_decision" };   // velké písmeno v hlavičce
     mdt_question: { text: string; citation: EvidenceId };   // ServiceRequest.reasonCode.text
     mdt_date: string;                                       // Task.restriction.period.start
     comorbidities: { text: string; icd10?: string; citation: EvidenceId }[];
@@ -960,6 +1125,7 @@ interface DecisionSupport {
     guideline_citations: EvidenceId[];          // ["KRC-2.1", "KRC-2.5"]
     prerequisites_missing: Claim[];             // co chybí (kind: "missing")
     considerations: string[];                   // rizika, kontraindikace (citované v rationale)
+    compatibility: TreatmentCompatibility;      // semafor souladu se stavem pacienta (FR-D4, §5.9)
   }[];
   trials: {
     study_id: string;                           // "RKT-03"
@@ -969,6 +1135,23 @@ interface DecisionSupport {
   }[];
   discussion_questions: { text: string; citations: EvidenceId[] }[];   // 2–3
   disclaimer: string;                           // "AI předkládá možnosti, nerozhoduje."
+}
+
+interface CompatibilityRuleResult {
+  rule_id: string;                              // "VS-PLI-01" (katalog docs/POZADAVKY_LEKARE.md §5.3)
+  status: Light;
+  text: string;                                 // "ppoDLCO 38 % < 60 % → zátěžový test"
+  patient_citations: EvidenceId[];              // ["P04-spiro04"]
+  rule_citation: EvidenceId;                    // "PLI-3.1" | "RKT-06/Z4" | "EXT-…"
+  derived?: { formula: string; inputs: EvidenceId[] };   // např. Cockcroft-Gault
+}
+
+interface TreatmentCompatibility {
+  modality: string;                             // mdt-modalita
+  owner_role: RoleId;                           // kdo se k metodě vyjadřuje
+  overall: Light;                               // nejhorší z rules
+  rules: CompatibilityRuleResult[];
+  patient_preferences: Claim[];                 // štítek, barvu nemění
 }
 ```
 
@@ -994,6 +1177,8 @@ interface Decision {
     trial?:          { text: string; study_ids: string[]; source: Source };      // Klinická studie
     re_mdt?:         { date: string; reason: string };         // Plánované re-MDT
     conclusion:      { text: string; source: Source };         // Závěr MDT
+    conditional?:    { text: string; missing: string[]; source: Source };   // podmíněné doporučení u neúplného případu (OBC-1.1)
+    tumor_priority?: { text: string; source: Source };         // duplicita malignit: priorita a plán druhého nádoru (OBC-1.4)
   };
   tasks: {                                                     // → Task
     id: string;
@@ -1029,6 +1214,53 @@ interface BriefConfig {
 }
 ```
 
+### 8.6 Zařazení pacienta (MdtCase, IntakeWarning)
+
+```ts
+type WarningKind = "missing" | "out_of_range" | "conflict" | "ai_uncertain";   // CHYBÍ · MIMO NORMU · ROZPOR · NEJISTOTA AI
+
+interface IntakeField {
+  id: string;                                   // "bm.mmr" | "spiro.ppo_dlco" | "ecog.physician"
+  label: string;
+  value?: string;
+  citation?: EvidenceId;
+  status: "present" | "missing" | "pending" | "skipped";
+  required_by?: EvidenceId;                     // proč je údaj povinný: "KRC-1.1"
+}
+
+interface IntakeWarning {
+  id: string;                                   // stabilní (pravidlo + citace)
+  kind: WarningKind;
+  severity: Severity;
+  title: string;
+  detail: string;
+  citations: EvidenceId[];
+}
+
+interface IntakePrefill {                        // GET /api/mdt/patients/{pid}/intake/
+  patient_id: string;
+  service_request_id: string;                   // "P03-zad01"
+  fields: IntakeField[];
+  warnings: IntakeWarning[];
+  ecog_physician?: { value: number; citation: EvidenceId };
+  intent_prefill?: "C" | "P";                   // z poslední MDT; „odloženo“ → nepředvyplněno
+}
+
+interface MdtCase {                             // POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/
+  id?: number;
+  session: number;                              // board
+  patient_id: string;
+  service_request_id: string;
+  created_by?: { user_id: number; name: string };
+  ecog: number | null;
+  intent: "C" | "P" | null;
+  imaging_recent_checked: boolean;              // „Snímek mladší než 3 měsíce“
+  skipped_fields: string[];                     // IntakeField.id
+  acknowledged_warnings: { id: string; by: number; at: string }[];
+  status: "nominated" | "ready" | "in_discussion" | "decided" | "confirmed" | "returned";   // returned = vráceno k doplnění (OBC-1.1)
+}
+```
+
 ---
 
 ## 9. Konfigurace (env proměnné)
@@ -1049,6 +1281,8 @@ interface BriefConfig {
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |
 | `TRANSCRIBE_MODEL` | backend | `gemini-3.8-flash` |
 | `GROUNDING_MIN_SIMILARITY` | backend | `0.55` (ladit podle evalu) |
+| `INTAKE_ANAMNESIS_MAX_CHARS` | backend | `600` (FR-A5: delší anamnéza se zkrátí na shrnutí) |
+| `COMPATIBILITY_RULES_FILE` | backend | `services/rules/data/compatibility_rules.yaml` (D-015) |
 | `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` | backend | Vercel doména(y) |
 
 ---
@@ -1070,6 +1304,8 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_da
   - `…/fhir/r4/Observation?patient=P03&_summary=count` vrátí `total` 85.
 - **Reset dat:** `docker compose -f docker-compose.dev.yml down -v`. Smaže **i** Postgres volume.
 - Porty: FE 3000, BE 8000, Postgres 5432, Redis 6379, Mailhog 8025, Traefik 8080, IRIS 1972 / 52773.
+- **Windows:** s `core.autocrlf=true` dostane `entrypoint.sh` v pracovní kopii konce řádků CRLF a backend kontejner nenaběhne. Dokud T-001 nepřidá `.gitattributes`: `git config core.autocrlf input`, pak `git rm --cached -r . -q && git reset --hard` (jen v čisté pracovní kopii).
+- **Node lokálně není nutný:** frontend běží v Dockeru. Dokumentace Next 16: `docker compose -f docker-compose.dev.yml exec frontend ls node_modules/next/dist/docs`.
 
 ### Struktura repa
 
@@ -1112,6 +1348,9 @@ Rakhaton2026/
 | Q7 | Podpora `Patient/$everything` a import mCODE IG ve verzi IRIS | ⬜ otestovat / O. Hoferek |
 | Q8 | Kdy a v jakém formátu bude oficiální ground truth? | ⬜ Ľ. Piljan |
 | Q9 | Kdo zapne billing (placený tier) v Google AI Studio? Bez něj nesmíme posílat data | ⬜ tým |
+| Q10 | Sprint 0 (M0, Pá 18:00) nestihnutý: potvrdit nové časy sprintů | ✅ sprinty startují Pá 19:00, M0 co nejdřív, M1–M4 beze změny |
+| Q11 | Owneři lanes (PROGRESS §2) | ✅ Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH) |
+| Q12 | Windows + `core.autocrlf=true` rozbije `entrypoint.sh` (CRLF) → `.gitattributes` v T-001 | ⬜ INFRA |
 
 ---
 

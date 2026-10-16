@@ -1,6 +1,6 @@
 # MDT Copilot — myšlenková mapa projektu
 
-> Přehled celého projektu na jednom místě: zadání z prezentace, poznámky z konzultace se zadavateli, architektura z [ARCHITEKTURA.md](ARCHITEKTURA.md) a stav z [PROGRESS.md](PROGRESS.md). Stav odpovídá pátku 16. 10. odpoledne.
+> Přehled celého projektu na jednom místě: zadání z prezentace, poznámky z konzultace se zadavateli, požadavky lékaře z [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md), architektura z [ARCHITEKTURA.md](ARCHITEKTURA.md) a stav z [PROGRESS.md](PROGRESS.md). Stav odpovídá pátku 16. 10. večer.
 >
 > Značky: _(poznámka)_ = zaznělo na konzultaci se zadavateli · ⚠️ **mezera** = v návrhu zatím chybí.
 
@@ -107,6 +107,13 @@ Každá role chce vidět něco jiného _(poznámka)_. Složení komise Copilot n
 | Patolog | histologie, grade, ICD-O-3 |
 | Radiační onkolog | předchozí ozařování, oblasti, dávky |
 | Pacient | trend PROMs, symptomy, preference |
+| Pneumolog, kardiolog | podle diagnózy: spirometrie a operabilita plic, LVEF při anti-HER2 léčbě |
+
+**Role v aplikaci** (požadavek lékaře, D-014):
+
+- předseda = administrátor: boardy, termíny, nastavení podkladu, potvrzení závěru;
+- zadávající lékař: zařadí a přesouvá své pacienty;
+- prohlížející: člen komise.
 
 ### Vstupní data
 
@@ -146,15 +153,31 @@ Copilot má pokrýt všechny 3 fáze.
 ### Plán a stav
 
 - Kód je zatím čistý template (Hackathon OS), MDT moduly neexistují.
-- Z 55 úkolů v PROGRESS.md je hotový jen T-007 (dataset popsán v DATASET.md), T-008 je škrtnutý. Lanes INFRA, DATA, AI, API, UI a PITCH nemají ownera.
+- Z 68 úkolů v PROGRESS.md jsou hotové T-007 (dataset) a T-500 (požadavky lékaře), T-008 je škrtnutý. Owneři lanes: Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH).
+- Práce běží ve sprintech = milnících M0–M4. Pravidla pro víc lidí, strojů a agentů jsou v PROGRESS §1.
 - Kritická cesta: `T-002` → `T-003` → `T-006` → `T-101` → `T-105` → `T-106` → `T-108` (T-008 „pacient 0“ nahrazen datasetem, dev pacient je P03).
-- Milníky: M0 Pá 18:00 · M1 Pá 23:00 · M2 So 04:00 · M3 So 09:00 · freeze So 10:00 · odevzdání zatím neřešíme · pitch 13:00.
-- Vyřešeno: dataset ✅ (Q1), LLM = Google AI Studio / Gemini ✅ (Q2), backend na VPS ✅ (Q3), dataset smí do gitu ✅ (Q5).
-- Otevřené: zapnout placený tier Gemini (Q9), připomínky onkologů k prahům (Q6), oficiální ground truth (Q8).
+- Sprinty startují Pá 19:00. Milníky: M0 co nejdřív · M1 Pá 23:00 · M2 So 04:00 · M3 So 09:00 · freeze So 10:00 · odevzdání zatím neřešíme · pitch 13:00.
+- Vyřešeno: dataset ✅ (Q1), LLM = Google AI Studio / Gemini ✅ (Q2), backend na VPS ✅ (Q3), dataset smí do gitu ✅ (Q5), start sprintů Pá 19:00 ✅ (Q10), owneři lanes ✅ (Q11).
+- Otevřené: zapnout placený tier Gemini (Q9), připomínky onkologů k prahům (Q6), oficiální ground truth (Q8), CRLF na Windows (Q12).
 
 ---
 
 ## Řešení: co stavíme
+
+### Požadavky lékaře (Pá večer)
+
+Poznámky lékaře, který by aplikaci používal, sladěné se zadáním. Detail je v [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md).
+
+- **Role:** předseda (administrátor), zadávající lékař, prohlížející.
+- **Boardy = zasedání:** předseda zakládá a mění termíny, lékař přesouvá své pacienty.
+- **Zařazení pacienta:**
+  - formulář předvyplněný z IRIS, Doplnit / Přeskočit;
+  - varování: chybí, mimo normu, rozpor, nejistota AI;
+  - ECOG + **C/P** a připomínka „snímek mladší než 3 měsíce“.
+- **Hlavička:** `P03 · muž · 67 let` místo RČ, diagnóza + TNM, otázka, velké ECOG lékaře a vedle ECOG pacienta, velké C/P.
+- **Úzké okno:** jeden sloupec, sekce odborností s barvou, výchozí obsah nastaví předseda.
+- **Semafor u postupů léčby:** soulad se stavem pacienta (např. špatná spirometrie vylučuje odebrání plíce). Počítají ho pravidla, ne AI.
+- **Bonusy:** Lung-RADS / Fleischner s kontrolou použitelnosti, vstup přes PDF nebo vložený text.
 
 ### Podklad A · B · B2 · C
 
@@ -260,10 +283,11 @@ Stav k Pá 16:20:
 - ✅ §4.3: komorbidity (`Condition`), alergie (PROMs + text), implantáty a výkony (`Procedure`).
 - ✅ §5.4: `RF-IDENTITY`, `RF-PRIOR-PROC`, `RF-DATAQUALITY`.
 - ✅ §4.5: `Source` a `Region` u guidelines.
+- ✅ Požadavky lékaře: FR-U1, FR-U2, FR-P4, FR-B8, FR-D4, FR-D5, FR-A5, FR-R5, BON-6, BON-7, D-014 až D-020, kontrakty §8.6 *(Pá večer)*.
 
 ### Rozjet práci
 
-- Rozdělit lanes mezi lidi a zabrat úkoly M0, zatím jsou všechny volné.
+- ✅ Lanes rozdělené (Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH)), sprinty od Pá 19:00. Teď zabrat úkoly M0, zatím jsou všechny volné. Pravidla pro sprinty a paralelní práci jsou v PROGRESS §1.
 - ✅ Dataset je k dispozici (Q1), viz [DATASET.md](DATASET.md).
 - ✅ LLM = Gemini (Q2). Zbývá zapnout placený tier v Google AI Studio (Q9).
 - Zeptat se mentorů na národní postupy a na prahy red flags (Q6). Zatím je bereme z guidelines OBC v datasetu.

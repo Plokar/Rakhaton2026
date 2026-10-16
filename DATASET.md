@@ -4,7 +4,7 @@
 >
 > **Umístění:** `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`. V kódu vždy přes proměnnou `DATASET_DIR`, cestu nehardcoduj.
 >
-> Architektura: [ARCHITEKTURA.md](ARCHITEKTURA.md) · úkoly: [PROGRESS.md](PROGRESS.md) · pravidla: [AGENTS.md](AGENTS.md)
+> Architektura: [ARCHITEKTURA.md](ARCHITEKTURA.md) · úkoly: [PROGRESS.md](PROGRESS.md) · pravidla: [AGENTS.md](AGENTS.md) · požadavky lékaře: [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md)
 
 ---
 
@@ -450,5 +450,25 @@ FHIR:
 - **Druhý nádor:** suspektní RCC pravé ledviny (`P06-dg3`, D41.0) neověřen. OBC-1.4, pořadí řešení.
 - **Věk 76:** chybí G8 (OBC-2.2). Úbytek hmotnosti 67 → 63 kg (`P06-vaha03` → `P06-vaha04`). Albumin 34. Kreatinin 106 (CKD G3a).
 - **Markery rostou:** CA 15-3 24 → 52, CEA 3,8 → 8,6, LD 4,4 (`P06-lab05-*` → `P06-lab07-*`).
+
+### Doplněk Pá 16. 10. 18:15 (revize pro požadavky lékaře, [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md))
+
+- **P01:** `P01-doc07` (2026-10-06) uvádí „Únava mírná, jinak bez nových obtíží“, ale den předtím pacientka v `P01-prom02` hlásí únavu 8/10 a 3 týdny bolest pravé kyčle. `RF-NEWSYMPTOM` / `RF-LLM` (zpráva vs. PROMs), PRS-4.2.
+- **P02, strana:** `P02-doc03` (implantace portu) uvádí „karcinom **levého** prsu“, pacientka má karcinom pravého prsu (`P02-dg1`, `P02-pat01`). `RF-IDENTITY`.
+- **P02, TNM:** `P02-mdt01` (klinické zhodnocení) uvádí „cT4b **N2** M1“, kdežto `P02-tnm01` a `P02-doc02` uvádějí cN1. `RF-TNM` / `RF-LLM`.
+- **P02, LVEF:** `P02-doc11` (2026-10-01) uvádí „EF v normě“, poslední LVEF je ale 52 % s mírně sníženou funkcí LK (`P02-lvef07`, `P02-doc08`). Kontrolní echo doporučené za 3–4 týdny (`P02-doc08`) v datech chybí. `RF-NOMINATION` / `RF-MISSING`, PRS-3.4.
+- **P04:** `P04-doc05` uvádí „Hmotnost 71 kg, hmotnost stabilní“, přitom `P04-vaha01` je 78 kg (−9 %). Rozpor v textu + `RF-WEIGHT`, OBC-2.3.
+- **P06, lokalizace:** `P06-doc01` v místním nálezu popisuje rezistenci „v horních a dolních vnitřních kvadrantech“, kdežto `P06-img01`, `P06-pat01` i `P06-dg1` uvádějí horní zevní kvadrant. `RF-IDENTITY`.
+- **P06, echo:** kontrolní echo doporučené „začátkem října 2026“ (`P06-doc10`) v datech není. Poslední LVEF je 55 % z 2026-08-24 (`P06-lvef04`). `RF-MISSING`, PRS-3.4.
+- **Rozmezí ECOG v textu:**
+  - „ECOG 0–1“ (`P03-doc06`) je strukturovaně uloženo jako 1 (`P03-ecog02`);
+  - „ECOG 1–2“ (`P06-doc06`) je uloženo jako 2 (`P06-ecog02`);
+  - „ECOG 0–1“ (`P05-doc06`, `P05-doc08`) strukturovaný záznam nemá.
+
+  Strukturovaná data berou horší hodnotu. AI má rozmezí hlásit jako nejistotu, ne převádět na jedno číslo.
+- **Paliativní péče (OBC-2.1)** není v dokumentaci zmíněna u žádného pacienta. Přitom P01 (únava 8), P02 (bolest 7, psychika 8), P05 (únava 8, psychika 7) a P06 (únava 7) mají pokročilé onemocnění s výraznou symptomovou zátěží (`Pxx-prom02`); u P04 (dušnost 7/10) k diskusi. `RF-PALIATIVE`.
+- **Kortikoidy bez plánu snižování (OBC-3.1):** P02 dexametazon 4 mg od 23. 9. (`P02-med03`, `P02-doc11` „pokračuje“), plán snižování v dokumentaci není. `RF-STEROID`.
+- **Hyponatrémie bez vyšetření SIADH (PLI-3.2):** P04 Na 136 → 129 mmol/l, osmolalita séra a moči ani natriurie v datech nejsou. `RF-LAB`.
+- **Očekávané barvy semaforu** pro P03 a P04 (podklad pro T-013): [docs/POZADAVKY_LEKARE.md §5.4](docs/POZADAVKY_LEKARE.md#54-očekávané-barvy-pro-demo-podklad-pro-dev-ground-truth-t-013).
 
 **Doporučený demo pacient:** **P03**. Má jasnou otázku, vizuálně silné rozpory (ECOG, neuropatie podle pacienta, chybějící hrudník, MMR), RECIST, studii RKT-03 s několika `unknown` kritérii a je nejmenší. Záloha je **P05** (třezalka jako „wow“ red flag, protokol studie).

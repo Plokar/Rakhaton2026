@@ -1,10 +1,30 @@
-"""Zápisy aplikace do IRIS FHIR (ARCH §4.3 výstupy)."""
+"""Zápisy aplikace do IRIS FHIR (ARCH §4.3 výstupy). Struktura kopíruje předchozí MDT v datasetu (D-009)."""
+import html
+import re
 from datetime import datetime
 
 from services.fhir import client as fhir
+from services.fhir.ids import resource_type_for_id
 from services.patients import _ref_id
 
+BASE = 'https://rakathon.example.org/fhir'
+CS = f'{BASE}/CodeSystem'
+SD = f'{BASE}/StructureDefinition'
+AI_LABEL = {'system': 'http://terminology.hl7.org/CodeSystem/v3-ObservationValue', 'code': 'AIAST',
+            'display': 'artificial intelligence asserted'}
+MDT_TYPES = {'primarni': 'Primární projednání', 'progrese': 'Progrese / recidiva', 'restaging': 'Restaging / hodnocení odpovědi'}
+INTENTS = {'kurativni': 'Kurativní', 'paliativni': 'Paliativní', 'odlozeno': 'Rozhodnutí odloženo'}
+MODALITIES = {'chirurgie': 'Chirurgie', 'chemoterapie': 'Chemoterapie', 'rt': 'Radioterapie', 'hormonalni': 'Hormonální léčba',
+              'cilena': 'Cílená léčba', 'imunoterapie': 'Imunoterapie', 'jina-systemova': 'Jiná systémová léčba',
+              'diagnostika': 'Diagnostika', 'sledovani': 'Sledování'}
+ROLES_CS = {'chair': 'předseda komise', 'surgeon': 'chirurg', 'oncologist': 'klinický onkolog',
+            'radiation_oncologist': 'radiační onkolog', 'radiologist': 'radiolog', 'pathologist': 'patolog',
+            'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient'}
+SEVERITY = {'high': 'high', 'moderate': 'moderate', 'low': 'low'}
+_FOCUS_PREFIX = 'Požadované zaměření MDT:'
 
+
+# ── nominace a termín ─────────────────────────────────────────────────────────
 def nomination_task(patient_id: str, service_request_id: str) -> dict:
     """`Task` nominace (stav žádanky + termín MDT), `Task.focus` → `ServiceRequest`."""
     # IRIS neznámé parametry ignoruje, proto i filtr na focus u klienta
@@ -20,3 +40,197 @@ def set_mdt_date(patient_id: str, service_request_id: str, start: datetime) -> d
     task = nomination_task(patient_id, service_request_id)
     task.setdefault('restriction', {}).setdefault('period', {})['start'] = start.isoformat()
     return fhir.put(task)
+
+
+# ── potvrzení závěru (T-209) ─────────────────────────────────────────────────
+def next_mdt_id(patient_id: str) -> str:
+    """Číslo zasedání = poslední `Pxx-mdtNN` + 1 (P03 → P03-mdt02)."""
+    pattern = re.compile(rf'^{re.escape(patient_id)}-mdt(\d+)$')
+    numbers = [int(m[1]) for c in fhir.search('Composition', patient=patient_id) if (m := pattern.match(c['id']))]
+    return f'{patient_id}-mdt{max(numbers, default=0) + 1:02d}'
+
+
+def _ref(rtype: str, rid: str) -> dict:
+    return {'reference': f'{rtype}/{rid}'}
+
+
+def _person(user_id: str, name: str) -> dict:
+    """Lékař z datasetu (`LEK-…`) jako reference, jinak jen jméno (uživatel aplikace není Practitioner v IRIS)."""
+    return _ref('Practitioner', user_id) if str(user_id).startswith('LEK-') else {'display': name}
+
+
+def _div(text: str) -> dict:
+    body = '<br/>'.join(html.escape(line) for line in str(text).splitlines()) or '—'
+    return {'status': 'generated', 'div': f'<div xmlns="http://www.w3.org/1999/xhtml">{body}</div>'}
+
+
+def _coding(system: str, code: str, display: str) -> dict:
+    return {'coding': [{'system': f'{CS}/{system}', 'code': code, 'display': display}]}
+
+
+def _ai(*sources: str) -> dict:
+    return {'meta': {'security': [AI_LABEL]}} if any(s in ('ai', 'ai_edited') for s in sources) else {}
+
+
+def _cited_resources(evidence_ids) -> list[dict]:
+    """Citace faktů pacienta → reference na resource (odstavec `#n` → celý resource), bez guidelines a kritérií."""
+    out = {}
+    for eid in evidence_ids:
+        base = eid.split('#', 1)[0]
+        rtype = resource_type_for_id(base)
+        if rtype and re.match(r'^P\d{2}-', base):
+            out[base] = _ref(rtype, base)
+    return list(out.values())
+
+
+def build_decision_bundle(decision: dict, *, patient_id: str, service_request: dict, task: dict, mdt_id: str,
+                          mdt_date: datetime, confirmed_by: dict, red_flags: dict[str, dict], now: datetime) -> tuple[dict, dict]:
+    """Potvrzený závěr (Decision §8.4) → transaction Bundle + `fhir_ids`. Čistá funkce (testovatelná bez IRIS)."""
+    s = decision['sections']
+    focus = next((c.get('text', '') for c in service_request.get('category', []) if c.get('text')), '')
+    focus = focus.replace(_FOCUS_PREFIX, '').strip()
+    date = mdt_date.date().isoformat()
+    patient = _ref('Patient', patient_id)
+    chair = next((a for a in decision['attendees'] if a['role'] == 'chair'), None)
+    chair_ref = _person(chair['user_id'], chair['name']) if chair else {'display': confirmed_by['name']}
+    ids = {'composition': mdt_id, 'careplan': f'{mdt_id}-careplan', 'careteam': f'{mdt_id}-careteam',
+           'tasks': [], 'detected_issues': [], 'research_subjects': [], 'provenance': f'{mdt_id}-prov'}
+    resources = []
+
+    careteam = {
+        'resourceType': 'CareTeam', 'id': ids['careteam'], 'status': 'active', 'name': f'MDT – {focus} ({date})',
+        'subject': patient,
+        'participant': [{'role': [{'text': ROLES_CS.get(a['role'], a['role'])}], 'member': _person(a['user_id'], a['name'])}
+                        for a in decision['attendees']],
+    }
+    activities = [{'detail': {'kind': 'ServiceRequest', 'status': 'scheduled',
+                              'code': _coding('mdt-modalita', r['modality'], MODALITIES.get(r['modality'], r['modality'])),
+                              'description': f"{i}. {r['text']}"}}
+                  for i, r in enumerate(s['recommendation'], 1)]
+    if s.get('re_mdt'):
+        activities.append({'detail': {'status': 'scheduled', 'code': {'text': 'Plánované re-MDT'},
+                                      'description': f"{s['re_mdt']['reason']} ({s['re_mdt']['date']})"}})
+    careplan = {
+        'resourceType': 'CarePlan', 'id': ids['careplan'], 'status': 'active', 'intent': 'plan',
+        'category': [_coding('mdt-lecebny-zamer', s['intent'], INTENTS[s['intent']])], 'title': 'Doporučení MDT',
+        'subject': patient, 'created': date, 'careTeam': [_ref('CareTeam', ids['careteam'])],
+        'supportingInfo': [_ref('ServiceRequest', service_request['id'])],   # R4: basedOn jen CarePlan
+        'addresses': [r for r in service_request.get('reasonReference', []) if r.get('reference', '').startswith('Condition/')],
+        'activity': activities, **_ai(*(r['source'] for r in s['recommendation'])),
+    }
+    resources += [careteam, careplan]
+
+    for i, t in enumerate(decision['tasks'], 1):
+        tid = f'{mdt_id}-task{i:02d}'
+        ids['tasks'].append(tid)
+        resources.append({
+            'resourceType': 'Task', 'id': tid, 'status': t['status'], 'intent': 'order', 'description': t['description'],
+            'basedOn': [_ref('CarePlan', ids['careplan'])], 'for': patient, 'authoredOn': now.isoformat(),
+            'owner': _person(t['owner'], t['owner']), 'restriction': {'period': {'end': t['due_date']}}, **_ai(t['source']),
+        })
+
+    for i, flag_id in enumerate(decision.get('red_flags_acknowledged', []), 1):
+        rid = f'{mdt_id}-rf{i:02d}'
+        ids['detected_issues'].append(rid)
+        flag = red_flags.get(flag_id, {})
+        implicated = _cited_resources(flag.get('citations') or [flag_id.split(':', 1)[-1]])
+        detail = flag.get('description') or flag.get('title') or flag_id
+        if flag.get('guideline'):
+            detail += f" ({flag['guideline']})"
+        issue = {
+            'resourceType': 'DetectedIssue', 'id': rid, 'status': 'final',
+            'code': {'text': flag.get('rule') or flag_id.split(':', 1)[0]}, 'patient': patient,
+            'identifiedDateTime': now.isoformat(), 'detail': detail,
+            'mitigation': [{'action': {'text': 'Projednáno na MDT'}, 'date': now.isoformat(), 'author': chair_ref}],
+        }
+        if flag.get('severity') in SEVERITY:
+            issue['severity'] = SEVERITY[flag['severity']]
+        if implicated:
+            issue['implicated'] = implicated
+        resources.append(issue)
+
+    for i, study in enumerate((s.get('trial') or {}).get('study_ids', []), 1):
+        rid = f'{mdt_id}-rs{i:02d}'
+        ids['research_subjects'].append(rid)
+        resources.append({'resourceType': 'ResearchSubject', 'id': rid, 'status': 'candidate',
+                          'study': _ref('ResearchStudy', study), 'individual': patient})
+
+    sections = [('Projednaná otázka', s['question']['text']), ('Klinické zhodnocení', s['assessment']['text']),
+                ('Léčebný záměr', INTENTS[s['intent']]),
+                ('Doporučený postup', '\n'.join(f"{i}. [{MODALITIES.get(r['modality'], r['modality'])}] {r['text']}"
+                                                for i, r in enumerate(s['recommendation'], 1)))]
+    if s.get('extra_diagnostics'):
+        sections.append(('Doplňující diagnostika', s['extra_diagnostics']['text']))
+    sections.append(('Klinická studie', s['trial']['text'] if s.get('trial') else 'Nezvažována.'))
+    if s.get('re_mdt'):
+        sections.append(('Plánované re-MDT', f"{s['re_mdt']['reason']} ({s['re_mdt']['date']})"))
+    if s.get('conditional'):
+        sections.append(('Podmíněné doporučení', f"{s['conditional']['text']} Chybí: {', '.join(s['conditional']['missing'])}."))
+    if s.get('tumor_priority'):
+        sections.append(('Priorita nádorů', s['tumor_priority']['text']))
+    sections.append(('Závěr MDT', s['conclusion']['text']))
+    composition_sections = [{'title': title, 'text': _div(text)} for title, text in sections]
+    composition_sections[1]['entry'] = _cited_resources(s['assessment']['citations'])
+    if ids['detected_issues']:
+        composition_sections.append({'title': 'Varovné signály', 'text': _div(f"{len(ids['detected_issues'])} projednaných varování"),
+                                     'entry': [_ref('DetectedIssue', d) for d in ids['detected_issues']]})
+    composition_sections = [{k: v for k, v in sec.items() if v} for sec in composition_sections]
+    sources = [v['source'] for v in s.values() if isinstance(v, dict) and 'source' in v]
+    composition = {
+        'resourceType': 'Composition', 'id': mdt_id,
+        'identifier': {'system': f'{BASE}/sid/mdt-zaznam', 'value': mdt_id}, 'status': 'final',
+        'type': _coding('mdt-typ-zaznamu', 'mdt-zaznam', 'Záznam MDT'),
+        'category': [_coding('mdt-typ-projednani', decision['mdt_type'], MDT_TYPES[decision['mdt_type']]),
+                     {'text': f'Zaměření MDT: {focus}'}],
+        'subject': patient, 'date': mdt_date.isoformat(), 'author': [chair_ref],
+        'attester': [{'mode': 'legal', 'party': chair_ref, 'time': now.isoformat()}],
+        'custodian': _ref('Organization', 'ORG-FN'), 'title': f'Záznam MDT – {focus} – {date}',
+        'event': [{'period': {'start': date}, 'detail': [_ref('CarePlan', ids['careplan']), _ref('CareTeam', ids['careteam'])]}],
+        'section': composition_sections,
+        'extension': [
+            {'url': f'{SD}/mdt-forma-zasedani', 'valueString': 'prezenčně'},
+            *([{'url': f'{SD}/mdt-osetrujici-lekar', 'valueReference': service_request['requester']}]
+              if service_request.get('requester') else []),
+            {'url': f'{SD}/mdt-ucast-pacienta', 'valueBoolean': bool(decision.get('patient_present'))},
+        ],
+        **_ai(*sources),
+    }
+    resources.insert(0, composition)
+
+    service_request = {**service_request, 'status': 'completed'}
+    task = {**task, 'status': 'completed',
+            'businessStatus': _coding('mdt-stav-zadanky', 'projednana', 'Projednaná')}
+    resources += [service_request, task]
+
+    cited = _cited_resources(s['assessment']['citations'] + [c for f in red_flags.values() for c in f.get('citations', [])])
+    resources.append({
+        'resourceType': 'Provenance', 'id': ids['provenance'], 'recorded': now.isoformat(),
+        'target': [_ref(r['resourceType'], r['id']) for r in resources],
+        'agent': [
+            {'type': _participant('assembler', 'Assembler'), 'who': _ref('Device', 'mdt-copilot')},
+            {'type': _participant('verifier', 'Verifier'), 'who': chair_ref},
+        ],
+        **({'entity': [{'role': 'source', 'what': ref} for ref in cited]} if cited else {}),
+    })
+    bundle = {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
+        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': r,
+         'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources
+    ]}
+    return bundle, ids
+
+
+def _participant(code: str, display: str) -> dict:
+    return {'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/provenance-participant-type',
+                        'code': code, 'display': display}]}
+
+
+def confirm_decision(decision: dict, *, patient_id: str, service_request_id: str, mdt_date: datetime,
+                     confirmed_by: dict, red_flags: dict[str, dict], now: datetime) -> dict:
+    """Jeden transaction Bundle do IRIS. Vrací `fhir_ids`; při chybě `FhirError` a nic se nezapíše (transaction)."""
+    bundle, ids = build_decision_bundle(
+        decision, patient_id=patient_id, service_request=fhir.read('ServiceRequest', service_request_id),
+        task=nomination_task(patient_id, service_request_id), mdt_id=next_mdt_id(patient_id), mdt_date=mdt_date,
+        confirmed_by=confirmed_by, red_flags=red_flags, now=now,
+    )
+    fhir.transaction(bundle)
+    return ids

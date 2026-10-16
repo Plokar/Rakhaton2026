@@ -10,15 +10,19 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from pydantic import ValidationError as SchemaError
+
 from apps.copilot import jobs
+from apps.copilot.schemas import Decision as DecisionSchema
 from apps.copilot.models import GenerationJob
 from services import patients
 from services.fhir import writeback
+from services.fhir.client import FhirError
 
 from . import config as cfg
 from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
-from .models import BriefConfig, MdtCase, MdtSession
+from .models import BriefConfig, Decision, MdtCase, MdtSession
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
@@ -198,3 +202,57 @@ def config_detail(request, cfg_id):
         s.is_valid(raise_exception=True)
         obj = s.save()
     return Response(BriefConfigSerializer(obj).data)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def case_decision(request, cid):
+    """Draft závěru (Decision §8.4). PUT (předseda, lékař) validuje schéma; potvrzený závěr nejde měnit."""
+    case = get_object_or_404(MdtCase, pk=cid)
+    decision = Decision.objects.filter(case=case).first()
+    if request.method == 'GET':
+        if decision is None:
+            return Response({'detail': 'Závěr ještě není.'}, status=404)
+        return Response(decision.content)
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    if decision and decision.status == 'confirmed':
+        return Response({'detail': 'Závěr je potvrzený a zapsaný v IRIS, nelze ho měnit.'}, status=409)
+    try:
+        content = DecisionSchema.model_validate(
+            {**request.data, 'case_id': str(case.pk), 'status': 'draft', 'confirmed_by': None,
+             'confirmed_at': None, 'fhir_ids': None}).model_dump(mode='json')
+    except SchemaError as e:
+        return Response({'detail': 'Neplatný závěr (ARCH §8.4).', 'errors': e.errors(include_url=False)}, status=400)
+    decision, _ = Decision.objects.update_or_create(case=case, defaults={'content': content})
+    return Response(decision.content)
+
+
+@extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_decision_confirm(request, cid):
+    """Potvrzení předsedou (FR-C3): jeden transaction Bundle do IRIS (ARCH §4.3), vrátí závěr s `fhir_ids`."""
+    _require(request, roles.ADMIN)
+    case = get_object_or_404(MdtCase.objects.select_related('session'), pk=cid)
+    with transaction.atomic():
+        decision = get_object_or_404(Decision.objects.select_for_update(), case=case)
+        if decision.status == 'confirmed':
+            return Response({'detail': 'Závěr už je potvrzený.', 'fhir_ids': decision.fhir_ids}, status=409)
+        brief = case.briefs.first()
+        red_flags = {f['id']: f for f in (brief.content.get('red_flags', []) if brief else [])}
+        now = timezone.localtime()
+        confirmed_by = {'user_id': str(request.user.pk), 'name': request.user.get_full_name() or request.user.username}
+        try:
+            ids = writeback.confirm_decision(
+                decision.content, patient_id=case.patient_fhir_id, service_request_id=case.service_request_fhir_id,
+                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now)
+        except (FhirError, LookupError) as e:
+            return Response({'detail': f'IRIS zápis odmítl: {e}', 'outcome': getattr(e, 'outcome', None)}, status=502)
+        decision.content = {**decision.content, 'status': 'confirmed', 'confirmed_by': confirmed_by,
+                            'confirmed_at': now.isoformat(), 'fhir_ids': ids}
+        decision.status, decision.confirmed_by, decision.confirmed_at, decision.fhir_ids = 'confirmed', request.user, now, ids
+        decision.save()
+        case.status = 'confirmed'
+        case.save(update_fields=['status', 'updated_at'])
+    return Response(decision.content)

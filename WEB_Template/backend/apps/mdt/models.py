@@ -79,3 +79,15 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'
+
+
+class Decision(models.Model):
+    """Závěr komise (obsah = schéma Decision, ARCH §8.4). Po potvrzení je v IRIS a dál se nemění."""
+    STATUS = [('draft', 'návrh'), ('confirmed', 'potvrzeno')]
+    case = models.OneToOneField(MdtCase, on_delete=models.CASCADE, related_name='decision')
+    content = models.JSONField()
+    status = models.CharField(max_length=10, choices=STATUS, default='draft')
+    confirmed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    fhir_ids = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)

@@ -453,7 +453,7 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 | Výstup | FHIR resource (ID) | Klíčové prvky |
 |---|---|---|
 | **Záznam MDT** | `Composition/Pxx-mdtNN` | `status` `preliminary` → `final`; `type` `mdt-typ-zaznamu#mdt-zaznam`; `category` = typ projednání (z `ServiceRequest.code`) + zaměření; `author` + `attester` (legal) = předseda; `custodian` `ORG-FN`; `event.detail` → CarePlan + CareTeam; **sekce jako v datasetu:** Projednaná otázka · Klinické zhodnocení · Léčebný záměr · Doporučený postup · Doplňující diagnostika · Klinická studie · Plánované re-MDT · Závěr MDT; navíc sekce **Varovné signály** (odkazy na DetectedIssue); extension `mdt-forma-zasedani`, `mdt-osetrujici-lekar`, `mdt-ucast-pacienta` |
-| Doporučení | `CarePlan/Pxx-mdtNN-careplan` | `status=active`, `intent=plan`, `category` `mdt-lecebny-zamer` (kurativni / paliativni / odlozeno), `activity[].detail.code` `mdt-modalita` + `description`, `basedOn` → `ServiceRequest/Pxx-zad01`, `addresses` → Condition |
+| Doporučení | `CarePlan/Pxx-mdtNN-careplan` | `status=active`, `intent=plan`, `category` `mdt-lecebny-zamer` (kurativni / paliativni / odlozeno), `activity[].detail.code` `mdt-modalita` + `description`, `supportingInfo` → `ServiceRequest/Pxx-zad01` (R4 `basedOn` povoluje jen CarePlan, IRIS jinak vrací 400), `addresses` → Condition |
 | Přítomní | `CareTeam/Pxx-mdtNN-careteam` | `participant[].role.text` + `member` (z konfigurace „kdo je přítomen“) |
 | Úkoly | `Task/Pxx-mdtNN-task01…` | `basedOn` → CarePlan, `intent=order`, `owner`, `restriction.period.end` = termín, `description` |
 | Red flags | `DetectedIssue/Pxx-mdtNN-rf01…` | `severity` high/moderate/low, `implicated[]` = **oba zdroje**, `detail`, `reference` = pasáž guidelines (text), `patient` |

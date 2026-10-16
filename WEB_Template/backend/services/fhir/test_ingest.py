@@ -1,5 +1,6 @@
 """Ingest datasetu (T-101) proti in-memory FHIR serveru. Proti IRIS viz test_ingest_integration.py."""
 import json
+from collections import Counter
 from io import StringIO
 
 import pytest
@@ -7,6 +8,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from services.fhir import client, ingest
+from services.fhir.ids import DERIVED_FROM_EXTENSION, DERIVED_FROM_TYPES, derived_from
 from services.fhir.testing import _bad_value
 
 
@@ -31,6 +33,34 @@ def test_sanitize_fixes_ids_references_and_empty_strings(dataset_root):
     for r in resources.values():
         assert _bad_value(r) is None, r['id']
         assert any(t['code'] == 'fiktivni-data' for t in r['meta']['tag'])
+
+
+def test_derived_from_diagnostic_report_moved_to_extension(dataset_root):
+    """Q15: IRIS odmítá Observation.derivedFrom → DiagnosticReport (44× bm/tnm); odkaz se přesune, neztratí."""
+    report = ingest.collect(dataset_root)
+    moved = Counter()
+    for part in report.parts:
+        for r in part.resources:
+            assert all(ref['reference'].split('/')[0] in DERIVED_FROM_TYPES for ref in r.get('derivedFrom', []))
+            if any(e['url'] == DERIVED_FROM_EXTENSION for e in r.get('extension', [])):
+                moved[part.label] += 1
+    assert moved == {'P01': 10, 'P02': 5, 'P03': 5, 'P04': 5, 'P05': 10, 'P06': 9}
+    raw = {e['resource']['id']: e['resource'] for e in _raw_bundle(dataset_root, 'P01')['entry']}
+    clean = {r['id']: r for r in ingest.load_patient(dataset_root, 'P01')}
+    for rid, original in raw.items():                    # žádný odkaz se neztratil
+        if original.get('derivedFrom'):
+            assert derived_from(clean[ingest.sanitize_id(rid)]) == original['derivedFrom']
+    assert derived_from(clean['P01-bm01']) == [{'reference': 'DiagnosticReport/P01-pat01'}]
+    assert 'derivedFrom' not in clean['P01-bm01']
+
+
+def test_derived_from_without_fix_is_rejected_like_iris(fake_fhir, dataset_root):
+    obs = ingest.load_patient(dataset_root, 'P01')
+    bm = next(r for r in obs if r['id'] == 'P01-bm01')
+    bm['derivedFrom'] = derived_from(bm)
+    del bm['extension']
+    with pytest.raises(client.FhirError, match="'DiagnosticReport' in property 'derivedFrom'"):
+        ingest.upload(obs, 'P01')
 
 
 def test_sanitize_keeps_falsy_values_and_does_not_mutate(dataset_root):

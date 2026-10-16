@@ -16,7 +16,9 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from services.fhir import client as fhir
-from services.fhir.ids import resource_type_for_id, sanitize_id, sanitize_reference
+from services.fhir.ids import (
+    DERIVED_FROM_EXTENSION, DERIVED_FROM_TYPES, resource_type_for_id, sanitize_id, sanitize_reference,
+)
 
 FICTIONAL_TAG = {
     'system': 'https://rakathon.example.org/fhir/tag',
@@ -87,15 +89,37 @@ def sanitize(resource: dict, tags: Iterable[dict] = (FICTIONAL_TAG,)) -> dict:
 
     - ``_`` (a jiné nepovolené znaky) v ``id`` a ve všech ``reference`` → ``-``;
     - prázdné stringy pryč, a s nimi i prvky, které tím zůstaly prázdné (``answer: [{}]``);
+    - ``Observation.derivedFrom`` na typ, který R4 nepovoluje (DiagnosticReport), → extension ``derived-from`` (Q15);
     - ``meta.tag`` z bundlu do každého resource (filtr ``_tag=fiktivni-data``).
     """
     out = _prune(copy.deepcopy(resource))
     out['id'] = sanitize_id(out['id'])
+    _move_disallowed_derived_from(out)
     meta_tags = out.setdefault('meta', {}).setdefault('tag', [])
     for tag in tags:
         if not any(t.get('system') == tag['system'] and t.get('code') == tag['code'] for t in meta_tags):
             meta_tags.append(dict(tag))
     return out
+
+
+def _reference_type(ref: dict) -> str:
+    parts = ref.get('reference', '').split('/_history/')[0].rstrip('/').split('/')
+    return parts[-2] if len(parts) >= 2 else ''
+
+
+def _move_disallowed_derived_from(resource: dict) -> None:
+    """IRIS odmítne ``derivedFrom`` → DiagnosticReport (44× bm/tnm). Odkaz se neztratí: čte ho ``ids.derived_from``."""
+    if resource.get('resourceType') != 'Observation' or not resource.get('derivedFrom'):
+        return
+    keep = [r for r in resource['derivedFrom'] if _reference_type(r) in DERIVED_FROM_TYPES]
+    move = [r for r in resource['derivedFrom'] if _reference_type(r) not in DERIVED_FROM_TYPES]
+    if not move:
+        return
+    resource.setdefault('extension', []).extend({'url': DERIVED_FROM_EXTENSION, 'valueReference': r} for r in move)
+    if keep:
+        resource['derivedFrom'] = keep
+    else:
+        del resource['derivedFrom']
 
 
 def _is_empty(value) -> bool:

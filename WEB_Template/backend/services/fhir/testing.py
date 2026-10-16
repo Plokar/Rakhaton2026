@@ -3,7 +3,8 @@
 Nahrazuje ``services.fhir.client.request``, takže funguje ``read``, ``put``, ``search``, ``count``,
 ``transaction`` i ``patient_everything``. V tom, na čem stavíme, se chová jako IRIS:
 
-- odmítne (400) neplatné ID, prázdný string či prázdný prvek a referenci na neexistující resource;
+- odmítne (400) neplatné ID, prázdný string či prázdný prvek, referenci na neexistující resource
+  a ``Observation.derivedFrom`` na typ, který R4 nepovoluje (Q15, stejná hláška jako IRIS);
 - ``transaction`` je atomická, ``batch`` vrací stav po položkách;
 - search umí ``_id`` (čárky), ``patient``, ``subject``, ``code`` (``system|code``), ``_summary=count``;
   ostatní parametry **tiše ignoruje** jako IRIS (zapíše je do ``ignored_params``).
@@ -17,6 +18,7 @@ import re
 from pathlib import Path
 
 from services.fhir import client
+from services.fhir.ids import DERIVED_FROM_TYPES
 from services.fhir.ingest import collect, key, references
 
 _ID = re.compile(r'[A-Za-z0-9\-.]{1,64}')
@@ -81,6 +83,12 @@ class FakeFhirServer:
         bad = _bad_value(resource)
         if bad:
             return f'prázdná hodnota v {bad}'
+        if resource['resourceType'] == 'Observation':          # IRIS kontroluje cílové typy referencí (Q15)
+            for ref in resource.get('derivedFrom', []):
+                target = ref.get('reference', '').split('/')[0]
+                if target not in DERIVED_FROM_TYPES:
+                    return (f"The referenced resource type '{target}' in property 'derivedFrom' "
+                            "of Type 'Observation' is not allowed")
         return None
 
     def _check_refs(self, resources: list[dict], pending: set[str]) -> str | None:

@@ -121,7 +121,7 @@ Celkem je unikátních resources 1 078 + `Questionnaire` + 12 resources studií 
 | `DocumentReference` | **plný text** v `content[0].attachment.data` (base64, UTF-8, `text/plain`), `type` LOINC, `category[0].text` = oddělení (např. `"A-ONK – Ambulance klinické onkologie"`), `date`, `author` | typy LOINC: 11506-3 Progress note (29), 11488-4 Consult note (10), 28570-0 Procedure note (7), 34552-0 Cardiology note (4), 18842-5 Discharge summary (2) |
 | `DiagnosticReport` | `category` v2-0074: `SP` patologie, `RAD` zobrazení, `LAB` laboratoř; **text** v `presentedForm[0].data` (base64); `conclusion` = závěr; `imagingStudy` → ImagingStudy; `result[]` → lab Observation | 2. položka `category[].text` = pracoviště (RDG, NM, PAT-B, PAT-M…) |
 | `ImagingStudy` | `modality` (DICOM: CT, MR, PT, NM, MG…), `started`, `description` | snímky nejsou (`…/snimky-v-pacs` = „ne“) |
-| `Observation` | viz [§4.2](#42-observation--taxonomie); `derivedFrom` → **zdrojový dokument** (důležité pro citace a dohledatelnost) | |
+| `Observation` | viz [§4.2](#42-observation--taxonomie); `derivedFrom` → **zdrojový dokument** (důležité pro citace a dohledatelnost) | odkazy na `DiagnosticReport` (bm, tnm) jsou v IRIS v extension `derived-from` (§6.2); čti přes `derived_from()` |
 | `MedicationRequest` | chronická medikace: `medicationCodeableConcept` ATC, `dosageInstruction[0].text`, `authoredOn` | změny dávek jsou v textu dávkování |
 | `MedicationAdministration` | podání: `effectiveDateTime`, `dosage.text`, `category.text` = režim (např. „protinádorová léčba – FOLFOX + bevacizumab“), `note` = redukce a důvody | P04 nemá žádné |
 | `Procedure` | `code.text`, `category.text` (chirurgický výkon, bioptický, radioterapie, transfuze…), `performedDateTime` / `performedPeriod`, `report` → DocumentReference | |
@@ -217,7 +217,7 @@ Extensions (`…/StructureDefinition/…`):
 ServiceRequest (nominace) ──supportingInfo──▶ podklady (DiagnosticReport, DocumentReference, Observation, Composition)
       ▲ focus                └─reasonReference─▶ Condition (dg)
 Task (stav, termín MDT)
-Observation ──derivedFrom──▶ DocumentReference / DiagnosticReport   (strukturovaná hodnota ← zdrojový text)
+Observation ──derivedFrom──▶ DocumentReference   (strukturovaná hodnota ← zdrojový text; → DiagnosticReport přes extension derived-from, §6.2)
 DiagnosticReport(LAB) ──result──▶ Observation (lab)
 DiagnosticReport(RAD) ──imagingStudy──▶ ImagingStudy
 Procedure ──report──▶ DocumentReference
@@ -306,7 +306,7 @@ def to_transaction(bundle: dict) -> dict:
 | **Prázdný string** (FHIR zakazuje `""`) | `QuestionnaireResponse/P03-prom02` → item `bolest-misto` → `answer[0].valueString = ""` | odstranit prázdné hodnoty; když je `answer` prázdný, odstranit `answer` (item bez odpovědi je validní) |
 | Bundle `type: collection` | všechny bundly | převést na `transaction` ([§6.1](#61-postup-python-managepy-ingest_dataset-úkol-t-101)) |
 | `meta.tag` `fiktivni-data` na úrovni Bundle | všechny bundly | zkopírovat do `meta.tag` každého resource, aby šlo fiktivní data v IRIS filtrovat (`_tag`) |
-| **`Observation.derivedFrom` → `DiagnosticReport`** (R4 povoluje jen DocumentReference, ImagingStudy, Media, QuestionnaireResponse, Observation, MolecularSequence); IRIS vrací 400 | 44× `bm` / `tnm` Observation (P01 10, P02 5, P03 5, P04 5, P05 10, P06 9), např. `P01-bm01` → `P01-pat01` (zjištěno 16. 10. 20:12, Q15) | návrh: odkaz přesunout do extension `https://rakathon.example.org/fhir/StructureDefinition/derived-from` (`valueReference`), ostatní `derivedFrom` beze změny; dohledatelnost citací zůstane (resolver čte obojí) |
+| **`Observation.derivedFrom` → `DiagnosticReport`** (R4 povoluje jen DocumentReference, ImagingStudy, Media, QuestionnaireResponse, Observation, MolecularSequence); IRIS vrací 400 | 44× `bm` / `tnm` Observation (P01 10, P02 5, P03 5, P04 5, P05 10, P06 9), např. `P01-bm01` → `P01-pat01` (zjištěno 16. 10. 20:12, Q15) | **implementováno (Q15):** ingest odkaz přesune do extension `https://rakathon.example.org/fhir/StructureDefinition/derived-from` (`valueReference`), ostatní `derivedFrom` beze změny. Zdroj čti vždy přes `services/fhir/ids.py` `derived_from(resource)` (vrátí obojí), nikdy `derivedFrom` přímo |
 
 Nic dalšího se neupravuje. Částečná data (`"1959"`, `"2019-03"`), resources bez `code.coding` a `CareTeam.participant` bez `member` jsou ve FHIR R4 validní. Kdyby IRIS přesto něco odmítl, `OperationOutcome` zapiš do Blokerů v PROGRESS.md a sem doplň řádek.
 

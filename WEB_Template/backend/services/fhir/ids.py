@@ -79,6 +79,27 @@ def resource_type_for_id(rid: str) -> str | None:
     return None
 
 
+# Observation.derivedFrom smí v R4 ukazovat jen na tyto typy. Odkazy datasetu na DiagnosticReport (bm, tnm → patologie)
+# IRIS odmítá, proto je ingest přesouvá do této extension (Q15, DATASET §6.2).
+DERIVED_FROM_TYPES = frozenset(
+    {'DocumentReference', 'ImagingStudy', 'Media', 'QuestionnaireResponse', 'Observation', 'MolecularSequence'}
+)
+DERIVED_FROM_EXTENSION = 'https://rakathon.example.org/fhir/StructureDefinition/derived-from'
+
+
+def derived_from(resource: dict) -> list[dict]:
+    """Zdroje strukturovaného údaje: ``derivedFrom`` + extension ``derived-from`` (odkazy na DiagnosticReport).
+
+    Kdo potřebuje zdroj ``Observation`` (citace, red flags, resolver), čte tuhle funkci, ne ``derivedFrom`` přímo.
+    """
+    refs = list(resource.get('derivedFrom') or [])
+    refs += [
+        e['valueReference'] for e in resource.get('extension') or []
+        if e.get('url') == DERIVED_FROM_EXTENSION and e.get('valueReference')
+    ]
+    return refs
+
+
 def patient_id_for(rid: str) -> str | None:
     """Pacient, ke kterému ID patří (``P03-img03`` i ``LEK-P03-01`` → ``P03``)."""
     m = _PATIENT_PREFIX.fullmatch(rid) or _PRACTITIONER_PATIENT.fullmatch(rid)

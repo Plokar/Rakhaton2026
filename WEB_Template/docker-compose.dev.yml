@@ -70,12 +70,16 @@ services:
       - ./backend:/code        # Hot-reload: zmeny se okamžite projeví
       - /code/__pycache__      # Vyloučit cache z bind mountu
       - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
+      - ../data/fixtures:/data/fixtures:ro                    # testy kontraktů (T-009)
+      - ./frontend/src/fixtures:/data/frontend-fixtures:ro
     env_file:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings_dev
       DJANGO_DEBUG: "True"
       DATASET_DIR: /data/dataset
+      FIXTURES_DIR: /data/fixtures
+      FRONTEND_FIXTURES_DIR: /data/frontend-fixtures
       IRIS_HOST: iris
       IRIS_PORT: "1972"
       IRIS_NAMESPACE: FHIRSERVER

@@ -741,9 +741,163 @@ def rf_newsymptom(data: PatientData) -> list[RedFlag]:
                   [qr["id"], latest_doc], data.guideline({"PRS": "PRS-4.2"}, "OBC-1.3"))]
 
 
+# ── Pravidla z konzultace (T-312) ─────────────────────────────────────────────
+SIDE = {"lev": "vlevo", "prav": "vpravo"}
+ORGANS = {"prs": r"prsu?", "ledvin": r"ledvin[ayě]?", "plic": r"plíc[eií]|(?:horního|dolního|středního)\s+laloku"}
+SIDE_MENTION = r"(?:karcinom|nádor|tumor|ca)\w*\s+(?:\w+\s+){0,2}?(lev|prav)(?:ého|ý|é|á)\s+(?:\w+\s+)?(%s)"
+QUADRANT = re.compile(r"(zevní|vnitřní)\w*\s+kvadrant", re.IGNORECASE)
+IMPLANT = re.compile(r"port|stent|endoprotéz|kardiostimul|defibrilátor|zkrat|chlopn", re.IGNORECASE)
+ALLERGY_NONE = re.compile(r"^\s*(alergie:?\s*)?(neudává|nevím o žádné|žádné|nemá|bez alergií|ne|nic)\.?\s*$",
+                          re.IGNORECASE)
+
+
+def _side(text: str) -> str | None:
+    text = text.lower()
+    left, right = bool(re.search(r"\blev|vlevo|sin\.", text)), bool(re.search(r"\bprav|vpravo|dx\.", text))
+    return "lev" if left and not right else "prav" if right and not left else None
+
+
+def rf_identity(data: PatientData) -> list[RedFlag]:
+    """Dokument nesedí k pacientovi: strana těla, kvadrant, pohlaví (věk a data hlídá RF-LLM a RF-DATAQUALITY)."""
+    flags = []
+    for c in data.oncologic:
+        site = " ".join(_cc_text(b) for b in c.get("bodySite", []))
+        side = _side(site)
+        organ = next((key for key in ORGANS if key in _plain(site)), None)
+        if side is None or organ is None:
+            continue
+        pattern = re.compile(SIDE_MENTION % ORGANS[organ], re.IGNORECASE)
+        for evidence_id in data.find_paragraphs(pattern, ("DocumentReference", "DiagnosticReport", "Composition")):
+            mentioned = pattern.search(data.paragraph_text(evidence_id)).group(1).lower()
+            if mentioned != side:
+                flags.append(_flag("RF-IDENTITY", evidence_id, "high", f"Strana těla nesedí: {SIDE[mentioned]} vs. "
+                                   f"{SIDE[side]}",
+                                   f"Dokument uvádí nádor {SIDE[mentioned]}, diagnóza {_code(c.get('code'), 'icd-10')} "
+                                   f"je {SIDE[side]} ({site}). Ověřit, zda dokument patří k pacientovi a k tomuto "
+                                   "nádoru.", [evidence_id, c["id"]], None))
+        quadrant = QUADRANT.search(site)
+        if organ == "prs" and quadrant:
+            expected = quadrant.group(1).lower()
+            for evidence_id in data.find_paragraphs(QUADRANT, ("DocumentReference", "DiagnosticReport")):
+                found = {m.group(1).lower() for m in QUADRANT.finditer(data.paragraph_text(evidence_id))}
+                if found and expected not in found:
+                    flags.append(_flag("RF-IDENTITY", evidence_id, "high", "Lokalizace v prsu nesedí",
+                                       f"Dokument popisuje {', '.join(sorted(found))} kvadrant, diagnóza uvádí {site}.",
+                                       [evidence_id, c["id"]], None))
+    patient = (data.by_type.get("Patient") or [{}])[0]
+    if patient.get("gender") == "male":
+        for evidence_id in data.find_paragraphs(re.compile(r"\bpacientk", re.IGNORECASE),
+                                                ("DocumentReference", "DiagnosticReport", "Composition")):
+            flags.append(_flag("RF-IDENTITY", evidence_id, "high", "Pohlaví v dokumentu nesedí",
+                               "Dokument mluví o pacientce, pacient je muž.", [evidence_id, data.patient_id], None))
+    return flags
+
+
+def prior_procedures(data: PatientData) -> dict[str, list[dict]]:
+    """Implantáty, předchozí operace a radioterapie z `Procedure` (FR-A4, RF-PRIOR-PROC)."""
+    out: dict[str, list[dict]] = {"implant": [], "surgery": [], "radiotherapy": []}
+    for p in sorted(data.by_type.get("Procedure", []), key=lambda p: p.get("performedDateTime", "")):
+        text, category = _cc_text(p.get("code")), _cc_text(p.get("category")).lower()
+        if IMPLANT.search(text):
+            out["implant"].append(p)
+        elif "radioterap" in category:
+            out["radiotherapy"].append(p)
+        elif "chirurg" in category:
+            out["surgery"].append(p)
+    return out
+
+
+def allergies(data: PatientData) -> list[tuple[str, str]]:
+    """Uvedené alergie: (text, Evidence ID) z PROMs `alergie` a odstavců „Alergie:“."""
+    found = []
+    for qr in data.proms[-1:]:
+        text = str(data.answers(qr).get("alergie") or "")
+        if text and not ALLERGY_NONE.match(text):
+            found.append((text, qr["id"]))
+    for evidence_id in data.find_paragraphs(re.compile(r"Alergi\w*:", re.IGNORECASE)):
+        sentence = re.search(r"Alergi\w*:?([^.]*(?:\.[^A-ZÁ-Ž]*)?)", data.paragraph_text(evidence_id))
+        text = sentence.group(1).strip() if sentence else ""
+        if text and not ALLERGY_NONE.match(text):
+            found.append((text, evidence_id))
+    return found
+
+
+def _performed(procedure: dict) -> str:
+    return (procedure.get("performedDateTime") or procedure.get("performedPeriod", {}).get("start") or "?")[:10]
+
+
+def rf_prior_proc(data: PatientData) -> list[RedFlag]:
+    procedures = prior_procedures(data)
+    allergy = allergies(data)
+    parts, citations = [], []
+    labels = {"implant": "implantáty", "surgery": "předchozí operace", "radiotherapy": "předchozí radioterapie"}
+    for kind, items in procedures.items():
+        if items:
+            parts.append(f"{labels[kind]}: " + "; ".join(f"{_cc_text(p.get('code'))} ({_performed(p)})" for p in items))
+            citations += [p["id"] for p in items] + [_ref_id(r) for p in items for r in p.get("report", [])]
+    if allergy:
+        texts = list(dict.fromkeys(text.strip().rstrip(".") for text, _ in allergy))
+        parts.append("alergie: " + "; ".join(texts))
+        citations += [evidence for _, evidence in allergy]
+    if not parts:
+        return []
+    if len(set(citations)) < 2:
+        citations.append(data.patient_id)
+    return [_flag("RF-PRIOR-PROC", "info", "low", "Předchozí výkony, implantáty a alergie (info pro chirurga a RT)",
+                  "; ".join(parts) + ".", citations, None)]
+
+
+def rf_dataquality(data: PatientData) -> list[RedFlag]:
+    flags = []
+    # strukturovaná hodnota bez zdrojového dokumentu (mezera v dohledatelnosti); laboratoř má zdroj v panelu LAB
+    no_source = [o for o in data.observations if not derived_from(o.resource)
+                 and not any("v2-0074" in c.get("system", "") for cat in o.resource.get("category", [])
+                             for c in cat.get("coding", []))
+                 and _code(o.resource.get("code"), "loinc.org") not in (LOINC["weight"],)]
+    if no_source:
+        flags.append(_flag("RF-DATAQUALITY", "bez-zdroje", "low", "Hodnoty bez zdrojového dokumentu",
+                           "Bez odkazu na zdrojový dokument (derivedFrom): "
+                           + ", ".join(f"{o.text} {o.value if not isinstance(o.value, float) else _num(o.value)} "
+                                       f"({o.date})" for o in no_source) + ". Hodnotu nejde dohledat ve zprávě.",
+                           [o.id for o in no_source] + ([data.patient_id] if len(no_source) < 2 else []), None))
+    units: dict[str, dict[str, str]] = {}
+    for o in data.observations:
+        quantity = o.resource.get("valueQuantity") or {}
+        loinc = _code(o.resource.get("code"), "loinc.org")
+        if loinc and quantity.get("code"):
+            units.setdefault(loinc, {}).setdefault(quantity["code"], o.id)
+    for loinc, by_unit in units.items():
+        if len(by_unit) > 1:
+            flags.append(_flag("RF-DATAQUALITY", f"jednotky-{loinc}", "low", "Nesoulad jednotek",
+                               f"LOINC {loinc} má v datech různé jednotky: {', '.join(by_unit)}.",
+                               list(by_unit.values()), None))
+    if data.mdt_date:
+        late = [r for r in data.resources if r.get("resourceType") not in ("Task", "Patient")
+                and (d := _date(r.get("effectiveDateTime") or r.get("date") or r.get("authored")
+                                or r.get("performedDateTime"))) and d > data.mdt_date]
+        if late:
+            flags.append(_flag("RF-DATAQUALITY", "datum", "low", "Datum po termínu MDT",
+                               f"Záznamy s datem po zasedání ({data.mdt_date}): {', '.join(r['id'] for r in late)}.",
+                               [r["id"] for r in late] + [data.task.get("id")], None))
+    seen: dict[tuple, str] = {}
+    duplicates = []
+    for o in data.observations:
+        key = (o.text, o.date, str(o.value))
+        if key in seen:
+            duplicates.append((seen[key], o.id))
+        seen.setdefault(key, o.id)
+    if duplicates:
+        flags.append(_flag("RF-DATAQUALITY", "duplicity", "low", "Duplicitní záznamy",
+                           "Stejný údaj se stejným datem a hodnotou je v datech vícekrát: "
+                           + ", ".join(f"{a} = {b}" for a, b in duplicates) + ".",
+                           [i for pair in duplicates for i in pair], None))
+    return flags
+
+
 RULES: tuple[Callable[[PatientData], list[RedFlag]], ...] = (
     rf_ecog, rf_proms, rf_tox, rf_stale, rf_missing, rf_med, rf_newsymptom, rf_lab, rf_weight, rf_geri,
     rf_lesion, rf_genetic, rf_nomination, rf_tnm, rf_palliative, rf_roles, rf_steroid,
+    rf_identity, rf_prior_proc, rf_dataquality,
 )
 
 

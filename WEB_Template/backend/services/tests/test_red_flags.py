@@ -59,6 +59,11 @@ def find(flags, rule, citation=None):
     ("P06", "RF-LESION", "P06-dg2", "high", "OBC-1.4"),
     ("P06", "RF-LAB", "P06-lvef04", "moderate", "PRS-3.4"),
     ("P06", "RF-GERI", "P06", "low", "OBC-2.2"),
+    # pravidla z konzultace (T-312, DATASET §9 doplněk 18:15)
+    ("P02", "RF-IDENTITY", "P02-doc03#1", "high", None),            # „karcinom levého prsu“, dg. vpravo
+    ("P06", "RF-IDENTITY", "P06-doc01#5", "high", None),            # vnitřní kvadranty vs. horní zevní
+    ("P02", "RF-DATAQUALITY", "P02-lvef03", "low", None),           # LVEF bez derivedFrom
+    ("P03", "RF-PRIOR-PROC", "P03-proc03", "low", None),            # stent
 ])
 def test_dataset_hypotheses(flags, patient_id, rule, citation, severity, guideline):
     matches = find(flags[patient_id], rule, citation)
@@ -79,6 +84,12 @@ def test_ecog_difference(flags, patient_id, ecog_flag):
     ("P03", "RF-PALIATIVE"),    # bez symptomu ≥ 7 a bez zhoršení
     ("P02", "RF-STALE"),        # MDT 14. 10., CT 24. 9.
     ("P06", "RF-NOMINATION:nadory"),
+    ("P03", "RF-IDENTITY"),       # muž, strana jater i sigma bez rozporu
+    ("P04", "RF-IDENTITY"),
+    ("P01", "RF-IDENTITY"),       # „Levý prs bez nálezu“ v mamografii není rozpor
+    ("P05", "RF-IDENTITY"),
+    ("P03", "RF-DATAQUALITY"),
+    ("P04", "RF-PRIOR-PROC"),     # bronchoskopie a EBUS nejsou operace ani implantát
 ])
 def test_no_false_positive(flags, patient_id, rule):
     assert not [f for f in flags[patient_id] if f.rule == rule or f.id.startswith(rule)]
@@ -143,6 +154,28 @@ def test_derived_from_extension_keeps_citations(patient_id, guidelines):
     ctx_a = context_from_resources(patient_id, original, studies=load_studies(), guidelines=guidelines)
     ctx_b = context_from_resources(patient_id, moved, studies=load_studies(), guidelines=guidelines)
     assert ctx_a.render() == ctx_b.render()
+
+
+def test_p02_lvef_without_source_marked(flags):
+    flag = next(f for f in flags["P02"] if f.id == "RF-DATAQUALITY:bez-zdroje")
+    assert flag.citations == ("P02-lvef03", "P02-lvef04", "P02-lvef06")
+
+
+# ── Upozornění v hlavičce (FR-A4, T-312) ──────────────────────────────────────
+def test_header_alerts():
+    from services.rules.alerts import header_alerts
+    p03 = header_alerts(load_patient("P03"))
+    texts = [a["text"] for a in p03]
+    assert any("venózního portu" in t for t in texts) and any("stentu" in t for t in texts)
+    assert all(a["kind"] == "claim" and a["citations"] and a["verification"] == "verified" for a in p03)
+    assert next(a for a in p03 if "portu" in a["text"])["citations"] == ["P03-proc02", "P03-doc03"]
+    p06 = header_alerts(load_patient("P06"))
+    allergy = [a for a in p06 if a["text"].startswith("Alergie:")]
+    assert len(allergy) == 1 and "otoky" in allergy[0]["text"]
+    p01 = [a["text"] for a in header_alerts(load_patient("P01"))]
+    assert any(t.startswith("Předchozí operace: Mastektomie vlevo") for t in p01)
+    assert any(t.startswith("Předchozí radioterapie") for t in p01)
+    assert header_alerts(load_patient("P04")) == []
 
 
 # ── RF-ROLES (přítomné role z konfigurace) ────────────────────────────────────

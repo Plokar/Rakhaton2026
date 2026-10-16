@@ -28,8 +28,10 @@ RULE_KIND = {
     "RF-PALIATIVE": "missing", "RF-STEROID": "missing", "RF-ROLES": "missing", "RF-LESION": "missing",
     "RF-LAB": "out_of_range", "RF-WEIGHT": "out_of_range", "RF-PROMS": "out_of_range",
     "RF-ECOG": "conflict", "RF-TOX": "conflict", "RF-NOMINATION": "conflict", "RF-TNM": "conflict",
-    "RF-MED": "conflict", "RF-NEWSYMPTOM": "conflict", "RF-LLM": "conflict",
+    "RF-MED": "conflict", "RF-NEWSYMPTOM": "conflict", "RF-LLM": "conflict", "RF-IDENTITY": "conflict",
+    "RF-DATAQUALITY": "missing",
 }
+INFO_RULES = {"RF-PRIOR-PROC"}     # jen informace do hlavičky (FR-A4), při zařazení se neodklikává
 # Pole bez citace hlídané pravidlem: přeskočené pole flag umlčí, flag nahradí varování „Chybí: pole“.
 # Ostatní pole se s flagy párují přes citaci zdroje.
 FIELD_RULES = {"geri.g8": ("RF-GERI",)}
@@ -361,7 +363,7 @@ def intake_prefill(resources: Iterable[dict], skipped_fields: Iterable[str] = ()
     covered_citations: set[str] = set()
     raised_rules: set[str] = set()
     for flag in flags:
-        if flag.rule in skipped_rules or skipped_citations & set(flag.citations):
+        if flag.rule in INFO_RULES or flag.rule in skipped_rules or skipped_citations & set(flag.citations):
             continue
         warnings.append(_flag_warning(flag))
         covered_citations |= set(flag.citations)

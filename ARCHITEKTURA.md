@@ -719,7 +719,13 @@ Výstup se před potvrzením ukládá v draftu a po potvrzení jako `DetectedIss
   - Deterministické flagy mají `verification = "verified"`, citace jsou ID z datasetu včetně odstavců (`P03-img03#1`) a pasáž guidelines je vždy ze sady pacienta.
   - Prahy jsou konstanty na začátku souboru; konvence týmu jsou v popisu flagu označené.
   - `RF-ROLES` se vyhodnocuje jen s `roles_present` z konfigurace.
-  - `RF-IDENTITY`, `RF-PRIOR-PROC` a `RF-DATAQUALITY` patří do T-312.
+  - Pravidla z konzultace (T-312):
+    - `RF-IDENTITY` kontroluje stranu těla u spojení „karcinom/nádor + strana + orgán“, kvadrant prsu a pohlaví;
+    - `RF-PRIOR-PROC` je informační, při zařazení se neodklikává;
+    - `RF-DATAQUALITY` hlídá hodnotu bez `derivedFrom`, nesoulad jednotek, datum po MDT a duplicity.
+
+    Věk v textu deterministicky kontrolovat nejde (zmínky jsou o příbuzných), řeší ho `RF-LLM`.
+- `services/rules/alerts.py:header_alerts(resources)` vrátí `Claim[]` pro `header.alerts` (FR-A4): alergie (PROMs i zprávy sloučené), implantáty, předchozí operace a radioterapie s citacemi.
 - `build_context()` pravidla spustí nad stejnými resources: `ctx.red_flags` a řádky v `ctx.rule_results` (sekce „Výsledky deterministických pravidel“ v kontextu).
 - `services/ai/red_flags_llm.py`:
   - `detect_llm_red_flags(ctx, provider)` (prompt `services/ai/prompts/red_flags.md`) hledá jen další rozpory;

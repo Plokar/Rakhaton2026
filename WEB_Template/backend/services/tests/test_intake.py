@@ -87,7 +87,7 @@ def test_skip_g8_silences_rf_geri():
 def test_warning_ids_match_red_flags(prefills):
     """Varování z red flags má id flagu: odkliknutí jde spárovat a flag v podkladu zůstane (D-019)."""
     from services.rules.red_flags import evaluate
-    flag_ids = {f.id for f in evaluate(load_patient("P03"))}
+    flag_ids = {f.id for f in evaluate(load_patient("P03")) if f.rule != "RF-PRIOR-PROC"}   # info do hlavičky
     assert flag_ids <= set(warning_ids(prefills["P03"]))
 
 

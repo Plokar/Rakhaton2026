@@ -1,5 +1,8 @@
+'use client';
+
+import * as React from 'react';
 import Link from 'next/link';
-import { CalendarDays, ChevronRight, FileText, PanelRightOpen, UserRound } from 'lucide-react';
+import { ArrowRightLeft, CalendarDays, ChevronRight, FileText, PanelRightOpen, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSession, MdtSessionListItem } from '@/types/mdt';
 import { formatDate } from './format';
@@ -57,8 +60,19 @@ export function SessionCard({ session }: { session: MdtSessionListItem }) {
   );
 }
 
-/** Případ v agendě zasedání: hlavička pacienta z IRIS, otázka, stav a odkaz na podklad. */
-export function AgendaItem({ item }: { item: MdtCase }) {
+/**
+ * Případ v agendě zasedání: hlavička pacienta z IRIS, otázka, stav a odkaz na podklad.
+ * S `onMove` jde případ přesunout na jiný board (předseda, zadávající lékař u svého pacienta).
+ */
+export function AgendaItem({
+  item,
+  moveTargets = [],
+  onMove,
+}: {
+  item: MdtCase;
+  moveTargets?: MdtSession[];
+  onMove?: (targetSessionId: number) => Promise<void>;
+}) {
   const patient = item.patient;
   return (
     <li className="rounded-xl border border-border bg-card p-4">
@@ -115,8 +129,58 @@ export function AgendaItem({ item }: { item: MdtCase }) {
           >
             <PanelRightOpen className="h-3.5 w-3.5" aria-hidden /> Úzké okno
           </a>
+          {onMove && moveTargets.length > 0 && <MoveCase targets={moveTargets} onMove={onMove} />}
         </div>
       )}
     </li>
+  );
+}
+
+function MoveCase({ targets, onMove }: { targets: MdtSession[]; onMove: (target: number) => Promise<void> }) {
+  const [target, setTarget] = React.useState('');
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const selectId = React.useId();
+
+  const move = async () => {
+    if (!target) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onMove(Number(target));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Přesun se nepodařil.');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <label htmlFor={selectId} className="sr-only">
+        Přesunout na jiný board
+      </label>
+      <select
+        id={selectId}
+        value={target}
+        onChange={(e) => setTarget(e.target.value)}
+        className="h-8 max-w-[14rem] rounded-lg border border-input bg-background px-2 text-xs text-foreground"
+      >
+        <option value="">Přesunout na board…</option>
+        {targets.map((s) => (
+          <option key={s.id} value={s.id}>
+            {formatDate(s.date)} · {s.title}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={move}
+        disabled={!target || busy}
+        className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+      >
+        <ArrowRightLeft className="h-3.5 w-3.5" aria-hidden /> Přesunout
+      </button>
+      {error && <span className="text-xs text-destructive">{error}</span>}
+    </div>
   );
 }

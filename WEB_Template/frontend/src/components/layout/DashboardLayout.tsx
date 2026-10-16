@@ -9,6 +9,7 @@ import { CommandPalette } from '@/components/ui/command-palette';
 import { Avatar } from '@/components/ui/avatar';
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown';
 import { cn } from '@/lib/utils';
+import { MeProvider, meLabel, useMe } from '@/components/mdt/me';
 import {
   LayoutDashboard,
   CalendarDays,
@@ -30,6 +31,12 @@ interface DashboardLayoutProps {
 
 // Odkazy na localhost služby mají smysl jen při lokálním vývoji (ARCH §3.4)
 const isDev = process.env.NODE_ENV === 'development';
+
+/** Role MDT a odbornost přihlášeného (FR-U1); než se načtou, e-mail. */
+function MeRole({ fallback }: { fallback: string }) {
+  const me = useMe();
+  return <span className="text-[11px] text-muted-foreground truncate">{me ? meLabel(me) : fallback}</span>;
+}
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
@@ -106,6 +113,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const userFallback = (user.first_name?.[0] || user.username[0] || 'U').toUpperCase();
 
   return (
+    <MeProvider userId={user.id}>
     <div className="flex min-h-screen bg-background text-foreground">
       {/* Mobile Backdrop */}
       {mobileOpen && (
@@ -223,7 +231,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 {!collapsed && (
                   <div className="flex flex-col text-left overflow-hidden">
                     <span className="text-xs font-semibold text-foreground truncate">{displayName}</span>
-                    <span className="text-[11px] text-muted-foreground truncate">{user.email}</span>
+                    <MeRole fallback={user.email} />
                   </div>
                 )}
               </div>
@@ -319,5 +327,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Command Palette Modal */}
       <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} />
     </div>
+    </MeProvider>
   );
 }

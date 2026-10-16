@@ -1468,6 +1468,7 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 |---|---|---|
 | `BACKEND_URL` | Vercel (server) | `https://api.<doména>` (rewrites) |
 | `NEXT_PUBLIC_API_URL` | Vercel / lokálně | `''` na Vercelu (same-origin), lokálně `http://localhost:8000` |
+| `NEXT_PUBLIC_DEMO_PASSWORD` | Vercel / lokálně | heslo pro 1-click demo účty na loginu (výchozí `demo123456`); musí se shodovat s `MDT_DEMO_PASSWORD` backendu. Je veřejné, demo účty pracují jen s fiktivními daty |
 | `IRIS_HOST` / `IRIS_PORT` | backend | `iris` / `1972` |
 | `IRIS_NAMESPACE` | backend | `FHIRSERVER` |
 | `IRIS_USER` / `IRIS_PASSWORD` | backend | dev `SuperUser` / `SYS`, **na VPS jiné** |

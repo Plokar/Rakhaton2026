@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import { CaseBriefScreen } from '@/components/mdt/CaseBriefScreen';
+import { can, MeProvider, useMe } from '@/components/mdt/me';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 /**
@@ -13,9 +14,19 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 export default function BriefWindowPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = React.use(params);
   return (
+    <MeProvider userId="brief">
+      <BriefWindow caseId={caseId} />
+    </MeProvider>
+  );
+}
+
+function BriefWindow({ caseId }: { caseId: string }) {
+  const me = useMe();
+  return (
     <main className="mx-auto w-full max-w-xl px-3 py-3">
       <CaseBriefScreen
         caseId={caseId}
+        canGenerate={can.generateBrief(me)}
         toolbar={
           <div className="flex w-full items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">MDT Copilot · podklad</span>

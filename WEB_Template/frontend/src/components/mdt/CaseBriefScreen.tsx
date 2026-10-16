@@ -28,7 +28,16 @@ type LoadState = { key: string; brief?: StoredBrief; missing?: boolean; error?: 
  * Podklad případu: načtení z API (nebo fixture u `demo`), generování přes job s průběhem
  * a zobrazení v `BriefView`. Sdílí ho `/dashboard/cases/[caseId]` a úzké okno `/brief/[caseId]`.
  */
-export function CaseBriefScreen({ caseId, toolbar }: { caseId: string; toolbar?: React.ReactNode }) {
+export function CaseBriefScreen({
+  caseId,
+  toolbar,
+  canGenerate = false,
+}: {
+  caseId: string;
+  toolbar?: React.ReactNode;
+  /** Generovat podklad smí předseda a zadávající lékař (ARCH §6.3). */
+  canGenerate?: boolean;
+}) {
   const isDemo = caseId === DEMO_CASE;
   const [version, setVersion] = React.useState(0);
   const [loaded, setLoaded] = React.useState<LoadState | null>(null);
@@ -76,7 +85,7 @@ export function CaseBriefScreen({ caseId, toolbar }: { caseId: string; toolbar?:
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {toolbar}
-        {!isDemo && current?.brief && jobId === null && (
+        {!isDemo && canGenerate && current?.brief && jobId === null && (
           <Button variant="outline" size="sm" onClick={generate} className="ml-auto gap-1.5">
             <RefreshCw className="h-3.5 w-3.5" /> Přegenerovat
           </Button>
@@ -107,8 +116,12 @@ export function CaseBriefScreen({ caseId, toolbar }: { caseId: string; toolbar?:
         <EmptyState
           icon={<FileText className="h-6 w-6" />}
           title="Podklad ještě nebyl vygenerován"
-          description="AI připraví podklad z dat pacienta v IRIS podle nastavení předsedy. Trvá to několik sekund."
-          action={<Button onClick={generate}>Vygenerovat podklad</Button>}
+          description={
+            canGenerate
+              ? 'AI připraví podklad z dat pacienta v IRIS podle nastavení předsedy. Trvá to několik sekund.'
+              : 'Podklad vygeneruje předseda nebo zadávající lékař.'
+          }
+          action={canGenerate ? <Button onClick={generate}>Vygenerovat podklad</Button> : undefined}
         />
       )}
       {current?.error && (

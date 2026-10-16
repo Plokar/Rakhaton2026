@@ -19,6 +19,19 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+// Demo účty zakládá `seed_mdt` (T-501) nad fiktivními daty. 1-click přihlášení heslo záměrně zveřejňuje;
+// na produkci se musí shodovat s MDT_DEMO_PASSWORD backendu.
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'demo123456';
+const DEMO_ACCOUNTS = [
+  { username: 'predseda', label: 'Předseda komise', role: 'předseda · klinický onkolog' },
+  { username: 'onkolog', label: 'Onkolog', role: 'zadávající lékař' },
+  { username: 'pneumolog', label: 'Pneumolog', role: 'zadávající lékař (P04)' },
+  { username: 'chirurg', label: 'Chirurg', role: 'člen komise' },
+  { username: 'radiolog', label: 'Radiolog', role: 'člen komise' },
+  { username: 'patolog', label: 'Patolog', role: 'člen komise' },
+  { username: 'radioterapeut', label: 'Radiační onkolog', role: 'člen komise' },
+];
+
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,10 +72,19 @@ export default function LoginForm() {
     }
   };
 
-  const fillCredentials = (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
+  const loginAs = async (demoUsername: string) => {
+    setUsername(demoUsername);
+    setPassword(DEMO_PASSWORD);
     setError('');
+    setLoading(true);
+    try {
+      await login(demoUsername, DEMO_PASSWORD);
+      router.push(redirectUrl);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Přihlášení demo účtem se nezdařilo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -131,34 +153,30 @@ export default function LoginForm() {
           <div className="mb-8">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Přihlášení k účtu</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Zadejte své přihlašovací údaje nebo použijte rychlé vyplnění.
+              Zadejte své přihlašovací údaje, nebo se přihlaste demo účtem.
             </p>
           </div>
 
-          {/* Quick Fill Buttons for Hackathon Demo */}
+          {/* 1-click demo účty (ARCH §6.2, FR-U1): role podle oprávnění + odbornost */}
           <div className="mb-6 rounded-xl border border-border/80 bg-muted/40 p-3 space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              ⚡ Rychlé vyplnění demo účtů:
+              Přihlásit jako demo účet
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fillCredentials('admin', 'admin123456')}
-                className="text-xs justify-start h-8 truncate"
-              >
-                👤 Admin
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fillCredentials('alice', 'demo123456')}
-                className="text-xs justify-start h-8 truncate"
-              >
-                👩 Alice (AI Lead)
-              </Button>
+              {DEMO_ACCOUNTS.map((a) => (
+                <Button
+                  key={a.username}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loginAs(a.username)}
+                  disabled={loading}
+                  className="h-auto flex-col items-start gap-0 py-1.5 text-left"
+                >
+                  <span className="text-xs font-semibold">{a.label}</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">{a.role}</span>
+                </Button>
+              ))}
             </div>
           </div>
 
@@ -178,7 +196,7 @@ export default function LoginForm() {
               </label>
               <Input
                 type="text"
-                placeholder="např. admin"
+                placeholder="např. predseda"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 leftIcon={<User className="h-4 w-4" />}

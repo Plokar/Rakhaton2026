@@ -2,7 +2,19 @@
  * API podkladu pro komisi (ARCHITEKTURA §6.3): podklad, generování přes job a zdroje citací.
  */
 import { apiFetch } from '@/lib/api';
-import type { Brief, BriefConfig, EvidenceSource, Me, MdtSessionDetail, MdtSessionListItem } from '@/types/mdt';
+import type {
+  Brief,
+  BriefConfig,
+  EvidenceSource,
+  Me,
+  MdtCase,
+  MdtSession,
+  MdtSessionDetail,
+  MdtSessionListItem,
+} from '@/types/mdt';
+
+/** Úprava boardu (jen předseda); změna data přepíše termín v `Task` všech případů v IRIS. */
+export type SessionInput = { title: string; date: string; status?: MdtSession['status'] };
 
 /** GET /api/jobs/{jid}/ (polling à 1 s, D-004). */
 export interface GenerationJob {
@@ -27,6 +39,19 @@ export const mdtApi = {
   /** Board + agenda: případy s hlavičkou pacienta z IRIS. */
   getSession: (sessionId: string) =>
     apiFetch<MdtSessionDetail>(`/api/mdt/sessions/${encodeURIComponent(sessionId)}/`),
+
+  createSession: (input: SessionInput) =>
+    apiFetch<MdtSession>('/api/mdt/sessions/', { method: 'POST', body: JSON.stringify(input) }),
+
+  updateSession: (sessionId: number, input: Partial<SessionInput>) =>
+    apiFetch<MdtSession>(`/api/mdt/sessions/${sessionId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
+
+  /** Jen prázdný board (409, když má pacienty). */
+  deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
+
+  /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019). */
+  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields'>> & { acknowledge?: string[] }) =>
+    apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
 

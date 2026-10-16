@@ -9,20 +9,12 @@ from services.ai.brief import build_brief, generate_brief
 from services.ai.context_builder import context_from_resources
 from services.ai.grounding import check_claim, verify_claims
 from services.ai_service import MockAIProvider
-from services.fhir import ingest
-from services.iris import indexing
 from services.tests.dataset import load_patient, load_studies
 
 PATIENTS = ["P01", "P02", "P03", "P04", "P05", "P06"]
 
-
-@pytest.fixture(autouse=True)
-def indexed_grounding_vectors(fake_iris, dataset_root):
-    """Podklady ověřují grounding proti stejným in-memory vektorům jako IRIS."""
-    for patient_id in PATIENTS:
-        indexing.index_patient(patient_id, ingest.load_patient(dataset_root, patient_id))
-    indexing.index_guidelines(indexing.guideline_chunks(dataset_root))
-    indexing.index_trials(indexing.trial_criteria(ingest.load_studies(dataset_root)))
+# podklady ověřují grounding proti stejným in-memory vektorům jako IRIS (services/conftest.py)
+pytestmark = pytest.mark.usefixtures("grounding_vectors")
 
 # Souhrn, jak by ho napsal LLM: čísla a data přesně podle zdrojů, citace odstavců
 P03_SUMMARY = {"items": [
@@ -127,7 +119,8 @@ def test_generate_brief_job_interface(monkeypatch):
     assert result["case_id"] == "12" and result["model"] == "mock"
     roles = brief_module.DEFAULT_CONFIG["roles_present"]
     assert sorted(calls) == sorted([("brief.rf_llm", "success"), ("brief.summary", "success")]
-                                   + [(f"brief.role.{r}", "success") for r in roles])
+                                   + [(f"brief.role.{r}", "success") for r in roles]
+                                   + [("brief.recist.extract", "success")] * ("radiologist" in roles))
     assert progress[0] == 5 and progress[-1] == 100 and progress == sorted(progress)
 
 
@@ -189,3 +182,12 @@ def test_grounding_v2_accepts_matching_citation_and_keeps_missing_exempt(p03_con
         {"kind": "missing", "text": "MMR chybí", "citations": []},
     ], p03_context)
     assert [item["verification"] for item in result] == ["verified", "verified"]
+
+
+def test_grounding_v2_keeps_structured_citations_on_v1(p03_context):
+    """Laboratoř nemá text ani vektor: platí kontrola citace a čísla, ne sémantika."""
+    structured, mixed = verify_claims([
+        {"kind": "claim", "text": "CEA 13,9 µg/l", "citations": ["P03-lab06-cea"]},
+        {"kind": "claim", "text": "CEA 13,9 µg/l", "citations": ["P03-lab06-cea", "P03-img03#1"]},
+    ], p03_context)
+    assert structured["verification"] == "verified" and mixed["verification"] == "verified"

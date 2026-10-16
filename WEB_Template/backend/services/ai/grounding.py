@@ -84,6 +84,10 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
 
     Důvody neověření vrátí v `_grounding` (mimo kontrakt). Chybějící údaje nepopisují
     klinický fakt a zůstávají kontrolované pouze podle citací.
+
+    Vektor mají jen texty (odstavce, guidelines, `EXT-…`, kritéria studií). Tvrzení opřené
+    aspoň jednou citací o strukturovaná data (Observation, Procedure, Condition…) zůstává na
+    kontrole citací, čísel a dat, sémantika se počítá jen u čistě textových citací.
     """
     try:
         min_similarity = float(os.environ.get("GROUNDING_MIN_SIMILARITY", DEFAULT_MIN_SIMILARITY))
@@ -99,12 +103,15 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
             try:
                 from services.iris.vector_store import similarity
 
-                scores = similarity(claim.get("text", ""), claim.get("citations") or [])
+                citations = claim.get("citations") or []
+                scores = similarity(claim.get("text", ""), citations)
                 valid_scores = [score for score in scores.values()
                                 if isinstance(score, (int, float)) and math.isfinite(score)]
-                if not valid_scores:
-                    result = GroundingResult(False, ["citované zdroje nemají dostupné vektory"])
-                elif max(valid_scores) < min_similarity:
+                # citace bez vektoru = strukturovaná data, pro ně platí jen body 1–3 (ARCH §5.3)
+                textual = bool(citations) and all(c in scores for c in citations)
+                if textual and not valid_scores:
+                    result = GroundingResult(False, ["citované zdroje nemají platné vektory"])
+                elif textual and max(valid_scores) < min_similarity:
                     best = max(valid_scores)
                     result = GroundingResult(False, [
                         f"sémantická podobnost {best:.3f} je pod prahem {min_similarity:.3f}"

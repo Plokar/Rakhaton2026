@@ -11,6 +11,9 @@ from services.tests.dataset import load_guideline_markdowns, load_patient, load_
 
 ROLES = ["surgeon", "oncologist", "radiologist", "pathologist", "radiation_oncologist", "patient"]
 
+# tvrzení rolí ověřuje grounding v2 proti vektorům v IRIS (services/conftest.py, T-213)
+pytestmark = pytest.mark.usefixtures("grounding_vectors")
+
 
 @pytest.fixture(scope="module")
 def guidelines():

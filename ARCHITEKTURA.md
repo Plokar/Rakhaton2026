@@ -713,7 +713,7 @@ Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-
 
 **Implementace (T-106, T-213):**
 
-- `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí `0.55`); chybějící vektor nebo nedostupné IRIS znamená `unverified`. Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
+- `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí `0.55`). Sémantika se počítá jen u tvrzení, jehož všechny citace mají vektor (odstavce a texty, guidelines, `EXT-…`, kritéria studií). Tvrzení, které cituje strukturovaná data (Observation, Procedure, Condition, MedicationStatement…), vektor nemá a zůstává na bodech 1–3. Nedostupné IRIS znamená `unverified`. Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
 - `services/ai/brief.py:generate_brief(case, config, progress)` je generátor pro joby z T-107.
   - Hlavička (D-018), časová osa, chybějící údaje (z T-502, přeskočené jako „Chybí (přeskočeno lékařem)“) a red flags jsou deterministické z FHIR.
   - Souhrn píše Gemini (`prompts/summary.md` + pravidla zkratek z T-509), souběžně s RF-LLM.

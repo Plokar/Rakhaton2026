@@ -117,29 +117,27 @@ def test_citations_exist_in_context(patient_id, flags, guidelines):
         assert flag.as_dict()["citations"] == list(flag.citations)
 
 
-def _move_derived_from_to_extension(resources):
-    """Navržená sanitizace z Q15: `derivedFrom` → DiagnosticReport do extension `derived-from`."""
+def _extension_back_to_derived_from(resources):
+    """Tvar před Q15 (jako v datasetu): extension `derived-from` zpět do `derivedFrom`."""
     from services.rules.red_flags import DERIVED_FROM_EXTENSION
     out = []
     for r in resources:
-        r = dict(r)
-        refs = r.get("derivedFrom") or []
-        moved = [ref for ref in refs if ref.get("reference", "").startswith("DiagnosticReport/")]
-        if moved:
-            r["derivedFrom"] = [ref for ref in refs if ref not in moved]
-            if not r["derivedFrom"]:
-                del r["derivedFrom"]
-            r["extension"] = list(r.get("extension", [])) + [
-                {"url": DERIVED_FROM_EXTENSION, "valueReference": ref} for ref in moved]
+        ext = [e for e in r.get("extension", []) if e.get("url") == DERIVED_FROM_EXTENSION]
+        if ext:
+            r = dict(r)
+            r["derivedFrom"] = list(r.get("derivedFrom", [])) + [e["valueReference"] for e in ext]
+            r["extension"] = [e for e in r["extension"] if e not in ext]
+            if not r["extension"]:
+                del r["extension"]
         out.append(r)
     return out
 
 
 @pytest.mark.parametrize("patient_id", ["P03", "P04", "P05"])
 def test_derived_from_extension_keeps_citations(patient_id, guidelines):
-    """Q15: když ingest přesune derivedFrom do extension, citace zdrojů zůstanou stejné."""
-    original = load_patient(patient_id)
-    moved = _move_derived_from_to_extension(original)
+    """Q15: ingest přesouvá derivedFrom → DiagnosticReport do extension, citace zdrojů zůstanou stejné."""
+    moved = load_patient(patient_id)                     # ingest (T-101) už přesouvá
+    original = _extension_back_to_derived_from(moved)    # tvar z datasetu před Q15
     assert moved != original
     assert [f.as_dict() for f in evaluate(moved)] == [f.as_dict() for f in evaluate(original)]
     ctx_a = context_from_resources(patient_id, original, studies=load_studies(), guidelines=guidelines)

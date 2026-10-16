@@ -76,11 +76,13 @@ def search_checks(patient_id: str) -> list[Check]:
 def everything_check(patient_id: str) -> Check:
     """``Patient/$everything``: podpora a srovnání s fallbackem (paralelní searche)."""
     try:
-        bundle = fhir.request('GET', f'Patient/{patient_id}/$everything', params={'_count': 1000})
+        # IRIS 2026.2 u $everything nezná _count (vrátí ho jako OperationOutcome v entry), vrací vše najednou
+        bundle = fhir.request('GET', f'Patient/{patient_id}/$everything')
     except fhir.FhirError as e:
         return Check('Patient/$everything', 'info', f'nepodporováno (HTTP {e.status}), zůstává fallback patient_everything',
                      required=False)
-    got = {f"{e['resource']['resourceType']}/{e['resource']['id']}" for e in bundle.get('entry', [])}
+    got = {f"{e['resource']['resourceType']}/{e['resource']['id']}" for e in bundle.get('entry', [])
+           if e.get('search', {}).get('mode') != 'outcome'}
     fallback = {f"{r['resourceType']}/{r['id']}" for rs in fhir.patient_everything(patient_id).values() for r in rs}
     paged = any(link.get('relation') == 'next' for link in bundle.get('link', []))
     return Check('Patient/$everything', 'info',

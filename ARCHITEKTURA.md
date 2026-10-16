@@ -562,11 +562,44 @@ ORDER BY Score DESC
 - **Neznámé search parametry IRIS tiše ignoruje** (vrátí 200 se vším). Filtry ověřit testem.
 - Search parametry se liší od názvů elementů (`recorded-date` vs. `recordedDate`). `Task` a `ImagingStudy` se hledají přes `patient`.
 - Kódy: `Observation?patient=P03&code=http://loinc.org|718-7&_sort=date`.
-- **`Patient/$everything`:** podporu v naší verzi IRIS **ověřit** (komunita naznačuje, že není out-of-the-box). Fallback: paralelní searche přes typy z [DATASET.md §6.3](DATASET.md#63-čtení-za-běhu-context-builder).
+- **`Patient/$everything`:** v IRIS 2026.2 **funguje** (P03: 190 resources včetně odkazovaných lékařů, organizace a studií, vše v jedné odpovědi). Nezná ale `_count` (vrátí ho jako `OperationOutcome` v entry se `search.mode = outcome`, takové entry je potřeba přeskočit). Aplikace zůstává u fallbacku `patient_everything` (paralelní searche přes typy z [DATASET.md §6.3](DATASET.md#63-čtení-za-běhu-context-builder)), který vrací jen resources pacienta.
 - **Kontrola serveru (T-313):** `python manage.py iris_check` (po `ingest_dataset`, logika `services/fhir/capabilities.py`) vypíše markdown tabulku:
   - u každého search parametru, na kterém aplikace stojí (`patient` u 14 typů, `_id` i s čárkami, `code`, `subject`, `category`, `status`, `date`, `_tag`, `_sort`), se ptá hodnotou, která nemůže nic najít. Výsledek musí být 0, jinak IRIS parametr ignoruje a vrací cizí data. Povinné kontroly při selhání vrátí chybový kód;
   - dál ověří `Patient/$everything` (a srovná ho s fallbackem), jestli jsou nahrané profily mCODE IG a `$validate`.
-  - **Výsledek z naší verze IRIS sem doplnit** (zatím nespuštěno, chybí stroj s Dockerem). Parametr, který IRIS ignoruje, je potřeba vyřadit z allowlistu MCP `fhir_query` (§4.7) a nepoužívat v kódu.
+  - **Výsledek na IRIS for Health 2026.2 (16. 10. 21:45, @Seb):** všechny povinné kontroly prošly, žádný parametr z allowlistu IRIS neignoruje. P03 má o 11 resources víc než dataset, protože na Sebově stroji už je potvrzený závěr `P03-mdt02` (T-209).
+
+    | Kontrola | Výsledek | Detail |
+    |---|---|---|
+    | `metadata` | ✓ ok | FHIR 4.0.1, InterSystems IRIS for Health IRIS for UNIX (Ubuntu Server LTS for x86-64 Containers) 2026.2 (Build 221U) Fri Jun 26 2026 09:58:52 EDT [Health:11.1.0] |
+    | `Condition?patient` | ✓ ok | 0 pro nesmysl, 5 pro {'patient': 'P03'} (celkem 31) |
+    | `DocumentReference?patient` | ✓ ok | 0 pro nesmysl, 8 pro {'patient': 'P03'} (celkem 53) |
+    | `DiagnosticReport?patient` | ✓ ok | 0 pro nesmysl, 12 pro {'patient': 'P03'} (celkem 78) |
+    | `ImagingStudy?patient` | ✓ ok | 0 pro nesmysl, 4 pro {'patient': 'P03'} (celkem 29) |
+    | `Observation?patient` | ✓ ok | 0 pro nesmysl, 85 pro {'patient': 'P03'} (celkem 578) |
+    | `MedicationRequest?patient` | ✓ ok | 0 pro nesmysl, 5 pro {'patient': 'P03'} (celkem 25) |
+    | `MedicationAdministration?patient` | ✓ ok | 0 pro nesmysl, 32 pro {'patient': 'P03'} (celkem 152) |
+    | `Procedure?patient` | ✓ ok | 0 pro nesmysl, 3 pro {'patient': 'P03'} (celkem 17) |
+    | `QuestionnaireResponse?patient` | ✓ ok | 0 pro nesmysl, 2 pro {'patient': 'P03'} (celkem 12) |
+    | `ServiceRequest?patient` | ✓ ok | 0 pro nesmysl, 1 pro {'patient': 'P03'} (celkem 6) |
+    | `Task?patient` | ✓ ok | 0 pro nesmysl, 5 pro {'patient': 'P03'} (celkem 10) |
+    | `Composition?patient` | ✓ ok | 0 pro nesmysl, 3 pro {'patient': 'P03'} (celkem 15) |
+    | `CarePlan?patient` | ✓ ok | 0 pro nesmysl, 2 pro {'patient': 'P03'} (celkem 8) |
+    | `CareTeam?patient` | ✓ ok | 0 pro nesmysl, 2 pro {'patient': 'P03'} (celkem 8) |
+    | `Observation?_id` | ✓ ok | 0 pro nesmysl, 2 pro {'_id': 'P03-ecog01,P03-vaha01'} (celkem 578) |
+    | `Practitioner?_id` | ✓ ok | 0 pro nesmysl, 1 pro {'_id': 'LEK-P03-01'} (celkem 57) |
+    | `Observation?code` | ✓ ok | 0 pro nesmysl, 6 pro {'patient': 'P03', 'code': 'http://loinc.org|2039-6'} (celkem 578) |
+    | `Observation?subject` | ✓ ok | 0 pro nesmysl, 85 pro {'subject': 'Patient/P03'} (celkem 578) |
+    | `Observation?category` | ✓ ok | 0 pro nesmysl, 76 pro {'patient': 'P03', 'category': 'laboratory'} (celkem 578) |
+    | `Observation?status` | ✓ ok | 0 pro nesmysl, 85 pro {'patient': 'P03', 'status': 'final'} (celkem 578) |
+    | `Observation?date` | ✓ ok | 0 pro nesmysl, 85 pro {'patient': 'P03', 'date': 'ge2000-01-01'} (celkem 578) |
+    | `Patient?_tag` | ✓ ok | 0 pro nesmysl, 6 pro {'_tag': 'https://rakathon.example.org/fhir/tag|fiktivni-data'} (celkem 6) |
+    | `_id=a,b (OR)` | ✓ ok | 2 resources, čekáno 2 |
+    | `Observation?_sort=-date` | ✓ ok | data: 2026-10-05, 2026-09-21, 2026-08-24, 2026-07-13, 2026-06-01, 2026-04-28 |
+    | `Patient/$everything` | ℹ info | funguje: 190 resources (fallback 170, chybí 0, navíc 20) |
+    | `mCODE IG` | ℹ info | nenahraný (profily mCODE v IRIS nejsou; BON-5 / T-307) |
+    | `$validate` | ℹ info | funguje, ECOG Observation bez chyb |
+
+  - Parametr, který IRIS ignoruje, je potřeba vyřadit z allowlistu MCP `fhir_query` (§4.7) a nepoužívat v kódu.
 - Validace: chyba 400 vrací `OperationOutcome`, logovat `issue[].details.text`.
 - **Community Edition má limit spojení.** DB-API spojení vždy zavírat (`try/finally` nebo context manager v `services/iris/db.py`) a nedržet je přes request.
 
@@ -1548,7 +1581,7 @@ Rakhaton2026/
 | Q4 | Pravidla odevzdání a commity po So 12:00 | ⏸ zatím neřešíme |
 | Q5 | Veřejné repo, dataset v gitu | ✅ ano, smí |
 | Q6 | Klinické prahy red flags: připomínky onkologů | ⬜ zatím nemáme; prahy bereme z guidelines OBC/KRC/PRS/PLI datasetu ([§5.4](#54-red-flags)) |
-| Q7 | Podpora `Patient/$everything` a import mCODE IG ve verzi IRIS | ⬜ otestovat / O. Hoferek |
+| Q7 | Podpora `Patient/$everything` a import mCODE IG ve verzi IRIS | ✅ `$everything` funguje (bez `_count`), `$validate` funguje, mCODE IG není nahraný (import = T-307), viz §4.6 |
 | Q8 | Kdy a v jakém formátu bude oficiální ground truth? | ⬜ Ľ. Piljan |
 | Q9 | Kdo zapne billing (placený tier) v Google AI Studio? Bez něj nesmíme posílat data | ⬜ tým |
 | Q10 | Sprint 0 (M0, Pá 18:00) nestihnutý: potvrdit nové časy sprintů | ✅ sprinty startují Pá 19:00, M0 co nejdřív, M1–M4 beze změny |

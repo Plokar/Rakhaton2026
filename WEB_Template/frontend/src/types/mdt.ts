@@ -452,4 +452,42 @@ export interface MdtCase {
   acknowledged_warnings: { id: string; by: number; at: string }[];
   /** returned = vráceno k doplnění (OBC-1.1). */
   status: 'nominated' | 'ready' | 'in_discussion' | 'decided' | 'confirmed' | 'returned';
+  /** Pořadí v agendě (jen čtení). */
+  order?: number;
+  /** Otázka pro MDT z nominace (jen čtení). */
+  question?: string;
+  /** Jen v detailu boardu (hlavička z IRIS, §8.2). */
+  patient?: PatientListItem | null;
 }
+
+export type MdtRole = 'mdt_admin' | 'mdt_doctor' | 'mdt_viewer';
+
+/** GET /api/mdt/me/ */
+export interface Me {
+  user_id: number;
+  /** Demo: predseda | onkolog | pneumolog | chirurg | radiolog | patolog | radioterapeut */
+  username: string;
+  name: string;
+  /** Superuser = mdt_admin, bez skupiny = mdt_viewer. */
+  role: MdtRole;
+  specialty: RoleId | null;
+}
+
+/** Board = zasedání MDT (D-014). */
+export interface MdtSession {
+  id: number;
+  /** Místní čas "2026-10-21T14:00:00+02:00". */
+  date: string;
+  /** "Mamární komise", "GIT – kolorektální karcinom / hepatobiliární" */
+  title: string;
+  status: 'planned' | 'in_progress' | 'closed';
+  chair: { user_id: number; name: string } | null;
+  /** Výchozí BriefConfig boardu. */
+  config_id: number | null;
+}
+
+/** GET /api/mdt/sessions/ */
+export type MdtSessionListItem = MdtSession & { patients: string[] };
+
+/** GET /api/mdt/sessions/{sid}/ (agenda) */
+export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };

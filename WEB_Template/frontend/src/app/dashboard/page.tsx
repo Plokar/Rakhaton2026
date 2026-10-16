@@ -8,12 +8,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SessionCard, sortSessions } from '@/components/mdt/sessions';
+import { mdtApi } from '@/lib/mdt-api';
+import { useApiData } from '@/lib/use-api-data';
 import { ArrowUpRight, CalendarDays, FileText, ListChecks } from 'lucide-react';
 
-// Přehled MDT (ARCH §7.1): boardy = zasedání, případy a jejich stav, úkoly po termínu.
-// Data doplní T-109 (boardy a agenda) a T-511 (úkoly po zasedání).
+// Přehled MDT (ARCH §7.1): nadcházející boardy (zasedání) a úkoly po termínu (T-511).
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { data, error, loading } = useApiData(mdtApi.getSessions, '');
+  const upcoming = data ? sortSessions(data.filter((s) => s.status !== 'closed')).slice(0, 4) : [];
 
   return (
     <DashboardLayout>
@@ -54,11 +59,24 @@ export default function DashboardPage() {
               </Link>
             </CardHeader>
             <CardContent>
-              <EmptyState
-                icon={<CalendarDays className="h-6 w-6" />}
-                title="Zatím žádná zasedání"
-                description="Boardy a agenda se načtou z backendu, jakmile bude hotový seed zasedání (T-109)."
-              />
+              {loading && <Skeleton className="h-24 w-full" />}
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              {data && upcoming.length === 0 && (
+                <EmptyState
+                  icon={<CalendarDays className="h-6 w-6" />}
+                  title="Žádná nadcházející zasedání"
+                  description="Board zakládá a termín mění předseda komise."
+                />
+              )}
+              {upcoming.length > 0 && (
+                <ul className="space-y-2">
+                  {upcoming.map((s) => (
+                    <li key={s.id}>
+                      <SessionCard session={s} />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
 
@@ -79,7 +97,7 @@ export default function DashboardPage() {
               <EmptyState
                 icon={<ListChecks className="h-6 w-6" />}
                 title="Žádné úkoly po termínu"
-                description="Úkoly vzniknou po potvrzení závěru komise (T-511)."
+                description="Úkoly vzniknou po potvrzení závěru komise."
               />
             </CardContent>
           </Card>

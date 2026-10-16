@@ -22,7 +22,7 @@ export default function MdtTasksPage() {
         <EmptyState
           icon={<ListChecks className="h-6 w-6" />}
           title="Zatím žádné úkoly"
-          description="Úkoly vzniknou po potvrzení závěru komise (T-511)."
+          description="Úkoly vzniknou po potvrzení závěru komise."
         />
       </div>
     </DashboardLayout>

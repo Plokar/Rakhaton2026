@@ -539,6 +539,46 @@ class MdtCase(BaseModel):
     skipped_fields: list[str] = Field(description="IntakeField.id")
     acknowledged_warnings: list[AcknowledgedWarning]
     status: Literal["nominated", "ready", "in_discussion", "decided", "confirmed", "returned"]
+    order: int | None = Field(default=None, description="Pořadí v agendě (jen čtení)")
+    question: str | None = Field(default=None, description="Otázka pro MDT z nominace (jen čtení)")
+    patient: PatientListItem | None = Field(default=None, description="Jen v detailu boardu (hlavička z IRIS)")
+
+
+MdtRole = Literal["mdt_admin", "mdt_doctor", "mdt_viewer"]
+
+
+class Me(BaseModel):
+    """GET /api/mdt/me/"""
+    user_id: int
+    username: str
+    name: str
+    role: MdtRole = Field(description="Superuser = mdt_admin, bez skupiny = mdt_viewer")
+    specialty: RoleId | None
+
+
+class SessionChair(BaseModel):
+    user_id: int
+    name: str
+
+
+class MdtSession(BaseModel):
+    """Board = zasedání MDT (D-014)."""
+    id: int
+    date: str = Field(description='Místní čas "2026-10-21T14:00:00+02:00"')
+    title: str
+    status: Literal["planned", "in_progress", "closed"]
+    chair: SessionChair | None
+    config_id: int | None = Field(description="Výchozí BriefConfig boardu")
+
+
+class MdtSessionListItem(MdtSession):
+    """GET /api/mdt/sessions/"""
+    patients: list[str]
+
+
+class MdtSessionDetail(MdtSession):
+    """GET /api/mdt/sessions/{sid}/ (agenda)"""
+    cases: list[MdtCase]
 
 
 # ── Pomocné funkce ────────────────────────────────────────────────────────────

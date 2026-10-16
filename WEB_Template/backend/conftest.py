@@ -2,20 +2,9 @@
 Pytest configuration for Django tests.
 """
 import pytest
-from django.conf import settings
 
-
-@pytest.fixture(scope='session')
-def django_db_setup():
-    """Ensure test database is properly configured."""
-    settings.DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'test_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+# Testovací DB zakládá pytest-django jako test_<POSTGRES_DB> z env POSTGRES_* (settings.py),
+# takže to funguje v kontejneru (db) i v CI (localhost).
 
 
 @pytest.fixture

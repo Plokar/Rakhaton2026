@@ -640,7 +640,8 @@ ORDER BY Score DESC
 3. **Generace:**
    - jeden Gemini call na sekci: A, B (každá přítomná role včetně posouzení role), B2, red flags (LLM část) a otázky; běží **paralelně** (ThreadPool);
    - teplota 0–0.2, **strukturovaný výstup** (`response_mime_type=application/json` + `response_schema` = pydantic schéma z [§8](#8-datové-kontrakty-fe--be));
-   - parametry z konfigurace: úroveň detailu, role, jazyk.
+   - parametry z konfigurace: úroveň detailu, role, jazyk;
+   - **rozhraní pro job (T-107 ↔ T-106):** `services/ai/brief.py: generate_brief(case: MdtCase, config: dict, progress: Callable[[int], None]) -> dict`. Vrací validní `Brief` (§8.2), `config` je snapshot `BriefConfig` (§8.5), `progress(0–100)` se ukládá do jobu. Každé LLM volání se loguje přes `LlmCallLog.record(purpose, result)` (`apps/copilot/models.py`). Výjimka = job ve stavu `error` s textem chyby. Registr generátorů je `apps/copilot/jobs.py: GENERATORS`.
 4. **Validace (grounding validátor, `services/ai/grounding.py`):** viz [§5.3](#53-anti-halucinace--grounding-validátor).
 5. **Review:** UI zobrazí draft s odlišením AI. Lékař edituje a potvrzuje po sekcích nebo celý závěr.
 6. **Zápis:** potvrzení vytvoří FHIR transaction do IRIS ([§4.3 výstupy](#výstupy-zápis-komise-do-iris-jeden-transaction-bundle)) a pak export PDF a FHIR document Bundle.

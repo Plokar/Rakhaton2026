@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.projects',         # Hackathon projects, tasks, notifs, storage, AI
     'apps.copilot',          # MDT Copilot (iris_init, ingest, AI orchestrace)
     'apps.patients',         # Pacienti z IRIS FHIR (T-103)
+    'apps.mdt',              # Boardy, případy, konfigurace (T-107)
 ]
 
 MIDDLEWARE = [
@@ -316,3 +317,7 @@ LOGGING = {
 # CELERY_TIMEZONE = TIME_ZONE
 # CELERY_TASK_TRACK_STARTED = True
 # CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minut
+
+# ── MDT Copilot ───────────────────────────────────────────────────────────────
+# Joby generování synchronně (testy); jinak in-process ThreadPool (D-004)
+MDT_JOBS_SYNC = os.environ.get('MDT_JOBS_SYNC', 'False') == 'True'

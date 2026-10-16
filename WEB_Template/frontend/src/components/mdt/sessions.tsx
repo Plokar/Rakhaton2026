@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowRightLeft, CalendarDays, ChevronRight, FileText, PanelRightOpen, UserRound } from 'lucide-react';
+import { ArrowRightLeft, CalendarDays, ChevronRight, FileText, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSession, MdtSessionListItem } from '@/types/mdt';
+import { BriefWindowLink } from './BriefWindowLink';
 import { formatDate } from './format';
 
 export const SESSION_STATUS: Record<MdtSession['status'], string> = {
@@ -121,14 +122,10 @@ export function AgendaItem({
           >
             <FileText className="h-3.5 w-3.5" aria-hidden /> Podklad
           </Link>
-          <a
-            href={`/brief/${item.id}`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-          >
-            <PanelRightOpen className="h-3.5 w-3.5" aria-hidden /> Úzké okno
-          </a>
+          <BriefWindowLink
+            caseId={item.id}
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+          />
           {onMove && moveTargets.length > 0 && <MoveCase targets={moveTargets} onMove={onMove} />}
         </div>
       )}

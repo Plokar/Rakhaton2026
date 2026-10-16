@@ -678,6 +678,15 @@ Každé tvrzení (`claim`) z LLM projde kontrolami:
 
 Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-evaluace)) a do pitche.
 
+**Implementace (T-106):**
+
+- `services/ai/grounding.py` (v1) dělá body 1–3 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. Bod 4 je T-213.
+- `services/ai/brief.py:generate_brief(case, config, progress)` je generátor pro joby z T-107.
+  - Hlavička (D-018), časová osa, chybějící údaje (z T-502, přeskočené jako „Chybí (přeskočeno lékařem)“) a red flags jsou deterministické z FHIR.
+  - Souhrn píše Gemini (`prompts/summary.md` + pravidla zkratek z T-509), souběžně s RF-LLM.
+  - Když LLM selže nebo běží mock, nastoupí souhrn z dat (NFR-5).
+  - Na P01–P06 vychází 0 neověřených tvrzení.
+
 ### 5.4 Red flags
 
 **Hybrid: deterministická pravidla (`services/rules/red_flags.py`) + LLM detekce rozporů.**

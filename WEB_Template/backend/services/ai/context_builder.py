@@ -177,18 +177,23 @@ def build_context(patient_id: str, *, guidelines: list[GuidelinePassage] | None 
                   rule_results: Iterable[str] = (), roles_present: Iterable[str] | None = None,
                   evaluate_rules: bool = True) -> PatientContext:
     """Kontext pacienta z IRIS (FHIR REST + `MDT.GuidelineChunk`) včetně deterministických red flags."""
+    resources, studies = load_resources(patient_id)
+    if guidelines is None:
+        guidelines = load_guidelines(guideline_sets_for(_diagnosis_codes(resources)))
+    flags = rules.evaluate(resources, roles_present) if evaluate_rules else []
+    return context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines,
+                                  rule_results=rule_results, red_flags=flags)
+
+
+def load_resources(patient_id: str) -> tuple[list[dict], list[dict]]:
+    """FHIR resources pacienta z IRIS (+ referencovaní lékaři a pracoviště) a studie s kritérii."""
     from services.fhir import client as fhir
 
     by_type = fhir.patient_everything(patient_id)
     resources = [r for items in by_type.values() for r in items]
     for rtype in ("Practitioner", "Organization"):
         resources += _fetch_referenced(fhir, resources, rtype)
-    studies = fhir.search("ResearchStudy") + fhir.search("Group")
-    if guidelines is None:
-        guidelines = load_guidelines(guideline_sets_for(_diagnosis_codes(resources)))
-    flags = rules.evaluate(resources, roles_present) if evaluate_rules else []
-    return context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines,
-                                  rule_results=rule_results, red_flags=flags)
+    return resources, fhir.search("ResearchStudy") + fhir.search("Group")
 
 
 def context_from_resources(patient_id: str, resources: Iterable[dict], *, studies: Iterable[dict] = (),

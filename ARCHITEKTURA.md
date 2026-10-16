@@ -1350,7 +1350,7 @@ Rakhaton2026/
 | Q9 | Kdo zapne billing (placený tier) v Google AI Studio? Bez něj nesmíme posílat data | ⬜ tým |
 | Q10 | Sprint 0 (M0, Pá 18:00) nestihnutý: potvrdit nové časy sprintů | ✅ sprinty startují Pá 19:00, M0 co nejdřív, M1–M4 beze změny |
 | Q11 | Owneři lanes (PROGRESS §2) | ✅ Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH) |
-| Q12 | Windows + `core.autocrlf=true` rozbije `entrypoint.sh` (CRLF) → `.gitattributes` v T-001 | ⬜ INFRA |
+| Q12 | Windows + `core.autocrlf=true` rozbije `entrypoint.sh` (CRLF) → `.gitattributes` v T-001 | ✅ `.gitattributes` (T-001) |
 
 ---
 

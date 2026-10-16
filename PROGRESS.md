@@ -172,7 +172,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 
 | ID | Úkol | Lane | Závisí na | Hotovo když (DoD) | Owner | Stav |
 |---|---|---|---|---|---|---|
-| T-001 | Struktura repa: `docs/zadani/` (přesun pptx), `data/{dev_ground_truth,fixtures,audio}/`, root `.gitignore` (`.env`, `.venv`, `node_modules`, `.claude/settings.local.json`) a **`.gitattributes`** (`* text=auto`, `*.sh text eol=lf`, `*.ps1 text eol=crlf`; jinak Windows s `autocrlf=true` rozbije `entrypoint.sh`, Q12). Dataset zůstává v `Dataset_MDT_Copilot_v1.1_pre_timy/` (smí do gitu) | INFRA | — | složky, dataset, `.gitignore` a `.gitattributes` v `master`; `git ls-files --eol` ukazuje u `*.sh` v pracovní kopii LF | `@Seb+claude` | 🟨 |
+| T-001 | Struktura repa: `docs/zadani/` (přesun pptx), `data/{dev_ground_truth,fixtures,audio}/`, root `.gitignore` (`.env`, `.venv`, `node_modules`, `.claude/settings.local.json`) a **`.gitattributes`** (`* text=auto`, `*.sh text eol=lf`, `*.ps1 text eol=crlf`; jinak Windows s `autocrlf=true` rozbije `entrypoint.sh`, Q12). Dataset zůstává v `Dataset_MDT_Copilot_v1.1_pre_timy/` (smí do gitu) | INFRA | — | složky, dataset, `.gitignore` a `.gitattributes` v `master`; `git ls-files --eol` ukazuje u `*.sh` v pracovní kopii LF | `@Seb+claude` | ✅ |
 | T-002 | Služba `iris` v `docker-compose.dev.yml` (Dockerfile + `merge.cpf` z kitu do `WEB_Template/iris/`, volume, porty 1972/52773), mount datasetu do backendu (`DATASET_DIR`) — ARCH §3.4, §4.2 | INFRA | T-001 | `curl -u SuperUser:SYS localhost:52773/fhir/r4/metadata` vrátí 200 po `dev.ps1 up` | `@?` | ⬜ |
 | T-003 | Command `iris_init` (native API: namespace FHIRSERVER + endpoint `/fhir/r4`, `Device/mdt-copilot`, idempotentní, bez Synthea) — ARCH §4.2 | INFRA | T-002 | 2× spuštění bez chyby, endpoint existuje | `@?` | ⬜ |
 | T-004 | Vercel: projekt (root `WEB_Template/frontend`), `rewrites` `/api/*` → `BACKEND_URL`, `skipTrailingSlashRedirect`, `api.ts` same-origin (`??`), dev odkazy jen v dev — ARCH §3.4 | INFRA | — | přihlášení demo účtem funguje na `*.vercel.app` proti nasazenému BE | `@?` | ⬜ |
@@ -278,7 +278,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | Q9 | **Zapnout billing (placený tier) v Google AI Studio.** Bez něj nesmíme posílat data (podmínky Gemini API pro EHP) | T-012, T-102 | `@?` | ⬜ |
 | Q10 | Sprint 0 (M0, Pá 18:00) nestihnutý: potvrdit nové časy sprintů | M1–M4 | tým | ✅ sprinty startují Pá 19:00, M0 co nejdřív, M1–M4 beze změny |
 | Q11 | Owneři lanes nejsou přiřazení (§2) | všechny | tým | ✅ Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH) |
-| Q12 | Na Windows s `core.autocrlf=true` má `entrypoint.sh` v pracovní kopii CRLF a backend kontejner nenaběhne. Řeší `.gitattributes` (T-001), do té doby `git config core.autocrlf input` | T-002, `dev.ps1 up` | INFRA | ⬜ |
+| Q12 | Na Windows s `core.autocrlf=true` má `entrypoint.sh` v pracovní kopii CRLF a backend kontejner nenaběhne. Řeší `.gitattributes` (T-001), do té doby `git config core.autocrlf input` | T-002, `dev.ps1 up` | INFRA | ✅ `.gitattributes` (T-001); stará pracovní kopie: smazat `*.sh` a `git checkout -- .` |
 
 ---
 
@@ -293,6 +293,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 - Pá 18:54 · @xxzoomczexx+claude · T-500 · Požadavky lékaře sladěné se zadáním a zapracované. ⚠️ KONTRAKT: ARCH §6.2 (`MdtSession` = board, `MdtCase` pole zařazení, `UserProfile`), §6.3 (`/api/mdt/me/`, `/patients/{pid}/intake/`, `PATCH /cases/{cid}/`, `/cases/{cid}/compatibility/`), §8.1 (`Light`, `RoleId` + `pulmonologist` / `cardiologist`, nové `SectionId`, `EXT-…`), §8.2 (`header.intent`, `display_name` bez jména), §8.3 (`TreatmentCompatibility`), nová §8.6 (`IntakePrefill`, `MdtCase`). Nové FR-U1, FR-U2, FR-P4, FR-B8, FR-D4, FR-D5, FR-A5, FR-R5, BON-6, BON-7 a D-014 až D-020. Nové úkoly T-014, T-501–T-511; T-211 a T-303 přepracované. Pravidla pro sprinty a paralelní práci v §1. Blokery Q10–Q12.
 - Pá 19:03 · @xxzoomczexx+claude · T-500 · Kontrola architektury proti 42 pasážím guidelines: nová ARCH §5.11 (pokrytí guidelines), pravidla `RF-PALIATIVE` (OBC-2.1), `RF-ROLES` (KRC-2.1, PLI-2.1, PRS-1.4), `RF-STEROID` (OBC-3.1); `RF-STALE` + MR jater (KRC-2.4); `RF-LAB`: Na podle `referenceRange`, marker ≠ progrese (PRS-4.2), prahy bez zdroje označené jako konvence týmu. ⚠️ KONTRAKT: `MdtCase.status` + `returned`, `Decision.sections.conditional` a `tumor_priority` (OBC-1.1, OBC-1.4). Otázku pro MDT nelze přeskočit.
 - Pá 19:11 · @xxzoomczexx+claude · — · Owneři lanes: Seb (INFRA + API), Maty (DATA), Jarda (AI), Mira (UI + PITCH). Start sprintů Pá 19:00, Sprint 0 běží. Q10 a Q11 vyřešeny.
+- Pá 19:16 · @Seb+claude · T-001 · Root `.gitignore` + `.gitattributes` (`*.sh` a `Makefile` LF, `*.ps1` CRLF), `data/{dev_ground_truth,fixtures,audio}/`, zadání přesunuto do `docs/zadani/`. Q12 vyřešena (větev `t-001-repo-struktura`).
 
 ---
 

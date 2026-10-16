@@ -3,11 +3,31 @@
   "status": "draft",
   "mdt_type": "restaging",
   "attendees": [
-    { "user_id": "LEK-P03-06", "name": "LEK-P03-06 · klinický onkolog, předseda GIT komise", "role": "chair" },
-    { "user_id": "LEK-P03-01", "name": "LEK-P03-01 · klinický onkolog (ošetřující lékař)", "role": "oncologist" },
-    { "user_id": "LEK-P03-05", "name": "LEK-P03-05 · chirurg – hepatobiliární chirurgie", "role": "surgeon" },
-    { "user_id": "LEK-P03-04", "name": "LEK-P03-04 · radiolog", "role": "radiologist" },
-    { "user_id": "LEK-P03-03", "name": "LEK-P03-03 · patolog", "role": "pathologist" }
+    {
+      "user_id": "LEK-P03-06",
+      "name": "LEK-P03-06 · klinický onkolog, předseda GIT komise",
+      "role": "chair"
+    },
+    {
+      "user_id": "LEK-P03-01",
+      "name": "LEK-P03-01 · klinický onkolog (ošetřující lékař)",
+      "role": "oncologist"
+    },
+    {
+      "user_id": "LEK-P03-05",
+      "name": "LEK-P03-05 · chirurg – hepatobiliární chirurgie",
+      "role": "surgeon"
+    },
+    {
+      "user_id": "LEK-P03-04",
+      "name": "LEK-P03-04 · radiolog",
+      "role": "radiologist"
+    },
+    {
+      "user_id": "LEK-P03-03",
+      "name": "LEK-P03-03 · patolog",
+      "role": "pathologist"
+    }
   ],
   "patient_present": false,
   "sections": {
@@ -18,7 +38,18 @@
     "assessment": {
       "text": "Adenokarcinom sigmatu G2, cT3 cN1 cM1a, KRAS G12D. Po 8 cyklech FOLFOX + bevacizumab parciální odpověď (RECIST 83 → 50 mm). Postižení obou laloků (S3), vymizelá metastáza S5, ložisko S8 v kontaktu s pravou jaterní žílou, FLR odhadem 38 %. Neuropatie G1 podle lékaře, pacient popisuje omezení jemné motoriky. Chybí CT hrudníku a vyšetření MMR/MSI.",
       "source": "ai",
-      "citations": ["P03-tnm01", "P03-bm01", "P03-img01#5", "P03-img03#4", "P03-img04#2", "P03-img04#3", "P03-neuro01", "P03-prom02", "P03-img03#1", "P03-bm04"]
+      "citations": [
+        "P03-tnm01",
+        "P03-bm01",
+        "P03-img01#5",
+        "P03-img03#4",
+        "P03-img04#2",
+        "P03-img04#3",
+        "P03-neuro01",
+        "P03-prom02",
+        "P03-img03#1",
+        "P03-bm04"
+      ]
     },
     "intent": "kurativni",
     "recommendation": [
@@ -39,7 +70,10 @@
     },
     "trial": {
       "text": "RKT-03 posoudit po doplnění CT hrudníku a MMR/MSI (Z1, V1, V2 neznámé, V3 sporné). RKT-05 nabídnout pro úbytek hmotnosti.",
-      "study_ids": ["RKT-03", "RKT-05"],
+      "study_ids": [
+        "RKT-03",
+        "RKT-05"
+      ],
       "source": "ai"
     },
     "re_mdt": {
@@ -52,7 +86,10 @@
     },
     "conditional": {
       "text": "Doporučení je podmíněné výsledkem CT hrudníku a MMR/MSI.",
-      "missing": ["CT hrudníku", "MMR/MSI"],
+      "missing": [
+        "CT hrudníku",
+        "MMR/MSI"
+      ],
       "source": "ai"
     }
   },
@@ -90,6 +127,10 @@
       "source": "human"
     }
   ],
-  "red_flags_acknowledged": ["rf01", "rf02", "rf04"],
+  "red_flags_acknowledged": [
+    "RF-TOX:P03-neuro01",
+    "RF-STALE:hrudnik",
+    "RF-MISSING:P03-bm04"
+  ],
   "transcript_ref": "P03-mdt02-prepis"
 }

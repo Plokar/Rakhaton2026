@@ -1,9 +1,10 @@
 """
-Testy kontraktů (T-009, ARCHITEKTURA §8): pydantic schémata, fixtures P03 a Evidence ID.
+Testy kontraktů (T-009, ARCHITEKTURA §8): pydantic schémata, fixtures P03, Evidence ID
+a shoda výstupů ostatních lanes (red flags T-202, zařazení T-502, API pacientů T-103) s kontraktem.
 
 Fixtures (``data/fixtures``) a dataset leží mimo backend. V CI jsou v checkoutu repa,
 v backend kontejneru je jen dataset (``DATASET_DIR``); co chybí, test přeskočí.
-Dataset se tu čte jen kvůli kontrole citací, za běhu se čte z IRIS.
+Dataset se tu čte jen v testech (``services/tests/dataset.py``), za běhu se čte z IRIS.
 """
 import json
 import os
@@ -15,8 +16,14 @@ import pytest
 
 from apps.copilot import schemas
 from apps.copilot.evidence import GUIDELINE_ID_RE, is_evidence_id, parse_evidence_id
+from services import patients as patient_service
 from services.ai.text import resource_paragraphs
 from services.ai_service import MockAIProvider, gemini_json_schema
+from services.rules.intake import intake_prefill
+from services.rules.red_flags import evaluate
+from services.tests.dataset import dataset_dir, load_patient
+
+PATIENTS = ["P01", "P02", "P03", "P04", "P05", "P06"]
 
 # Kořen repa (v CI a lokálně); v backend kontejneru je jen /code, tam je None.
 REPO_ROOT = next((p for p in Path(__file__).resolve().parents if (p / "WEB_Template").is_dir()), None)
@@ -30,7 +37,6 @@ def _dir(env: str, *relative: str) -> Path | None:
 
 FIXTURES_DIR = _dir("FIXTURES_DIR", "data", "fixtures")
 FRONTEND_FIXTURES_DIR = _dir("FRONTEND_FIXTURES_DIR", "WEB_Template", "frontend", "src", "fixtures")
-DATASET_DIR = _dir("DATASET_DIR", "Dataset_MDT_Copilot_v1.1_pre_timy", "Dataset_MDT_Copilot_v1.1")
 
 FIXTURES = {
     "brief_P03.json": schemas.Brief,
@@ -51,11 +57,16 @@ LIGHT_RANK = {"green": 0, "grey": 1, "orange": 2, "red": 3}   # 🔴 > 🟠 > �
 needs_fixtures = pytest.mark.skipif(
     not (FIXTURES_DIR and FIXTURES_DIR.is_dir()), reason="chybí data/fixtures (backend kontejner je nevidí)",
 )
-needs_dataset = pytest.mark.skipif(not (DATASET_DIR and DATASET_DIR.is_dir()), reason="chybí DATASET_DIR")
 
 
 def load_fixture(name: str):
     return json.loads((FIXTURES_DIR / name).read_text(encoding="utf-8"))
+
+
+def assert_contract(schema, data):
+    """Data projdou schématem a nic se neztratí: žádný klíč navíc ani s překlepem."""
+    model = schema.model_validate(data)
+    assert model.model_dump(mode="json", exclude_unset=True) == data
 
 
 def evidence_ids(node, key: str | None = None):
@@ -81,14 +92,10 @@ def all_strings(node):
         yield node
 
 
-def sanitize_id(resource_id: str) -> str:
-    return resource_id.replace("_", "-")   # DATASET §6.2
-
-
 @lru_cache(maxsize=None)
 def patient_resources(patient_id: str) -> dict[str, dict]:
-    bundle = json.loads((DATASET_DIR / "pacienti" / patient_id / f"{patient_id}_bundle.json").read_text(encoding="utf-8"))
-    return {sanitize_id(e["resource"]["id"]): e["resource"] for e in bundle["entry"]}
+    """Resources pacienta se stejnou sanitizací jako ingest do IRIS (T-101)."""
+    return {r["id"]: r for r in load_patient(patient_id)}
 
 
 def paragraph_text(evidence_id: str) -> str | None:
@@ -100,14 +107,14 @@ def paragraph_text(evidence_id: str) -> str | None:
 @lru_cache(maxsize=None)
 def guideline_ids() -> frozenset[str]:
     ids = set()
-    for path in (DATASET_DIR / "guidelines").glob("*.md"):
+    for path in (dataset_dir() / "guidelines").glob("*.md"):
         ids.update(re.findall(r"^\*\*([A-Z]{3}-\d+\.\d+) – ", path.read_text(encoding="utf-8"), re.MULTILINE))
     return frozenset(ids)
 
 
 @lru_cache(maxsize=None)
 def trial_ids() -> frozenset[str]:
-    data = json.loads((DATASET_DIR / "studie" / "studie.json").read_text(encoding="utf-8"))
+    data = json.loads((dataset_dir() / "studie" / "studie.json").read_text(encoding="utf-8"))
     ids = set()
     for study in data["studie"]:
         ids.add(study["id"])
@@ -148,7 +155,8 @@ class TestEvidenceId:
 class TestSchemas:
     @pytest.mark.parametrize("schema", [
         schemas.Brief, schemas.DecisionSupport, schemas.Decision, schemas.IntakePrefill,
-        schemas.MdtCase, schemas.BriefConfig, schemas.TimelineEvent,
+        schemas.MdtCase, schemas.BriefConfig, schemas.TimelineEvent, schemas.PatientDetail,
+        schemas.ObservationSeries,
     ])
     def test_usable_as_response_schema(self, schema):
         """Schéma projde čištěním pro Gemini a mock z něj vyrobí validní instanci (T-012)."""
@@ -172,9 +180,7 @@ class TestFixtures:
     @pytest.mark.parametrize("name, schema", FIXTURES.items())
     def test_valid_and_roundtrip(self, name, schema):
         """Fixture projde validací a nic se neztratí (odhalí překlepy v klíčích)."""
-        data = load_fixture(name)
-        model = schema.model_validate(data)
-        assert model.model_dump(mode="json", exclude_unset=True) == data
+        assert_contract(schema, load_fixture(name))
 
     @pytest.mark.parametrize("name", FIXTURES)
     def test_evidence_id_format(self, name):
@@ -233,7 +239,6 @@ class TestFixtures:
 
 
 @needs_fixtures
-@needs_dataset
 class TestFixtureCitations:
     @pytest.mark.parametrize("name", FIXTURES)
     def test_citations_exist_in_dataset(self, name):
@@ -254,6 +259,9 @@ class TestFixtureCitations:
                 problems.append(f"{evidence_id}: studie nebo kritérium neexistuje")
         assert not problems
 
+
+# ── Dataset a výstupy ostatních lanes ─────────────────────────────────────────
+class TestDataset:
     @pytest.mark.parametrize("evidence_id, snippet", [
         ("P03-img01#5", "83 mm"),
         ("P03-img03#4", "50 mm (pokles o 40 %)"),
@@ -270,3 +278,26 @@ class TestFixtureCitations:
 
     def test_guidelines_count(self):
         assert len(guideline_ids()) == 42   # DATASET §7
+
+
+class TestProducersMatchContract:
+    """Co vracejí pravidla a API pacientů, odpovídá přesně kontraktu §8 (žádný klíč navíc ani chybějící)."""
+
+    @pytest.mark.parametrize("patient_id", PATIENTS)
+    def test_red_flags(self, patient_id):
+        for flag in evaluate(load_patient(patient_id)):
+            assert_contract(schemas.RedFlag, flag.as_dict())
+
+    @pytest.mark.parametrize("patient_id", PATIENTS)
+    def test_intake_prefill(self, patient_id):
+        assert_contract(schemas.IntakePrefill, intake_prefill(load_patient(patient_id)))
+
+    @pytest.mark.parametrize("patient_id", PATIENTS)
+    def test_patients_api(self, patient_id):
+        resources = load_patient(patient_id)
+        assert_contract(schemas.PatientListItem, patient_service.summary(patient_id, resources))
+        assert_contract(schemas.PatientDetail, patient_service.detail(patient_id, resources))
+        for event in patient_service.timeline(resources):
+            assert_contract(schemas.TimelineEvent, event)
+        for series in patient_service.observations(resources):
+            assert_contract(schemas.ObservationSeries, series)

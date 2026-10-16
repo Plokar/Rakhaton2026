@@ -175,11 +175,81 @@ class RedFlag(BaseModel):
 
 
 class TimelineEvent(BaseModel):
-    """GET /api/patients/{pid}/timeline/"""
-    date: str
+    """GET /api/patients/{pid}/timeline/ → TimelineEvent[] (seřazené podle data)"""
+    date: str = Field(description='"2026-09-21", může být částečné "2019-03"')
     type: Literal["diagnosis", "procedure", "medication", "imaging", "pathology", "lab", "proms", "mdt", "document"]
     label: str
     citation: EvidenceId
+
+
+class PatientListItem(BaseModel):
+    """GET /api/patients/ → PatientListItem[]"""
+    id: str = Field(description='"P03"')
+    display_name: str = Field(description='"P03 · muž · 67 let"')
+    sex: Literal["male", "female", "other", "unknown"]
+    age: int | None
+    diagnosis: Diagnosis | None = Field(description="První onkologická")
+    mdt_question: str | None = Field(description="ServiceRequest.reasonCode.text")
+    mdt_question_citation: EvidenceId | None = Field(description='"P03-zad01"')
+    mdt_date: str | None = Field(description="Task.restriction.period.start (ISO)")
+
+
+class PatientDiagnosis(BaseModel):
+    text: str
+    icd10: str
+    onset: str | None = None
+    verification: str
+    stage: str | None
+    citation: EvidenceId
+
+
+class PatientComorbidity(BaseModel):
+    text: str
+    icd10: str | None
+    citation: EvidenceId
+
+
+class TnmRecord(BaseModel):
+    text: str
+    kind: str
+    date: str
+    citation: EvidenceId
+
+
+class EcogValue(BaseModel):
+    value: int = Field(ge=0, le=4)
+    date: str
+    citation: EvidenceId
+
+
+class PatientEcog(BaseModel):
+    physician: EcogValue | None = Field(description="Poslední Observation 89247-1")
+    patient: EcogPatient | None = Field(description="Poslední PROMs samostatnost")
+
+
+class PatientDetail(PatientListItem):
+    """GET /api/patients/{pid}/"""
+    diagnoses: list[PatientDiagnosis]
+    comorbidities: list[PatientComorbidity]
+    tnm: list[TnmRecord] = Field(description="Observation tnm, chronologicky")
+    ecog: PatientEcog
+
+
+class ObservationPoint(BaseModel):
+    date: str
+    value: float
+    citation: EvidenceId
+    ref_low: float | None = None
+    ref_high: float | None = None
+    interpretation: Literal["H", "L"] | None = None
+
+
+class ObservationSeries(BaseModel):
+    """GET /api/patients/{pid}/observations/?code=718-7,lvef,proms:brneni → ObservationSeries[]"""
+    code: str = Field(description='LOINC | druh z ID bez LOINC ("lvef") | "proms:<linkId>"')
+    label: str
+    unit: str | None
+    points: list[ObservationPoint]
 
 
 # ── §8.3 DecisionSupport (B2) ─────────────────────────────────────────────────

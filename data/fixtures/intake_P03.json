@@ -6,47 +6,94 @@
       "id": "mdt.question",
       "label": "Otázka pro MDT",
       "value": "Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?",
-      "citation": "P03-zad01",
+      "citation": "P03-zad01#1",
       "status": "present",
       "required_by": "OBC-1.1"
     },
     {
-      "id": "histology",
+      "id": "dx.histology",
       "label": "Histologie a grade",
-      "value": "Adenokarcinom tlustého střeva G2 (ICD-O-3 8140/3)",
-      "citation": "P03-pat01#3",
+      "value": "Histologie a grade: Adenokarcinom sigmatu G2 (biopsie 24. 4. 2026)",
+      "citation": "P03-zad01#2",
       "status": "present",
       "required_by": "OBC-1.1"
     },
     {
-      "id": "tnm",
+      "id": "staging.tnm",
       "label": "TNM",
-      "value": "cT3 cN1 cM1a, stadium IVA",
+      "value": "cT3 cN1 cM1a, stadium IVA (TNM 8. vyd.)",
       "citation": "P03-tnm01",
       "status": "present",
       "required_by": "OBC-1.1"
     },
     {
-      "id": "staging.mr_liver",
-      "label": "MR jater s hepatospecifickou k. l. (≤ 4–6 týdnů)",
-      "value": "2026-09-28",
+      "id": "staging.imaging",
+      "label": "Zobrazení ≤ 6 týdnů k datu MDT",
+      "value": "MR jater s hepatospecifickou k. l. – restaging (2026-09-28, 23 dní před MDT)",
       "citation": "P03-img04",
       "status": "present",
-      "required_by": "KRC-2.4"
+      "required_by": "OBC-1.2"
     },
     {
-      "id": "staging.ct_chest",
-      "label": "CT hrudníku (≤ 4–6 týdnů)",
-      "value": "poslední 2026-04-28; restaging 2026-09-21 hrudník nezahrnul",
-      "citation": "P03-img03#1",
-      "status": "missing",
-      "required_by": "KRC-2.4"
+      "id": "ecog.physician",
+      "label": "ECOG (lékař)",
+      "value": "0",
+      "citation": "P03-ecog03",
+      "status": "present",
+      "required_by": "OBC-1.3"
+    },
+    {
+      "id": "ecog.patient",
+      "label": "ECOG podle pacienta (PROMs)",
+      "value": "1",
+      "citation": "P03-prom02",
+      "status": "present",
+      "required_by": "OBC-1.3"
+    },
+    {
+      "id": "comorbidities",
+      "label": "Komorbidity",
+      "value": "I25.2 Starý infarkt myokardu (2019, st. p. PCI RIA); I10 Esenciální hypertenze; E78.0 Hypercholesterolémie",
+      "citation": "P03-kom1",
+      "status": "present",
+      "required_by": "OBC-1.1"
+    },
+    {
+      "id": "treatment.history",
+      "label": "Dosavadní léčba",
+      "value": "Předchozí onkologická léčba:\n- [Chemoterapie] FOLFOX + bevacizumab, 8 cyklů (8. cyklus s redukcí oxaliplatiny na 75 %) (2026-06-01 – 2026-09-07)",
+      "citation": "P03-zad01#3",
+      "status": "present",
+      "required_by": "OBC-1.1"
+    },
+    {
+      "id": "preferences",
+      "label": "Preference pacienta",
+      "value": "Preference a omezení pacienta: Přeje si operaci, pokud je možná; obává se dlouhé pracovní neschopnosti (profesionální řidič).",
+      "citation": "P03-zad01#5",
+      "status": "present",
+      "required_by": "OBC-1.1"
+    },
+    {
+      "id": "allergies",
+      "label": "Alergie",
+      "value": "nevím o žádné",
+      "citation": "P03-prom02",
+      "status": "present"
+    },
+    {
+      "id": "weight",
+      "label": "Hmotnost a trend",
+      "value": "78 kg (2026-10-05)",
+      "citation": "P03-vaha04",
+      "status": "present",
+      "required_by": "OBC-2.3"
     },
     {
       "id": "bm.ras",
       "label": "RAS (KRAS, NRAS)",
-      "value": "KRAS G12D, NRAS wild-type",
-      "citation": "P03-bm01",
+      "value": "bez mutace (wild-type)",
+      "citation": "P03-bm02",
       "status": "present",
       "required_by": "KRC-1.1"
     },
@@ -67,55 +114,31 @@
       "required_by": "KRC-1.1"
     },
     {
-      "id": "ecog.physician",
-      "label": "ECOG (lékař)",
-      "value": "0",
-      "citation": "P03-ecog03",
-      "status": "present",
-      "required_by": "OBC-1.3"
+      "id": "staging.chest_ct",
+      "label": "CT hrudníku ≤ 6 týdnů",
+      "value": "CT hrudníku, břicha a pánve s k. l. – staging (2026-04-28, 176 dní před MDT)",
+      "citation": "P03-img01",
+      "status": "missing",
+      "required_by": "KRC-2.4"
     },
     {
-      "id": "ecog.patient",
-      "label": "ECOG (pacient, dotazník)",
-      "value": "1",
-      "citation": "P03-prom02",
+      "id": "staging.liver_mr",
+      "label": "MR jater ≤ 6 týdnů",
+      "value": "MR jater s hepatospecifickou k. l. – restaging (2026-09-28, 23 dní před MDT)",
+      "citation": "P03-img04",
       "status": "present",
-      "required_by": "OBC-1.3"
-    },
-    {
-      "id": "comorbidities",
-      "label": "Komorbidity",
-      "value": "IM 2019 (st. p. PCI RIA), hypertenze, hypercholesterolémie",
-      "citation": "P03-kom1",
-      "status": "present",
-      "required_by": "OBC-1.1"
-    },
-    {
-      "id": "treatment.prior",
-      "label": "Dosavadní léčba",
-      "value": "FOLFOX + bevacizumab, 8 cyklů (2026-06-01 až 2026-09-07)",
-      "citation": "P03-tx-oxa-08",
-      "status": "present",
-      "required_by": "OBC-1.1"
-    },
-    {
-      "id": "preferences",
-      "label": "Preference pacienta",
-      "value": "Operaci by chtěl, pokud dává smysl; obává se dlouhé pracovní neschopnosti",
-      "citation": "P03-prom02",
-      "status": "present",
-      "required_by": "OBC-1.1"
+      "required_by": "KRC-2.4"
     },
     {
       "id": "liver.flr",
-      "label": "FLR (budoucí jaterní remnant)",
-      "value": "38 %",
+      "label": "Budoucí jaterní remnant (FLR)",
+      "value": "Objem levého laloku (S2–S4) odhadem 38 % celkového objemu jater.",
       "citation": "P03-img04#3",
       "status": "present",
       "required_by": "KRC-2.1"
     },
     {
-      "id": "bev.last_dose",
+      "id": "treatment.bevacizumab",
       "label": "Poslední dávka bevacizumabu",
       "value": "2026-09-07",
       "citation": "P03-tx-bev-08",
@@ -123,102 +146,139 @@
       "required_by": "KRC-2.3"
     },
     {
-      "id": "neuropathy",
-      "label": "Neuropatie (lékař i pacient)",
-      "value": "G1 podle lékaře; pacient brnění 6/10",
+      "id": "tox.neuropathy",
+      "label": "Neuropatie (lékař)",
+      "value": "grade 1",
       "citation": "P03-neuro01",
       "status": "present",
       "required_by": "KRC-3.2"
-    },
-    {
-      "id": "weight.trend",
-      "label": "Hmotnost a trend za 6 měsíců",
-      "value": "84 → 78 kg",
-      "citation": "P03-vaha04",
-      "status": "present",
-      "required_by": "OBC-2.3"
-    },
-    {
-      "id": "family_history",
-      "label": "Rodinná anamnéza",
-      "value": "otec karcinom tlustého střeva v 72 letech",
-      "citation": "P03-doc02#6",
-      "status": "present",
-      "required_by": "OBC-2.4"
-    },
-    {
-      "id": "dpd",
-      "label": "Aktivita DPD (před fluoropyrimidiny)",
-      "status": "missing",
-      "required_by": "EXT-EMA-DPD-2020"
     }
   ],
   "warnings": [
     {
-      "id": "RF-STALE:P03-img03#1",
+      "id": "RF-STALE:hrudnik",
       "kind": "missing",
       "severity": "high",
-      "title": "Restaging bez CT hrudníku",
-      "detail": "Restagingové CT 2026-09-21 hrudník nezahrnulo, poslední CT hrudníku je z 2026-04-28. Před resekcí jater má být restaging ne starší než 4–6 týdnů (KRC-2.4).",
-      "citations": ["P03-img03#1", "P03-img01#2", "KRC-2.4"]
-    },
-    {
-      "id": "RF-MISSING:P03-bm04",
-      "kind": "missing",
-      "severity": "moderate",
-      "title": "Chybí MMR/MSI",
-      "detail": "Vyšetření MMR/MSI nebylo požadováno, u metastatického KRC je povinné (KRC-1.1).",
-      "citations": ["P03-bm04", "P03-pat02#8", "KRC-1.1"]
+      "title": "Restaging před resekcí jater bez aktuálního CT hrudníku",
+      "detail": "Otázka MDT se týká resekce, ale poslední CT hrudníku P03-img01 je z 2026-04-28 (176 dní před MDT). Před resekcí jater je nutný restaging CT hrudníku, břicha a pánve a MR jater ne starší než 4–6 týdnů.",
+      "citations": [
+        "P03-img03#1",
+        "P03-img01",
+        "P03-zad01",
+        "KRC-2.4"
+      ]
     },
     {
       "id": "RF-TOX:P03-neuro01",
       "kind": "conflict",
       "severity": "high",
-      "title": "Rozpor v hodnocení neuropatie",
-      "detail": "Lékař uvádí G1, pacient popisuje omezení jemné motoriky (knoflíky, padají mu věci z ruky), což odpovídá G2 (KRC-3.2).",
-      "citations": ["P03-neuro01", "P03-prom02", "KRC-3.2"]
+      "title": "Neuropatie: lékař G1, pacient popisuje víc",
+      "detail": "Lékař hodnotí neuropatii jako grade 1 (2026-10-05), pacient uvádí brnění 6/10, „Brnění v prstech rukou nepřestává ani mezi cykly, špatně zapínám knoflíky a padají mi věci z ruky. V zimě je to horší.“. Omezení instrumentálních činností odpovídá stupni 2; neuropatii je nutné hodnotit i podle výpovědi pacienta.",
+      "citations": [
+        "P03-neuro01",
+        "P03-prom02",
+        "KRC-3.2"
+      ]
+    },
+    {
+      "id": "RF-MISSING:P03-bm04",
+      "kind": "missing",
+      "severity": "moderate",
+      "title": "Chybí výsledek: MMR / MSI",
+      "detail": "MMR / MSI: „nevyšetřeno“ (2026-05-12). Prediktivní biomarker je součástí úplných podkladů pro MDT.",
+      "citations": [
+        "P03-bm04",
+        "P03-pat02",
+        "KRC-1.1"
+      ]
     },
     {
       "id": "RF-ECOG:P03-ecog03",
       "kind": "conflict",
       "severity": "moderate",
       "title": "ECOG lékař 0 vs. pacient 1",
-      "detail": "Rozdíl ECOG lékaře a pacienta je 1 stupeň (OBC-1.3).",
-      "citations": ["P03-ecog03", "P03-prom02", "OBC-1.3"]
+      "detail": "Lékař hodnotí ECOG 0 (2026-10-05), pacient v dotazníku (2026-10-04) odpovídá stupni 1. Rozdíl 1 stupně se má na MDT výslovně zmínit.",
+      "citations": [
+        "P03-ecog03",
+        "P03-prom02",
+        "OBC-1.3"
+      ]
+    },
+    {
+      "id": "RF-MED:P03-prom02",
+      "kind": "conflict",
+      "severity": "moderate",
+      "title": "Léky nebo doplňky mimo medikační záznam",
+      "detail": "Pacient v dotazníku uvádí: hořčík, vitamin B. V medikaci to není.",
+      "citations": [
+        "P03-prom02",
+        "P03-med01",
+        "P03-med02",
+        "P03-med03",
+        "P03-med04",
+        "P03-med05"
+      ]
     },
     {
       "id": "RF-LAB:P03-lab06-cea",
       "kind": "out_of_range",
       "severity": "moderate",
-      "title": "CEA nad normou a roste",
-      "detail": "CEA 13,9 µg/l (norma 0–5), předchozí odběr 9,1 µg/l.",
-      "citations": ["P03-lab06-cea", "P03-lab05-cea"]
+      "title": "CEA roste (+53 % proti nadiru)",
+      "detail": "CEA 9,1 (2026-09-21) → 13,9 (2026-10-05). Vzestup markeru je důvod k časnějšímu zobrazení, sám o sobě není progrese (práh 25 % je konvence týmu).",
+      "citations": [
+        "P03-lab06-cea",
+        "P03-lab05-cea"
+      ]
+    },
+    {
+      "id": "RF-PROMS:P03-prom02",
+      "kind": "out_of_range",
+      "severity": "moderate",
+      "title": "Výrazná symptomová zátěž podle pacienta",
+      "detail": "Pacient v dotazníku uvádí: brnění 6/10 (dříve 0/10). Symptom ≥ 7/10 (OBC-1.3) nebo nárůst o ≥ 3 body (konvence týmu).",
+      "citations": [
+        "P03-prom02",
+        "P03-prom01",
+        "OBC-1.3"
+      ]
     },
     {
       "id": "RF-WEIGHT:P03-vaha04",
       "kind": "out_of_range",
       "severity": "moderate",
       "title": "Úbytek hmotnosti 7 %",
-      "detail": "Hmotnost 84 kg (2026-05-18) → 78 kg (2026-10-05), úbytek ≥ 5 % je indikace k nutričnímu vyšetření (OBC-2.3).",
-      "citations": ["P03-vaha01", "P03-vaha04", "OBC-2.3"]
+      "detail": "Hmotnost 84 kg (2026-05-18) → 78 kg (2026-10-05), úbytek 7,1 % za 140 dní. Úbytek ≥ 5 % za 6 měsíců je indikací k nutričnímu vyšetření.",
+      "citations": [
+        "P03-vaha04",
+        "P03-vaha01",
+        "OBC-2.3"
+      ]
     },
     {
-      "id": "RF-MED:P03-prom02",
-      "kind": "conflict",
-      "severity": "moderate",
-      "title": "Doplňky mimo medikaci",
-      "detail": "Pacient v dotazníku uvádí hořčík a vitamin B, v medikaci nejsou.",
-      "citations": ["P03-prom02", "P03-doc02#4"]
+      "id": "out_of_range:P03-lab06-hb",
+      "kind": "out_of_range",
+      "severity": "low",
+      "title": "Hemoglobin 114 g/l",
+      "detail": "Poslední hodnota Hemoglobin 114 g/l (ref 135–175) (2026-10-05) je mimo referenční rozmezí.",
+      "citations": [
+        "P03-lab06-hb"
+      ]
     },
     {
-      "id": "AI-RANGE:P03-doc06#2",
+      "id": "ai_uncertain:ecog-range:P03-doc06#2",
       "kind": "ai_uncertain",
       "severity": "low",
-      "title": "NEJISTOTA AI: „ECOG 0–1“",
-      "detail": "Zpráva z 2026-09-07 uvádí rozmezí „ECOG 0–1“, strukturovaně je uloženo jako ECOG 1. AI rozmezí nepřevádí na jedno číslo.",
-      "citations": ["P03-doc06#2", "P03-ecog02"]
+      "title": "Nejisté ECOG: ECOG 0–1",
+      "detail": "Zpráva uvádí rozmezí „ECOG 0–1“. Strukturovaně je uloženo ECOG 1 (P03-ecog02); AI rozmezí nepřevádí na jedno číslo, hodnotu potvrdí lékař.",
+      "citations": [
+        "P03-doc06#2",
+        "P03-ecog02"
+      ]
     }
   ],
-  "ecog_physician": { "value": 0, "citation": "P03-ecog03" },
+  "ecog_physician": {
+    "value": 0,
+    "citation": "P03-ecog03"
+  },
   "intent_prefill": "C"
 }

@@ -154,12 +154,61 @@ export interface RedFlag {
   verification: Verification;
 }
 
-/** GET /api/patients/{pid}/timeline/ */
+/** GET /api/patients/{pid}/timeline/ → TimelineEvent[] (seřazené podle data) */
 export interface TimelineEvent {
+  /** "2026-09-21", může být částečné "2019-03". */
   date: string;
   type: 'diagnosis' | 'procedure' | 'medication' | 'imaging' | 'pathology' | 'lab' | 'proms' | 'mdt' | 'document';
   label: string;
   citation: EvidenceId;
+}
+
+/** GET /api/patients/ → PatientListItem[] */
+export interface PatientListItem {
+  /** "P03" */
+  id: string;
+  /** "P03 · muž · 67 let" */
+  display_name: string;
+  sex: 'male' | 'female' | 'other' | 'unknown';
+  age: number | null;
+  /** První onkologická. */
+  diagnosis: { text: string; icd10: string; citation: EvidenceId } | null;
+  /** ServiceRequest.reasonCode.text */
+  mdt_question: string | null;
+  /** "P03-zad01" */
+  mdt_question_citation: EvidenceId | null;
+  /** Task.restriction.period.start (ISO) */
+  mdt_date: string | null;
+}
+
+/** GET /api/patients/{pid}/ */
+export interface PatientDetail extends PatientListItem {
+  diagnoses: { text: string; icd10: string; onset?: string; verification: string; stage: string | null; citation: EvidenceId }[];
+  comorbidities: { text: string; icd10: string | null; citation: EvidenceId }[];
+  /** Observation tnm, chronologicky. */
+  tnm: { text: string; kind: string; date: string; citation: EvidenceId }[];
+  ecog: {
+    /** Poslední Observation 89247-1. */
+    physician: { value: number; date: string; citation: EvidenceId } | null;
+    /** Poslední PROMs samostatnost. */
+    patient: { value: number; date: string; citation: EvidenceId; answer_text: string } | null;
+  };
+}
+
+/** GET /api/patients/{pid}/observations/?code=718-7,lvef,proms:brneni → ObservationSeries[] */
+export interface ObservationSeries {
+  /** LOINC | druh z ID bez LOINC ("lvef") | "proms:<linkId>" */
+  code: string;
+  label: string;
+  unit: string | null;
+  points: {
+    date: string;
+    value: number;
+    citation: EvidenceId;
+    ref_low?: number;
+    ref_high?: number;
+    interpretation?: 'H' | 'L';
+  }[];
 }
 
 // ── §8.3 DecisionSupport (B2) ─────────────────────────────────────────────────

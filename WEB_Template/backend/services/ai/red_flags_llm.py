@@ -14,6 +14,7 @@ from typing import Literal, Optional, Sequence
 from pydantic import BaseModel, Field
 
 from services.ai.context_builder import PatientContext
+from services.ai.prompt_config import prompt_settings
 from services.ai_service import BaseAIProvider, get_ai_provider
 from services.rules.red_flags import SEVERITY_ORDER, RedFlag
 
@@ -33,14 +34,15 @@ class LlmRedFlags(BaseModel):
 
 
 def detect_llm_red_flags(context: PatientContext, provider: BaseAIProvider | None = None,
-                         known: Sequence[RedFlag] | None = None) -> tuple[list[RedFlag], dict]:
+                         known: Sequence[RedFlag] | None = None, config: dict | None = None) -> tuple[list[RedFlag], dict]:
     """Vrátí (flagy RF-LLM, výsledek volání pro audit `LlmCallLog`). Při chybě volání prázdný seznam."""
     provider = provider or get_ai_provider()
     known = context.red_flags if known is None else known
     prompt = context.render()
     if known and not context.rule_results:
         prompt += "\n## Výsledky deterministických pravidel\n" + "\n".join(f"- {f.render_line()}" for f in known)
-    result = provider.generate(prompt, system_prompt=PROMPT, response_schema=LlmRedFlags, temperature=0.1)
+    system = f"{PROMPT}\n\n{prompt_settings(config, 'red_flags')}"
+    result = provider.generate(prompt, system_prompt=system, response_schema=LlmRedFlags, temperature=0.1)
     if result.get("status") != "success":
         return [], result
 

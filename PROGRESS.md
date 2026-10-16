@@ -208,7 +208,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 
 | ID | Úkol | Lane | Závisí na | Hotovo když (DoD) | Owner | Stav |
 |---|---|---|---|---|---|---|
-| T-201 | **Blok B:** prompty pro role (chirurg, onkolog, radiolog, patolog, pacient, radiační onkolog) + **posouzení role** `RoleAssessment` (FR-B7), paralelní generace | AI | T-106 | ≥ 3 role validní s verdiktem, celý podklad < 20 s | `@?` | ⬜ |
+| T-201 | **Blok B:** prompty pro role (chirurg, onkolog, radiolog, patolog, pacient, radiační onkolog) + **posouzení role** `RoleAssessment` (FR-B7), paralelní generace | AI | T-106 | ≥ 3 role validní s verdiktem, celý podklad < 20 s | `@Jarda+claude` | 🟨 |
 | T-202 | **Red flags:** `rules/red_flags.py` (RF-ECOG, RF-PROMS, RF-TOX, RF-STALE, RF-MISSING, RF-MED, RF-NEWSYMPTOM, RF-LAB, RF-WEIGHT, RF-GERI, RF-LESION, RF-GENETIC, RF-NOMINATION, RF-TNM, RF-PALIATIVE, RF-ROLES, RF-STEROID) + `RF-LLM`; ≥ 2 citace + pasáž; odkliknutí varování red flag neodstraní (D-019) — ARCH §5.4 | AI | T-105 | najde hypotézy z DATASET §9 pro P03 a P05 (včetně třezalky) | `@Jarda+claude` | ✅ |
 | T-203 | Guidelines (42 pasáží, regex z DATASET §7) → `MDT.GuidelineChunk`; studie (`Group.characteristic`) → `MDT.TrialCriterion` — ARCH §4.5 | DATA | T-102 | vyhledání s filtrem MKN-10 vrací relevantní pasáže; 42 + 6 studií v IRIS | `@Maty+claude` | 👀 |
 | T-204 | **B2:** sada guidelines podle dg., možnosti s ID pasáží + co chybí (včetně podpůrné péče z OBC-2.x, když ji pacient splňuje), screening `RKT-01…06` po kritériích (včetně protokolu RKT-06), 2–3 otázky — ARCH §5.5 | AI | T-203, T-106 | `DecisionSupport` validní; P03 má RKT-03 s `unknown` u Z1 a V2; žádné „doporučujeme“ | `@?` | ⬜ |

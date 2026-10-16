@@ -927,6 +927,7 @@ Požadavek lékaře (FR-D4, D-015). Barva **není doporučení**. Říká, jestl
   - Externí zdroje `EXT-…` bere jen z katalogu T-504 (`services/iris/data/external_sources.json`).
   - „Není v dokumentaci“ (IM, ILD, MDS) je zelené jen s `comorbidities_confirmed`, jinak šedé (docs/POZADAVKY_LEKARE.md §5.1).
   - **Možnosti léčby v B2 (T-204) se berou z tohoto katalogu:** `treatment_options[].id/title/guideline_citations/compatibility` dodá kód, LLM píše jen `rationale`, `prerequisites_missing` a `considerations`. Díky tomu se červená možnost nikdy neztratí.
+- **Znalostní báze `data/onko/` (T-315):** nadmnožina katalogu pro další diagnózy a modality (postupy, pravidla se strojovými podmínkami, fakta, studie, normy). Stejná ID `VS-*` a stejné zdroje jako YAML hlídá `services/eval/test_onko_kb.py`. Napojení do aplikace je T-316, do té doby platí YAML.
 
 ### 5.10 Zařazení pacienta a kontrola úplnosti
 

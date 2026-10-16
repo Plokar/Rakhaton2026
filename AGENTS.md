@@ -17,7 +17,7 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 - `WEB_Template/backend/`: Django 5.2 + DRF (→ VPS). Je to modulární monolit: `apps/` (HTTP vrstva), `services/` (logika).
 - IRIS for Health (FHIR R4 + Vector Search): služba `iris` v docker-compose, viz ARCHITEKTURA §4.
 - `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`: dataset od Asseco (= `DATASET_DIR`). **Neměnit**, opravy patří do sanitizace v ingestu.
-- `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele.
+- `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele, `onko/` = znalostní báze (postupy podle diagnózy, studie, kritéria semaforu, normy). Ptej se přes `python3 data/onko/q.py`, celé TSV do promptu nenačítej.
 - `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), později `EVAL.md` a `DEMO.md`.
 - `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej Gemini**.
   - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDT Copilot“ má přednost před textem skillu (ARCH §4.8).

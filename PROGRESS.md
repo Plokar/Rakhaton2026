@@ -248,7 +248,7 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | T-314 | **Nahrát simulovanou diskusi MDT** k P03 (2–3 min, více mluvčích podle rolí, závěr + úkoly) → `data/audio/P03_mdt02.m4a` + referenční text | PITCH | — | nahrávka a text v repu | `@?` | ⬜ |
 | T-507 | **Anamnéza** (FR-A5): sekce OA/FA/RA/SA/GA/NO ze zpráv, doslovně nebo jako shrnutí AI s citacemi podle `INTAKE_ANAMNESIS_MAX_CHARS`, přepínač `AnamnesisBlock` | AI + UI | T-106 | dlouhá anamnéza má shrnutí s citacemi, krátká je doslovně | `@?` | ⬜ |
 | T-508 | BON-6 **Karta Lung-RADS / Fleischner** s kontrolou použitelnosti (`services/rules/scales.py`, `ScaleCard`) | AI + UI | T-503 | u všech 6 pacientů „nelze použít“ s důvodem; test na fiktivní screeningový uzel | `@?` | ⬜ |
-| T-509 | **Zkratky a NEJISTOTA AI** (FR-R5): pravidla výkladu podle kontextu v promptech + testy na tabulku docs/POZADAVKY_LEKARE.md §7.2 | AI | T-502 | každý řádek tabulky se vyloží správně, nebo vyhodí varování | `@?` | ⬜ |
+| T-509 | **Zkratky a NEJISTOTA AI** (FR-R5): pravidla výkladu podle kontextu v promptech + testy na tabulku docs/POZADAVKY_LEKARE.md §7.2 | AI | T-502 | každý řádek tabulky se vyloží správně, nebo vyhodí varování | `@Jarda+claude` | 🟨 |
 | T-510 | BON-7 **Vstup PDF nebo vloženého textu** → překladač do FHIR (Gemini, odkaz na zdrojový `DocumentReference`) → validace → potvrzení lékařem → IRIS | DATA + AI | T-012, T-502, Q9 | vložená zpráva vznikne v IRIS jako `DocumentReference` + `Observation` s `Provenance` | `@?` | ⬜ |
 
 ### M4 — Freeze a demo (do So 11:00)

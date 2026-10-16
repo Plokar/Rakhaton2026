@@ -1533,7 +1533,7 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 | `IRIS_NAMESPACE` | backend | `FHIRSERVER` |
 | `IRIS_USER` / `IRIS_PASSWORD` | backend | dev `SuperUser` / `SYS`, **na VPS jiné** |
 | `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4` |
-| `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1` |
+| `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1`; bez proměnné ho `ingest.dataset_dir()` najde v checkoutu repa (CI, testy) |
 | `AI_PROVIDER` | backend | `gemini` (prod) / `mock` (testy, CI) |
 | `GEMINI_API_KEY` | backend | Google AI Studio, **placený tier**; nikdy do gitu ani do frontendu |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |

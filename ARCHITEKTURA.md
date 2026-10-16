@@ -393,7 +393,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | **FHIR write-back** (transaction Bundle) | Potvrzený závěr komise ve struktuře datasetu ([§4.3](#43-fhir-datový-model)) + aktualizace stavu žádanky (`Task`, `ServiceRequest`) | MUST |
 | **IRIS SQL + Vector Search** (`VECTOR`, `TO_VECTOR`, `VECTOR_COSINE`) | Odstavce zpráv (filtr na pacienta), pasáže guidelines, kritéria studií: výběr a řazení pasáží, **ověření citací** (podobnost tvrzení a zdroje), propojení přepisu s fakty | MUST |
 | **Python DB-API** `intersystems-irispython` (`import iris`) | Přístup z Djanga (SQL, vektory, native API pro inicializaci FHIR serveru) | MUST |
-| **FHIR SQL Builder** | Projekce `Observation` (laboratoř, hmotnost, ECOG) do SQL pro trendy, pravidla red flags a dashboard zasedání | SHOULD |
+| **FHIR SQL Builder** | Projekce `Observation` (laboratoř, hmotnost, ECOG) do SQL pro trendy, pravidla red flags a dashboard zasedání. **Realizováno (T-309) jako SQL pohled `MDT.ObservationSeries`** nad úložištěm FHIR serveru (`HSFHIR_X0001_R.Rsrc` + `JSON_TABLE`): vždy aktuální, bez ruční konfigurace Builderu v portálu a bez synchronizace; zakládá ho `iris_init`, čte `services/iris/projections.py`. Živě sedí s FHIR REST na všech 13 řadách P03 | SHOULD |
 | **MCP server nad IRIS** (FastMCP, kit 5.2) | Nástroje `get_patient_context`, `search_evidence`, `search_guidelines`, `fhir_query` pro copilot agenta; ukázka „IRIS jako MCP backend“ | SHOULD |
 | **FHIR packages (mCODE IG) + `$validate`** | Validace exportu proti profilům (`HS.FHIRMeta.Load.NpmLoader.importPackages`) | BONUS |
 | Interoperability production | Ingest „surových“ eZdraví zpráv (File → DTL → FHIR); dataset už je FHIR, takže netřeba | stretch, ne |
@@ -1092,7 +1092,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/patients/` | seznam pacientů (z FHIR `Patient` + primární `Condition`) |
 | GET | `/api/patients/{pid}/` | detail: demografie, diagnózy, komorbidity, TNM, ECOG |
 | GET | `/api/patients/{pid}/timeline/` | události časové osy s Evidence ID |
-| GET | `/api/patients/{pid}/observations/?code=…` | časové řady (labs, hmotnost, ECOG, PROMs skóre) pro grafy |
+| GET | `/api/patients/{pid}/observations/?code=…[&source=sql]` | časové řady (labs, hmotnost, ECOG, PROMs skóre) pro grafy; `source=sql` čte kódované číselné `Observation` ze SQL pohledu `MDT.ObservationSeries` (T-309) |
 | GET | `/api/evidence/?id={EvidenceId}` | zdroj citace (text + zvýraznění / hodnota / pasáž guidelines / kritérium studie) |
 | GET, POST | `/api/mdt/sessions/` | zasedání |
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |

@@ -47,12 +47,19 @@ def patient_timeline(request, pid):
 
 @extend_schema(
     responses=OpenApiTypes.OBJECT, tags=['patients'],
-    parameters=[OpenApiParameter('code', str, description='Kódy řad oddělené čárkou: LOINC (718-7), druh (lvef), proms:<linkId>')],
+    parameters=[OpenApiParameter('code', str, description='Kódy řad oddělené čárkou: LOINC (718-7), druh (lvef), proms:<linkId>'),
+                OpenApiParameter('source', str, description='`sql` = SQL projekce MDT.ObservationSeries v IRIS (jen kódované '
+                                 'číselné Observation, T-309); výchozí FHIR REST')],
 )
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def patient_observations(request, pid):
     codes = {c for c in request.query_params.get('code', '').split(',') if c} or None
+    if request.query_params.get('source') == 'sql':
+        from services.iris import projections
+        if not patients.VALID_ID.match(pid or ''):
+            return Response({'detail': 'Neplatné ID pacienta.'}, status=400)
+        return Response(projections.observation_series(pid, codes))
     return Response(patients.observations(_load(pid), codes))
 
 

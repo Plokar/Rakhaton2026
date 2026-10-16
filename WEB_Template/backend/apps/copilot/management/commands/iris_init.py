@@ -40,6 +40,12 @@ class Command(BaseCommand):
                 )
 
         self._put_device()
+        try:                                       # T-309: SQL projekce Observation (pohled nad FHIR úložištěm)
+            from services.iris import projections
+            projections.ensure_view()
+            self.stdout.write(f'SQL pohled {projections.VIEW} je připravený.')
+        except Exception as exc:                   # bez pohledu aplikace běží dál (REST cesta)
+            self.stderr.write(f'SQL pohled {projections.VIEW} se nepodařilo založit: {exc}')
         self.stdout.write(self.style.SUCCESS('IRIS FHIR server je připravený.'))
 
     def _wait_for_iris(self, timeout):

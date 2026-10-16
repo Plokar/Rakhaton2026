@@ -1,0 +1,74 @@
+{
+  "segments": [
+    {
+      "speaker": "předseda",
+      "start": "00:00",
+      "text": "Dobrý den, pokračujeme pacientem P03. Muž, šedesát sedm let, adenokarcinom sigmatu s jaterními metastázami po osmi cyklech FOLFOX s bevacizumabem. Otázka zní, zda jsou metastázy resekabilní a v jakém pořadí."
+    },
+    {
+      "speaker": "onkolog",
+      "start": "00:13",
+      "text": "Pacient dostal osm cyklů FOLFOX s bevacizumabem, poslední sedmého září. V osmém cyklu jsem snížil oxaliplatinu na sedmdesát pět procent pro přetrvávající parestezie. KRAS G12D, BRAF bez mutace. Neuropatii jsem hodnotil jako grade jedna, ale pacient v dotazníku píše, že špatně zapíná knoflíky a padají mu věci z ruky. To odpovídá spíš grade dva. ECOG hodnotím nula, pacient sám uvádí jedna. Zhubl z osmdesáti čtyř na sedmdesát osm kilogramů."
+    },
+    {
+      "speaker": "radiolog",
+      "start": "00:43",
+      "text": "Na CT z dvacátého prvního září je parciální odpověď podle RECIST, součet cílových lézí klesl z osmdesáti tří na padesát milimetrů, tedy o čtyřicet procent. Hrudník nebyl požadován, poslední CT hrudníku je z dubna. Na MR z dvacátého osmého září ložisko S5 vymizelo, ložisko S3 v levém laloku se zmenšilo na čtyři milimetry a S8 se stále dotýká pravé jaterní žíly. Levý lalok má odhadem třicet osm procent objemu jater."
+    },
+    {
+      "speaker": "chirurg",
+      "start": "01:08",
+      "text": "Resekabilní to je, ale ne jednodobě. Po osmi cyklech chemoterapie chci budoucí remnant aspoň čtyřicet procent, třicet osm je hraniční. Navrhuji dvoudobý postup: v první době ošetřit ložisko S3 a odstranit primární tumor, ve druhé pravostranná hepatektomie včetně původní lokalizace S5. Bevacizumab byl naposledy sedmého září, šest týdnů uplyne devatenáctého října, operaci tedy můžeme plánovat."
+    },
+    {
+      "speaker": "předseda",
+      "start": "01:35",
+      "text": "Než to uzavřeme, chybí nám kompletní restaging. Bez CT hrudníku nemůžeme vyloučit extrahepatální onemocnění."
+    },
+    {
+      "speaker": "radiolog",
+      "start": "01:43",
+      "text": "CT hrudníku zvládneme do pátku dvacátého třetího října."
+    },
+    {
+      "speaker": "patolog",
+      "start": "01:46",
+      "text": "Stav MMR a MSI nebyl vyšetřen, molekulární vyšetření bylo jen na RAS a BRAF. Z parafinového bloku biopsie to doplníme do dvacátého sedmého října. Otec pacienta měl karcinom tlustého střeva, takže je indikované i genetické poradenství."
+    },
+    {
+      "speaker": "onkolog",
+      "start": "02:02",
+      "text": "Souhlasím. Oxaliplatinu už nepodávat, neuropatie podle pacienta odpovídá grade dva a pacient je profesionální řidič. Kvůli úbytku hmotnosti ho pošlu i na nutriční vyšetření."
+    },
+    {
+      "speaker": "předseda",
+      "start": "02:13",
+      "text": "A klinická studie COLUMBA-LM, RKT nula tři?"
+    },
+    {
+      "speaker": "onkolog",
+      "start": "02:17",
+      "text": "Zatím nelze rozhodnout. Chybí hrudník a MMR a neuropatie grade dva by byla vyřazovacím kritériem. Vrátíme se k tomu po doplnění."
+    },
+    {
+      "speaker": "předseda",
+      "start": "02:25",
+      "text": "Shrnu závěr. Záměr je kurativní. Doporučujeme dvoudobou resekci jater, v první době ošetření ložiska S3 a resekci primárního tumoru, pokud doplněné CT hrudníku nepotvrdí extrahepatální onemocnění. Úkoly: radiolog CT hrudníku do dvacátého třetího října, patolog MMR a MSI do dvacátého sedmého října, chirurg CT volumetrie jater a plán první doby do třicátého října, ošetřující onkolog genetické poradenství a nutriční vyšetření, oxaliplatinu nepodávat. Re-MDT čtvrtého listopadu. Souhlasíte?"
+    },
+    {
+      "speaker": "chirurg",
+      "start": "02:57",
+      "text": "Souhlasím."
+    },
+    {
+      "speaker": "radiolog",
+      "start": "02:59",
+      "text": "Ano, souhlasím."
+    },
+    {
+      "speaker": "patolog",
+      "start": "03:00",
+      "text": "Souhlasím."
+    }
+  ]
+}

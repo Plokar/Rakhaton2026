@@ -33,8 +33,9 @@ def document_bundle(fhir_ids: dict, now: datetime) -> dict:
     record = [('Composition', fhir_ids['composition']), ('CarePlan', fhir_ids['careplan']), ('CareTeam', fhir_ids['careteam'])]
     record += [('Task', i) for i in fhir_ids['tasks']] + [('DetectedIssue', i) for i in fhir_ids['detected_issues']]
     record += [('ResearchSubject', i) for i in fhir_ids['research_subjects']] + [('Provenance', fhir_ids['provenance'])]
-    if fhir_ids.get('document_reference_pdf'):
-        record.append(('DocumentReference', fhir_ids['document_reference_pdf']))
+    for key in ('document_reference_pdf', 'document_reference_patient'):
+        if fhir_ids.get(key):
+            record.append(('DocumentReference', fhir_ids[key]))
     resources = {f'{t}/{i}': fhir.read(t, i) for t, i in record}
     # ponytail: jen jeden skok referencí; hlubší graf (zdroje zdrojů) je v IRIS, dokument by zbytečně nabobtnal
     for ref in sorted(set().union(*map(_references, list(resources.values()))) - set(resources)):
@@ -110,6 +111,8 @@ def decision_pdf(decision: dict, *, title: str, mdt_date: datetime, patient: dic
     if s.get('tumor_priority'):
         section('Priorita nádorů', s['tumor_priority']['text'], s['tumor_priority']['source'])
     section('Závěr MDT', s['conclusion']['text'], s['conclusion']['source'])
+    if decision.get('patient_summary'):                       # BON-4 (T-306)
+        section('Shrnutí pro pacienta', ' '.join(i['text'] for i in decision['patient_summary']['items']), 'ai')
 
     if decision['tasks']:
         story.append(p('Úkoly', h2))

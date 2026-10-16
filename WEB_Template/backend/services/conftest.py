@@ -42,3 +42,15 @@ def fake_iris(monkeypatch) -> FakeIris:
     server = FakeIris()
     monkeypatch.setattr(db, 'connect', server.connect)
     return server
+
+
+@pytest.fixture
+def grounding_vectors(fake_iris, dataset_root) -> FakeIris:
+    """Vektory všech 6 pacientů, guidelines a kritérií studií v in-memory IRIS (grounding v2, T-213)."""
+    from services.iris import indexing
+
+    for patient_id in ('P01', 'P02', 'P03', 'P04', 'P05', 'P06'):
+        indexing.index_patient(patient_id, ingest.load_patient(dataset_root, patient_id))
+    indexing.index_guidelines(indexing.guideline_chunks(dataset_root))
+    indexing.index_trials(indexing.trial_criteria(ingest.load_studies(dataset_root)))
+    return fake_iris

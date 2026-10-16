@@ -634,6 +634,7 @@ ORDER BY Score DESC
 - Skills z kitu (`iris-fhir`, `iris-vector-search`, `iris-sql-python`, `iris-ai-agents`, `iris-environment`) jsou v `.claude/skills/` (T-011, MIT, kit V2 commit `3ebaee2`). Každý začíná blokem **„V MDT Copilot“**, který má přednost před textem kitu: odkazuje na naše implementace (`services/fhir`, `services/iris`, `services/mcp`) a vypisuje rozdíly (žádná Synthea ani POST, Gemini místo OpenAI, bez LangChain, compose služba `iris`).
   - Obsahují ověřené snippety a gotchas.
   - **Pozor: kit používá OpenAI** (`text-embedding-3-small`, `gpt-5-nano`). U nás se embeddingy i LLM volají přes Gemini ([§5.7](#57-model-a-ochrana-údajů)). IRIS část (SQL, `TO_VECTOR`, `VECTOR_COSINE`) platí beze změny.
+- **UI skills** (T-015, MIT): `shadcn` ([shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), commit `d2fba50`), `web-design-guidelines` a `vercel-react-best-practices` ([vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `063bee9`). I ty začínají blokem **„V MDT Copilot“**: Next 16 v `WEB_Template/frontend`, shadcn zatím bez `components.json` (`init` / `add` jen po domluvě s UI lane), tři barevné systémy semafor / odbornost / AI jsou záměr (D-017) a pravidlo „jen sémantické tokeny“ na ně neplatí.
 - Volitelně MCP [iris-agentic-dev](https://github.com/intersystems-community/iris-agentic-dev) pro živý přístup agenta k IRIS (`iris-agentic-dev init` detekuje Docker kontejner).
 
 ---
@@ -807,6 +808,13 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - Pro každou roli z `roles_present` jedno volání Gemini (`prompts/role_view.md`), všechna souběžně se souhrnem a RF-LLM.
   - Kritérium posouzení s citací mimo kontext dostane `unknown`.
   - Bez LLM (mock nebo chyba) vzniknou tvrzení z dat podle zaměření role a posouzení ze semaforu postupů, za které role odpovídá (red → `not_candidate`, orange → `conditional`, šedá → `insufficient_data`; u radiologa pravidla stagingu). Podpůrná léčba verdikt onkologa netvoří.
+- **Údaje podle diagnózy a katalog metod (FR-B8, FR-D5, T-506):** `services/ai/diagnosis_data.py` + data `services/ai/data/diagnosis_data.yaml` (docs/POZADAVKY_LEKARE.md §4 a §5.2).
+  - Ke každé sekci odbornosti kód připojí údaje podle sady guidelines pacienta: KRC chirurg FLR, poslední dávka bevacizumabu, restaging; onkolog RAS / BRAF / MMR, neuropatie. PLI: chirurg ppoFEV1 / ppoDLCO / VO2max, pneumolog spirometrie a kouření, onkolog EGFR / ALK / ROS1 / PD-L1. PRS: onkolog ER / PR / HER2 / Ki-67 a LVEF, kardiolog trend LVEF. Údaje se přidají vždy, i když je LLM nezmínil, a nekrátí se podle detailu.
+  - Chybějící údaj je `missing` s `expected_source` = pasáž, která ho vyžaduje (např. VO2max → PLI-3.1).
+  - Sekce `modalities` („Léčebné metody a odborníci“): pro každou `mdt-modalita` ze semaforu kdo se musí vyjádřit, co má mít u sebe a které postupy ze sady guidelines k ní patří, s citací pasáží a faktů pacienta.
+  - Obojí sestavuje kód (`_computed`), proto se přeskočí bod 4 groundingu. Body 1–3 platí.
+- **Anamnéza (FR-A5, T-507):** `services/ai/anamnesis.py` vezme z odstavců `DocumentReference` nejnovější znění každé sekce (NO, OA, FA včetně „Léková anamnéza“, alergie, RA, GA, SA, „Anamnéza“) s citací odstavce. Do `INTAKE_ANAMNESIS_MAX_CHARS` (600) jde doslovně, nad limit shrnutí LLM s citacemi jen na tyto odstavce (fallback: první věta každé sekce + „…“). Sekce `anamnesis` běží v poolu souběžně s ostatními voláními. Doslovné znění otevře klik na citaci (přepínač `AnamnesisBlock` je volitelný UI krok).
+- **Lung-RADS / Fleischner (BON-6, T-508):** `services/rules/scales.py:evaluate_scales(resources)` → `{scale, applicable, category, reason, patient_citations, rule_citation}` (`EXT-LUNGRADS-2022`, `EXT-FLEISCHNER-2017`). Lung-RADS jen u screeningového nízkodávkového CT plic (kategorie podle velikosti solidního uzlu), Fleischner jen u náhodného uzlu bez známého nádoru, ≥ 35 let a mimo screening (tabulka intervalů zatím ⚪). Výsledek je tvrzení v sekci radiologa a pneumologa; u všech 6 pacientů „nelze použít“ s důvodem. Imunosuprese se zatím nekontroluje.
 
 ### 5.6 AI zapisovatel (BON-3)
 
@@ -821,6 +829,12 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - draft `Decision` (rozhodnutí, zdůvodnění, úkoly s vlastníkem a termínem, re-MDT) s citacemi na segmenty přepisu (`P03-mdt02-prepis#12`);
   - přepis se uloží jako `DocumentReference/Pxx-mdtNN-prepis`.
 - Vždy jen **draft**. Předseda edituje a potvrzuje.
+- **Implementace (T-305):** `POST /api/mdt/cases/{cid}/scribe/` (předseda, lékař; multipart `audio` ≤ 20 MB, nebo JSON `{transcript}` „MM:SS mluvčí: text“ / `{segments}`) → job `scribe` → `services/ai/scribe.py:generate_scribe`.
+  1. Audio přepíše `provider.transcribe` (Gemini, `Transcript`).
+  2. Přepis se uloží jako `DocumentReference/{next_mdt_id}-prepis` (text/plain, úsek = odstavec, takže `#n` = n-tý úsek a resolver citací ho umí); vazba `context.related` na nominaci `ServiceRequest`, protože `Composition` vznikne až potvrzením.
+  3. LLM (`ScribeDraft`) z přepisu a kontextu pacienta sestaví draft `Decision`. Citace mimo přepis a kontext se zahodí, úkol bez termínu dostane termín re-MDT (jinak MDT + 14 dní), `study_ids` jen `RKT-nn`, `transcript_ref` = ID přepisu.
+  4. Bez LLM (mock) se nic nevymýšlí: závěr = poslední slovo předsedy s citací, úkoly prázdné.
+  5. Potvrzený závěr zapisovatel nepřepíše (409). Živě s Gemini: nahrávka P03 (3:01) → 13 úseků a draft se 4 úkoly jako v `expected_decision` za 54 s.
 
 ### 5.7 Model a ochrana údajů
 
@@ -1089,6 +1103,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
+| GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, lékař) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
 | POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3) |
 | GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4) |
 | POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids` |
@@ -1408,8 +1423,9 @@ interface Decision {
   fhir_ids?: {                                                 // po potvrzení
     composition: string;  careplan: string;  careteam: string;
     tasks: string[];  detected_issues: string[];  research_subjects: string[];
-    provenance: string;  document_reference_pdf?: string;
+    provenance: string;  document_reference_pdf?: string;  document_reference_patient?: string;   // "P03-mdt02-pacient"
   };
+  patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };   // BON-4, po potvrzení
 }
 ```
 

@@ -18,6 +18,8 @@ urlpatterns = [
     path('cases/<int:cid>/export.fhir.json', views.case_export_fhir, name='case-export-fhir'),
     path('cases/<int:cid>/export.pdf', views.case_export_pdf, name='case-export-pdf'),
     path('cases/<int:cid>/brief/', views.case_brief, name='case-brief'),
+    path('cases/<int:cid>/scribe/', views.case_scribe, name='case-scribe'),
+    path('cases/<int:cid>/patient-summary/', views.case_patient_summary, name='case-patient-summary'),
     path('cases/<int:cid>/readiness/', views.case_readiness, name='case-readiness'),
     path('cases/<int:cid>/compatibility/', views.case_compatibility, name='case-compatibility'),
 ]

@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext
+from services.ai.recist import recist_claim
 from services.ai_service import BaseAIProvider
 from services.rules.compatibility import CHECKS, load_catalog
 from services.rules.red_flags import PatientData
@@ -91,6 +92,10 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
              for i, item in enumerate((output or {}).get("items") or [], 1) if item.get("text", "").strip()]
     if not items:
         items = _fallback_items(role, cfg, context, data)
+    if role == "radiologist":
+        recist = recist_claim(context, provider, log_call)
+        if recist:
+            items.append(recist)
 
     assessment = None
     if question:

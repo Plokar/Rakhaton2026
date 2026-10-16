@@ -294,3 +294,24 @@ def test_grounding_v2_skips_structured_citations_without_vectors(p03_context, mo
         {"kind": "claim", "text": "CT z 21. 9. 2026 bez hrudníku", "citations": ["P03-img03"]},
     ], p03_context)
     assert [item["verification"] for item in result] == ["verified", "unverified"]
+
+
+# ── T-507: anamnéza (FR-A5) ───────────────────────────────────────────────────
+def test_short_anamnesis_is_verbatim_with_citations():
+    items = section(brief_for("P03"), "anamnesis")["items"]
+    texts = [i["text"] for i in items]
+    assert texts[0].startswith("Osobní anamnéza: IM 2019, st. p. PCI RIA")
+    assert "Rodinná anamnéza: otec karcinom tlustého střeva v 72 letech." in texts
+    assert "Alergie: neudává." in texts
+    assert all(i["verification"] == "verified" and i["citations"][0].startswith("P03-doc02#") for i in items)
+
+
+def test_long_anamnesis_is_ai_summary_with_citations(monkeypatch):
+    monkeypatch.setenv("INTAKE_ANAMNESIS_MAX_CHARS", "300")          # P06 má ~570 znaků → shrnutí
+    llm = {"items": [{"text": "Žije sama, chodí s holí, dříve dlouhodobě kouřila.", "citations": ["P06-doc05#3"]},
+                     {"text": "Vymyšlený bod bez platné citace.", "citations": ["P06-doc99#1"]}]}
+    items = section(brief_for("P06", MockAIProvider(responses={"AnamnesisOutput": llm})), "anamnesis")["items"]
+    assert [i["text"] for i in items] == ["Žije sama, chodí s holí, dříve dlouhodobě kouřila."]
+    fallback = section(brief_for("P06"), "anamnesis")["items"]               # mock bez odpovědi: první věty
+    assert fallback[0]["text"].startswith("Nynější onemocnění: Pravidelně chodila") and fallback[0]["text"].endswith("…")
+    assert all(i["verification"] == "verified" for i in fallback)

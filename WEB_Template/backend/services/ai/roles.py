@@ -28,6 +28,7 @@ from services.ai.recist import recist_claim
 from services.ai_service import BaseAIProvider
 from services.rules.compatibility import CHECKS, load_catalog
 from services.rules.red_flags import PatientData
+from services.rules.scales import scale_claims
 
 log = logging.getLogger(__name__)
 
@@ -102,6 +103,8 @@ def role_section(role: str, context: PatientContext, data: PatientData, compatib
         items = _fallback_items(role, cfg, context, data)       # data z FHIR se nekrátí (chybějící údaje zůstanou)
     # FR-B8 (T-506): údaje podle diagnózy doplní kód vždy, i když je LLM nezmínil.
     items += role_diagnosis_items(role, context, {c for item in items for c in item["citations"]})
+    if role in ("radiologist", "pulmonologist"):                # BON-6 (T-508): Lung-RADS / Fleischner
+        items += scale_claims(data.resources, role)
     if recist_future:
         recist = recist_future.result()
         recist_pool.shutdown()

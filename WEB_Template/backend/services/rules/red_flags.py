@@ -24,7 +24,8 @@ from services.rules.guideline_sets import guideline_sets_for
 SEVERITY_ORDER = {"high": 0, "moderate": 1, "low": 2}
 
 LOINC = {"ecog": "89247-1", "weight": "29463-7", "hb": "718-7", "na": "2951-2", "glu": "15074-8",
-         "alb": "1751-7", "cea": "2039-6", "ca199": "24108-3", "ca153": "6875-3"}
+         "alb": "1751-7", "cea": "2039-6", "ca199": "24108-3", "ca153": "6875-3", "neu": "751-8", "plt": "777-3",
+         "krea": "14682-9", "bili": "14631-6"}
 MARKERS = {"cea": "CEA", "ca199": "CA 19-9", "ca153": "CA 15-3"}
 SYMPTOMS = {"bolest": "bolest", "unava": "únava", "nevolnost": "nevolnost", "dusnost": "dušnost",
             "chut": "chuť k jídlu", "brneni": "brnění", "prujem": "průjem", "psychika": "psychika",
@@ -509,21 +510,29 @@ def rf_lab(data: PatientData) -> list[RedFlag]:
     return flags
 
 
-def rf_weight(data: PatientData) -> list[RedFlag]:
+def weight_change(data: PatientData, window_days: int = WEIGHT_WINDOW_DAYS):
+    """(maximum v okně, poslední měření, podíl úbytku) z `vaha` i PROMs `hmotnost`; body = (datum, kg, ID)."""
     points = [(o.date, o.value, o.id) for o in data.by_loinc("weight") if o.date]
     for qr in data.proms:
         weight = data.answers(qr).get("hmotnost")
         if isinstance(weight, (int, float)) and _date(qr.get("authored")):
             points.append((_date(qr["authored"]), weight, qr["id"]))
     if len(points) < 2:
-        return []
+        return None
     points.sort()
     last = points[-1]
-    window = [p for p in points[:-1] if (last[0] - p[0]).days <= WEIGHT_WINDOW_DAYS]
+    window = [p for p in points[:-1] if (last[0] - p[0]).days <= window_days]
     if not window:
-        return []
+        return None
     peak = max(window, key=lambda p: p[1])
-    loss = (peak[1] - last[1]) / peak[1]
+    return peak, last, (peak[1] - last[1]) / peak[1]
+
+
+def rf_weight(data: PatientData) -> list[RedFlag]:
+    change = weight_change(data)
+    if change is None:
+        return []
+    peak, last, loss = change
     if loss < WEIGHT_LOSS:
         return []
     return [_flag("RF-WEIGHT", last[2], "moderate", f"Úbytek hmotnosti {round(loss * 100)} %",

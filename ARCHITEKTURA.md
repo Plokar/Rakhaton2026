@@ -849,6 +849,12 @@ Požadavek lékaře (FR-D4, D-015). Barva **není doporučení**. Říká, jestl
   7. preference pacienta barvu nemění, zobrazí se jako štítek.
 - **Zobrazení:** v B2 u každé možnosti léčby (`DecisionSupport.treatment_options[].compatibility`, §8.3). **Vždy se zobrazí všechny možnosti** z guidelines, i červené. Nadpis zní „Soulad se stavem pacienta“, nikdy „doporučujeme“.
 - **Očekávané barvy pro P03 a P04** (dev ground truth, T-013): [docs/POZADAVKY_LEKARE.md §5.4](docs/POZADAVKY_LEKARE.md#54-očekávané-barvy-pro-demo-podklad-pro-dev-ground-truth-t-013).
+- **Implementace (T-503):**
+  - `services/rules/data/compatibility_rules.yaml` drží data: pravidla `VS-*` (prahy, `source`, volitelně `threshold_source`, pole formuláře `fields`, `team_threshold` pro prahy ⚠ podle Q-7) a katalog postupů podle sady guidelines (`requires_icd` / `requires` určují, kdy postup dává smysl).
+  - `services/rules/compatibility.py` obsahuje kontrolní funkce. `evaluate_compatibility(resources, skipped_fields=[], comorbidities_confirmed=False)` vrátí `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]`.
+  - Externí zdroje `EXT-…` bere jen z katalogu T-504 (`services/iris/data/external_sources.json`).
+  - „Není v dokumentaci“ (IM, ILD, MDS) je zelené jen s `comorbidities_confirmed`, jinak šedé (docs/POZADAVKY_LEKARE.md §5.1).
+  - **Možnosti léčby v B2 (T-204) se berou z tohoto katalogu:** `treatment_options[].id/title/guideline_citations/compatibility` dodá kód, LLM píše jen `rationale`, `prerequisites_missing` a `considerations`. Díky tomu se červená možnost nikdy neztratí.
 
 ### 5.10 Zařazení pacienta a kontrola úplnosti
 
@@ -1015,7 +1021,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli) |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
-| GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4, `TreatmentCompatibility[]` §8.3) |
+| GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |

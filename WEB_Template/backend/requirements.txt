@@ -51,6 +51,8 @@ cryptography>=41.0.0
 # AI – Google Gemini API (ARCHITEKTURA §5.7) + schémata pro response_schema
 google-genai>=2.31,<3
 pydantic>=2.6,<3
+# Pravidla semaforu jako data (services/rules/data/compatibility_rules.yaml)
+PyYAML>=6.0
 
 # =============================================================================
 # VOLITELNÉ – Odkomentovat podle potřeby

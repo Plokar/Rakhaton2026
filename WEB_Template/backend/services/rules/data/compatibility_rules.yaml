@@ -1,0 +1,381 @@
+# Semafor souladu léčebných postupů se stavem pacienta (D-015, ARCHITEKTURA §5.9).
+# Katalog a prahy: docs/POZADAVKY_LEKARE.md §5.3, očekávané barvy §5.4.
+#
+# Barvu počítá kód (services/rules/compatibility.py), LLM ji nikdy nepřiřazuje.
+# - rules.<ID>.check   = jméno kontrolní funkce v compatibility.py
+# - rules.<ID>.source  = citace pravidla: pasáž guidelines, kritérium studie nebo EXT-… (D-016);
+#   katalog EXT-… je v services/iris/data/external_sources.json (T-504, nahrává se do MDT.GuidelineChunk)
+# - rules.<ID>.threshold_source = zdroj číselného prahu, když se liší od pasáže, která pravidlo zakládá
+# - rules.<ID>.fields  = pole formuláře zařazení (§8.6); přeskočené pole → „skipped“ (neposuzováno)
+# - rules.<ID>.team_threshold = práh ⚠ potvrdil tým (Q-7), klinicky ho zatím neověřil lékař
+# - procedures         = možnosti léčby z dodaných guidelines; vždy se zobrazí všechny, i červené
+
+rules:
+  # ── Obecná pravidla ──────────────────────────────────────────────────────────
+  VS-OBC-01:
+    title: "ECOG lékaře pro intenzivní léčbu"
+    check: ecog_physician
+    source: OBC-1.3
+    green_max: 1
+    orange_max: 2              # ≥ 3 červená (⚠ kritéria studií ECOG 0–1)
+    team_threshold: true
+    fields: [ecog.physician]
+  VS-OBC-02:
+    title: "ECOG lékař vs. pacient"
+    check: ecog_difference
+    source: OBC-1.3
+    fields: [ecog.physician, ecog.patient]
+  VS-OBC-03:
+    title: "Geriatrický screening G8 (věk ≥ 70)"
+    check: g8
+    source: OBC-2.2
+    min_age: 70
+    g8_threshold: 14           # ≤ 14 → komplexní geriatrické hodnocení
+    threshold_source: EXT-G8-2023
+    fields: [geri.g8]
+  VS-OBC-04:
+    title: "Úbytek hmotnosti za 6 měsíců"
+    check: weight_loss
+    source: OBC-2.3
+    loss_orange: 0.05
+    window_days: 183
+    fields: [weight]
+  VS-OBC-05:
+    title: "Glykémie při kortikoidech"
+    check: steroid_glucose
+    source: OBC-3.1
+    glucose_max: 10            # ⚠ práh z ARCHITEKTURA RF-LAB
+    team_threshold: true
+  VS-OBC-06:
+    title: "Krevní obraz pro myelotoxickou léčbu"
+    check: blood_counts
+    source: RKT-06/Z4
+    neu_min: 1.5
+    plt_min: 100
+    hb_min: 90
+    team_threshold: true
+  VS-OBC-07:
+    title: "Bilirubin pro systémovou léčbu"
+    check: bilirubin
+    source: RKT-01/V3
+    uln_factor: 1.5
+  VS-OBC-09:
+    title: "Aktuálnost stagingu k datu MDT"
+    check: staging_age
+    source: OBC-1.2
+    max_days: 42
+    fields: [staging.imaging]
+  VS-OBC-10:
+    title: "Nejasné ložisko nebo druhý nádor bez histologie"
+    check: unclear_lesion
+    source: OBC-1.4
+  VS-OBC-11:
+    title: "Byliny a léky mimo medikaci (CYP3A)"
+    check: cyp3a_interaction
+    source: EXT-KISQALI-SMPC-UK
+
+  # ── Chirurgie obecně ─────────────────────────────────────────────────────────
+  VS-CHIR-01:
+    title: "Infarkt myokardu a koronární stent"
+    check: cardiac_events
+    source: EXT-ACC-AHA-ESC-2022
+    mi_days: 60
+    stent_days: 183
+    team_threshold: true
+  VS-CHIR-02:
+    title: "Kouření"
+    check: smoking
+    source: PLI-3.3
+    fields: [smoking]
+  VS-CHIR-03:
+    title: "Interval od poslední dávky bevacizumabu"
+    check: bevacizumab_interval
+    source: KRC-2.3
+    min_days: 42
+
+  # ── Kolorektum (C18–C20) ─────────────────────────────────────────────────────
+  VS-KRC-01:
+    title: "Budoucí jaterní remnant (FLR)"
+    check: flr
+    source: KRC-2.1
+    flr_min: 30
+    flr_min_after_chemo: 40
+    intensive_cycles: 4        # ≥ 4 podání oxaliplatiny / irinotekanu = intenzivní chemoterapie
+    fields: [liver.flr]
+  VS-KRC-02:
+    title: "Kompletní restaging před resekcí jater"
+    check: liver_restaging
+    source: KRC-2.4
+    max_days: 42
+    fields: [staging.chest_ct, staging.liver_mr]
+  VS-KRC-03:
+    title: "Rozsah jaterního postižení"
+    check: liver_extent
+    source: KRC-2.5
+  VS-KRC-05:
+    title: "Neuropatie a oxaliplatina"
+    check: neuropathy_oxaliplatin
+    source: KRC-3.2
+    fields: [tox.neuropathy]
+  VS-KRC-06:
+    title: "Stav RAS pro anti-EGFR"
+    check: ras_status
+    source: KRC-3.1
+    fields: [bm.ras]
+  VS-KRC-07:
+    title: "MMR / MSI pro imunoterapii"
+    check: mmr_status
+    source: KRC-1.2
+    fields: [bm.mmr]
+  VS-KRC-08:
+    title: "Bevacizumab: hypertenze a arteriální tromboembolie"
+    check: bevacizumab_safety
+    source: EXT-AVASTIN-FDA-2020
+  VS-KRC-09:
+    title: "Deficit DPD před fluoropyrimidiny"
+    check: dpd
+    source: EXT-EMA-DPD-2020
+  VS-KRC-10:
+    title: "Délka konverzní chemoterapie"
+    check: conversion_cycles
+    source: KRC-2.2
+    cycles_orange: 4
+
+  # ── Plíce (C34) ──────────────────────────────────────────────────────────────
+  VS-PLI-01:
+    title: "Predikované pooperační plicní funkce"
+    check: ppo_lung_function
+    source: PLI-3.1
+    ppo_min: 60
+    ppo_high_risk: 30
+    fields: [spiro.ppo_fev1, spiro.ppo_dlco]
+  VS-PLI-02:
+    title: "Spiroergometrie (VO2max)"
+    check: vo2max
+    source: EXT-VO2MAX-2016
+    vo2_green: 20
+    vo2_red: 10
+    team_threshold: true
+    fields: [spiro.vo2max]
+  VS-PLI-03:
+    title: "Dušnost a chůze podle pacienta"
+    check: dyspnea_walking
+    source: PLI-3.1
+    dyspnea_orange: 7
+    walking_limited: [1-patro-zastavka, rovina, byt]
+  VS-PLI-04:
+    title: "Ložisko měnící stadium (M kategorie)"
+    check: unclear_lesion
+    source: PLI-1.2
+  VS-PLI-05:
+    title: "MR mozku a invazivní staging mediastina"
+    check: lung_staging
+    source: PLI-1.1
+    fields: [staging.brain_mr, staging.ebus]
+  VS-PLI-06:
+    title: "EGFR a ALK před imunoterapií"
+    check: egfr_alk
+    source: PLI-1.3
+    fields: [bm.egfr, bm.alk]
+  VS-PLI-07:
+    title: "PD-L1 pro durvalumab"
+    check: pdl1
+    source: PLI-2.4
+    tps_min: 1
+    fields: [bm.pdl1]
+  VS-PLI-09:
+    title: "Sodík (hyponatrémie)"
+    check: sodium
+    source: PLI-3.2
+    fields: [lab.na]
+  VS-PLI-10:
+    title: "Plicní funkce pro radikální radioterapii"
+    check: no_threshold
+    source: PLI-2.4
+    text: "Práh plicních funkcí pro radikální radioterapii v podkladech není, doplní radiační onkolog."
+  VS-PLI-11:
+    title: "Způsobilost pro cisplatinu"
+    check: cisplatin_fitness
+    source: EXT-GALSKY-2011
+    crcl_min: 60
+    team_threshold: true
+
+  # ── Prs (C50) ────────────────────────────────────────────────────────────────
+  VS-PRS-01:
+    title: "LVEF při anti-HER2 léčbě"
+    check: lvef_anti_her2
+    source: PRS-3.4
+    lvef_min: 50
+    drop_orange: 10
+    max_age_days: 92           # echo à 3 měsíce
+    fields: [lvef]
+  VS-PRS-02:
+    title: "ILD nebo pneumonitida v anamnéze (T-DXd)"
+    check: ild_history
+    source: PRS-2.3
+  VS-PRS-03:
+    title: "HER2 pro indikaci T-DXd"
+    check: her2_tdxd
+    source: PRS-1.2
+    fields: [bm.her2]
+  VS-PRS-04:
+    title: "Viscerální krize"
+    check: visceral_crisis
+    source: PRS-2.4
+    uln_factor: 1.5
+  VS-PRS-05:
+    title: "QTc před ribociklibem"
+    check: qtc
+    source: EXT-KISQALI-SMPC-UK
+    qtc_max: 450
+  VS-PRS-07:
+    title: "Hemoglobin a anémie G3 při PARP inhibitoru (protokol RKT-06)"
+    check: parpi_anemia
+    source: RKT-06/Z4
+    hb_stop: 80
+    hb_continue: 90
+    dose_levels: [300, 250, 200]
+  VS-PRS-08:
+    title: "MDS/AML v anamnéze (PARP inhibitor)"
+    check: mds_aml
+    source: RKT-06/V2
+  VS-PRS-09:
+    title: "Induktory a inhibitory CYP3A"
+    check: cyp3a_interaction
+    source: EXT-KISQALI-SMPC-UK
+  VS-PRS-10:
+    title: "Neuropatie a taxany"
+    check: neuropathy_taxane
+    source: PRS-3.1
+    grade_orange: 2            # ⚠ práh z praxe v datasetu (P06-doc08)
+    team_threshold: true
+    fields: [tox.neuropathy]
+  VS-PRS-11:
+    title: "Počet mozkových metastáz pro SRS"
+    check: brain_metastases
+    source: PRS-3.3
+    srs_max: 4
+  VS-PRS-12:
+    title: "CrCl pro kyselinu zoledronovou"
+    check: zoledronate_crcl
+    source: EXT-ZOMETA-SMPC-UK
+    crcl_full: 60
+    crcl_min: 30
+  VS-PRS-13:
+    title: "Stomatologické vyšetření před antiresorpční léčbou"
+    check: dental_exam
+    source: PRS-4.1
+
+procedures:
+  # ── Kolorektum ───────────────────────────────────────────────────────────────
+  - id: krc-resekce-jater
+    title: "Resekce jaterních metastáz (jednodobě nebo dvoudobě) a resekce primárního nádoru"
+    sets: [KRC]
+    requires_icd: [C78.7]
+    modality: chirurgie
+    owner_role: surgeon
+    guidelines: [KRC-2.1, KRC-2.4, KRC-2.5]
+    rules: [VS-KRC-01, VS-KRC-02, VS-KRC-03, VS-CHIR-03, VS-CHIR-01, VS-OBC-04, VS-OBC-02]
+    preference_keywords: [operac, resekc, chirurg, pracovní neschopnost, mimo práci]
+  - id: krc-konverzni-chemoterapie
+    title: "Pokračovat v konverzní chemoterapii (fluoropyrimidin + oxaliplatina ± bevacizumab)"
+    sets: [KRC]
+    modality: chemoterapie
+    owner_role: oncologist
+    guidelines: [KRC-2.2, KRC-3.1]
+    rules: [VS-KRC-05, VS-KRC-08, VS-KRC-09, VS-KRC-10]
+    preference_keywords: [chemo]
+  - id: krc-anti-egfr
+    title: "Anti-EGFR protilátka (cetuximab, panitumumab) s chemoterapií"
+    sets: [KRC]
+    modality: cilena
+    owner_role: oncologist
+    guidelines: [KRC-3.1]
+    rules: [VS-KRC-06]
+  - id: krc-imunoterapie
+    title: "Imunoterapie inhibitorem kontrolního bodu"
+    sets: [KRC]
+    modality: imunoterapie
+    owner_role: oncologist
+    guidelines: [KRC-1.2]
+    rules: [VS-KRC-07]
+
+  # ── Plíce ────────────────────────────────────────────────────────────────────
+  - id: pli-neoadjuvance-lobektomie
+    title: "Neoadjuvantní chemoimunoterapie a lobektomie"
+    sets: [PLI]
+    modality: chirurgie
+    owner_role: surgeon
+    guidelines: [PLI-2.2, PLI-3.1]
+    rules: [VS-PLI-01, VS-PLI-02, VS-PLI-03, VS-PLI-06, VS-PLI-04, VS-PLI-09, VS-CHIR-02, VS-OBC-03, VS-OBC-04,
+            VS-PLI-11]
+    preference_keywords: [operac, resekc, chirurg, dušnost]
+  - id: pli-chrt-durvalumab
+    title: "Konkomitantní chemoradioterapie a konsolidační durvalumab"
+    sets: [PLI]
+    modality: rt
+    owner_role: radiation_oncologist
+    guidelines: [PLI-2.4]
+    rules: [VS-PLI-07, VS-PLI-06, VS-PLI-10, VS-PLI-04, VS-OBC-04, VS-PLI-11]
+    preference_keywords: [ozař, radioterap]
+
+  # ── Prs ──────────────────────────────────────────────────────────────────────
+  - id: prs-endokrinni-cdk46
+    title: "Endokrinní léčba ± inhibitor CDK4/6 (linie podle biomarkerů)"
+    sets: [PRS]
+    requires: hr_positive_her2_not_positive
+    modality: hormonalni
+    owner_role: oncologist
+    guidelines: [PRS-2.1, PRS-2.2]
+    rules: [VS-PRS-04, VS-PRS-05, VS-PRS-09, VS-OBC-09]
+    preference_keywords: [hormon, tablet]
+  - id: prs-anti-her2
+    title: "Pertuzumab + trastuzumab (± taxan), udržovací anti-HER2 léčba"
+    sets: [PRS]
+    requires: her2_positive
+    modality: cilena
+    owner_role: oncologist
+    guidelines: [PRS-3.1]
+    rules: [VS-PRS-01, VS-PRS-10]
+  - id: prs-tdxd
+    title: "Trastuzumab deruxtekan (T-DXd)"
+    sets: [PRS]
+    requires: her2_tested
+    modality: cilena
+    owner_role: oncologist
+    guidelines: [PRS-2.3, PRS-3.2]
+    rules: [VS-PRS-03, VS-PRS-02, VS-PRS-01]
+  - id: prs-srs
+    title: "Stereotaktická radioterapie mozkových metastáz (SRS), pokračovat v anti-HER2 léčbě"
+    sets: [PRS]
+    requires_icd: [C79.3]
+    modality: rt
+    owner_role: radiation_oncologist
+    guidelines: [PRS-3.3]
+    rules: [VS-PRS-11, VS-OBC-05]
+    preference_keywords: [ozař, hlav, vlas]
+  - id: prs-parp-inhibitor
+    title: "PARP inhibitor (studie RKT-06)"
+    sets: [PRS]
+    requires: brca_pathogenic
+    modality: cilena
+    owner_role: oncologist
+    guidelines: [PRS-2.2, RKT-06]
+    rules: [VS-PRS-07, VS-PRS-08, VS-PRS-09, VS-OBC-06]
+    preference_keywords: [únav, jiné možnosti]
+  - id: prs-antiresorpcni
+    title: "Kyselina zoledronová nebo denosumab (kostní metastázy)"
+    sets: [PRS]
+    requires_icd: [C79.5]
+    modality: jina-systemova
+    owner_role: oncologist
+    guidelines: [PRS-4.1]
+    rules: [VS-PRS-12, VS-PRS-13]
+  - id: prs-chemoterapie
+    title: "Chemoterapie (volba podle předchozí léčby)"
+    sets: [PRS]
+    modality: chemoterapie
+    owner_role: oncologist
+    guidelines: [PRS-2.2]
+    rules: [VS-OBC-01, VS-OBC-06, VS-OBC-07, VS-OBC-09, VS-OBC-10]
+    preference_keywords: [chemo, vlas]

@@ -391,6 +391,8 @@ export interface Decision {
 export interface BriefConfig {
   id?: string;
   name: string;
+  /** Preset nabízený v konfigurátoru (GET /api/mdt/configs/). */
+  is_preset?: boolean;
   sections: { id: SectionId; enabled: boolean; order: number; detail?: DetailLevel }[];
   /** Ovlivní role_views, posouzení i záložky. */
   roles_present: RoleId[];

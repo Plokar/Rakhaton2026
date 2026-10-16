@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CalendarDays, Pencil, Trash2, UsersRound } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Pencil, SlidersHorizontal, Trash2, UsersRound } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { BoardDialog } from '@/components/mdt/BoardDialog';
 import { formatDate } from '@/components/mdt/format';
@@ -94,6 +94,13 @@ function AgendaContent({ sessionId }: { sessionId: string }) {
                 )}
               </p>
             </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/dashboard/mdt/${encodeURIComponent(sessionId)}/setup`}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground hover:bg-accent"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden /> {can.manageBoards(me) ? 'Nastavit podklad' : 'Nastavení podkladu'}
+              </Link>
             {can.manageBoards(me) && (
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1.5">
@@ -106,6 +113,7 @@ function AgendaContent({ sessionId }: { sessionId: string }) {
                 )}
               </div>
             )}
+            </div>
           </div>
           {deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
 

@@ -71,6 +71,7 @@ class SectionConfig(BaseModel):
 class BriefConfig(BaseModel):
     id: str | None = None
     name: str
+    is_preset: bool | None = Field(default=None, description="Preset nabízený v konfigurátoru")
     sections: list[SectionConfig]
     roles_present: list[RoleId] = Field(description="Ovlivní role_views, posouzení i záložky")
     detail_level: DetailLevel

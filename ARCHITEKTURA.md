@@ -1415,6 +1415,7 @@ interface Decision {
 interface BriefConfig {
   id?: string;
   name: string;
+  is_preset?: boolean;                          // preset v konfigurátoru (GET /api/mdt/configs/)
   sections: { id: SectionId; enabled: boolean; order: number; detail?: "brief" | "standard" | "detailed" }[];
   roles_present: RoleId[];                      // ovlivní role_views, posouzení i záložky
   detail_level: "brief" | "standard" | "detailed";

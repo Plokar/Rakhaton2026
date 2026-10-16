@@ -46,7 +46,16 @@ export const mdtApi = {
   createSession: (input: SessionInput) =>
     apiFetch<MdtSession>('/api/mdt/sessions/', { method: 'POST', body: JSON.stringify(input) }),
 
-  updateSession: (sessionId: number, input: Partial<SessionInput>) =>
+  /** Presety a konfigurace podkladu (FR-R1); zakládá a mění jen předseda. */
+  getConfigs: () => apiFetch<BriefConfig[]>('/api/mdt/configs/'),
+
+  createConfig: (config: BriefConfig) =>
+    apiFetch<BriefConfig>('/api/mdt/configs/', { method: 'POST', body: JSON.stringify(config) }),
+
+  updateConfig: (configId: string, config: BriefConfig) =>
+    apiFetch<BriefConfig>(`/api/mdt/configs/${encodeURIComponent(configId)}/`, { method: 'PUT', body: JSON.stringify(config) }),
+
+  updateSession: (sessionId: number, input: Partial<SessionInput> & { config_id?: number | null }) =>
     apiFetch<MdtSession>(`/api/mdt/sessions/${sessionId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   /** Jen prázdný board (409, když má pacienty). */

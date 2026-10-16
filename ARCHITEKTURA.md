@@ -1398,6 +1398,18 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   skipped_fields: string[];                     // IntakeField.id
   acknowledged_warnings: { id: string; by: number; at: string }[];
   status: "nominated" | "ready" | "in_discussion" | "decided" | "confirmed" | "returned";   // returned = vráceno k doplnění (OBC-1.1)
+  order?: number;                               // pořadí v agendě (jen čtení)
+  question?: string;                            // otázka pro MDT z nominace (jen čtení)
+  patient?: PatientListItem | null;             // jen v detailu boardu (hlavička z IRIS, §8.2)
+}
+
+interface MdtSession {                          // GET /api/mdt/sessions/ → (MdtSession & { patients: string[] })[]
+  id: number;                                   // GET /api/mdt/sessions/{sid}/ → MdtSession & { cases: MdtCase[] } (agenda)
+  date: string;                                 // místní čas "2026-10-21T14:00:00+02:00"
+  title: string;                                // "Mamární komise", "Mamární komise (urgentní)", "GIT – kolorektální karcinom / hepatobiliární"
+  status: "planned" | "in_progress" | "closed";
+  chair: { user_id: number; name: string } | null;
+  config_id: number | null;                     // výchozí BriefConfig boardu
 }
 ```
 

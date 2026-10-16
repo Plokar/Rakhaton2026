@@ -72,6 +72,7 @@ fi
 if [ "${DJANGO_DEBUG}" = "True" ]; then
   echo "🌱 Seeding demo data for Hackathon OS..."
   python manage.py seed_demo_data || echo "   (seed data skipped or already present)"
+  python manage.py seed_mdt || echo "   (seed_mdt přeskočen: IRIS bez dat? spusť ingest_dataset)"
 fi
 
 

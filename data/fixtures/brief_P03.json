@@ -1,0 +1,1024 @@
+{
+  "case_id": "1",
+  "patient_id": "P03",
+  "generated_at": "2026-10-20T08:00:00+02:00",
+  "model": "gemini-3.8-flash",
+  "config": {
+    "name": "GIT komise – výchozí",
+    "sections": [
+      { "id": "summary", "enabled": true, "order": 1 },
+      { "id": "timeline", "enabled": true, "order": 2 },
+      { "id": "red_flags", "enabled": true, "order": 3 },
+      { "id": "anamnesis", "enabled": true, "order": 4 },
+      { "id": "role_views", "enabled": true, "order": 5, "detail": "standard" },
+      { "id": "modalities", "enabled": false, "order": 6 },
+      { "id": "decision_support", "enabled": true, "order": 7 },
+      { "id": "trials", "enabled": true, "order": 8 },
+      { "id": "questions", "enabled": true, "order": 9 },
+      { "id": "mdt_question", "enabled": true, "order": 10 }
+    ],
+    "roles_present": ["oncologist", "surgeon", "radiologist", "pathologist", "patient"],
+    "detail_level": "standard",
+    "language": "cs",
+    "hide_unverified": false
+  },
+  "status": "draft",
+  "header": {
+    "display_name": "P03 · muž · 67 let",
+    "age": 67,
+    "sex": "male",
+    "diagnosis": {
+      "text": "Adenokarcinom sigmatu G2 s jaterními metastázami",
+      "icd10": "C18.7",
+      "citation": "P03-dg1"
+    },
+    "tnm": { "text": "cT3 cN1 cM1a", "stage": "IVA", "citation": "P03-tnm01" },
+    "ecog": {
+      "physician": { "value": 0, "date": "2026-10-05", "citation": "P03-ecog03" },
+      "patient": {
+        "value": 1,
+        "date": "2026-10-04",
+        "citation": "P03-prom02",
+        "answer_text": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+      }
+    },
+    "intent": { "letter": "C", "code": "kurativni", "source": "previous_mdt" },
+    "mdt_question": {
+      "text": "Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?",
+      "citation": "P03-zad01"
+    },
+    "mdt_date": "2026-10-21T14:00:00+02:00",
+    "comorbidities": [
+      { "text": "Starý infarkt myokardu (2019, st. p. PCI RIA)", "icd10": "I25.2", "citation": "P03-kom1" },
+      { "text": "Esenciální hypertenze", "icd10": "I10", "citation": "P03-kom2" },
+      { "text": "Hypercholesterolémie", "icd10": "E78.0", "citation": "P03-kom3" }
+    ],
+    "alerts": [
+      {
+        "id": "al-01",
+        "kind": "claim",
+        "text": "Venózní port (v. subclavia l. dx.) od 2026-05-28.",
+        "citations": ["P03-proc02", "P03-doc03#1"],
+        "verification": "verified"
+      },
+      {
+        "id": "al-02",
+        "kind": "claim",
+        "text": "Lékový stent po PCI RIA (2019), užívá kyselinu acetylsalicylovou 100 mg.",
+        "citations": ["P03-proc03", "P03-med01"],
+        "verification": "verified"
+      },
+      {
+        "id": "al-03",
+        "kind": "claim",
+        "text": "Alergie neudává.",
+        "citations": ["P03-doc02#2", "P03-prom02"],
+        "verification": "verified"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "summary",
+      "title": "Souhrn případu",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "sum-01",
+          "kind": "claim",
+          "text": "Adenokarcinom sigmatu G2, cT3 cN1 cM1a, stadium IVA, s jaterními metastázami; KRAS G12D, BRAF V600E neprokázána.",
+          "citations": ["P03-dg1", "P03-tnm01", "P03-dg2", "P03-bm01", "P03-bm03"],
+          "verification": "verified"
+        },
+        {
+          "id": "sum-02",
+          "kind": "claim",
+          "text": "Po 8 cyklech FOLFOX + bevacizumab parciální odpověď podle RECIST 1.1: součet cílových lézí 83 mm → 50 mm (pokles o 40 %).",
+          "citations": ["P03-img01#4", "P03-img03#3", "P03-doc07#4"],
+          "verification": "verified"
+        },
+        {
+          "id": "sum-03",
+          "kind": "claim",
+          "text": "Postižení obou jaterních laloků trvá (S3 4 mm), metastáza S5 vymizela; objem levého laloku odhadem 38 % celkového objemu jater.",
+          "citations": ["P03-img04#2", "P03-img04#3", "P03-img04#4"],
+          "verification": "verified"
+        },
+        {
+          "id": "sum-04",
+          "kind": "claim",
+          "text": "ECOG 0 podle lékaře, pacient hodnotí svůj stav jako ECOG 1: těžší fyzickou práci nezvládá.",
+          "citations": ["P03-ecog03", "P03-prom02"],
+          "verification": "verified"
+        },
+        {
+          "id": "sum-05",
+          "kind": "missing",
+          "text": "Aktuální CT hrudníku: restagingové CT hrudník nezahrnulo.",
+          "citations": ["P03-img03#1"],
+          "verification": "verified",
+          "expected_source": "DiagnosticReport RAD: CT hrudníku ne starší než 4–6 týdnů před resekcí jater (KRC-2.4)"
+        },
+        {
+          "id": "sum-06",
+          "kind": "missing",
+          "text": "Vyšetření MMR/MSI.",
+          "citations": ["P03-bm04"],
+          "verification": "verified",
+          "expected_source": "Observation biomarker MMR/MSI, povinné u metastatického KRC (KRC-1.1)"
+        }
+      ]
+    },
+    {
+      "id": "timeline",
+      "title": "Časová osa",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "tl-01",
+          "kind": "claim",
+          "text": "2026-04-21 · Koloskopie s biopsií: tumor sigmatu suspektní z malignity.",
+          "citations": ["P03-proc01", "P03-doc01#3"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-02",
+          "kind": "claim",
+          "text": "2026-04-24 · Histologie: adenokarcinom tlustého střeva, středně diferencovaný (G2).",
+          "citations": ["P03-pat01#3"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-03",
+          "kind": "claim",
+          "text": "2026-04-28 · Stagingové CT: 4 jaterní metastázy v pravém laloku, hrudník bez metastáz.",
+          "citations": ["P03-img01#4"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-04",
+          "kind": "claim",
+          "text": "2026-05-06 · MR jater: celkem 5 metastáz včetně S3, postižení obou laloků.",
+          "citations": ["P03-img02#3"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-05",
+          "kind": "claim",
+          "text": "2026-05-12 · Molekulární patologie: KRAS G12D, NRAS a BRAF bez patogenní varianty; MMR/MSI nebylo požadováno.",
+          "citations": ["P03-pat02#3", "P03-pat02#5"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-06",
+          "kind": "claim",
+          "text": "2026-05-20 · MDT: kurativní záměr, konverzní chemoterapie FOLFOX + bevacizumab, re-MDT po restagingu.",
+          "citations": ["P03-mdt01", "P03-mdt01-careplan"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-07",
+          "kind": "claim",
+          "text": "2026-06-01 až 2026-09-07 · 8 cyklů FOLFOX + bevacizumab, 8. cyklus s redukcí oxaliplatiny na 75 %.",
+          "citations": ["P03-tx-oxa-01", "P03-tx-oxa-08", "P03-doc06#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-08",
+          "kind": "claim",
+          "text": "2026-09-21 · Restagingové CT břicha a pánve: parciální odpověď, bez nových ložisek.",
+          "citations": ["P03-img03#3"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-09",
+          "kind": "claim",
+          "text": "2026-09-28 · MR jater: výrazná regrese všech ložisek, metastáza S5 vymizela.",
+          "citations": ["P03-img04#2", "P03-img04#4"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-10",
+          "kind": "claim",
+          "text": "2026-10-04 · Dotazník pacienta: brnění rukou 6/10, špatně zapíná knoflíky.",
+          "citations": ["P03-prom02"],
+          "verification": "verified"
+        },
+        {
+          "id": "tl-11",
+          "kind": "claim",
+          "text": "2026-10-05 · Nominace na re-MDT GIT s otázkou resekability.",
+          "citations": ["P03-doc07#4", "P03-zad01"],
+          "verification": "verified"
+        }
+      ]
+    },
+    {
+      "id": "anamnesis",
+      "title": "Anamnéza",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "an-01",
+          "kind": "claim",
+          "text": "OA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.",
+          "citations": ["P03-doc02#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "an-02",
+          "kind": "claim",
+          "text": "FA: kyselina acetylsalicylová 100 mg 0-1-0, ramipril 10 mg 1-0-0 (navýšen 13. 7. 2026), atorvastatin 40 mg 0-0-1, bisoprolol 2,5 mg 1-0-0, metoklopramid při nevolnosti.",
+          "citations": ["P03-med01", "P03-med02", "P03-med03", "P03-med04", "P03-med05"],
+          "verification": "verified"
+        },
+        {
+          "id": "an-03",
+          "kind": "claim",
+          "text": "RA: otec karcinom tlustého střeva v 72 letech.",
+          "citations": ["P03-doc02#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "an-04",
+          "kind": "claim",
+          "text": "SA: řidič městské dopravy, nyní v pracovní neschopnosti; kouřil do r. 2019 (cca 20 balíčkoroků).",
+          "citations": ["P03-doc02#2"],
+          "verification": "verified"
+        }
+      ]
+    },
+    {
+      "id": "role_views",
+      "role": "surgeon",
+      "title": "Chirurg (hepatobiliární)",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "chir-01",
+          "kind": "claim",
+          "text": "Ložisko S8 22 mm má kontakt s pravou jaterní žílou v délce cca 10 mm.",
+          "citations": ["P03-img04#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "chir-02",
+          "kind": "claim",
+          "text": "Metastáza S5 vymizela; pro plánování resekce je třeba počítat s původní lokalizací.",
+          "citations": ["P03-img04#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "chir-03",
+          "kind": "claim",
+          "text": "Objem levého laloku (S2–S4) odhadem 38 % celkového objemu jater, v levém laloku ložisko S3 4 mm.",
+          "citations": ["P03-img04#3", "P03-img04#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "chir-04",
+          "kind": "claim",
+          "text": "Poslední dávka bevacizumabu 2026-09-07.",
+          "citations": ["P03-tx-bev-08"],
+          "verification": "verified"
+        }
+      ],
+      "assessment": {
+        "role": "surgeon",
+        "question": "Je pacient kandidátem resekce jaterních metastáz?",
+        "verdict": "conditional",
+        "criteria": [
+          {
+            "text": "FLR ≥ 40 % po intenzivní chemoterapii",
+            "status": "not_met",
+            "citations": ["P03-img04#3"],
+            "guideline": "KRC-2.1"
+          },
+          {
+            "text": "Kompletní restaging ≤ 4–6 týdnů včetně CT hrudníku, bez extrahepatálního onemocnění",
+            "status": "unknown",
+            "citations": ["P03-img03#1", "P03-img01#2"],
+            "guideline": "KRC-2.4",
+            "missing": "CT hrudníku ne starší než 4–6 týdnů"
+          },
+          {
+            "text": "Od poslední dávky bevacizumabu ≥ 6 týdnů k datu MDT",
+            "status": "met",
+            "citations": ["P03-tx-bev-08"],
+            "guideline": "KRC-2.3"
+          },
+          {
+            "text": "ECOG 0–1",
+            "status": "met",
+            "citations": ["P03-ecog03", "P03-prom02"],
+            "guideline": "OBC-1.3"
+          }
+        ],
+        "note": "Podklad pro diskusi, rozhoduje lékař."
+      }
+    },
+    {
+      "id": "role_views",
+      "role": "oncologist",
+      "title": "Klinický onkolog",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "onk-01",
+          "kind": "claim",
+          "text": "KRAS G12D: nádor je RAS mutovaný, anti-EGFR léčba není indikována.",
+          "citations": ["P03-bm01", "P03-pat02#4"],
+          "verification": "verified"
+        },
+        {
+          "id": "onk-02",
+          "kind": "missing",
+          "text": "MMR/MSI nevyšetřeno.",
+          "citations": ["P03-bm04"],
+          "verification": "verified",
+          "expected_source": "Observation biomarker MMR/MSI (KRC-1.1)"
+        },
+        {
+          "id": "onk-03",
+          "kind": "claim",
+          "text": "Neuropatie podle lékaře G1; pacient udává brnění 6/10, špatně zapíná knoflíky a padají mu věci z ruky.",
+          "citations": ["P03-neuro01", "P03-prom02"],
+          "verification": "verified"
+        },
+        {
+          "id": "onk-04",
+          "kind": "claim",
+          "text": "8. cyklus podán s redukcí oxaliplatiny na 75 % pro přetrvávající parestezie prstů mezi cykly.",
+          "citations": ["P03-doc06#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "onk-05",
+          "kind": "claim",
+          "text": "CEA znovu roste: 9,1 → 13,9 µg/l.",
+          "citations": ["P03-lab05-cea", "P03-lab06-cea"],
+          "verification": "verified"
+        },
+        {
+          "id": "onk-06",
+          "kind": "claim",
+          "text": "CEA kleslo z 86 na 9,1 µg/l.",
+          "citations": ["P03-lab06-cea"],
+          "verification": "unverified"
+        }
+      ],
+      "assessment": {
+        "role": "oncologist",
+        "question": "Lze pokračovat v konverzní chemoterapii FOLFOX + bevacizumab?",
+        "verdict": "conditional",
+        "criteria": [
+          {
+            "text": "Neuropatie < G2, hodnoceno i podle výpovědi pacienta",
+            "status": "unknown",
+            "citations": ["P03-neuro01", "P03-prom02"],
+            "guideline": "KRC-3.2",
+            "missing": "Sjednotit hodnocení neuropatie lékařem a pacientem"
+          },
+          {
+            "text": "Po dosažení resekability chemoterapii neprodlužovat",
+            "status": "unknown",
+            "citations": ["P03-img04#2", "P03-doc06#2"],
+            "guideline": "KRC-2.2",
+            "missing": "Rozhodnutí MDT o resekabilitě"
+          }
+        ],
+        "note": "Podklad pro diskusi, rozhoduje lékař."
+      }
+    },
+    {
+      "id": "role_views",
+      "role": "radiologist",
+      "title": "Radiolog",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "rdg-01",
+          "kind": "claim",
+          "text": "RECIST 1.1: součet cílových lézí 83 mm (2026-04-28) → 50 mm (2026-09-21), pokles o 40 %, parciální odpověď.",
+          "citations": ["P03-img01#4", "P03-img03#3"],
+          "verification": "verified"
+        },
+        {
+          "id": "rdg-02",
+          "kind": "claim",
+          "text": "Restagingové CT 2026-09-21 hrudník nezahrnulo; poslední CT hrudníku je z 2026-04-28 (bez metastáz).",
+          "citations": ["P03-img03#1", "P03-img01#2"],
+          "verification": "verified"
+        },
+        {
+          "id": "rdg-03",
+          "kind": "claim",
+          "text": "MR jater 2026-09-28: S7 28 mm, S8 22 mm, S6 6 mm, S3 4 mm, S5 bez zřetelného ložiska.",
+          "citations": ["P03-img04#2"],
+          "verification": "verified"
+        }
+      ]
+    },
+    {
+      "id": "role_views",
+      "role": "pathologist",
+      "title": "Patolog",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "pat-01",
+          "kind": "claim",
+          "text": "Adenokarcinom tlustého střeva, středně diferencovaný (G2), morfologie ICD-O-3 8140/3.",
+          "citations": ["P03-pat01#3", "P03-pat01#5"],
+          "verification": "verified"
+        },
+        {
+          "id": "pat-02",
+          "kind": "claim",
+          "text": "NGS: KRAS G12D, NRAS bez patogenní varianty, BRAF V600E neprokázána.",
+          "citations": ["P03-pat02#3"],
+          "verification": "verified"
+        },
+        {
+          "id": "pat-03",
+          "kind": "missing",
+          "text": "MMR/MSI: vyšetření nebylo požadováno.",
+          "citations": ["P03-pat02#5"],
+          "verification": "verified",
+          "expected_source": "DiagnosticReport SP: IHC MMR nebo MSI z bioptického materiálu (KRC-1.1)"
+        },
+        {
+          "id": "pat-04",
+          "kind": "claim",
+          "text": "Otec měl karcinom tlustého střeva v 72 letech.",
+          "citations": ["P03-doc02#2"],
+          "verification": "verified"
+        }
+      ]
+    },
+    {
+      "id": "role_views",
+      "role": "patient",
+      "title": "Hlas pacienta",
+      "ai_generated": true,
+      "items": [
+        {
+          "id": "pac-01",
+          "kind": "claim",
+          "text": "Těžší fyzickou práci nezvládá, lehčí činnosti a domácnost ano; vyjde jedno patro bez zastavení.",
+          "citations": ["P03-prom02"],
+          "verification": "verified"
+        },
+        {
+          "id": "pac-02",
+          "kind": "claim",
+          "text": "Brnění rukou 0/10 → 6/10 mezi vyplněními; špatně zapíná knoflíky a padají mu věci z ruky.",
+          "citations": ["P03-prom01", "P03-prom02"],
+          "verification": "verified"
+        },
+        {
+          "id": "pac-03",
+          "kind": "claim",
+          "text": "Hmotnost 84 kg → 78 kg.",
+          "citations": ["P03-vaha01", "P03-vaha04"],
+          "verification": "verified"
+        },
+        {
+          "id": "pac-04",
+          "kind": "claim",
+          "text": "Délka i kvalita života jsou pro něj stejně důležité. Operaci by chtěl, pokud dává smysl; jako řidič s brněním rukou teď řídit nemůže.",
+          "citations": ["P03-prom02"],
+          "verification": "verified"
+        },
+        {
+          "id": "pac-05",
+          "kind": "claim",
+          "text": "Užívá navíc hořčík a vitamin B.",
+          "citations": ["P03-prom02"],
+          "verification": "verified"
+        }
+      ]
+    }
+  ],
+  "red_flags": [
+    {
+      "id": "rf01",
+      "rule": "RF-TOX",
+      "severity": "high",
+      "title": "Neuropatie: lékař G1, pacient popisuje omezení jemné motoriky",
+      "description": "Lékař hodnotí neuropatii jako G1, pacient udává brnění 6/10, špatně zapíná knoflíky a padají mu věci z ruky. Omezení instrumentálních činností odpovídá G2, při kterém se oxaliplatina přerušuje.",
+      "citations": ["P03-neuro01", "P03-prom02"],
+      "guideline": "KRC-3.2",
+      "verification": "verified"
+    },
+    {
+      "id": "rf02",
+      "rule": "RF-STALE",
+      "severity": "high",
+      "title": "Restaging před resekcí jater bez CT hrudníku",
+      "description": "Restagingové CT 2026-09-21 zahrnulo jen břicho a pánev, poslední CT hrudníku je z 2026-04-28. Před resekcí jater má být kompletní restaging ne starší než 4–6 týdnů.",
+      "citations": ["P03-img03#1", "P03-img01#2"],
+      "guideline": "KRC-2.4",
+      "verification": "verified"
+    },
+    {
+      "id": "rf03",
+      "rule": "RF-ECOG",
+      "severity": "moderate",
+      "title": "ECOG lékař 0 vs. pacient 1",
+      "description": "Lékař hodnotí ECOG 0, pacient v dotazníku popisuje stav odpovídající ECOG 1.",
+      "citations": ["P03-ecog03", "P03-prom02"],
+      "guideline": "OBC-1.3",
+      "verification": "verified"
+    },
+    {
+      "id": "rf04",
+      "rule": "RF-MISSING",
+      "severity": "moderate",
+      "title": "MMR/MSI nevyšetřeno",
+      "description": "MMR/MSI je u metastatického kolorektálního karcinomu povinné, vyšetření nebylo požadováno.",
+      "citations": ["P03-bm04", "P03-pat02#5"],
+      "guideline": "KRC-1.1",
+      "verification": "verified"
+    },
+    {
+      "id": "rf05",
+      "rule": "RF-WEIGHT",
+      "severity": "moderate",
+      "title": "Úbytek hmotnosti 84 → 78 kg",
+      "description": "Hmotnost klesla z 84 kg (2026-05-18) na 78 kg (2026-10-05), úbytek o 7 % za necelých 5 měsíců.",
+      "citations": ["P03-vaha01", "P03-vaha04"],
+      "guideline": "OBC-2.3",
+      "verification": "verified"
+    },
+    {
+      "id": "rf06",
+      "rule": "RF-GENETIC",
+      "severity": "moderate",
+      "title": "Rodinná anamnéza KRC bez genetického poradenství",
+      "description": "Otec měl karcinom tlustého střeva, MMR/MSI nevyšetřeno a genetické poradenství v dokumentaci není.",
+      "citations": ["P03-doc02#2", "P03-bm04"],
+      "guideline": "OBC-2.4",
+      "verification": "verified"
+    },
+    {
+      "id": "rf07",
+      "rule": "RF-LAB",
+      "severity": "moderate",
+      "title": "CEA znovu roste",
+      "description": "CEA vzrostlo z 9,1 na 13,9 µg/l. Vzestup markeru je důvod k časnějšímu zobrazení, sám o sobě nejde o progresi.",
+      "citations": ["P03-lab05-cea", "P03-lab06-cea"],
+      "verification": "verified"
+    },
+    {
+      "id": "rf08",
+      "rule": "RF-MED",
+      "severity": "moderate",
+      "title": "Doplňky mimo medikaci",
+      "description": "Pacient užívá hořčík a vitamin B, v seznamu medikace nejsou.",
+      "citations": ["P03-prom02", "P03-doc02#2"],
+      "verification": "verified"
+    },
+    {
+      "id": "rf09",
+      "rule": "RF-PRIOR-PROC",
+      "severity": "low",
+      "title": "Port, koronární stent, kyselina acetylsalicylová",
+      "description": "Informace pro chirurga: venózní port, lékový stent po PCI 2019 a antiagregace kyselinou acetylsalicylovou.",
+      "citations": ["P03-proc02", "P03-proc03", "P03-med01"],
+      "verification": "verified"
+    }
+  ],
+  "decision_support": {
+    "treatment_options": [
+      {
+        "id": "opt-resekce",
+        "title": "Resekce jaterních metastáz (jednodobě, nebo dvoudobě) a resekce primárního tumoru sigmatu",
+        "rationale": [
+          {
+            "id": "b2-res-01",
+            "kind": "claim",
+            "text": "Parciální odpověď po 8 cyklech konverzní chemoterapie, bez nových ložisek.",
+            "citations": ["P03-img03#3", "P03-doc07#4"],
+            "verification": "verified"
+          },
+          {
+            "id": "b2-res-02",
+            "kind": "claim",
+            "text": "Postižení obou laloků (S3), vymizelá metastáza S5, ložisko S8 v kontaktu s pravou jaterní žílou.",
+            "citations": ["P03-img04#2", "P03-img04#4"],
+            "verification": "verified"
+          }
+        ],
+        "guideline_citations": ["KRC-2.1", "KRC-2.3", "KRC-2.4", "KRC-2.5"],
+        "prerequisites_missing": [
+          {
+            "id": "b2-res-m1",
+            "kind": "missing",
+            "text": "CT hrudníku ne starší než 4–6 týdnů.",
+            "citations": ["P03-img03#1"],
+            "verification": "verified",
+            "expected_source": "DiagnosticReport RAD (KRC-2.4)"
+          }
+        ],
+        "considerations": [
+          "FLR 38 % je pod hranicí 40 % po intenzivní chemoterapii; zvážit dvoudobý postup.",
+          "Vymizelé ložisko S5 je třeba zahrnout do plánu resekce podle původní lokalizace."
+        ],
+        "compatibility": {
+          "modality": "chirurgie",
+          "owner_role": "surgeon",
+          "overall": "orange",
+          "rules": [
+            {
+              "rule_id": "VS-KRC-01",
+              "status": "orange",
+              "text": "FLR 38 % po 8 cyklech FOLFOX < 40 % → posoudí HPB chirurg, zvážit dvoudobý postup",
+              "patient_citations": ["P03-img04#3", "P03-tx-oxa-08"],
+              "rule_citation": "KRC-2.1"
+            },
+            {
+              "rule_id": "VS-KRC-02",
+              "status": "orange",
+              "text": "Restaging bez CT hrudníku, poslední CT hrudníku 2026-04-28",
+              "patient_citations": ["P03-img03#1", "P03-img01#2"],
+              "rule_citation": "KRC-2.4"
+            },
+            {
+              "rule_id": "VS-KRC-03",
+              "status": "orange",
+              "text": "Postižení obou laloků (S3), vymizelé S5, S8 v kontaktu s pravou jaterní žílou",
+              "patient_citations": ["P03-img04#2", "P03-img04#4"],
+              "rule_citation": "KRC-2.5"
+            },
+            {
+              "rule_id": "VS-CHIR-03",
+              "status": "green",
+              "text": "Poslední bevacizumab 2026-09-07 → operace možná od 2026-10-19",
+              "patient_citations": ["P03-tx-bev-08"],
+              "rule_citation": "KRC-2.3",
+              "derived": { "formula": "2026-09-07 + 42 dní = 2026-10-19", "inputs": ["P03-tx-bev-08"] }
+            },
+            {
+              "rule_id": "VS-CHIR-01",
+              "status": "green",
+              "text": "IM i lékový stent v roce 2019 (> 6 měsíců); užívá kyselinu acetylsalicylovou",
+              "patient_citations": ["P03-kom1", "P03-proc03", "P03-med01"],
+              "rule_citation": "EXT-ESC-2022-NCS"
+            },
+            {
+              "rule_id": "VS-OBC-04",
+              "status": "orange",
+              "text": "Úbytek hmotnosti 7 % (84 → 78 kg) ≥ 5 % → nutriční vyšetření",
+              "patient_citations": ["P03-vaha01", "P03-vaha04"],
+              "rule_citation": "OBC-2.3",
+              "derived": { "formula": "(84 − 78) / 84 = 7,1 %", "inputs": ["P03-vaha01", "P03-vaha04"] }
+            },
+            {
+              "rule_id": "VS-OBC-02",
+              "status": "orange",
+              "text": "ECOG lékař 0 vs. pacient 1",
+              "patient_citations": ["P03-ecog03", "P03-prom02"],
+              "rule_citation": "OBC-1.3"
+            }
+          ],
+          "patient_preferences": [
+            {
+              "id": "b2-res-p1",
+              "kind": "claim",
+              "text": "Operaci by chtěl, pokud dává smysl; potřebuje vědět, jak dlouho bude mimo práci.",
+              "citations": ["P03-prom02"],
+              "verification": "verified"
+            }
+          ]
+        }
+      },
+      {
+        "id": "opt-folfox",
+        "title": "Pokračovat v systémové léčbě FOLFOX + bevacizumab",
+        "rationale": [
+          {
+            "id": "b2-fol-01",
+            "kind": "claim",
+            "text": "RAS mutovaný karcinom: standardem je FOLFOX nebo FOLFIRI ± bevacizumab.",
+            "citations": ["P03-bm01", "KRC-3.1"],
+            "verification": "verified"
+          },
+          {
+            "id": "b2-fol-02",
+            "kind": "claim",
+            "text": "Další cyklus je odložen do rozhodnutí komise.",
+            "citations": ["P03-doc07#1"],
+            "verification": "verified"
+          }
+        ],
+        "guideline_citations": ["KRC-3.1", "KRC-2.2", "KRC-3.2"],
+        "prerequisites_missing": [],
+        "considerations": [
+          "Neuropatie podle pacienta odpovídá G2: oxaliplatinu přerušit (stop-and-go).",
+          "Po dosažení resekability chemoterapii neprodlužovat."
+        ],
+        "compatibility": {
+          "modality": "chemoterapie",
+          "owner_role": "oncologist",
+          "overall": "orange",
+          "rules": [
+            {
+              "rule_id": "VS-KRC-05",
+              "status": "orange",
+              "text": "Neuropatie G1 podle lékaře, pacient popisuje omezení jemné motoriky → rozpor, odpovídá G2",
+              "patient_citations": ["P03-neuro01", "P03-prom02"],
+              "rule_citation": "KRC-3.2"
+            },
+            {
+              "rule_id": "VS-KRC-08",
+              "status": "orange",
+              "text": "IM v anamnéze (2019) → bevacizumab s opatrností; hypertenze kompenzovaná",
+              "patient_citations": ["P03-kom1", "P03-doc07#3"],
+              "rule_citation": "EXT-FDA-AVASTIN-PI"
+            },
+            {
+              "rule_id": "VS-KRC-09",
+              "status": "grey",
+              "text": "Aktivita DPD v datech není → nelze posoudit",
+              "patient_citations": [],
+              "rule_citation": "EXT-EMA-DPD-2020"
+            },
+            {
+              "rule_id": "VS-KRC-10",
+              "status": "orange",
+              "text": "8 cyklů, vymizelé ložisko S5 → po dosažení resekability neprodlužovat",
+              "patient_citations": ["P03-tx-oxa-08", "P03-img04#2"],
+              "rule_citation": "KRC-2.2"
+            }
+          ],
+          "patient_preferences": []
+        }
+      },
+      {
+        "id": "opt-anti-egfr",
+        "title": "Anti-EGFR léčba (cetuximab, panitumumab) s chemoterapií",
+        "rationale": [
+          {
+            "id": "b2-egfr-01",
+            "kind": "claim",
+            "text": "KRAS G12D: nádor je RAS mutovaný.",
+            "citations": ["P03-bm01", "P03-pat02#4"],
+            "verification": "verified"
+          }
+        ],
+        "guideline_citations": ["KRC-3.1"],
+        "prerequisites_missing": [],
+        "considerations": ["U RAS mutovaného karcinomu se anti-EGFR léčba nepodává."],
+        "compatibility": {
+          "modality": "cilena",
+          "owner_role": "oncologist",
+          "overall": "red",
+          "rules": [
+            {
+              "rule_id": "VS-KRC-06",
+              "status": "red",
+              "text": "KRAS G12D (RAS mutovaný) → anti-EGFR se nepodává",
+              "patient_citations": ["P03-bm01"],
+              "rule_citation": "KRC-3.1"
+            }
+          ],
+          "patient_preferences": []
+        }
+      },
+      {
+        "id": "opt-io",
+        "title": "Imunoterapie (u dMMR / MSI-H)",
+        "rationale": [
+          {
+            "id": "b2-io-01",
+            "kind": "claim",
+            "text": "Stav MMR/MSI není znám, vyšetření nebylo požadováno.",
+            "citations": ["P03-bm04", "P03-pat02#5"],
+            "verification": "verified"
+          }
+        ],
+        "guideline_citations": ["KRC-1.2"],
+        "prerequisites_missing": [
+          {
+            "id": "b2-io-m1",
+            "kind": "missing",
+            "text": "Vyšetření MMR/MSI.",
+            "citations": ["P03-bm04"],
+            "verification": "verified",
+            "expected_source": "Observation biomarker MMR/MSI (KRC-1.1)"
+          }
+        ],
+        "considerations": [],
+        "compatibility": {
+          "modality": "imunoterapie",
+          "owner_role": "oncologist",
+          "overall": "grey",
+          "rules": [
+            {
+              "rule_id": "VS-KRC-07",
+              "status": "grey",
+              "text": "MMR/MSI nevyšetřeno → nelze posoudit",
+              "patient_citations": ["P03-bm04"],
+              "rule_citation": "KRC-1.2"
+            }
+          ],
+          "patient_preferences": []
+        }
+      }
+    ],
+    "trials": [
+      {
+        "study_id": "RKT-03",
+        "title": "COLUMBA-LM: resekce jater s peroperační navigací a ablací drobných ložisek vs. standardní resekce",
+        "overall": "potentially_eligible",
+        "criteria": [
+          {
+            "criterion_id": "RKT-03/Z1",
+            "text": "Metastázy kolorektálního karcinomu omezené na játra",
+            "kind": "inclusion",
+            "status": "unknown",
+            "citations": ["P03-img03#1", "P03-img01#2"],
+            "missing": "Aktuální CT hrudníku"
+          },
+          {
+            "criterion_id": "RKT-03/Z2",
+            "text": "Odpověď nebo stabilizace po ≥ 6 cyklech indukční chemoterapie s oxaliplatinou nebo irinotekanem",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-img03#3", "P03-tx-oxa-08"]
+          },
+          {
+            "criterion_id": "RKT-03/Z3",
+            "text": "ECOG 0–1",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-ecog03", "P03-prom02"]
+          },
+          {
+            "criterion_id": "RKT-03/Z4",
+            "text": "Resekabilita potvrzená MDT s hepatobiliárním chirurgem",
+            "kind": "inclusion",
+            "status": "unknown",
+            "citations": ["P03-zad01"],
+            "missing": "Rozhodnutí této MDT"
+          },
+          {
+            "criterion_id": "RKT-03/V1",
+            "text": "Extrahepatální onemocnění",
+            "kind": "exclusion",
+            "status": "unknown",
+            "citations": ["P03-img03#1"],
+            "missing": "Aktuální CT hrudníku"
+          },
+          {
+            "criterion_id": "RKT-03/V2",
+            "text": "MSI-H / dMMR",
+            "kind": "exclusion",
+            "status": "unknown",
+            "citations": ["P03-bm04"],
+            "missing": "Vyšetření MMR/MSI"
+          },
+          {
+            "criterion_id": "RKT-03/V3",
+            "text": "Periferní neuropatie ≥ G2",
+            "kind": "exclusion",
+            "status": "unknown",
+            "citations": ["P03-neuro01", "P03-prom02"],
+            "missing": "Sjednotit hodnocení neuropatie (lékař G1, popis pacienta odpovídá G2)"
+          },
+          {
+            "criterion_id": "RKT-03/V4",
+            "text": "Předpokládaný budoucí jaterní remnant (FLR) < 30 %",
+            "kind": "exclusion",
+            "status": "not_met",
+            "citations": ["P03-img04#3"]
+          }
+        ]
+      },
+      {
+        "study_id": "RKT-05",
+        "title": "VITALIS: nutriční a pohybová intervence při úbytku hmotnosti během protinádorové léčby",
+        "overall": "eligible",
+        "criteria": [
+          {
+            "criterion_id": "RKT-05/Z1",
+            "text": "Solidní nádor, plánovaná nebo probíhající protinádorová léčba",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-dg1", "P03-doc07#1"]
+          },
+          {
+            "criterion_id": "RKT-05/Z2",
+            "text": "Nechtěný úbytek hmotnosti ≥ 5 % za posledních 6 měsíců",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-vaha01", "P03-vaha04"]
+          },
+          {
+            "criterion_id": "RKT-05/Z3",
+            "text": "ECOG 0–2",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-ecog03", "P03-prom02"]
+          },
+          {
+            "criterion_id": "RKT-05/V1",
+            "text": "Pouze symptomatická léčba (BSC)",
+            "kind": "exclusion",
+            "status": "not_met",
+            "citations": ["P03-mdt01-careplan"]
+          },
+          {
+            "criterion_id": "RKT-05/V2",
+            "text": "Enterální nebo parenterální výživa",
+            "kind": "exclusion",
+            "status": "not_met",
+            "citations": ["P03-doc07#2"]
+          },
+          {
+            "criterion_id": "RKT-05/V3",
+            "text": "Neschopnost samostatné chůze",
+            "kind": "exclusion",
+            "status": "not_met",
+            "citations": ["P03-prom02"]
+          }
+        ]
+      },
+      {
+        "study_id": "RKT-06",
+        "title": "ORION-HRR: PARP inhibitor u solidních nádorů s alterací HRR genů",
+        "overall": "potentially_eligible",
+        "criteria": [
+          {
+            "criterion_id": "RKT-06/Z1",
+            "text": "Patogenní alterace BRCA1, BRCA2 nebo jiného HRR genu prokázaná NGS v nádoru",
+            "kind": "inclusion",
+            "status": "unknown",
+            "citations": ["P03-pat02#2"],
+            "missing": "NGS panel zahrnoval jen KRAS, NRAS a BRAF; HRR geny nevyšetřeny"
+          },
+          {
+            "criterion_id": "RKT-06/Z2",
+            "text": "Alespoň 1 předchozí linie systémové léčby v metastatickém stadiu",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-tx-oxa-08"]
+          },
+          {
+            "criterion_id": "RKT-06/Z3",
+            "text": "ECOG 0–1",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-ecog03", "P03-prom02"]
+          },
+          {
+            "criterion_id": "RKT-06/Z4",
+            "text": "Hemoglobin ≥ 90 g/l, neutrofily ≥ 1,5 × 10^9/l, trombocyty ≥ 100 × 10^9/l",
+            "kind": "inclusion",
+            "status": "met",
+            "citations": ["P03-lab06-hb", "P03-lab06-neu", "P03-lab06-plt"]
+          },
+          {
+            "criterion_id": "RKT-06/V1",
+            "text": "Předchozí léčba PARP inhibitorem",
+            "kind": "exclusion",
+            "status": "not_met",
+            "citations": ["P03-zad01"]
+          },
+          {
+            "criterion_id": "RKT-06/V2",
+            "text": "Myelodysplastický syndrom nebo akutní myeloidní leukémie v anamnéze",
+            "kind": "exclusion",
+            "status": "not_met",
+            "citations": ["P03-doc02#2"]
+          },
+          {
+            "criterion_id": "RKT-06/V3",
+            "text": "Neléčené mozkové metastázy",
+            "kind": "exclusion",
+            "status": "unknown",
+            "citations": ["P03-img01#1"],
+            "missing": "Zobrazení mozku nebylo provedeno"
+          }
+        ]
+      }
+    ],
+    "discussion_questions": [
+      {
+        "text": "Stačí FLR 38 % po 8 cyklech chemoterapie na jednodobou resekci, nebo zvolit dvoudobý postup?",
+        "citations": ["P03-img04#3", "KRC-2.1", "KRC-2.5"]
+      },
+      {
+        "text": "Doplnit před resekcí CT hrudníku a vyšetření MMR/MSI?",
+        "citations": ["P03-img03#1", "P03-bm04", "KRC-2.4", "KRC-1.1"]
+      },
+      {
+        "text": "Jak hodnotit neuropatii (lékař G1, popis pacienta odpovídá G2) pro další podávání oxaliplatiny?",
+        "citations": ["P03-neuro01", "P03-prom02", "KRC-3.2"]
+      }
+    ],
+    "disclaimer": "AI předkládá možnosti, nerozhoduje."
+  },
+  "stats": { "claims_total": 49, "claims_unverified": 1, "missing_total": 6 }
+}

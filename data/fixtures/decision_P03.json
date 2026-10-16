@@ -1,0 +1,95 @@
+{
+  "case_id": "1",
+  "status": "draft",
+  "mdt_type": "restaging",
+  "attendees": [
+    { "user_id": "LEK-P03-06", "name": "LEK-P03-06 · klinický onkolog, předseda GIT komise", "role": "chair" },
+    { "user_id": "LEK-P03-01", "name": "LEK-P03-01 · klinický onkolog (ošetřující lékař)", "role": "oncologist" },
+    { "user_id": "LEK-P03-05", "name": "LEK-P03-05 · chirurg – hepatobiliární chirurgie", "role": "surgeon" },
+    { "user_id": "LEK-P03-04", "name": "LEK-P03-04 · radiolog", "role": "radiologist" },
+    { "user_id": "LEK-P03-03", "name": "LEK-P03-03 · patolog", "role": "pathologist" }
+  ],
+  "patient_present": false,
+  "sections": {
+    "question": {
+      "text": "Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní (jednodobě, nebo dvoudobě vč. ložiska S3) a v jakém pořadí řešit primární tumor sigmatu? Pokud ne, jak pokračovat v systémové léčbě?",
+      "source": "human"
+    },
+    "assessment": {
+      "text": "Adenokarcinom sigmatu G2, cT3 cN1 cM1a, KRAS G12D. Po 8 cyklech FOLFOX + bevacizumab parciální odpověď (RECIST 83 → 50 mm). Postižení obou laloků (S3), vymizelá metastáza S5, ložisko S8 v kontaktu s pravou jaterní žílou, FLR odhadem 38 %. Neuropatie G1 podle lékaře, pacient popisuje omezení jemné motoriky. Chybí CT hrudníku a vyšetření MMR/MSI.",
+      "source": "ai",
+      "citations": ["P03-tnm01", "P03-bm01", "P03-img01#4", "P03-img03#3", "P03-img04#2", "P03-img04#3", "P03-neuro01", "P03-prom02", "P03-img03#1", "P03-bm04"]
+    },
+    "intent": "kurativni",
+    "recommendation": [
+      {
+        "modality": "diagnostika",
+        "text": "Doplnit CT hrudníku s k. l. a vyšetření MMR/MSI z bioptického materiálu.",
+        "source": "ai_edited"
+      },
+      {
+        "modality": "chirurgie",
+        "text": "Po doplnění stagingu dvoudobá resekce jater s resekcí primárního tumoru sigmatu; operace nejdříve od 2026-10-19 (6 týdnů od bevacizumabu).",
+        "source": "ai"
+      }
+    ],
+    "extra_diagnostics": {
+      "text": "CT hrudníku s k. l.; MMR/MSI (IHC) z biopsie sigmatu; nutriční vyšetření.",
+      "source": "ai"
+    },
+    "trial": {
+      "text": "RKT-03 posoudit po doplnění CT hrudníku a MMR/MSI (Z1, V1, V2 neznámé, V3 sporné). RKT-05 nabídnout pro úbytek hmotnosti.",
+      "study_ids": ["RKT-03", "RKT-05"],
+      "source": "ai"
+    },
+    "re_mdt": {
+      "date": "2026-11-04",
+      "reason": "Výsledky CT hrudníku a MMR/MSI, definitivní plán resekce."
+    },
+    "conclusion": {
+      "text": "Jaterní metastázy potenciálně resekabilní po konverzní chemoterapii. Doplnit staging a MMR/MSI, chemoterapii neprodlužovat, re-MDT s definitivním plánem resekce.",
+      "source": "ai"
+    },
+    "conditional": {
+      "text": "Doporučení je podmíněné výsledkem CT hrudníku a MMR/MSI.",
+      "missing": ["CT hrudníku", "MMR/MSI"],
+      "source": "ai"
+    }
+  },
+  "tasks": [
+    {
+      "id": "task01",
+      "description": "Objednat CT hrudníku s k. l.",
+      "owner": "LEK-P03-01",
+      "due_date": "2026-10-28",
+      "status": "requested",
+      "source": "ai"
+    },
+    {
+      "id": "task02",
+      "description": "Vyšetřit MMR/MSI (IHC) z bioptického materiálu sigmatu.",
+      "owner": "LEK-P03-03",
+      "due_date": "2026-10-30",
+      "status": "requested",
+      "source": "ai"
+    },
+    {
+      "id": "task03",
+      "description": "Nutriční vyšetření (úbytek hmotnosti 84 → 78 kg).",
+      "owner": "LEK-P03-01",
+      "due_date": "2026-10-28",
+      "status": "requested",
+      "source": "ai_edited"
+    },
+    {
+      "id": "task04",
+      "description": "Znovu zhodnotit neuropatii s pacientem a zvážit genetické poradenství (otec karcinom tlustého střeva).",
+      "owner": "LEK-P03-01",
+      "due_date": "2026-11-04",
+      "status": "requested",
+      "source": "human"
+    }
+  ],
+  "red_flags_acknowledged": ["rf01", "rf02", "rf04"],
+  "transcript_ref": "P03-mdt02-prepis"
+}

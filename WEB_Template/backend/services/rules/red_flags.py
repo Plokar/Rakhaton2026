@@ -123,6 +123,21 @@ def _ref_id(ref: dict | None) -> str:
     return ((ref or {}).get("reference") or "").rsplit("/", 1)[-1]
 
 
+DERIVED_FROM_EXTENSION = "https://rakathon.example.org/fhir/StructureDefinition/derived-from"
+
+
+def derived_from(resource: dict) -> list[str]:
+    """ID zdrojových dokumentů hodnoty: `derivedFrom` + extension `derived-from`.
+
+    IRIS odmítá `derivedFrom` → DiagnosticReport (Q15, DATASET §6.2), ingest ho proto může přesunout
+    do extension s `valueReference`. Čteme obojí, ať citace zdroje nezmizí.
+    """
+    refs = list(resource.get("derivedFrom") or [])
+    refs += [e["valueReference"] for e in resource.get("extension", [])
+             if e.get("url") == DERIVED_FROM_EXTENSION and e.get("valueReference")]
+    return [i for i in dict.fromkeys(_ref_id(r) for r in refs) if i]
+
+
 @dataclass
 class Obs:
     id: str
@@ -133,8 +148,8 @@ class Obs:
 
     @property
     def source(self) -> str | None:
-        refs = self.resource.get("derivedFrom") or []
-        return _ref_id(refs[0]) if refs else None
+        sources = derived_from(self.resource)
+        return sources[0] if sources else None
 
 
 class PatientData:

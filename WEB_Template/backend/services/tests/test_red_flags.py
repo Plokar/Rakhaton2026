@@ -117,6 +117,36 @@ def test_citations_exist_in_context(patient_id, flags, guidelines):
         assert flag.as_dict()["citations"] == list(flag.citations)
 
 
+def _move_derived_from_to_extension(resources):
+    """Navržená sanitizace z Q15: `derivedFrom` → DiagnosticReport do extension `derived-from`."""
+    from services.rules.red_flags import DERIVED_FROM_EXTENSION
+    out = []
+    for r in resources:
+        r = dict(r)
+        refs = r.get("derivedFrom") or []
+        moved = [ref for ref in refs if ref.get("reference", "").startswith("DiagnosticReport/")]
+        if moved:
+            r["derivedFrom"] = [ref for ref in refs if ref not in moved]
+            if not r["derivedFrom"]:
+                del r["derivedFrom"]
+            r["extension"] = list(r.get("extension", [])) + [
+                {"url": DERIVED_FROM_EXTENSION, "valueReference": ref} for ref in moved]
+        out.append(r)
+    return out
+
+
+@pytest.mark.parametrize("patient_id", ["P03", "P04", "P05"])
+def test_derived_from_extension_keeps_citations(patient_id, guidelines):
+    """Q15: když ingest přesune derivedFrom do extension, citace zdrojů zůstanou stejné."""
+    original = load_patient(patient_id)
+    moved = _move_derived_from_to_extension(original)
+    assert moved != original
+    assert [f.as_dict() for f in evaluate(moved)] == [f.as_dict() for f in evaluate(original)]
+    ctx_a = context_from_resources(patient_id, original, studies=load_studies(), guidelines=guidelines)
+    ctx_b = context_from_resources(patient_id, moved, studies=load_studies(), guidelines=guidelines)
+    assert ctx_a.render() == ctx_b.render()
+
+
 # ── RF-ROLES (přítomné role z konfigurace) ────────────────────────────────────
 def test_roles_resection_needs_surgeon_and_radiologist():
     resources = load_patient("P03")

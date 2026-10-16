@@ -505,7 +505,7 @@ def _observation(r: dict, facts: dict) -> tuple[str, str, str]:
         f"hodnotil: {', '.join(practitioners)}" if practitioners else "",
         f"vzorek: {r['specimen'].get('display')}" if r.get("specimen", {}).get("display") else "",
         f"týká se: {_ref_ids(r.get('focus'))}" if r.get("focus") else "",
-        f"zdroj: {_ref_ids(r.get('derivedFrom'))}" if r.get("derivedFrom") else "",
+        f"zdroj: {', '.join(rules.derived_from(r))}" if rules.derived_from(r) else "",
         _notes(r),
     ])
 

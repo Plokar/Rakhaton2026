@@ -1,0 +1,275 @@
+{
+  "poznamka": "Fiktivní studie pro Rakathon 2026 – neexistují, nevyhledávejte je v registrech.",
+  "studie": [
+    {
+      "id": "RKT-01",
+      "akronym": "MERIDIAN-B",
+      "faze": "II",
+      "nazev": "Perorální selektivní degradátor estrogenového receptoru (RKT-SERD) vs. fulvestrant u ESR1-mutovaného HR+/HER2− metastatického karcinomu prsu po progresi na inhibitoru CDK4/6",
+      "diagnoza": "Karcinom prsu, HR+/HER2−, metastatický",
+      "rameno": [
+        "RKT-SERD 400 mg p. o. denně",
+        "fulvestrant 500 mg i.m. (D1, D15, D29, pak á 28 dní)"
+      ],
+      "zarazeni": [
+        {
+          "id": "Z1",
+          "text": "Histologicky ověřený karcinom prsu, ER ≥ 10 %, HER2 negativní (IHC 0, 1+ nebo 2+ s negativní ISH)"
+        },
+        {
+          "id": "Z2",
+          "text": "Mutace ESR1 prokázaná v cirkulující nádorové DNA (ctDNA) ne starší než 3 měsíce"
+        },
+        {
+          "id": "Z3",
+          "text": "Progrese během nebo po 1. linii inhibitor aromatázy + inhibitor CDK4/6 v metastatickém stadiu"
+        },
+        {
+          "id": "Z4",
+          "text": "Nejvýše 1 linie chemoterapie v metastatickém stadiu"
+        },
+        {
+          "id": "Z5",
+          "text": "ECOG 0–1"
+        }
+      ],
+      "vyrazeni": [
+        {
+          "id": "V1",
+          "text": "Viscerální krize"
+        },
+        {
+          "id": "V2",
+          "text": "Neléčené nebo symptomatické mozkové metastázy"
+        },
+        {
+          "id": "V3",
+          "text": "Bilirubin > 1,5× horní hranice normy"
+        },
+        {
+          "id": "V4",
+          "text": "Předchozí léčba fulvestrantem nebo jiným SERD"
+        }
+      ]
+    },
+    {
+      "id": "RKT-02",
+      "akronym": "HELIX-2",
+      "faze": "III",
+      "nazev": "Nový anti-HER2 protilátkový konjugát (RKT-ADC2) vs. léčba dle výběru lékaře u HER2+ metastatického karcinomu prsu po trastuzumabu a taxanu, včetně pacientek s mozkovými metastázami",
+      "diagnoza": "Karcinom prsu, HER2+, metastatický",
+      "rameno": [
+        "RKT-ADC2 i.v. á 3 týdny",
+        "léčba dle výběru lékaře (trastuzumab deruxtekan nebo tukatinib + trastuzumab + kapecitabin)"
+      ],
+      "zarazeni": [
+        {
+          "id": "Z1",
+          "text": "HER2 pozitivní karcinom prsu (IHC 3+ nebo ISH pozitivní) z primárního nádoru nebo metastázy"
+        },
+        {
+          "id": "Z2",
+          "text": "Progrese po předchozí léčbě trastuzumabem a taxanem v metastatickém stadiu"
+        },
+        {
+          "id": "Z3",
+          "text": "Mozkové metastázy povoleny: léčené a stabilní, nebo neléčené asymptomatické nevyžadující kortikoidy v dávce > 2 mg dexametazonu denně"
+        },
+        {
+          "id": "Z4",
+          "text": "ECOG 0–1"
+        },
+        {
+          "id": "Z5",
+          "text": "LVEF ≥ 50 %"
+        }
+      ],
+      "vyrazeni": [
+        {
+          "id": "V1",
+          "text": "Intersticiální plicní onemocnění nebo pneumonitida v anamnéze"
+        },
+        {
+          "id": "V2",
+          "text": "Předchozí léčba trastuzumab deruxtekanem"
+        },
+        {
+          "id": "V3",
+          "text": "Leptomeningeální postižení"
+        }
+      ]
+    },
+    {
+      "id": "RKT-03",
+      "akronym": "COLUMBA-LM",
+      "faze": "III",
+      "nazev": "Resekce jater s peroperační ultrazvukovou navigací a ablací drobných ložisek vs. standardní resekce u kolorektálních jaterních metastáz po indukční chemoterapii",
+      "diagnoza": "Kolorektální karcinom s jaterními metastázami",
+      "rameno": [
+        "resekce + navigace + ablace ložisek ≤ 15 mm",
+        "standardní resekce"
+      ],
+      "zarazeni": [
+        {
+          "id": "Z1",
+          "text": "Metastázy kolorektálního karcinomu omezené na játra"
+        },
+        {
+          "id": "Z2",
+          "text": "Odpověď nebo stabilizace po ≥ 6 cyklech indukční chemoterapie s oxaliplatinou nebo irinotekanem"
+        },
+        {
+          "id": "Z3",
+          "text": "ECOG 0–1"
+        },
+        {
+          "id": "Z4",
+          "text": "Resekabilita potvrzená MDT s hepatobiliárním chirurgem"
+        }
+      ],
+      "vyrazeni": [
+        {
+          "id": "V1",
+          "text": "Extrahepatální onemocnění"
+        },
+        {
+          "id": "V2",
+          "text": "MSI-H / dMMR"
+        },
+        {
+          "id": "V3",
+          "text": "Periferní neuropatie ≥ G2"
+        },
+        {
+          "id": "V4",
+          "text": "Předpokládaný budoucí jaterní remnant (FLR) < 30 %"
+        }
+      ]
+    },
+    {
+      "id": "RKT-04",
+      "akronym": "PULMO-NEO",
+      "faze": "III",
+      "nazev": "Perioperační chemoimunoterapie s anti-PD-1 protilátkou (RKT-PD1) vs. standardní perioperační léčba u resekabilního NSCLC stadia II–IIIB",
+      "diagnoza": "Nemalobuněčný karcinom plic, stadium II–IIIB, resekabilní",
+      "rameno": [
+        "3 cykly chemoterapie + RKT-PD1, operace, adjuvantně RKT-PD1 1 rok",
+        "standardní perioperační chemoimunoterapie"
+      ],
+      "zarazeni": [
+        {
+          "id": "Z1",
+          "text": "Histologicky ověřený NSCLC stadia II–IIIB (TNM 8), resekabilní dle hrudního chirurga; N2 jedné uzlinové stanice povoleno"
+        },
+        {
+          "id": "Z2",
+          "text": "ECOG 0–1"
+        },
+        {
+          "id": "Z3",
+          "text": "ppoFEV1 a ppoDLCO ≥ 40 % náležité hodnoty, nebo vyhovující zátěžový test"
+        },
+        {
+          "id": "Z4",
+          "text": "Známý stav EGFR a ALK"
+        }
+      ],
+      "vyrazeni": [
+        {
+          "id": "V1",
+          "text": "Mutace EGFR nebo přestavba ALK"
+        },
+        {
+          "id": "V2",
+          "text": "Autoimunitní onemocnění vyžadující systémovou léčbu v posledních 2 letech"
+        },
+        {
+          "id": "V3",
+          "text": "Vzdálené metastázy (M1)"
+        }
+      ]
+    },
+    {
+      "id": "RKT-05",
+      "akronym": "VITALIS",
+      "faze": "N/A (podpůrná intervence)",
+      "nazev": "Multimodální nutriční a pohybová intervence u onkologických pacientů s úbytkem hmotnosti během protinádorové léčby",
+      "diagnoza": "Solidní nádory",
+      "rameno": [
+        "nutriční konzultace + perorální nutriční suplementace + řízený pohybový program 12 týdnů",
+        "standardní péče"
+      ],
+      "zarazeni": [
+        {
+          "id": "Z1",
+          "text": "Solidní nádor, plánovaná nebo probíhající protinádorová léčba"
+        },
+        {
+          "id": "Z2",
+          "text": "Nechtěný úbytek hmotnosti ≥ 5 % za posledních 6 měsíců"
+        },
+        {
+          "id": "Z3",
+          "text": "ECOG 0–2"
+        }
+      ],
+      "vyrazeni": [
+        {
+          "id": "V1",
+          "text": "Pouze symptomatická léčba (BSC)"
+        },
+        {
+          "id": "V2",
+          "text": "Enterální nebo parenterální výživa"
+        },
+        {
+          "id": "V3",
+          "text": "Neschopnost samostatné chůze"
+        }
+      ]
+    },
+    {
+      "id": "RKT-06",
+      "akronym": "ORION-HRR",
+      "faze": "II (basket)",
+      "nazev": "PARP inhibitor (RKT-PARPi) u pokročilých solidních nádorů s patogenní alterací genů homologní rekombinace (HRR) v nádoru",
+      "diagnoza": "Pokročilé solidní nádory s alterací BRCA1/2 nebo jiného HRR genu",
+      "rameno": [
+        "RKT-PARPi 300 mg p. o. 2× denně, cyklus 28 dní (jediné rameno)"
+      ],
+      "zarazeni": [
+        {
+          "id": "Z1",
+          "text": "Patogenní alterace BRCA1, BRCA2 nebo jiného HRR genu prokázaná NGS v nádoru (somatická nebo zárodečná)"
+        },
+        {
+          "id": "Z2",
+          "text": "Alespoň 1 předchozí linie systémové léčby v metastatickém stadiu"
+        },
+        {
+          "id": "Z3",
+          "text": "ECOG 0–1"
+        },
+        {
+          "id": "Z4",
+          "text": "Hemoglobin ≥ 90 g/l, neutrofily ≥ 1,5 × 10^9/l, trombocyty ≥ 100 × 10^9/l při zařazení"
+        }
+      ],
+      "vyrazeni": [
+        {
+          "id": "V1",
+          "text": "Předchozí léčba PARP inhibitorem"
+        },
+        {
+          "id": "V2",
+          "text": "Myelodysplastický syndrom nebo akutní myeloidní leukémie v anamnéze"
+        },
+        {
+          "id": "V3",
+          "text": "Neléčené mozkové metastázy"
+        }
+      ],
+      "pravidla": "Úprava dávky podle protokolu: hemoglobin < 80 g/l → přerušit podávání, transfuze dle potřeby, po úpravě na ≥ 90 g/l pokračovat se sníženou dávkou (250 mg 2× denně, další redukce 200 mg 2× denně). Anémie G3 při nejnižší dávce (200 mg 2× denně) → ukončení studijní léčby."
+    }
+  ]
+}

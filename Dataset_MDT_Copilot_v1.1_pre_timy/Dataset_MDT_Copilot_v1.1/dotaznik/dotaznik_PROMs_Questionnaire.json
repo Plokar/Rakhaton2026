@@ -1,0 +1,350 @@
+{
+  "resourceType": "Questionnaire",
+  "id": "MDT-PROMS-1",
+  "url": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+  "version": "1.0",
+  "name": "MdtPromsDotaznik",
+  "title": "Dotazník pacienta před onkologickou komisí (ilustrační)",
+  "status": "active",
+  "date": "2026-10-13",
+  "description": "Vlastní krátký dotazník pro Rakathon 2026. Tematicky inspirován EORTC QLQ-C30, PRO-CTCAE a Distress Thermometer, nepřebírá jejich znění. Škály 0–10: 0 = žádné potíže, 10 = nejhorší představitelné.",
+  "item": [
+    {
+      "linkId": "bolest",
+      "text": "Bolest za poslední týden (0–10)",
+      "type": "integer",
+      "required": true,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "bolest-misto",
+      "text": "Kde vás bolí? (vlastními slovy)",
+      "type": "string",
+      "required": false
+    },
+    {
+      "linkId": "unava",
+      "text": "Únava za poslední týden (0–10)",
+      "type": "integer",
+      "required": true,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "nevolnost",
+      "text": "Nevolnost nebo zvracení (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "dusnost",
+      "text": "Dušnost (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "chut",
+      "text": "Nechutenství (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "brneni",
+      "text": "Brnění, mravenčení nebo necitlivost rukou či nohou (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "prujem",
+      "text": "Průjem (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "psychika",
+      "text": "Psychická zátěž – úzkost, smutek, starosti (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "spanek",
+      "text": "Potíže se spánkem (0–10)",
+      "type": "integer",
+      "required": false,
+      "extension": [
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/minValue",
+          "valueInteger": 0
+        },
+        {
+          "url": "http://hl7.org/fhir/StructureDefinition/maxValue",
+          "valueInteger": 10
+        }
+      ]
+    },
+    {
+      "linkId": "samostatnost",
+      "text": "Jak zvládáte běžný den?",
+      "type": "choice",
+      "required": true,
+      "answerOption": [
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "0",
+            "display": "Zvládám vše jako před nemocí, i fyzicky náročné věci"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "1",
+            "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "2",
+            "display": "Postarám se o sebe, ale pracovat nemohu; přes den odpočívám méně než polovinu času"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "3",
+            "display": "Postarám se o sebe jen částečně; víc než polovinu dne ležím nebo sedím"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "4",
+            "display": "Jsem odkázán(a) na pomoc druhých, většinu dne ležím"
+          }
+        }
+      ]
+    },
+    {
+      "linkId": "chuze",
+      "text": "Kolik zvládnete ujít?",
+      "type": "choice",
+      "required": false,
+      "answerOption": [
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "bez-omezeni",
+            "display": "Ujdu bez potíží delší vzdálenost i do schodů"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "1-patro",
+            "display": "Vyjdu jedno patro bez zastavení"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "1-patro-zastavka",
+            "display": "Jedno patro vyjdu jen se zastávkou"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "rovina",
+            "display": "Zvládnu jen chůzi po rovině"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "byt",
+            "display": "Pohybuji se jen po bytě"
+          }
+        }
+      ]
+    },
+    {
+      "linkId": "hmotnost",
+      "text": "Vaše současná hmotnost (kg)",
+      "type": "decimal",
+      "required": false
+    },
+    {
+      "linkId": "hmotnost-zmena",
+      "text": "Změna hmotnosti za poslední 3 měsíce (kg, minus = úbytek)",
+      "type": "decimal",
+      "required": false
+    },
+    {
+      "linkId": "nove-obtize",
+      "text": "Objevily se od minulé návštěvy nové obtíže? Jaké?",
+      "type": "string",
+      "required": false
+    },
+    {
+      "linkId": "alergie",
+      "text": "Alergie nebo nesnášenlivost léků",
+      "type": "string",
+      "required": false
+    },
+    {
+      "linkId": "leky-mimo",
+      "text": "Léky, doplňky stravy nebo bylinky, které užíváte navíc",
+      "type": "string",
+      "required": false
+    },
+    {
+      "linkId": "priorita",
+      "text": "Co je pro vás v léčbě nejdůležitější?",
+      "type": "choice",
+      "required": false,
+      "answerOption": [
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "delka",
+            "display": "Nejdůležitější je pro mě co nejdelší život, i za cenu náročnější léčby"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "kvalita",
+            "display": "Nejdůležitější je pro mě kvalita života, i kdyby léčba byla méně účinná"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "oboji",
+            "display": "Obojí je pro mě stejně důležité"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "nevim",
+            "display": "Nevím / chci to probrat s lékařem"
+          }
+        }
+      ]
+    },
+    {
+      "linkId": "postoj",
+      "text": "Co si přejete, aby lékaři při rozhodování věděli? (např. postoj k operaci, cestování, práce, rodina)",
+      "type": "string",
+      "required": false
+    },
+    {
+      "linkId": "podpora",
+      "text": "Podpora v domácnosti",
+      "type": "choice",
+      "required": false,
+      "answerOption": [
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "dostatecna",
+            "display": "Mám dostatečnou podporu blízkých"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "castecna",
+            "display": "Podporu mám jen částečně"
+          }
+        },
+        {
+          "valueCoding": {
+            "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+            "code": "zadna",
+            "display": "Podporu nemám, žiji sám/sama bez pomoci"
+          }
+        }
+      ]
+    }
+  ]
+}

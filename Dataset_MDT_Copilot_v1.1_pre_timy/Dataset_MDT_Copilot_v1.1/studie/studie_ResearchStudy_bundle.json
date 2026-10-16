@@ -1,0 +1,714 @@
+{
+  "resourceType": "Bundle",
+  "id": "studie-bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/ResearchStudy/RKT-01",
+      "resource": {
+        "resourceType": "ResearchStudy",
+        "id": "RKT-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/studie",
+            "value": "RKT-01"
+          }
+        ],
+        "title": "MERIDIAN-B – Perorální selektivní degradátor estrogenového receptoru (RKT-SERD) vs. fulvestrant u ESR1-mutovaného HR+/HER2− metastatického karcinomu prsu po progresi na inhibitoru CDK4/6",
+        "status": "active",
+        "phase": {
+          "text": "II"
+        },
+        "condition": [
+          {
+            "text": "Karcinom prsu, HR+/HER2−, metastatický"
+          }
+        ],
+        "description": "Kritéria zařazení:\nZ1: Histologicky ověřený karcinom prsu, ER ≥ 10 %, HER2 negativní (IHC 0, 1+ nebo 2+ s negativní ISH)\nZ2: Mutace ESR1 prokázaná v cirkulující nádorové DNA (ctDNA) ne starší než 3 měsíce\nZ3: Progrese během nebo po 1. linii inhibitor aromatázy + inhibitor CDK4/6 v metastatickém stadiu\nZ4: Nejvýše 1 linie chemoterapie v metastatickém stadiu\nZ5: ECOG 0–1\n\nKritéria vyřazení:\nV1: Viscerální krize\nV2: Neléčené nebo symptomatické mozkové metastázy\nV3: Bilirubin > 1,5× horní hranice normy\nV4: Předchozí léčba fulvestrantem nebo jiným SERD",
+        "arm": [
+          {
+            "name": "Rameno 1",
+            "description": "RKT-SERD 400 mg p. o. denně"
+          },
+          {
+            "name": "Rameno 2",
+            "description": "fulvestrant 500 mg i.m. (D1, D15, D29, pak á 28 dní)"
+          }
+        ],
+        "enrollment": [
+          {
+            "reference": "Group/RKT-01-kriteria",
+            "display": "kritéria – viz description a Group.characteristic"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/Group/RKT-01-kriteria",
+      "resource": {
+        "resourceType": "Group",
+        "id": "RKT-01-kriteria",
+        "type": "person",
+        "actual": false,
+        "characteristic": [
+          {
+            "code": {
+              "text": "Z1"
+            },
+            "valueCodeableConcept": {
+              "text": "Histologicky ověřený karcinom prsu, ER ≥ 10 %, HER2 negativní (IHC 0, 1+ nebo 2+ s negativní ISH)"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z2"
+            },
+            "valueCodeableConcept": {
+              "text": "Mutace ESR1 prokázaná v cirkulující nádorové DNA (ctDNA) ne starší než 3 měsíce"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z3"
+            },
+            "valueCodeableConcept": {
+              "text": "Progrese během nebo po 1. linii inhibitor aromatázy + inhibitor CDK4/6 v metastatickém stadiu"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z4"
+            },
+            "valueCodeableConcept": {
+              "text": "Nejvýše 1 linie chemoterapie v metastatickém stadiu"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z5"
+            },
+            "valueCodeableConcept": {
+              "text": "ECOG 0–1"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "V1"
+            },
+            "valueCodeableConcept": {
+              "text": "Viscerální krize"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V2"
+            },
+            "valueCodeableConcept": {
+              "text": "Neléčené nebo symptomatické mozkové metastázy"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V3"
+            },
+            "valueCodeableConcept": {
+              "text": "Bilirubin > 1,5× horní hranice normy"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V4"
+            },
+            "valueCodeableConcept": {
+              "text": "Předchozí léčba fulvestrantem nebo jiným SERD"
+            },
+            "exclude": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/ResearchStudy/RKT-02",
+      "resource": {
+        "resourceType": "ResearchStudy",
+        "id": "RKT-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/studie",
+            "value": "RKT-02"
+          }
+        ],
+        "title": "HELIX-2 – Nový anti-HER2 protilátkový konjugát (RKT-ADC2) vs. léčba dle výběru lékaře u HER2+ metastatického karcinomu prsu po trastuzumabu a taxanu, včetně pacientek s mozkovými metastázami",
+        "status": "active",
+        "phase": {
+          "text": "III"
+        },
+        "condition": [
+          {
+            "text": "Karcinom prsu, HER2+, metastatický"
+          }
+        ],
+        "description": "Kritéria zařazení:\nZ1: HER2 pozitivní karcinom prsu (IHC 3+ nebo ISH pozitivní) z primárního nádoru nebo metastázy\nZ2: Progrese po předchozí léčbě trastuzumabem a taxanem v metastatickém stadiu\nZ3: Mozkové metastázy povoleny: léčené a stabilní, nebo neléčené asymptomatické nevyžadující kortikoidy v dávce > 2 mg dexametazonu denně\nZ4: ECOG 0–1\nZ5: LVEF ≥ 50 %\n\nKritéria vyřazení:\nV1: Intersticiální plicní onemocnění nebo pneumonitida v anamnéze\nV2: Předchozí léčba trastuzumab deruxtekanem\nV3: Leptomeningeální postižení",
+        "arm": [
+          {
+            "name": "Rameno 1",
+            "description": "RKT-ADC2 i.v. á 3 týdny"
+          },
+          {
+            "name": "Rameno 2",
+            "description": "léčba dle výběru lékaře (trastuzumab deruxtekan nebo tukatinib + trastuzumab + kapecitabin)"
+          }
+        ],
+        "enrollment": [
+          {
+            "reference": "Group/RKT-02-kriteria",
+            "display": "kritéria – viz description a Group.characteristic"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/Group/RKT-02-kriteria",
+      "resource": {
+        "resourceType": "Group",
+        "id": "RKT-02-kriteria",
+        "type": "person",
+        "actual": false,
+        "characteristic": [
+          {
+            "code": {
+              "text": "Z1"
+            },
+            "valueCodeableConcept": {
+              "text": "HER2 pozitivní karcinom prsu (IHC 3+ nebo ISH pozitivní) z primárního nádoru nebo metastázy"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z2"
+            },
+            "valueCodeableConcept": {
+              "text": "Progrese po předchozí léčbě trastuzumabem a taxanem v metastatickém stadiu"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z3"
+            },
+            "valueCodeableConcept": {
+              "text": "Mozkové metastázy povoleny: léčené a stabilní, nebo neléčené asymptomatické nevyžadující kortikoidy v dávce > 2 mg dexametazonu denně"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z4"
+            },
+            "valueCodeableConcept": {
+              "text": "ECOG 0–1"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z5"
+            },
+            "valueCodeableConcept": {
+              "text": "LVEF ≥ 50 %"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "V1"
+            },
+            "valueCodeableConcept": {
+              "text": "Intersticiální plicní onemocnění nebo pneumonitida v anamnéze"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V2"
+            },
+            "valueCodeableConcept": {
+              "text": "Předchozí léčba trastuzumab deruxtekanem"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V3"
+            },
+            "valueCodeableConcept": {
+              "text": "Leptomeningeální postižení"
+            },
+            "exclude": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/ResearchStudy/RKT-03",
+      "resource": {
+        "resourceType": "ResearchStudy",
+        "id": "RKT-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/studie",
+            "value": "RKT-03"
+          }
+        ],
+        "title": "COLUMBA-LM – Resekce jater s peroperační ultrazvukovou navigací a ablací drobných ložisek vs. standardní resekce u kolorektálních jaterních metastáz po indukční chemoterapii",
+        "status": "active",
+        "phase": {
+          "text": "III"
+        },
+        "condition": [
+          {
+            "text": "Kolorektální karcinom s jaterními metastázami"
+          }
+        ],
+        "description": "Kritéria zařazení:\nZ1: Metastázy kolorektálního karcinomu omezené na játra\nZ2: Odpověď nebo stabilizace po ≥ 6 cyklech indukční chemoterapie s oxaliplatinou nebo irinotekanem\nZ3: ECOG 0–1\nZ4: Resekabilita potvrzená MDT s hepatobiliárním chirurgem\n\nKritéria vyřazení:\nV1: Extrahepatální onemocnění\nV2: MSI-H / dMMR\nV3: Periferní neuropatie ≥ G2\nV4: Předpokládaný budoucí jaterní remnant (FLR) < 30 %",
+        "arm": [
+          {
+            "name": "Rameno 1",
+            "description": "resekce + navigace + ablace ložisek ≤ 15 mm"
+          },
+          {
+            "name": "Rameno 2",
+            "description": "standardní resekce"
+          }
+        ],
+        "enrollment": [
+          {
+            "reference": "Group/RKT-03-kriteria",
+            "display": "kritéria – viz description a Group.characteristic"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/Group/RKT-03-kriteria",
+      "resource": {
+        "resourceType": "Group",
+        "id": "RKT-03-kriteria",
+        "type": "person",
+        "actual": false,
+        "characteristic": [
+          {
+            "code": {
+              "text": "Z1"
+            },
+            "valueCodeableConcept": {
+              "text": "Metastázy kolorektálního karcinomu omezené na játra"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z2"
+            },
+            "valueCodeableConcept": {
+              "text": "Odpověď nebo stabilizace po ≥ 6 cyklech indukční chemoterapie s oxaliplatinou nebo irinotekanem"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z3"
+            },
+            "valueCodeableConcept": {
+              "text": "ECOG 0–1"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z4"
+            },
+            "valueCodeableConcept": {
+              "text": "Resekabilita potvrzená MDT s hepatobiliárním chirurgem"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "V1"
+            },
+            "valueCodeableConcept": {
+              "text": "Extrahepatální onemocnění"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V2"
+            },
+            "valueCodeableConcept": {
+              "text": "MSI-H / dMMR"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V3"
+            },
+            "valueCodeableConcept": {
+              "text": "Periferní neuropatie ≥ G2"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V4"
+            },
+            "valueCodeableConcept": {
+              "text": "Předpokládaný budoucí jaterní remnant (FLR) < 30 %"
+            },
+            "exclude": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/ResearchStudy/RKT-04",
+      "resource": {
+        "resourceType": "ResearchStudy",
+        "id": "RKT-04",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/studie",
+            "value": "RKT-04"
+          }
+        ],
+        "title": "PULMO-NEO – Perioperační chemoimunoterapie s anti-PD-1 protilátkou (RKT-PD1) vs. standardní perioperační léčba u resekabilního NSCLC stadia II–IIIB",
+        "status": "active",
+        "phase": {
+          "text": "III"
+        },
+        "condition": [
+          {
+            "text": "Nemalobuněčný karcinom plic, stadium II–IIIB, resekabilní"
+          }
+        ],
+        "description": "Kritéria zařazení:\nZ1: Histologicky ověřený NSCLC stadia II–IIIB (TNM 8), resekabilní dle hrudního chirurga; N2 jedné uzlinové stanice povoleno\nZ2: ECOG 0–1\nZ3: ppoFEV1 a ppoDLCO ≥ 40 % náležité hodnoty, nebo vyhovující zátěžový test\nZ4: Známý stav EGFR a ALK\n\nKritéria vyřazení:\nV1: Mutace EGFR nebo přestavba ALK\nV2: Autoimunitní onemocnění vyžadující systémovou léčbu v posledních 2 letech\nV3: Vzdálené metastázy (M1)",
+        "arm": [
+          {
+            "name": "Rameno 1",
+            "description": "3 cykly chemoterapie + RKT-PD1, operace, adjuvantně RKT-PD1 1 rok"
+          },
+          {
+            "name": "Rameno 2",
+            "description": "standardní perioperační chemoimunoterapie"
+          }
+        ],
+        "enrollment": [
+          {
+            "reference": "Group/RKT-04-kriteria",
+            "display": "kritéria – viz description a Group.characteristic"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/Group/RKT-04-kriteria",
+      "resource": {
+        "resourceType": "Group",
+        "id": "RKT-04-kriteria",
+        "type": "person",
+        "actual": false,
+        "characteristic": [
+          {
+            "code": {
+              "text": "Z1"
+            },
+            "valueCodeableConcept": {
+              "text": "Histologicky ověřený NSCLC stadia II–IIIB (TNM 8), resekabilní dle hrudního chirurga; N2 jedné uzlinové stanice povoleno"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z2"
+            },
+            "valueCodeableConcept": {
+              "text": "ECOG 0–1"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z3"
+            },
+            "valueCodeableConcept": {
+              "text": "ppoFEV1 a ppoDLCO ≥ 40 % náležité hodnoty, nebo vyhovující zátěžový test"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z4"
+            },
+            "valueCodeableConcept": {
+              "text": "Známý stav EGFR a ALK"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "V1"
+            },
+            "valueCodeableConcept": {
+              "text": "Mutace EGFR nebo přestavba ALK"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V2"
+            },
+            "valueCodeableConcept": {
+              "text": "Autoimunitní onemocnění vyžadující systémovou léčbu v posledních 2 letech"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V3"
+            },
+            "valueCodeableConcept": {
+              "text": "Vzdálené metastázy (M1)"
+            },
+            "exclude": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/ResearchStudy/RKT-05",
+      "resource": {
+        "resourceType": "ResearchStudy",
+        "id": "RKT-05",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/studie",
+            "value": "RKT-05"
+          }
+        ],
+        "title": "VITALIS – Multimodální nutriční a pohybová intervence u onkologických pacientů s úbytkem hmotnosti během protinádorové léčby",
+        "status": "active",
+        "phase": {
+          "text": "N/A (podpůrná intervence)"
+        },
+        "condition": [
+          {
+            "text": "Solidní nádory"
+          }
+        ],
+        "description": "Kritéria zařazení:\nZ1: Solidní nádor, plánovaná nebo probíhající protinádorová léčba\nZ2: Nechtěný úbytek hmotnosti ≥ 5 % za posledních 6 měsíců\nZ3: ECOG 0–2\n\nKritéria vyřazení:\nV1: Pouze symptomatická léčba (BSC)\nV2: Enterální nebo parenterální výživa\nV3: Neschopnost samostatné chůze",
+        "arm": [
+          {
+            "name": "Rameno 1",
+            "description": "nutriční konzultace + perorální nutriční suplementace + řízený pohybový program 12 týdnů"
+          },
+          {
+            "name": "Rameno 2",
+            "description": "standardní péče"
+          }
+        ],
+        "enrollment": [
+          {
+            "reference": "Group/RKT-05-kriteria",
+            "display": "kritéria – viz description a Group.characteristic"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/Group/RKT-05-kriteria",
+      "resource": {
+        "resourceType": "Group",
+        "id": "RKT-05-kriteria",
+        "type": "person",
+        "actual": false,
+        "characteristic": [
+          {
+            "code": {
+              "text": "Z1"
+            },
+            "valueCodeableConcept": {
+              "text": "Solidní nádor, plánovaná nebo probíhající protinádorová léčba"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z2"
+            },
+            "valueCodeableConcept": {
+              "text": "Nechtěný úbytek hmotnosti ≥ 5 % za posledních 6 měsíců"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z3"
+            },
+            "valueCodeableConcept": {
+              "text": "ECOG 0–2"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "V1"
+            },
+            "valueCodeableConcept": {
+              "text": "Pouze symptomatická léčba (BSC)"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V2"
+            },
+            "valueCodeableConcept": {
+              "text": "Enterální nebo parenterální výživa"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V3"
+            },
+            "valueCodeableConcept": {
+              "text": "Neschopnost samostatné chůze"
+            },
+            "exclude": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/ResearchStudy/RKT-06",
+      "resource": {
+        "resourceType": "ResearchStudy",
+        "id": "RKT-06",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/studie",
+            "value": "RKT-06"
+          }
+        ],
+        "title": "ORION-HRR – PARP inhibitor (RKT-PARPi) u pokročilých solidních nádorů s patogenní alterací genů homologní rekombinace (HRR) v nádoru",
+        "status": "active",
+        "phase": {
+          "text": "II (basket)"
+        },
+        "condition": [
+          {
+            "text": "Pokročilé solidní nádory s alterací BRCA1/2 nebo jiného HRR genu"
+          }
+        ],
+        "description": "Kritéria zařazení:\nZ1: Patogenní alterace BRCA1, BRCA2 nebo jiného HRR genu prokázaná NGS v nádoru (somatická nebo zárodečná)\nZ2: Alespoň 1 předchozí linie systémové léčby v metastatickém stadiu\nZ3: ECOG 0–1\nZ4: Hemoglobin ≥ 90 g/l, neutrofily ≥ 1,5 × 10^9/l, trombocyty ≥ 100 × 10^9/l při zařazení\n\nKritéria vyřazení:\nV1: Předchozí léčba PARP inhibitorem\nV2: Myelodysplastický syndrom nebo akutní myeloidní leukémie v anamnéze\nV3: Neléčené mozkové metastázy\n\nPravidla protokolu:\nÚprava dávky podle protokolu: hemoglobin < 80 g/l → přerušit podávání, transfuze dle potřeby, po úpravě na ≥ 90 g/l pokračovat se sníženou dávkou (250 mg 2× denně, další redukce 200 mg 2× denně). Anémie G3 při nejnižší dávce (200 mg 2× denně) → ukončení studijní léčby.",
+        "arm": [
+          {
+            "name": "Rameno 1",
+            "description": "RKT-PARPi 300 mg p. o. 2× denně, cyklus 28 dní (jediné rameno)"
+          }
+        ],
+        "enrollment": [
+          {
+            "reference": "Group/RKT-06-kriteria",
+            "display": "kritéria – viz description a Group.characteristic"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "https://rakathon.example.org/fhir/Group/RKT-06-kriteria",
+      "resource": {
+        "resourceType": "Group",
+        "id": "RKT-06-kriteria",
+        "type": "person",
+        "actual": false,
+        "characteristic": [
+          {
+            "code": {
+              "text": "Z1"
+            },
+            "valueCodeableConcept": {
+              "text": "Patogenní alterace BRCA1, BRCA2 nebo jiného HRR genu prokázaná NGS v nádoru (somatická nebo zárodečná)"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z2"
+            },
+            "valueCodeableConcept": {
+              "text": "Alespoň 1 předchozí linie systémové léčby v metastatickém stadiu"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z3"
+            },
+            "valueCodeableConcept": {
+              "text": "ECOG 0–1"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "Z4"
+            },
+            "valueCodeableConcept": {
+              "text": "Hemoglobin ≥ 90 g/l, neutrofily ≥ 1,5 × 10^9/l, trombocyty ≥ 100 × 10^9/l při zařazení"
+            },
+            "exclude": false
+          },
+          {
+            "code": {
+              "text": "V1"
+            },
+            "valueCodeableConcept": {
+              "text": "Předchozí léčba PARP inhibitorem"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V2"
+            },
+            "valueCodeableConcept": {
+              "text": "Myelodysplastický syndrom nebo akutní myeloidní leukémie v anamnéze"
+            },
+            "exclude": true
+          },
+          {
+            "code": {
+              "text": "V3"
+            },
+            "valueCodeableConcept": {
+              "text": "Neléčené mozkové metastázy"
+            },
+            "exclude": true
+          }
+        ]
+      }
+    }
+  ]
+}

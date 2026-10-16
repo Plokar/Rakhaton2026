@@ -105,15 +105,16 @@ Každá role chce vidět něco jiného _(poznámka)_.
 
 ### Vstupní data
 
-Smyšlená data od Asseco, formát zatím neznámý (Q1).
+Smyšlená data od Asseco, **dataset v1.1 už dorazil a je ve formátu FHIR R4**. Podrobně v [DATASET.md](DATASET.md). *(aktualizováno Pá 16:20)*
 
-- eZdraví: propouštěcí zprávy, krev a onkomarkery, popisy CT/MRI, léky.
-- PROMs: EORTC QLQ-C30 a PRO-CTCAE, aspoň 2 vyplnění v čase.
-- Nominace: kdo posílá, s jakou otázkou, předchozí závěry.
-- Výtah z ESMO guidelines + 3–5 smyšlených klinických studií.
-- 3–5 pacientů se schválně vloženými chybami a ground truth.
-- Bonus: přepis diskuse komise pro AI zapisovatele.
-- PACS: počítáme jen s textovými popisy, samotné snímky jsou mimo rozsah _(poznámka)_ ⚠️ **mezera**
+- **6 pacientů** (4× prs, 1× kolorektum, 1× plíce), každý jako FHIR Bundle se 142–215 resources.
+- eZdraví: zprávy (`DocumentReference`), patologie a zobrazení (`DiagnosticReport`), laboratoř s trendy markerů, ECOG, biomarkery, TNM (`Observation`), léky, výkony.
+- PROMs: vlastní dotazník `MDT-PROMS-1` (ne EORTC, kvůli licenci), 2 vyplnění v čase; otázka `samostatnost` = ECOG podle pacienta.
+- Nominace: `ServiceRequest` + `Task`; předchozí MDT jako `Composition` + `CarePlan` + `CareTeam`.
+- Guidelines: 4 výtahy (KRC, PRS, PLI, OBC) se 42 číslovanými pasážemi + 6 smyšlených studií (`RKT-01…06`).
+- Schválně vložené chyby a mezery ano. **Ground truth zatím ne** (až po odevzdání), máme vlastní hypotézy (DATASET §9).
+- Bonus přepis diskuse v datasetu **není**. Nahrajeme vlastní a přepíšeme ho Gemini.
+- PACS: dataset má jen textové popisy s rozměry lézí, žádné DICOM. Snímky jsou mimo rozsah _(poznámka)_ ✅ potvrzeno datasetem
 
 ### Proces komise
 
@@ -140,10 +141,11 @@ Copilot má pokrýt všechny 3 fáze.
 ### Plán a stav
 
 - Kód je zatím čistý template (Hackathon OS), MDT moduly neexistují.
-- Z 50 úkolů v PROGRESS.md není žádný hotový ani zabraný. Lanes INFRA, DATA, AI, API, UI a PITCH nemají ownera.
-- Kritická cesta: `T-002` → `T-003` → `T-008` → `T-101` → `T-105` → `T-106` → `T-108`.
-- Milníky: M0 Pá 18:00 · M1 Pá 23:00 · M2 So 04:00 · M3 So 09:00 · freeze So 10:00 · **odevzdání So 12:00** · pitch 13:00.
-- Blokery: dataset (Q1), LLM klíč (Q2), server (Q3).
+- Z 55 úkolů v PROGRESS.md je hotový jen T-007 (dataset popsán v DATASET.md), T-008 je škrtnutý. Lanes INFRA, DATA, AI, API, UI a PITCH nemají ownera.
+- Kritická cesta: `T-002` → `T-003` → `T-006` → `T-101` → `T-105` → `T-106` → `T-108` (T-008 „pacient 0“ nahrazen datasetem, dev pacient je P03).
+- Milníky: M0 Pá 18:00 · M1 Pá 23:00 · M2 So 04:00 · M3 So 09:00 · freeze So 10:00 · odevzdání zatím neřešíme · pitch 13:00.
+- Vyřešeno: dataset ✅ (Q1), LLM = Google AI Studio / Gemini ✅ (Q2), backend na VPS ✅ (Q3), dataset smí do gitu ✅ (Q5).
+- Otevřené: zapnout placený tier Gemini (Q9), připomínky onkologů k prahům (Q6), oficiální ground truth (Q8).
 
 ---
 
@@ -168,25 +170,25 @@ Je pacient pro tuhle roli kandidát? Nápad z konzultace _(poznámka)_.
 - Vyhodnotit po kritériích s citací, stejně jako screening studií.
 - Verdikt je jen podklad, potvrzuje ho lékař dané role.
 - Návrh postupu operace jde do B2 jako jedna z možností _(poznámka)_.
-- V kontraktu (ARCHITEKTURA §8) zatím chybí pole pro posouzení role. ⚠️ **mezera**
+- ✅ Doplněno: požadavek FR-B7 a typ `RoleAssessment` v kontraktu (ARCHITEKTURA §8.2), verdikt `candidate` / `conditional` / `not_candidate` / `insufficient_data`.
 
 ### Kontrola dat a varování
 
 Warning systém _(poznámka)_.
 
 - Red flags: rozpor mezi zdroji, závažnost, citace obou zdrojů.
-- Pravidla `RF-ECOG`, `RF-HB-FATIGUE`, `RF-MARKER`, `RF-TOX`, `RF-STALE`, `RF-MISSING` + rozpory od LLM.
-- Readiness: chybí histologie, zobrazení je staré, chybí biomarker.
-- Grounding validátor: sedí citace, čísla i data.
+- Pravidla red flags jsou v ARCHITEKTURA §5.4. Prahy jsou převzaté z guidelines datasetu (OBC-1.2 staging ≤ 6 týdnů, OBC-1.3 rozdíl ECOG ≥ 1…).
+- Readiness: checklist OBC-1.1, zastaralý staging, chybějící povinné biomarkery.
+- Grounding validátor: sedí citace, čísla, data a vektorová podobnost tvrzení se zdrojem (IRIS).
 - „Údaj chybí v podkladech“ místo hádání.
-- Varování „už operován“, implantáty, alergie: chybí pravidlo i FHIR typ _(poznámka)_ ⚠️ **mezera**
-- Přiřazení dokumentu ke správnému pacientovi a roli _(poznámka)_ ⚠️ **mezera**
+- Varování „už operován“, implantáty, alergie _(poznámka)_ ✅ pravidlo `RF-PRIOR-PROC` + hlavička (FR-A4). Výkony a implantáty jsou v `Procedure`, alergie jen v PROMs a textu (T-312).
+- Přiřazení dokumentu ke správnému pacientovi a roli _(poznámka)_ 🟨 pravidlo `RF-IDENTITY` (strana těla, pohlaví, věk, datum), úkol T-312.
 
 ### Guidelines a studie
 
-- Hledání v ESMO podle typu nádoru (prefix MKN-10, např. C18).
-- Postupy se liší podle diagnózy i země, chybí rozlišení zdroje a regionu _(poznámka)_ ⚠️ **mezera**
-- Kombinované choroby (diabetes + rakovina) mění kritéria studií _(poznámka)_ ⚠️ **mezera**
+- Výběr guidelines podle MKN-10: C50 → PRS, C18–C20 → KRC, C34 → PLI, OBC vždy.
+- Postupy se liší podle diagnózy i země _(poznámka)_ 🟨 `MDT.GuidelineChunk` má sloupce `Source` a `Region`. Dataset obsahuje jen jeden zdroj (výtah inspirovaný ESMO a národními standardy, CZ).
+- Kombinované choroby (diabetes + rakovina) mění kritéria studií _(poznámka)_ ✅ komorbidity jsou v datasetu (`Condition` „komorbidita“) a vstupují do screeningu a posouzení rolí. Příklad: P02 DM + dexametazon → OBC-3.1.
 - Studie jako `ResearchStudy` + kritéria inclusion / exclusion.
 - Kandidát do studie se zapíše jen po potvrzení komisí.
 
@@ -213,7 +215,7 @@ Warning systém _(poznámka)_.
 - IRIS Vector Search: RAG vždy s filtrem na pacienta.
 - PostgreSQL: jen uživatelé, drafty, presety, logy.
 - Generování jako job + polling, cíl pod 20 s.
-- Model a provider LLM zatím nevybrán (`D-008`). ⚠️ **mezera**
+- LLM, embeddingy i přepis audia: Google AI Studio / Gemini, placený tier (`D-008`) ✅
 
 ### Standardy a FHIR
 
@@ -221,7 +223,7 @@ Warning systém _(poznámka)_.
 - Zápis do IRIS: `CarePlan`, `Task`, `DetectedIssue`, `Provenance`, `Composition` _(poznámka: výstup ve FHIRu)_.
 - Kódy: MKN-10, ICD-O-3, LOINC, SNOMED CT, ATC.
 - Bonus: profily mCODE / ECCDM v exportu, `$validate` v IRIS.
-- Komorbidity a alergie v datovém modelu (ARCHITEKTURA §4.3) chybí. ⚠️ **mezera**
+- Komorbidity a alergie v datovém modelu ✅ ARCHITEKTURA §4.3: komorbidity = `Condition` „komorbidita“, alergie = PROMs + text (resource `AllergyIntolerance` v datasetu není).
 
 ---
 
@@ -232,13 +234,13 @@ Warning systém _(poznámka)_.
 | Krátká doba, rozhodnutí za 3–5 minut, přehledná appka | §1.1, souhrn do 30 s (FR-A1), `CaseHeader`, UX principy §7.3 | ✅ pokryto |
 | Oddělené dokumenty, PACS, předchozí vyšetření → vytáhnout to nejdůležitější | Blok A, `context_builder` §5.1 | 🟨 částečně: PACS jen jako textové popisy (`DiagnosticReport`). V pitchi říct, že obrazová data DICOM jsou mimo rozsah prototypu. |
 | Různé role v týmu (chirurg atd.) | Blok B, FR-B1 až B6, `RoleTabs` | ✅ pokryto |
-| Operoval / neoperoval, „match“ pacienta pro roli | FR-B1 resekabilita, ale jen jako volný text | ⚠️ chybí: strukturované posouzení role, kritéria splněno / nesplněno / neznámo s citací a souhrnný stav (kandidát / podmíněně / ne / chybí data). Formulovat jako podklad, ne doporučení. Je to změna kontraktu §8 → `⚠️ KONTRAKT` v Deníku. |
-| Přiřazování dokumentace | Ingest se stabilními ID (§4.4) | ⚠️ chybí: kontrola, že dokument patří pacientovi (věk, pohlaví, strana těla, datum), a zařazení dokumentu k roli. Dataset má schválně vložené chyby. Nové pravidlo red flag. |
-| Chyby v datech, musíme mít kontrolu | Red flags §5.4, readiness (BON-1), grounding §5.3 | 🟨 částečně: doplnit pravidla kvality dat (data mimo pořadí, nesoulad jednotek, vlevo vs. vpravo, duplicitní nálezy). |
-| Klinické postupy jiné pro diagnózu a zemi | `MDT.GuidelineChunk` s `CancerType` (§4.5) | ⚠️ chybí: k úsekům guidelines přidat zdroj a region (ESMO vs. národní doporučení), v B2 ukázat, odkud možnost pochází. Ověřit s mentory, co dataset obsahuje. |
+| Operoval / neoperoval, „match“ pacienta pro roli | FR-B7, `RoleAssessment` v §8.2, úkol T-201 | ✅ doplněno *(Pá 16:20)*: kritéria splněno / nesplněno / neznámo s citací + verdikt kandidát / podmíněně / ne / chybí data. Jen podklad. Zapsáno jako `⚠️ KONTRAKT` v Deníku. |
+| Přiřazování dokumentace | Ingest se zachovanými ID z datasetu (§4.4), pravidlo `RF-IDENTITY` (§5.4) | 🟨 navrženo, implementace T-312: kontrola strany těla, pohlaví, věku a data. Dataset má každý dokument s `subject` = pacient. Zařazení k roli podle oddělení (`category.text`, např. RDG, PAT-B). |
+| Chyby v datech, musíme mít kontrolu | Red flags §5.4 (18 pravidel včetně `RF-DATAQUALITY`), readiness (BON-1), grounding §5.3, hypotézy v DATASET §9 | ✅ navrženo: pravidla mají prahy z guidelines datasetu. Ruční průzkum našel desítky nesrovnalostí pro vývoj a eval. |
+| Klinické postupy jiné pro diagnózu a zemi | `MDT.GuidelineChunk` se sloupci `GuidelineSet`, `Source`, `Region`, `IcdPrefixes` (§4.5) | 🟨 dataset má jen jeden zdroj (výtah inspirovaný ESMO a národními standardy). Struktura na více zdrojů a regionů je připravená, v B2 se ukazuje ID pasáže. |
 | Návrh řešení pro operaci | B2 `treatment_options` (§5.5) | ✅ pokryto, jako možnost s citací, nikdy „doporučujeme“ |
-| Data z klinických studií, kombinované choroby (diabetes + rakovina) | Screening studií FR-D2, `MDT.TrialCriterion` | ⚠️ chybí: komorbidity nejsou ve vstupním FHIR modelu. Přidat `Condition` s kategorií komorbidita, zobrazit v hlavičce, použít v kritériích studií i v posouzení chirurga. |
-| Warning: defekty, jestli už byl operovaný | Pohled chirurga: předchozí operace (FR-B1) | 🟨 částečně: chybí samostatné varování. Přidat pravidlo pro předchozí výkon v téže oblasti, implantáty a alergie (`AllergyIntolerance` v modelu chybí). |
+| Data z klinických studií, kombinované choroby (diabetes + rakovina) | Screening studií FR-D2 (`RKT-01…06`, `MDT.TrialCriterion`), komorbidity v hlavičce (FR-A4) | ✅ komorbidity jsou v datasetu jako `Condition` „komorbidita“ a vstupují do screeningu i posouzení rolí. |
+| Warning: defekty, jestli už byl operovaný | Pohled chirurga (FR-B1), pravidlo `RF-PRIOR-PROC`, hlavička `alerts` (FR-A4) | ✅ navrženo, implementace T-312: předchozí výkony a implantáty z `Procedure` (port, stent, operace), alergie z PROMs a textu. `AllergyIntolerance` dataset nemá. |
 | Výstup ve FHIRu | Zápis do IRIS (§4.3 výstupy), export document Bundle (FR-C4) | ✅ pokryto |
 
 ---
@@ -247,17 +249,19 @@ Warning systém _(poznámka)_.
 
 ### Doplnit do ARCHITEKTURA.md
 
-- §8: typ pro posouzení role (kritéria + souhrnný stav + citace), zapsat jako změnu kontraktu.
-- §4.3: komorbidity (`Condition`), alergie (`AllergyIntolerance`), případně implantáty (`Device`).
-- §5.4: pravidla pro identitu dokumentu, předchozí operaci a kvalitu dat.
-- §4.5: zdroj a region u guidelines.
+Stav k Pá 16:20:
+
+- ✅ §8: `RoleAssessment` + společný typ `Criterion`, zapsáno jako změna kontraktu.
+- ✅ §4.3: komorbidity (`Condition`), alergie (PROMs + text), implantáty a výkony (`Procedure`).
+- ✅ §5.4: `RF-IDENTITY`, `RF-PRIOR-PROC`, `RF-DATAQUALITY`.
+- ✅ §4.5: `Source` a `Region` u guidelines.
 
 ### Rozjet práci
 
 - Rozdělit lanes mezi lidi a zabrat úkoly M0, zatím jsou všechny volné.
-- Získat dataset od Ľ. Piljana (Q1), bez něj stojí ingest.
-- Vybrat LLM a klíč (Q2), bez něj stojí generování.
-- Zeptat se mentorů na národní postupy a na prahy red flags (Q6).
+- ✅ Dataset je k dispozici (Q1), viz [DATASET.md](DATASET.md).
+- ✅ LLM = Gemini (Q2). Zbývá zapnout placený tier v Google AI Studio (Q9).
+- Zeptat se mentorů na národní postupy a na prahy red flags (Q6). Zatím je bereme z guidelines OBC v datasetu.
 
 ---
 

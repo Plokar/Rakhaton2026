@@ -178,7 +178,11 @@ def _embedding_text(row) -> str:
 
 def _replace(name: str, rows: list, delete_where: str, delete_params: list, provider=None,
              prepare: Callable[[str], str] = pseudonymize_text) -> int:
-    """Smaže řádky podle ``delete_where`` a vloží ``rows`` s embeddingy (RETRIEVAL_DOCUMENT)."""
+    """Smaže řádky podle ``delete_where`` a vloží ``rows`` s embeddingy (RETRIEVAL_DOCUMENT).
+
+    Schéma založí, když chybí (reindex po zápisu závěru T-209 na čistém IRIS, testy s ``fake_iris``).
+    """
+    ensure_schema()
     provider = provider or ai_service.get_ai_provider()
     vectors = embed([_embedding_text(r) for r in rows], ai_service.TASK_RETRIEVAL_DOCUMENT, provider, prepare)
     model_id = embedding_model_id(provider)

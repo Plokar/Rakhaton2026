@@ -115,6 +115,12 @@ def test_get_evidence_chunks_for_resolver(indexed):
     assert rows[0]['CharStart'] == 0 and rows[0]['DocDate'] == '2026-09-21'
 
 
+def test_indexing_creates_missing_schema(fake_iris, dataset_root):
+    """Reindex po zápisu závěru (T-209) i testy groundingu (T-213) zapisují bez předchozího ensure_schema."""
+    assert indexing.index_patient('P03', ingest.load_patient(dataset_root, 'P03')) == 85
+    assert set(fake_iris.tables) >= {'MDT.EvidenceChunk', 'MDT.GuidelineChunk', 'MDT.TrialCriterion'}
+
+
 def test_similarity_for_grounding(indexed):
     scores = vs.similarity(
         'Hrudník nebyl na restagingovém CT vyšetřen.',

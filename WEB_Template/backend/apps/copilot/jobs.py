@@ -15,7 +15,8 @@ from .models import Brief, GenerationJob
 
 log = logging.getLogger(__name__)
 
-GENERATORS = {'brief': 'services.ai.brief.generate_brief', 'scribe': 'services.ai.scribe.generate_scribe'}
+GENERATORS = {'brief': 'services.ai.brief.generate_brief', 'scribe': 'services.ai.scribe.generate_scribe',
+              'patient_summary': 'services.ai.patient_summary.generate_patient_summary'}
 
 # ponytail: in-process pool, joby běžící při restartu backendu zůstanou "running"; Celery/RQ až bude potřeba
 _pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix='mdt-job')

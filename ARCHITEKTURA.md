@@ -1102,6 +1102,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
+| GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, lékař) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
 | POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3) |
 | GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4) |
 | POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids` |
@@ -1421,8 +1422,9 @@ interface Decision {
   fhir_ids?: {                                                 // po potvrzení
     composition: string;  careplan: string;  careteam: string;
     tasks: string[];  detected_issues: string[];  research_subjects: string[];
-    provenance: string;  document_reference_pdf?: string;
+    provenance: string;  document_reference_pdf?: string;  document_reference_patient?: string;   // "P03-mdt02-pacient"
   };
+  patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };   // BON-4, po potvrzení
 }
 ```
 

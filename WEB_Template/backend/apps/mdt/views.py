@@ -290,6 +290,24 @@ def case_brief(request, cid):
     return Response({'job_id': job.pk}, status=202)
 
 
+@extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def case_patient_summary(request, cid):
+    """Shrnutí pro pacienta (BON-4). GET: uložené shrnutí. POST (předseda, lékař): job z potvrzeného závěru → 202 `{job_id}`."""
+    case = get_object_or_404(MdtCase, pk=cid)
+    decision = Decision.objects.filter(case=case).first()
+    if request.method == 'GET':
+        summary = (decision.content if decision else {}).get('patient_summary')
+        return Response(summary) if summary else Response({'detail': 'Shrnutí ještě není.'}, status=404)
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    if not decision or decision.status != 'confirmed':
+        return Response({'detail': 'Shrnutí pro pacienta vzniká až z potvrzeného závěru.'}, status=409)
+    job = GenerationJob.objects.create(case=case, kind='patient_summary', params={}, created_by=request.user)
+    jobs.start(job)
+    return Response({'job_id': job.pk}, status=202)
+
+
 AUDIO_MAX_BYTES = 20 * 1024 * 1024          # inline limit Gemini (ARCH §5.6)
 
 

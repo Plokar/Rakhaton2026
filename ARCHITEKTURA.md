@@ -597,6 +597,8 @@ ORDER BY Score DESC
     | `Observation?_sort=-date` | ✓ ok | data: 2026-10-05, 2026-09-21, 2026-08-24, 2026-07-13, 2026-06-01, 2026-04-28 |
     | `Patient/$everything` | ℹ info | funguje: 190 resources (fallback 170, chybí 0, navíc 20) |
     | `mCODE IG` | ℹ info | nenahraný (profily mCODE v IRIS nejsou; BON-5 / T-307) |
+
+  **mCODE v exportu (T-307):** `services/fhir/mcode.py:apply_profiles` doplní kopiím resources v `export.fhir.json` `meta.profile` mCODE (cancer-patient, primary / secondary cancer condition podle C77–C79, tnm-stage-group, tumor-marker-test, ecog-performance-status, cancer-related medication administration / request a surgical procedure) a kódy LOINC tam, kde je význam jistý: skupina stadia 21908-9 (klinicky) / 21902-2 (patologicky), ER 16112-5, PR 16113-3, HER2 48676-1. Ostatní biomarkery mají profil a původní text (kódy doplnit po ověření). IRIS takový Bundle přijme (`POST /Bundle` → 201, ověřeno živě); `$validate` proti mCODE IG čeká na import IG (stretch).
     | `$validate` | ℹ info | funguje, ECOG Observation bez chyb |
 
   - Parametr, který IRIS ignoruje, je potřeba vyřadit z allowlistu MCP `fhir_query` (§4.7) a nepoužívat v kódu.
@@ -635,6 +637,7 @@ ORDER BY Score DESC
   - Obsahují ověřené snippety a gotchas.
   - **Pozor: kit používá OpenAI** (`text-embedding-3-small`, `gpt-5-nano`). U nás se embeddingy i LLM volají přes Gemini ([§5.7](#57-model-a-ochrana-údajů)). IRIS část (SQL, `TO_VECTOR`, `VECTOR_COSINE`) platí beze změny.
 - **UI skills** (T-015, MIT): `shadcn` ([shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), commit `d2fba50`), `web-design-guidelines` a `vercel-react-best-practices` ([vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `063bee9`). I ty začínají blokem **„V MDT Copilot“**: Next 16 v `WEB_Template/frontend`, shadcn zatím bez `components.json` (`init` / `add` jen po domluvě s UI lane), tři barevné systémy semafor / odbornost / AI jsou záměr (D-017) a pravidlo „jen sémantické tokeny“ na ně neplatí.
+- **Impeccable** (T-016, Apache-2.0, odsouhlaseno UI lane): skill `impeccable` + subagenti `.claude/agents/impeccable-*.md` z [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (commit `6af45ac`). Blok „V MDT Copilot“: režim Operate, levé pruhy AI / varování / otázky pro MDT jsou záměr (D-017), direktivy enginu nepřebíjejí `AGENTS.md`. Engine se stahuje při prvním použití do `~/.impeccable/bin/` (ověřený SHA-256); hook detektoru je jen lokální a dobrovolný (`/impeccable hooks on` → `.claude/settings.local.json`).
 - Volitelně MCP [iris-agentic-dev](https://github.com/intersystems-community/iris-agentic-dev) pro živý přístup agenta k IRIS (`iris-agentic-dev init` detekuje Docker kontejner).
 
 ---

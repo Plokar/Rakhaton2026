@@ -79,6 +79,7 @@ Celkem je unikátních resources 1 078 + `Questionnaire` + 12 resources studií 
 | `LEK-P03-01` | Practitioner | lékař (kód + odbornost v `name.text` a `qualification.code.text`, **bez jmen**) |
 | `P03-dg1`, `P03-dg2` | Condition | onkologické diagnózy (`category.text = "onkologická diagnóza"`) |
 | `P03-kom1…` | Condition | komorbidity (`category.text = "komorbidita"`) |
+| `P05-ae1` | Condition | nežádoucí účinek léčby (`category.text = "nežádoucí účinek léčby"`; v datasetu jen tento, D64.8 anémie G3 při PARPi) |
 | `P03-doc01…` | DocumentReference | lékařské zprávy (ambulance, propouštěcí, konzilia) |
 | `P03-pat01…` | DiagnosticReport (SP) | patologie, molekulární patologie |
 | `P03-img01…` | DiagnosticReport (RAD) | popis zobrazení (CT/MR/PET/scinti/mamografie) |
@@ -116,7 +117,7 @@ Celkem je unikátních resources 1 078 + `Questionnaire` + 12 resources studií 
 | Resource | Kde je informace | Poznámky |
 |---|---|---|
 | `Patient` | `gender`, `birthDate` (jen rok, např. `"1959"`), věk k datu MDT v extension `…/vek-k-datu-mdt` | `name.text = "Pacient P03 (fiktivní)"`, žádné PII |
-| `Condition` | `code` MKN-10 (`http://hl7.org/fhir/sid/icd-10`), `onsetDateTime` (i částečné `"2019-03"`), `bodySite.text`, `stage[].summary.text` (TNM jako text), extension `…/icd-o-3-morfologie`, `…/icd-o-3-topografie` | `category.text` odliší diagnózu od komorbidity; `verificationStatus` může být `provisional` (P06-dg2) |
+| `Condition` | `code` MKN-10 (`http://hl7.org/fhir/sid/icd-10`), `onsetDateTime` (i částečné `"2019-03"`), `bodySite.text`, `stage[].summary.text` (TNM jako text), extension `…/icd-o-3-morfologie`, `…/icd-o-3-topografie` | `category.text` odliší diagnózu (`onkologická diagnóza`), komorbiditu (`komorbidita`) a nežádoucí účinek léčby (`nežádoucí účinek léčby`, `P05-ae1`); `verificationStatus` může být `provisional` (P06-dg2) |
 | `DocumentReference` | **plný text** v `content[0].attachment.data` (base64, UTF-8, `text/plain`), `type` LOINC, `category[0].text` = oddělení (např. `"A-ONK – Ambulance klinické onkologie"`), `date`, `author` | typy LOINC: 11506-3 Progress note (29), 11488-4 Consult note (10), 28570-0 Procedure note (7), 34552-0 Cardiology note (4), 18842-5 Discharge summary (2) |
 | `DiagnosticReport` | `category` v2-0074: `SP` patologie, `RAD` zobrazení, `LAB` laboratoř; **text** v `presentedForm[0].data` (base64); `conclusion` = závěr; `imagingStudy` → ImagingStudy; `result[]` → lab Observation | 2. položka `category[].text` = pracoviště (RDG, NM, PAT-B, PAT-M…) |
 | `ImagingStudy` | `modality` (DICOM: CT, MR, PT, NM, MG…), `started`, `description` | snímky nejsou (`…/snimky-v-pacs` = „ne“) |
@@ -276,6 +277,22 @@ def to_transaction(bundle: dict) -> dict:
         })
     return {"resourceType": "Bundle", "type": "transaction", "entry": entries}
 ```
+
+**Implementace (T-101):**
+
+- Logika je v `services/fhir/ingest.py` (`collect` bez sítě, `ingest` nahraje a ověří), příkaz jen obaluje:
+
+  ```bash
+  python manage.py ingest_dataset                       # celý dataset (1 091 resources) + kontrola počtů
+  python manage.py ingest_dataset --patients P03,P05    # Questionnaire + studie + vybraní pacienti
+  python manage.py ingest_dataset --dry-run             # bez sítě: sanitizace + počty ze souborů
+  python manage.py ingest_dataset --bundle-type batch   # když IRIS transakci odmítne: chyby po resources
+  ```
+- Entries v transakci jsou seřazené tak, aby odkazované resources byly před těmi, které na ně odkazují (`order_by_references`), a mají `fullUrl` `https://rakathon.example.org/fhir/Type/id`.
+- Kontrola počtů: každý resource přes `GET Type?_id=…&_summary=count` (přesně) a pacientské typy přes `?patient=Pxx` (aspoň tolik, víc je v pořádku, protože aplikace zapisuje `Pxx-mdtNN…`).
+- Index `ID → ResourceType` je funkce `services/fhir/ids.py` `resource_type_for_id` podle konvence z §3 (+ výstupy z ARCHITEKTURA §4.3). Test ověřuje, že sedí pro všech 1 091 resources. `parse_evidence_id` rozloží citaci (`P03-img03#2`, `KRC-2.4`, `RKT-03/V3`, `EXT-…`).
+- **Testy bez IRIS (i pro ostatní lanes):** fixture `fake_fhir_dataset` (`services/conftest.py`) nahradí `services.fhir.client.request` in-memory serverem s celým sanitizovaným datasetem. `client.patient_everything('P03')` atd. pak funguje jako proti IRIS. Fake server odmítá to co IRIS (neplatné ID, prázdné hodnoty, reference na neexistující resource) a neznámé search parametry tiše ignoruje (zapíše je do `ignored_params`).
+- DoD proti skutečnému IRIS: `docker compose -f docker-compose.dev.yml exec backend pytest -m integration services/fhir`.
 
 ### 6.2 Sanitizace (povinná)
 
@@ -470,5 +487,9 @@ FHIR:
 - **Kortikoidy bez plánu snižování (OBC-3.1):** P02 dexametazon 4 mg od 23. 9. (`P02-med03`, `P02-doc11` „pokračuje“), plán snižování v dokumentaci není. `RF-STEROID`.
 - **Hyponatrémie bez vyšetření SIADH (PLI-3.2):** P04 Na 136 → 129 mmol/l, osmolalita séra a moči ani natriurie v datech nejsou. `RF-LAB`.
 - **Očekávané barvy semaforu** pro P03 a P04 (podklad pro T-013): [docs/POZADAVKY_LEKARE.md §5.4](docs/POZADAVKY_LEKARE.md#54-očekávané-barvy-pro-demo-podklad-pro-dev-ground-truth-t-013).
+
+### Doplněk Pá 16. 10. (T-101, ingest)
+
+- **P05-ae1:** třetí kategorie `Condition`, „nežádoucí účinek léčby“ (D64.8, anémie G3 při PARPi, od 2026-08-17). Není to onkologická diagnóza ani komorbidita: context builder a hlavička (komorbidity, FR-A4) ji musí rozlišit podle `category.text`. Pro P05 je to další zdroj k anémii G3 (`P05-anem01`, `P05-anem02`, protokol RKT-06).
 
 **Doporučený demo pacient:** **P03**. Má jasnou otázku, vizuálně silné rozpory (ECOG, neuropatie podle pacienta, chybějící hrudník, MMR), RECIST, studii RKT-03 s několika `unknown` kritérii a je nejmenší. Záloha je **P05** (třezalka jako „wow“ red flag, protokol studie).

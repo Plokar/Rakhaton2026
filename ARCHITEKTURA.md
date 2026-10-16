@@ -474,7 +474,8 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 
 - **ID z datasetu zachováváme** (D-005). Sanitizace: `_` se mění na `-` (`P01-lab01-hb_f` → `P01-lab01-hb-f`) v `id`, `fullUrl` i ve všech `reference`; prázdné stringy se odstraní ([DATASET.md §6.2](DATASET.md#62-sanitizace-povinná)).
 - Ingest posílá **transaction Bundle s `request.method = "PUT"`** a `request.url = "Type/id"`. Opakované spuštění data přepíše, nic se neduplikuje. Jeden bundle na pacienta (142–215 entries) + bundle studií + Questionnaire.
-- Command `python manage.py ingest_dataset [--patients P03,P05] [--skip-vectors]` čte z `DATASET_DIR` a po nahrání **ověří počty** proti [DATASET.md §2](DATASET.md#2-pacienti).
+- Command `python manage.py ingest_dataset [--patients P03,P05] [--skip-vectors] [--dry-run] [--bundle-type batch]` čte z `DATASET_DIR` a po nahrání **ověří počty** proti [DATASET.md §2](DATASET.md#2-pacienti). Logika je v `services/fhir/ingest.py`, detail v [DATASET.md §6.1](DATASET.md#61-postup-python-managepy-ingest_dataset-úkol-t-101).
+- Index `ID → ResourceType` pro resolver citací je funkce `services/fhir/ids.py` `resource_type_for_id` (podle konvence ID, žádná tabulka). Tamtéž `parse_evidence_id` pro validaci a rozklad citací (§5.2, §5.3).
 - Nové resources z aplikace dodržují konvenci datasetu (`Pxx-mdtNN-…`, viz §4.3), aby šly citovat a dohledat stejně.
 
 ### 4.5 Vektorové tabulky (IRIS SQL, namespace FHIRSERVER)

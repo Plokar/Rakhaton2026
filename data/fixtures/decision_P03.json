@@ -18,7 +18,7 @@
     "assessment": {
       "text": "Adenokarcinom sigmatu G2, cT3 cN1 cM1a, KRAS G12D. Po 8 cyklech FOLFOX + bevacizumab parciální odpověď (RECIST 83 → 50 mm). Postižení obou laloků (S3), vymizelá metastáza S5, ložisko S8 v kontaktu s pravou jaterní žílou, FLR odhadem 38 %. Neuropatie G1 podle lékaře, pacient popisuje omezení jemné motoriky. Chybí CT hrudníku a vyšetření MMR/MSI.",
       "source": "ai",
-      "citations": ["P03-tnm01", "P03-bm01", "P03-img01#4", "P03-img03#3", "P03-img04#2", "P03-img04#3", "P03-neuro01", "P03-prom02", "P03-img03#1", "P03-bm04"]
+      "citations": ["P03-tnm01", "P03-bm01", "P03-img01#5", "P03-img03#4", "P03-img04#2", "P03-img04#3", "P03-neuro01", "P03-prom02", "P03-img03#1", "P03-bm04"]
     },
     "intent": "kurativni",
     "recommendation": [

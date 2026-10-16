@@ -72,7 +72,7 @@
         "id": "al-03",
         "kind": "claim",
         "text": "Alergie neudává.",
-        "citations": ["P03-doc02#2", "P03-prom02"],
+        "citations": ["P03-doc02#5", "P03-prom02"],
         "verification": "verified"
       }
     ]
@@ -94,7 +94,7 @@
           "id": "sum-02",
           "kind": "claim",
           "text": "Po 8 cyklech FOLFOX + bevacizumab parciální odpověď podle RECIST 1.1: součet cílových lézí 83 mm → 50 mm (pokles o 40 %).",
-          "citations": ["P03-img01#4", "P03-img03#3", "P03-doc07#4"],
+          "citations": ["P03-img01#5", "P03-img03#4", "P03-doc07#6"],
           "verification": "verified"
         },
         {
@@ -166,7 +166,7 @@
           "id": "tl-05",
           "kind": "claim",
           "text": "2026-05-12 · Molekulární patologie: KRAS G12D, NRAS a BRAF bez patogenní varianty; MMR/MSI nebylo požadováno.",
-          "citations": ["P03-pat02#3", "P03-pat02#5"],
+          "citations": ["P03-pat02#4", "P03-pat02#5", "P03-pat02#6", "P03-pat02#8"],
           "verification": "verified"
         },
         {
@@ -180,14 +180,14 @@
           "id": "tl-07",
           "kind": "claim",
           "text": "2026-06-01 až 2026-09-07 · 8 cyklů FOLFOX + bevacizumab, 8. cyklus s redukcí oxaliplatiny na 75 %.",
-          "citations": ["P03-tx-oxa-01", "P03-tx-oxa-08", "P03-doc06#2"],
+          "citations": ["P03-tx-oxa-01", "P03-tx-oxa-08", "P03-doc06#4"],
           "verification": "verified"
         },
         {
           "id": "tl-08",
           "kind": "claim",
           "text": "2026-09-21 · Restagingové CT břicha a pánve: parciální odpověď, bez nových ložisek.",
-          "citations": ["P03-img03#3"],
+          "citations": ["P03-img03#4"],
           "verification": "verified"
         },
         {
@@ -208,7 +208,7 @@
           "id": "tl-11",
           "kind": "claim",
           "text": "2026-10-05 · Nominace na re-MDT GIT s otázkou resekability.",
-          "citations": ["P03-doc07#4", "P03-zad01"],
+          "citations": ["P03-doc07#6", "P03-zad01"],
           "verification": "verified"
         }
       ]
@@ -222,7 +222,7 @@
           "id": "an-01",
           "kind": "claim",
           "text": "OA: IM 2019, st. p. PCI RIA s implantací stentu, od té doby bez stenokardií. Hypertenze, hypercholesterolémie.",
-          "citations": ["P03-doc02#2"],
+          "citations": ["P03-doc02#3"],
           "verification": "verified"
         },
         {
@@ -236,7 +236,7 @@
           "id": "an-03",
           "kind": "claim",
           "text": "RA: otec karcinom tlustého střeva v 72 letech.",
-          "citations": ["P03-doc02#2"],
+          "citations": ["P03-doc02#6"],
           "verification": "verified"
         },
         {
@@ -327,7 +327,7 @@
           "id": "onk-01",
           "kind": "claim",
           "text": "KRAS G12D: nádor je RAS mutovaný, anti-EGFR léčba není indikována.",
-          "citations": ["P03-bm01", "P03-pat02#4"],
+          "citations": ["P03-bm01", "P03-pat02#7"],
           "verification": "verified"
         },
         {
@@ -349,7 +349,7 @@
           "id": "onk-04",
           "kind": "claim",
           "text": "8. cyklus podán s redukcí oxaliplatiny na 75 % pro přetrvávající parestezie prstů mezi cykly.",
-          "citations": ["P03-doc06#2"],
+          "citations": ["P03-doc06#4"],
           "verification": "verified"
         },
         {
@@ -382,7 +382,7 @@
           {
             "text": "Po dosažení resekability chemoterapii neprodlužovat",
             "status": "unknown",
-            "citations": ["P03-img04#2", "P03-doc06#2"],
+            "citations": ["P03-img04#2", "P03-doc06#4"],
             "guideline": "KRC-2.2",
             "missing": "Rozhodnutí MDT o resekabilitě"
           }
@@ -400,7 +400,7 @@
           "id": "rdg-01",
           "kind": "claim",
           "text": "RECIST 1.1: součet cílových lézí 83 mm (2026-04-28) → 50 mm (2026-09-21), pokles o 40 %, parciální odpověď.",
-          "citations": ["P03-img01#4", "P03-img03#3"],
+          "citations": ["P03-img01#5", "P03-img03#4"],
           "verification": "verified"
         },
         {
@@ -429,21 +429,21 @@
           "id": "pat-01",
           "kind": "claim",
           "text": "Adenokarcinom tlustého střeva, středně diferencovaný (G2), morfologie ICD-O-3 8140/3.",
-          "citations": ["P03-pat01#3", "P03-pat01#5"],
+          "citations": ["P03-pat01#3", "P03-pat01#6"],
           "verification": "verified"
         },
         {
           "id": "pat-02",
           "kind": "claim",
           "text": "NGS: KRAS G12D, NRAS bez patogenní varianty, BRAF V600E neprokázána.",
-          "citations": ["P03-pat02#3"],
+          "citations": ["P03-pat02#4", "P03-pat02#5", "P03-pat02#6"],
           "verification": "verified"
         },
         {
           "id": "pat-03",
           "kind": "missing",
           "text": "MMR/MSI: vyšetření nebylo požadováno.",
-          "citations": ["P03-pat02#5"],
+          "citations": ["P03-pat02#8"],
           "verification": "verified",
           "expected_source": "DiagnosticReport SP: IHC MMR nebo MSI z bioptického materiálu (KRC-1.1)"
         },
@@ -451,7 +451,7 @@
           "id": "pat-04",
           "kind": "claim",
           "text": "Otec měl karcinom tlustého střeva v 72 letech.",
-          "citations": ["P03-doc02#2"],
+          "citations": ["P03-doc02#6"],
           "verification": "verified"
         }
       ]
@@ -537,7 +537,7 @@
       "severity": "moderate",
       "title": "MMR/MSI nevyšetřeno",
       "description": "MMR/MSI je u metastatického kolorektálního karcinomu povinné, vyšetření nebylo požadováno.",
-      "citations": ["P03-bm04", "P03-pat02#5"],
+      "citations": ["P03-bm04", "P03-pat02#8"],
       "guideline": "KRC-1.1",
       "verification": "verified"
     },
@@ -557,7 +557,7 @@
       "severity": "moderate",
       "title": "Rodinná anamnéza KRC bez genetického poradenství",
       "description": "Otec měl karcinom tlustého střeva, MMR/MSI nevyšetřeno a genetické poradenství v dokumentaci není.",
-      "citations": ["P03-doc02#2", "P03-bm04"],
+      "citations": ["P03-doc02#6", "P03-bm04"],
       "guideline": "OBC-2.4",
       "verification": "verified"
     },
@@ -576,7 +576,7 @@
       "severity": "moderate",
       "title": "Doplňky mimo medikaci",
       "description": "Pacient užívá hořčík a vitamin B, v seznamu medikace nejsou.",
-      "citations": ["P03-prom02", "P03-doc02#2"],
+      "citations": ["P03-prom02", "P03-doc02#4"],
       "verification": "verified"
     },
     {
@@ -599,7 +599,7 @@
             "id": "b2-res-01",
             "kind": "claim",
             "text": "Parciální odpověď po 8 cyklech konverzní chemoterapie, bez nových ložisek.",
-            "citations": ["P03-img03#3", "P03-doc07#4"],
+            "citations": ["P03-img03#4", "P03-doc07#6"],
             "verification": "verified"
           },
           {
@@ -734,7 +734,7 @@
               "rule_id": "VS-KRC-08",
               "status": "orange",
               "text": "IM v anamnéze (2019) → bevacizumab s opatrností; hypertenze kompenzovaná",
-              "patient_citations": ["P03-kom1", "P03-doc07#3"],
+              "patient_citations": ["P03-kom1", "P03-doc07#5"],
               "rule_citation": "EXT-FDA-AVASTIN-PI"
             },
             {
@@ -763,7 +763,7 @@
             "id": "b2-egfr-01",
             "kind": "claim",
             "text": "KRAS G12D: nádor je RAS mutovaný.",
-            "citations": ["P03-bm01", "P03-pat02#4"],
+            "citations": ["P03-bm01", "P03-pat02#7"],
             "verification": "verified"
           }
         ],
@@ -794,7 +794,7 @@
             "id": "b2-io-01",
             "kind": "claim",
             "text": "Stav MMR/MSI není znám, vyšetření nebylo požadováno.",
-            "citations": ["P03-bm04", "P03-pat02#5"],
+            "citations": ["P03-bm04", "P03-pat02#8"],
             "verification": "verified"
           }
         ],
@@ -846,7 +846,7 @@
             "text": "Odpověď nebo stabilizace po ≥ 6 cyklech indukční chemoterapie s oxaliplatinou nebo irinotekanem",
             "kind": "inclusion",
             "status": "met",
-            "citations": ["P03-img03#3", "P03-tx-oxa-08"]
+            "citations": ["P03-img03#4", "P03-tx-oxa-08"]
           },
           {
             "criterion_id": "RKT-03/Z3",
@@ -991,7 +991,7 @@
             "text": "Myelodysplastický syndrom nebo akutní myeloidní leukémie v anamnéze",
             "kind": "exclusion",
             "status": "not_met",
-            "citations": ["P03-doc02#2"]
+            "citations": ["P03-doc02#3"]
           },
           {
             "criterion_id": "RKT-06/V3",

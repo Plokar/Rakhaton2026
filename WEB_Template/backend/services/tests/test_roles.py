@@ -56,6 +56,14 @@ def test_role_specific_content(guidelines):
     assert all("zdroj:" not in t for t in oncologist)
 
 
+def test_radiologist_section_includes_cited_recist_for_p03(guidelines):
+    radiologist = role_sections(brief_for("P03", guidelines, roles=["radiologist"]))["radiologist"]
+    recist = next(item for item in radiologist["items"] if item["id"] == "radiologist-recist")
+    assert "83 → 50 mm" in recist["text"] and "PR" in recist["text"]
+    assert recist["citations"] == ["P03-img01", "P03-img03"]
+    assert recist["verification"] == "verified"
+
+
 @pytest.mark.parametrize("patient_id", ["P01", "P05"])
 def test_supportive_care_does_not_make_oncology_candidate(guidelines, patient_id):
     oncologist = role_sections(brief_for(patient_id, guidelines))["oncologist"]["assessment"]

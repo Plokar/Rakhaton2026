@@ -801,6 +801,7 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - pro každou přítomnou roli se vyhodnotí otázka (chirurg: „kandidát resekce?“, radiační onkolog: „kandidát SRS / RT?“, onkolog: „kandidát další linie / studie?“) po kritériích s citacemi;
   - verdikt je `candidate` / `conditional` / `not_candidate` / `insufficient_data`;
   - vždy s poznámkou „podklad, rozhoduje lékař“.
+- **RECIST 1.1 (BON-2):** pohled radiologa může obsahovat předběžný výsledek cílových lézí vypočtený z explicitně uvedených SLD v radiologických zprávách. LLM vytěží hodnotu, datum a Evidence ID; `services/rules/recist.py` deterministicky určí baseline, nadir a aktuální změnu. PR = pokles ≥ 30 % od baseline; PD = nárůst ≥ 20 % a zároveň ≥ 5 mm od nadiru; SD = ani PR ani PD; CR jen při SLD 0. Tvrzení cituje baseline i aktuální zprávu. Jde pouze o předběžné hodnocení cílových lézí; nové a necílové léze potvrzuje radiolog podle [RECIST 1.1](https://project.eortc.org/recist/recist-1-1/). Pokud jsou méně než dvě explicitní měření, výsledek nevznikne.
 - **Otázky k diskusi:** 2–3 otázky odvozené z red flags, chybějících dat a otázky z nominace.
 - **Implementace bloku B (T-201):** `services/ai/roles.py` + role jako data `services/ai/data/roles.yaml` (název, zaměření, otázka posouzení podle sady guidelines, modality semaforu).
   - Pro každou roli z `roles_present` jedno volání Gemini (`prompts/role_view.md`), všechna souběžně se souhrnem a RF-LLM.

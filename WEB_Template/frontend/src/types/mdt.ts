@@ -195,6 +195,43 @@ export interface PatientDetail extends PatientListItem {
   };
 }
 
+/** GET /api/evidence/?id=P03-img03%232 (400 neplatné ID, 404 nenalezeno) */
+export interface EvidenceSource {
+  evidence_id: EvidenceId;
+  kind: 'resource' | 'paragraph' | 'guideline' | 'trial_criterion' | 'external';
+  /** "CT břicha a pánve…", "KRC-2.4 – Restaging před resekcí", "RKT-03 – kritérium vyřazení V3" */
+  title: string;
+  /** Celý text zprávy / PROMs „otázka: odpověď“ / znění pasáže či kritéria. */
+  text?: string | null;
+  /** U "#n": text.slice(start, end). */
+  highlight?: { paragraph: number; start: number; end: number } | null;
+  resource_type?: string | null;
+  resource_id?: string | null;
+  patient_id?: string | null;
+  date?: string | null;
+  /** Category text ("RDG – Radiodiagnostické oddělení"). */
+  department?: string | null;
+  /** LEK-… + odbornost. */
+  author?: { id: string; text: string; specialty: string | null } | null;
+  /** Observation. */
+  value?: {
+    text: string;
+    value: number | null;
+    unit: string | null;
+    ref_low: number | null;
+    ref_high: number | null;
+    interpretation: string | null;
+  } | null;
+  /** Observation → zdrojový dokument (derivedFrom + extension derived-from), bez další rekurze. */
+  derived_from?: EvidenceSource[] | null;
+  /** Guidelines. */
+  source?: string | null;
+  region?: string | null;
+  /** Kritérium studie. */
+  study_id?: string | null;
+  criterion_kind?: 'inclusion' | 'exclusion' | null;
+}
+
 /** GET /api/patients/{pid}/observations/?code=718-7,lvef,proms:brneni → ObservationSeries[] */
 export interface ObservationSeries {
   /** LOINC | druh z ID bez LOINC ("lvef") | "proms:<linkId>" */
@@ -266,11 +303,19 @@ export interface TreatmentCompatibility {
   modality: string;
   /** Kdo se k metodě vyjadřuje. */
   owner_role: RoleId;
-  /** Nejhorší z rules: red > orange > grey > green. */
+  /** Nejhorší z rules: red > orange > grey > skipped > green. */
   overall: Light;
   rules: CompatibilityRuleResult[];
   /** Štítek, barvu nemění. */
   patient_preferences: Claim[];
+}
+
+/** GET /api/mdt/cases/{cid}/compatibility/ → ProcedureCompatibility[] (všechny postupy, i červené) */
+export interface ProcedureCompatibility {
+  id: string;
+  title: string;
+  guideline_citations: EvidenceId[];
+  compatibility: TreatmentCompatibility;
 }
 
 // ── §8.4 Decision (závěr komise) ──────────────────────────────────────────────

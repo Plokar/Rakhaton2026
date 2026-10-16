@@ -827,8 +827,8 @@
   "decision_support": {
     "treatment_options": [
       {
-        "id": "opt-resekce",
-        "title": "Resekce jaterních metastáz (jednodobě, nebo dvoudobě) a resekce primárního tumoru sigmatu",
+        "id": "krc-resekce-jater",
+        "title": "Resekce jaterních metastáz (jednodobě nebo dvoudobě) a resekce primárního nádoru",
         "rationale": [
           {
             "id": "b2-res-01",
@@ -853,7 +853,6 @@
         ],
         "guideline_citations": [
           "KRC-2.1",
-          "KRC-2.3",
           "KRC-2.4",
           "KRC-2.5"
         ],
@@ -881,7 +880,7 @@
             {
               "rule_id": "VS-KRC-01",
               "status": "orange",
-              "text": "FLR 38 % po 8 cyklech FOLFOX < 40 % → posoudí HPB chirurg, zvážit dvoudobý postup",
+              "text": "FLR 38 % < 40 % po intenzivní chemoterapii (8 podání) → posoudí HPB chirurg, zvážit dvoudobý postup (KRC-2.5)",
               "patient_citations": [
                 "P03-img04#3",
                 "P03-tx-oxa-08"
@@ -891,60 +890,63 @@
             {
               "rule_id": "VS-KRC-02",
               "status": "orange",
-              "text": "Restaging bez CT hrudníku, poslední CT hrudníku 2026-04-28",
+              "text": "Restaging neúplný: CT hrudníku z 2026-04-28 (176 dní) (limit 4–6 týdnů)",
               "patient_citations": [
                 "P03-img03#1",
-                "P03-img01#2"
+                "P03-img01",
+                "P03-img04"
               ],
               "rule_citation": "KRC-2.4"
             },
             {
               "rule_id": "VS-KRC-03",
               "status": "orange",
-              "text": "Postižení obou laloků (S3), vymizelé S5, S8 v kontaktu s pravou jaterní žílou",
+              "text": "postižení obou laloků, vymizelé ložisko (plánovat podle původní lokalizace), kontakt s jaterní žílou",
               "patient_citations": [
-                "P03-img04#2",
-                "P03-img04#4"
+                "P03-img04#4",
+                "P03-img04#2"
               ],
               "rule_citation": "KRC-2.5"
             },
             {
               "rule_id": "VS-CHIR-03",
               "status": "green",
-              "text": "Poslední bevacizumab 2026-09-07 → operace možná od 2026-10-19",
+              "text": "Poslední bevacizumab 2026-09-07, k MDT 44 dní; operace nejdříve 2026-10-19 (≥ 6 týdnů)",
               "patient_citations": [
-                "P03-tx-bev-08"
+                "P03-tx-bev-08",
+                "P03-zad01-task"
               ],
               "rule_citation": "KRC-2.3",
               "derived": {
-                "formula": "2026-09-07 + 42 dní = 2026-10-19",
+                "formula": "datum MDT 2026-10-21 − poslední dávka 2026-09-07 = 44 dní",
                 "inputs": [
-                  "P03-tx-bev-08"
+                  "P03-tx-bev-08",
+                  "P03-zad01-task"
                 ]
               }
             },
             {
               "rule_id": "VS-CHIR-01",
               "status": "green",
-              "text": "IM i lékový stent v roce 2019 (> 6 měsíců); užívá kyselinu acetylsalicylovou",
+              "text": "IM 2019, stent 2019: > 60 dní po IM a > 6 měsíců po stentu; užívá kyselina acetylsalicylová → info pro operatéra",
               "patient_citations": [
                 "P03-kom1",
                 "P03-proc03",
                 "P03-med01"
               ],
-              "rule_citation": "EXT-ESC-2022-NCS"
+              "rule_citation": "EXT-ACC-AHA-ESC-2022"
             },
             {
               "rule_id": "VS-OBC-04",
               "status": "orange",
-              "text": "Úbytek hmotnosti 7 % (84 → 78 kg) ≥ 5 % → nutriční vyšetření",
+              "text": "Hmotnost 84 → 78 kg (2026-05-18 → 2026-10-05), úbytek 7,1 % → nutriční vyšetření",
               "patient_citations": [
-                "P03-vaha01",
-                "P03-vaha04"
+                "P03-vaha04",
+                "P03-vaha01"
               ],
               "rule_citation": "OBC-2.3",
               "derived": {
-                "formula": "(84 − 78) / 84 = 7,1 %",
+                "formula": "(84 − 78) / 84 kg = 7,1 %",
                 "inputs": [
                   "P03-vaha01",
                   "P03-vaha04"
@@ -954,7 +956,7 @@
             {
               "rule_id": "VS-OBC-02",
               "status": "orange",
-              "text": "ECOG lékař 0 vs. pacient 1",
+              "text": "ECOG lékař 0 vs. pacient 1 → výslovně zmínit na MDT",
               "patient_citations": [
                 "P03-ecog03",
                 "P03-prom02"
@@ -964,9 +966,36 @@
           ],
           "patient_preferences": [
             {
-              "id": "b2-res-p1",
+              "id": "pref-krc-resekce-jater-1",
               "kind": "claim",
-              "text": "Operaci by chtěl, pokud dává smysl; potřebuje vědět, jak dlouho bude mimo práci.",
+              "text": "Přeje si operaci, pokud je možná;",
+              "citations": [
+                "P03-zad01#5"
+              ],
+              "verification": "verified"
+            },
+            {
+              "id": "pref-krc-resekce-jater-2",
+              "kind": "claim",
+              "text": "obává se dlouhé pracovní neschopnosti (profesionální řidič).",
+              "citations": [
+                "P03-zad01#5"
+              ],
+              "verification": "verified"
+            },
+            {
+              "id": "pref-krc-resekce-jater-3",
+              "kind": "claim",
+              "text": "Operaci bych chtěl, pokud dává smysl.",
+              "citations": [
+                "P03-prom02"
+              ],
+              "verification": "verified"
+            },
+            {
+              "id": "pref-krc-resekce-jater-4",
+              "kind": "claim",
+              "text": "Potřebuji ale vědět, jak dlouho budu mimo práci – jsem řidič a s brněním rukou teď řídit nemůžu.",
               "citations": [
                 "P03-prom02"
               ],
@@ -976,8 +1005,8 @@
         }
       },
       {
-        "id": "opt-folfox",
-        "title": "Pokračovat v systémové léčbě FOLFOX + bevacizumab",
+        "id": "krc-konverzni-chemoterapie",
+        "title": "Pokračovat v konverzní chemoterapii (fluoropyrimidin + oxaliplatina ± bevacizumab)",
         "rationale": [
           {
             "id": "b2-fol-01",
@@ -1000,9 +1029,8 @@
           }
         ],
         "guideline_citations": [
-          "KRC-3.1",
           "KRC-2.2",
-          "KRC-3.2"
+          "KRC-3.1"
         ],
         "prerequisites_missing": [],
         "considerations": [
@@ -1017,7 +1045,7 @@
             {
               "rule_id": "VS-KRC-05",
               "status": "orange",
-              "text": "Neuropatie G1 podle lékaře, pacient popisuje omezení jemné motoriky → rozpor, odpovídá G2",
+              "text": "Lékař G1, pacient popisuje omezení instrumentálních činností → odpovídá G2",
               "patient_citations": [
                 "P03-neuro01",
                 "P03-prom02"
@@ -1027,24 +1055,25 @@
             {
               "rule_id": "VS-KRC-08",
               "status": "orange",
-              "text": "IM v anamnéze (2019) → bevacizumab s opatrností; hypertenze kompenzovaná",
+              "text": "Arteriální tromboembolie v anamnéze (Starý infarkt myokardu (2019, st. p. PCI RIA)) → opatrnost",
               "patient_citations": [
                 "P03-kom1",
+                "P03-proc03",
                 "P03-doc07#5"
               ],
-              "rule_citation": "EXT-FDA-AVASTIN-PI"
+              "rule_citation": "EXT-AVASTIN-FDA-2020"
             },
             {
               "rule_id": "VS-KRC-09",
               "status": "grey",
-              "text": "Aktivita DPD v datech není → nelze posoudit",
+              "text": "Deficit DPD v podkladech není vyšetřen",
               "patient_citations": [],
               "rule_citation": "EXT-EMA-DPD-2020"
             },
             {
               "rule_id": "VS-KRC-10",
               "status": "orange",
-              "text": "8 cyklů, vymizelé ložisko S5 → po dosažení resekability neprodlužovat",
+              "text": "8 podání (poslední 2026-09-07), vymizelé ložisko → po dosažení resekability neprodlužovat (hepatotoxicita, riziko vymizení ložisek)",
               "patient_citations": [
                 "P03-tx-oxa-08",
                 "P03-img04#2"
@@ -1056,8 +1085,8 @@
         }
       },
       {
-        "id": "opt-anti-egfr",
-        "title": "Anti-EGFR léčba (cetuximab, panitumumab) s chemoterapií",
+        "id": "krc-anti-egfr",
+        "title": "Anti-EGFR protilátka (cetuximab, panitumumab) s chemoterapií",
         "rationale": [
           {
             "id": "b2-egfr-01",
@@ -1085,9 +1114,10 @@
             {
               "rule_id": "VS-KRC-06",
               "status": "red",
-              "text": "KRAS G12D (RAS mutovaný) → anti-EGFR se nepodává",
+              "text": "KRAS mutace c.35G>A p.(Gly12Asp) – G12D → anti-EGFR není u RAS-mutovaného nádoru indikováno",
               "patient_citations": [
-                "P03-bm01"
+                "P03-bm01",
+                "P03-bm02"
               ],
               "rule_citation": "KRC-3.1"
             }
@@ -1096,8 +1126,8 @@
         }
       },
       {
-        "id": "opt-io",
-        "title": "Imunoterapie (u dMMR / MSI-H)",
+        "id": "krc-imunoterapie",
+        "title": "Imunoterapie inhibitorem kontrolního bodu",
         "rationale": [
           {
             "id": "b2-io-01",
@@ -1134,7 +1164,7 @@
             {
               "rule_id": "VS-KRC-07",
               "status": "grey",
-              "text": "MMR/MSI nevyšetřeno → nelze posoudit",
+              "text": "MMR/MSI nevyšetřeno",
               "patient_citations": [
                 "P03-bm04"
               ],
@@ -1404,7 +1434,7 @@
     "disclaimer": "AI předkládá možnosti, nerozhoduje."
   },
   "stats": {
-    "claims_total": 49,
+    "claims_total": 52,
     "claims_unverified": 1,
     "missing_total": 6
   }

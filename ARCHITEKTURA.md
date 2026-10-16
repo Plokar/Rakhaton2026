@@ -1127,7 +1127,8 @@ Navigace (`DashboardLayout.tsx`, Ctrl+K): **Přehled**, **Zasedání**, **Úkoly
 > - `intake_P03.json` a `red_flags` v `brief_P03.json` jsou vygenerované z pravidel (`intake_prefill()` T-502, `evaluate()` T-202) nad P03, ostatní části jsou ruční vzor výstupu LLM. Test `TestProducersMatchContract` ověřuje, že výstupy T-202, T-502 a T-103 pro P01–P06 přesně odpovídají schématům (žádný klíč navíc ani chybějící).
 > - **Fixtures** demo pacienta P03 jsou v `data/fixtures/` (`brief_P03.json`, `decision_P03.json`, `intake_P03.json`), jen s reálnými ID z datasetu. Frontend má kopii v `src/fixtures/` a typovaný import v `src/lib/fixtures.ts`, protože frontend kontejner ani Vercel nevidí složky mimo `WEB_Template/frontend`. Test `apps/copilot/test_schemas.py` hlídá validaci pydantic (round-trip bez ztráty klíčů), existenci každé citace v datasetu a shodu kopie.
 > - Pydantic hlídá jen strukturu a výčty. Sémantiku (citace u tvrzení, ≥ 2 zdroje u red flagu, barva semaforu) hlídá grounding validátor a pravidla: chybná citace z LLM nemá shodit celý podklad, má skončit jako `unverified`. Proto má `verification` v pydantic výchozí hodnotu `"unverified"`.
-> - Formát Evidence ID ověřuje `apps/copilot/evidence.py` (`parse_evidence_id`, `is_evidence_id`). Odstavce `#n` se počítají jen přes `services/ai/text.py` (T-105, §4.5); fixtures i testy ho používají také.
+> - Formát Evidence ID rozkládá jen `services/fhir/ids.py` (`parse_evidence_id`), odstavce `#n` počítá jen `services/ai/text.py` (T-105, §4.5). Fixtures i testy je používají také.
+> - Typy odpovědí `/api/evidence/` (`EvidenceSource`, T-104) a `/api/mdt/cases/{cid}/compatibility/` (`ProcedureCompatibility` = `{id, title, guideline_citations, compatibility}`, T-503) jsou v `schemas.py` i `mdt.ts`. Semafor v `brief_P03.json` je výstup `evaluate_compatibility()` (T-503). Test ověřuje, že resolver T-104 otevře každou citaci z fixtures.
 
 ### 8.1 Společné typy
 

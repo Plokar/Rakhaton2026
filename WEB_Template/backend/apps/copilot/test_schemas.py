@@ -1,10 +1,11 @@
 """
-Testy kontraktů (T-009, ARCHITEKTURA §8): pydantic schémata, fixtures P03, Evidence ID
-a shoda výstupů ostatních lanes (red flags T-202, zařazení T-502, API pacientů T-103) s kontraktem.
+Testy kontraktů (T-009, ARCHITEKTURA §8): pydantic schémata, fixtures P03 a shoda výstupů
+ostatních lanes s kontraktem (red flags T-202, zařazení T-502, semafor T-503, API pacientů T-103,
+resolver citací T-104).
 
-Fixtures (``data/fixtures``) a dataset leží mimo backend. V CI jsou v checkoutu repa,
-v backend kontejneru je jen dataset (``DATASET_DIR``); co chybí, test přeskočí.
-Dataset se tu čte jen v testech (``services/tests/dataset.py``), za běhu se čte z IRIS.
+Fixtures (``data/fixtures``) leží mimo backend. V CI jsou v checkoutu repa, v backend kontejneru
+chybí a testy s nimi se přeskočí. Dataset se čte jen v testech (``services/tests/dataset.py``),
+za běhu se čte z IRIS.
 """
 import json
 import os
@@ -15,10 +16,16 @@ from pathlib import Path
 import pytest
 
 from apps.copilot import schemas
-from apps.copilot.evidence import GUIDELINE_ID_RE, is_evidence_id, parse_evidence_id
+from services import evidence as evidence_resolver
 from services import patients as patient_service
 from services.ai.text import resource_paragraphs
 from services.ai_service import MockAIProvider, gemini_json_schema
+from services.conftest import dataset_root, fake_fhir, fake_fhir_dataset, fake_iris  # noqa: F401  (FHIR + IRIS v paměti)
+from services.fhir import ingest
+from services.fhir.ids import parse_evidence_id
+from services.iris import indexing
+from services.iris import vector_store as vs
+from services.rules.compatibility import evaluate_compatibility
 from services.rules.intake import intake_prefill
 from services.rules.red_flags import evaluate
 from services.tests.dataset import dataset_dir, load_patient
@@ -52,7 +59,7 @@ EVIDENCE_KEYS = {
 # Resources, které vzniknou až v aplikaci (zápis komise, BON-3), v datasetu nejsou.
 APP_CREATED_RE = re.compile(r"^P\d{2}-mdt\d{2}-prepis$")
 
-LIGHT_RANK = {"green": 0, "grey": 1, "orange": 2, "red": 3}   # 🔴 > 🟠 > ⚪ > 🟢 (§5.9)
+LIGHT_RANK = {"green": 0, "skipped": 1, "grey": 2, "orange": 3, "red": 4}   # 🔴 > 🟠 > ⚪ > neposuzováno > 🟢 (§5.9)
 
 needs_fixtures = pytest.mark.skipif(
     not (FIXTURES_DIR and FIXTURES_DIR.is_dir()), reason="chybí data/fixtures (backend kontejner je nevidí)",
@@ -79,6 +86,12 @@ def evidence_ids(node, key: str | None = None):
             yield from evidence_ids(item, key)
     elif isinstance(node, str) and key in EVIDENCE_KEYS:
         yield node
+
+
+def fixture_citations() -> list[str]:
+    """Citace ze všech fixtures (bez resources, které vzniknou až v aplikaci)."""
+    ids = {e for name in FIXTURES for e in evidence_ids(load_fixture(name))}
+    return sorted(e for e in ids if not APP_CREATED_RE.match(e))
 
 
 def all_strings(node):
@@ -117,38 +130,14 @@ def trial_ids() -> frozenset[str]:
     data = json.loads((dataset_dir() / "studie" / "studie.json").read_text(encoding="utf-8"))
     ids = set()
     for study in data["studie"]:
-        ids.add(study["id"])
         for criterion in study.get("zarazeni", []) + study.get("vyrazeni", []):
             ids.add(f"{study['id']}/{criterion['id']}")
     return frozenset(ids)
 
 
-# ── Evidence ID ───────────────────────────────────────────────────────────────
-class TestEvidenceId:
-    @pytest.mark.parametrize("evidence_id, kind, resource_id, paragraph, criterion", [
-        ("P03", "patient", "P03", None, None),
-        ("P03-ecog03", "patient", "P03-ecog03", None, None),
-        ("P03-img03#3", "patient", "P03-img03", 3, None),
-        ("P01-lab01-hb-f", "patient", "P01-lab01-hb-f", None, None),
-        ("KRC-2.4", "guideline", "KRC-2.4", None, None),
-        ("RKT-03", "trial", "RKT-03", None, None),
-        ("RKT-03/V3", "trial", "RKT-03", None, "V3"),
-        ("EXT-EMA-DPD-2020", "external", "EXT-EMA-DPD-2020", None, None),
-    ])
-    def test_parse(self, evidence_id, kind, resource_id, paragraph, criterion):
-        ref = parse_evidence_id(evidence_id)
-        assert (ref.kind, ref.resource_id, ref.paragraph, ref.criterion) == (kind, resource_id, paragraph, criterion)
-
-    @pytest.mark.parametrize("evidence_id", [
-        "", "P3-img03", "P03-img03#0", "P03-img03#a", "KRC-2", "KRC-2.4#1", "RKT-3/V3",
-        "RKT-03/X1", "EXT-", "ext-ema", "P01-lab01-hb_f", "[P03-img03]",
-    ])
-    def test_invalid(self, evidence_id):
-        assert not is_evidence_id(evidence_id)
-
-    def test_guideline_regex(self):
-        assert GUIDELINE_ID_RE.match("OBC-1.3")
-        assert not GUIDELINE_ID_RE.match("XYZ-1.3")
+@lru_cache(maxsize=None)
+def external_ids() -> frozenset[str]:
+    return frozenset(c.EvidenceId for c in indexing.external_chunks())
 
 
 # ── Schémata ──────────────────────────────────────────────────────────────────
@@ -156,7 +145,7 @@ class TestSchemas:
     @pytest.mark.parametrize("schema", [
         schemas.Brief, schemas.DecisionSupport, schemas.Decision, schemas.IntakePrefill,
         schemas.MdtCase, schemas.BriefConfig, schemas.TimelineEvent, schemas.PatientDetail,
-        schemas.ObservationSeries,
+        schemas.ObservationSeries, schemas.ProcedureCompatibility,
     ])
     def test_usable_as_response_schema(self, schema):
         """Schéma projde čištěním pro Gemini a mock z něj vyrobí validní instanci (T-012)."""
@@ -184,7 +173,7 @@ class TestFixtures:
 
     @pytest.mark.parametrize("name", FIXTURES)
     def test_evidence_id_format(self, name):
-        bad = [e for e in evidence_ids(load_fixture(name)) if not is_evidence_id(e)]
+        bad = [e for e in evidence_ids(load_fixture(name)) if parse_evidence_id(e) is None]
         assert not bad
 
     @pytest.mark.parametrize("name", FIXTURES)
@@ -219,13 +208,16 @@ class TestFixtures:
             assert compat.overall == worst, option.id
             for rule in compat.rules:
                 ref = parse_evidence_id(rule.rule_citation)
-                assert ref and ref.kind != "patient", rule.rule_id   # pravidlo cituje zdroj, ne fakt pacienta
+                assert ref and ref.kind in ("guideline", "trial_criterion", "external"), rule.rule_id
 
     def test_p03_expected_lights(self):
         """Barvy semaforu pro P03 podle docs/POZADAVKY_LEKARE.md §5.4."""
         brief = schemas.Brief.model_validate(load_fixture("brief_P03.json"))
         lights = {o.id: o.compatibility.overall for o in brief.decision_support.treatment_options}
-        assert lights == {"opt-resekce": "orange", "opt-folfox": "orange", "opt-anti-egfr": "red", "opt-io": "grey"}
+        assert lights == {
+            "krc-resekce-jater": "orange", "krc-konverzni-chemoterapie": "orange",
+            "krc-anti-egfr": "red", "krc-imunoterapie": "grey",
+        }
 
     @pytest.mark.parametrize("name", FIXTURES)
     def test_never_recommends(self, name):
@@ -237,27 +229,35 @@ class TestFixtures:
         question = next(f for f in intake.fields if f.id == "mdt.question")
         assert question.status == "present"
 
-
-@needs_fixtures
-class TestFixtureCitations:
-    @pytest.mark.parametrize("name", FIXTURES)
-    def test_citations_exist_in_dataset(self, name):
-        """Každá citace ukazuje na existující resource, odstavec, pasáž nebo kritérium."""
+    def test_citations_exist_in_dataset(self):
+        """Každá citace ukazuje na existující resource, odstavec, pasáž, kritérium nebo externí zdroj."""
         problems = []
-        for evidence_id in evidence_ids(load_fixture(name)):
+        for evidence_id in fixture_citations():
             ref = parse_evidence_id(evidence_id)
-            if ref.kind == "patient":
-                if APP_CREATED_RE.match(ref.resource_id):
-                    continue
+            if ref.kind in ("resource", "paragraph"):
                 if ref.resource_id not in patient_resources(ref.patient_id):
                     problems.append(f"{evidence_id}: resource není v datasetu")
                 elif ref.paragraph is not None and paragraph_text(evidence_id) is None:
                     problems.append(f"{evidence_id}: odstavec neexistuje")
             elif ref.kind == "guideline" and evidence_id not in guideline_ids():
                 problems.append(f"{evidence_id}: pasáž není v guidelines")
-            elif ref.kind == "trial" and evidence_id not in trial_ids():
-                problems.append(f"{evidence_id}: studie nebo kritérium neexistuje")
+            elif ref.kind == "trial_criterion" and evidence_id not in trial_ids():
+                problems.append(f"{evidence_id}: kritérium studie neexistuje")
+            elif ref.kind == "external" and evidence_id not in external_ids():
+                problems.append(f"{evidence_id}: externí zdroj není v katalogu T-504")
         assert not problems
+
+    def test_resolver_opens_every_citation(self, fake_fhir_dataset, fake_iris, dataset_root):
+        """UI otevře zdroj u každé citace: resolver T-104 ji najde a odpověď odpovídá EvidenceSource."""
+        vs.ensure_schema()
+        indexing.index_guidelines(indexing.guideline_chunks(dataset_root) + indexing.external_chunks())
+        indexing.index_trials(indexing.trial_criteria(ingest.load_studies(dataset_root)))
+        for evidence_id in fixture_citations():
+            source = evidence_resolver.resolve(evidence_id)
+            assert_contract(schemas.EvidenceSource, source)
+            if source["kind"] == "paragraph":
+                h = source["highlight"]
+                assert source["text"][h["start"]:h["end"]] == paragraph_text(evidence_id), evidence_id
 
 
 # ── Dataset a výstupy ostatních lanes ─────────────────────────────────────────
@@ -291,6 +291,11 @@ class TestProducersMatchContract:
     @pytest.mark.parametrize("patient_id", PATIENTS)
     def test_intake_prefill(self, patient_id):
         assert_contract(schemas.IntakePrefill, intake_prefill(load_patient(patient_id)))
+
+    @pytest.mark.parametrize("patient_id", PATIENTS)
+    def test_compatibility(self, patient_id):
+        for procedure in evaluate_compatibility(load_patient(patient_id)):
+            assert_contract(schemas.ProcedureCompatibility, procedure)
 
     @pytest.mark.parametrize("patient_id", PATIENTS)
     def test_patients_api(self, patient_id):

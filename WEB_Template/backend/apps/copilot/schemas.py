@@ -235,6 +235,48 @@ class PatientDetail(PatientListItem):
     ecog: PatientEcog
 
 
+class EvidenceHighlight(BaseModel):
+    paragraph: int
+    start: int
+    end: int
+
+
+class EvidenceAuthor(BaseModel):
+    id: str
+    text: str
+    specialty: str | None
+
+
+class EvidenceValue(BaseModel):
+    text: str
+    value: float | None
+    unit: str | None
+    ref_low: float | None
+    ref_high: float | None
+    interpretation: str | None
+
+
+class EvidenceSource(BaseModel):
+    """GET /api/evidence/?id=P03-img03%232 (T-104; 400 neplatné ID, 404 nenalezeno)"""
+    evidence_id: EvidenceId
+    kind: Literal["resource", "paragraph", "guideline", "trial_criterion", "external"]
+    title: str
+    text: str | None = Field(default=None, description="Celý text / PROMs „otázka: odpověď“ / znění pasáže či kritéria")
+    highlight: EvidenceHighlight | None = Field(default=None, description="U #n: text[start:end]")
+    resource_type: str | None = None
+    resource_id: str | None = None
+    patient_id: str | None = None
+    date: str | None = None
+    department: str | None = None
+    author: EvidenceAuthor | None = None
+    value: EvidenceValue | None = Field(default=None, description="Observation")
+    derived_from: list[EvidenceSource] | None = Field(default=None, description="Zdrojový dokument, bez další rekurze")
+    source: str | None = Field(default=None, description="Guidelines")
+    region: str | None = None
+    study_id: str | None = Field(default=None, description="Kritérium studie")
+    criterion_kind: Literal["inclusion", "exclusion"] | None = None
+
+
 class ObservationPoint(BaseModel):
     date: str
     value: float
@@ -270,9 +312,17 @@ class CompatibilityRuleResult(BaseModel):
 class TreatmentCompatibility(BaseModel):
     modality: str = Field(description="Kód mdt-modalita")
     owner_role: RoleId = Field(description="Kdo se k metodě vyjadřuje")
-    overall: Light = Field(description="Nejhorší z rules: red > orange > grey > green")
+    overall: Light = Field(description="Nejhorší z rules: red > orange > grey > skipped > green")
     rules: list[CompatibilityRuleResult]
     patient_preferences: list[Claim] = Field(description="Štítek, barvu nemění")
+
+
+class ProcedureCompatibility(BaseModel):
+    """GET /api/mdt/cases/{cid}/compatibility/ → ProcedureCompatibility[] (T-503, všechny postupy i červené)"""
+    id: str
+    title: str
+    guideline_citations: list[EvidenceId]
+    compatibility: TreatmentCompatibility
 
 
 class TreatmentOption(BaseModel):

@@ -597,6 +597,8 @@ ORDER BY Score DESC
     | `Observation?_sort=-date` | ✓ ok | data: 2026-10-05, 2026-09-21, 2026-08-24, 2026-07-13, 2026-06-01, 2026-04-28 |
     | `Patient/$everything` | ℹ info | funguje: 190 resources (fallback 170, chybí 0, navíc 20) |
     | `mCODE IG` | ℹ info | nenahraný (profily mCODE v IRIS nejsou; BON-5 / T-307) |
+
+  **mCODE v exportu (T-307):** `services/fhir/mcode.py:apply_profiles` doplní kopiím resources v `export.fhir.json` `meta.profile` mCODE (cancer-patient, primary / secondary cancer condition podle C77–C79, tnm-stage-group, tumor-marker-test, ecog-performance-status, cancer-related medication administration / request a surgical procedure) a kódy LOINC tam, kde je význam jistý: skupina stadia 21908-9 (klinicky) / 21902-2 (patologicky), ER 16112-5, PR 16113-3, HER2 48676-1. Ostatní biomarkery mají profil a původní text (kódy doplnit po ověření). IRIS takový Bundle přijme (`POST /Bundle` → 201, ověřeno živě); `$validate` proti mCODE IG čeká na import IG (stretch).
     | `$validate` | ℹ info | funguje, ECOG Observation bez chyb |
 
   - Parametr, který IRIS ignoruje, je potřeba vyřadit z allowlistu MCP `fhir_query` (§4.7) a nepoužívat v kódu.

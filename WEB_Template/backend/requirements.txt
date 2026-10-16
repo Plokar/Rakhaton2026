@@ -4,7 +4,8 @@
 # =============================================================================
 
 # Core Django
-Django>=4.2,<5.0
+# <4.2.30: Django 4.2.30 odstranil django.utils.cache.cc_delim_re, který DRF (i 3.17.2) importuje → backend nenaběhne
+Django>=4.2,<4.2.30
 python-dotenv>=1.0.0
 django-environ>=0.11.0
 
@@ -44,6 +45,10 @@ intersystems-irispython>=5.0
 
 # Security
 cryptography>=41.0.0
+
+# AI – Google Gemini API (ARCHITEKTURA §5.7) + schémata pro response_schema
+google-genai>=2.31,<3
+pydantic>=2.6,<3
 
 # =============================================================================
 # VOLITELNÉ – Odkomentovat podle potřeby

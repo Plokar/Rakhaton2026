@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from services.ai_service import get_ai_provider
+from services.ai_service import SUPPORTED_PROVIDERS, ai_model, ai_model_strong, get_ai_provider
 
 
 @api_view(['POST'])
@@ -14,10 +14,11 @@ def ai_generate(request):
     {
         "prompt": "Napiš mi funkci pro...",
         "system_prompt": "Jsi zkušený architekt...",
-        "provider": "gemini" | "openai" | "ollama" | "mock",
-        "model": "gemini-1.5-flash",
+        "provider": "gemini" | "mock",
+        "model": "gemini-3.8-flash",
         "temperature": 0.7
     }
+    Data pacientů smí jen do Gemini v placeném tieru (ARCHITEKTURA §5.7), proto jen mock a gemini.
     """
     prompt = request.data.get('prompt')
     if not prompt:
@@ -28,7 +29,11 @@ def ai_generate(request):
     model = request.data.get('model')
     temperature = float(request.data.get('temperature', 0.7))
 
-    provider = get_ai_provider(provider_name)
+    try:
+        provider = get_ai_provider(provider_name)
+    except ValueError as exc:
+        return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
     result = provider.generate(
         prompt=prompt,
         system_prompt=system_prompt,
@@ -49,39 +54,23 @@ def ai_providers_list(request):
     GET /api/ai/providers/
     Vrátí seznam podporovaných providerů a zda je nastaven jejich API klíč.
     """
-    return Response({
-        'providers': [
-            {
-                'id': 'mock',
-                'name': 'Hackathon Mock (Zero-Config)',
-                'is_configured': True,
-                'default_model': 'mock-gpt-v1',
-                'models': ['mock-gpt-v1', 'mock-fast-v1'],
-                'description': 'Nevyžaduje žádný klíč, okamžitě vrací realistické simulované odpovědi.'
-            },
-            {
-                'id': 'gemini',
-                'name': 'Google Gemini',
-                'is_configured': bool(os.environ.get('GEMINI_API_KEY')),
-                'default_model': 'gemini-1.5-flash',
-                'models': ['gemini-1.5-flash', 'gemini-1.5-pro'],
-                'description': 'Google Gemini Flash a Pro modely.'
-            },
-            {
-                'id': 'openai',
-                'name': 'OpenAI',
-                'is_configured': bool(os.environ.get('OPENAI_API_KEY')),
-                'default_model': 'gpt-4o-mini',
-                'models': ['gpt-4o-mini', 'gpt-4o'],
-                'description': 'OpenAI GPT-4o a GPT-4o-mini.'
-            },
-            {
-                'id': 'ollama',
-                'name': 'Ollama (Local)',
-                'is_configured': True,
-                'default_model': 'llama3.2',
-                'models': ['llama3.2', 'mistral', 'codellama'],
-                'description': 'Lokální běh modelů přes Ollama.'
-            }
-        ]
-    })
+    models = list(dict.fromkeys([ai_model(), ai_model_strong()]))
+    providers = {
+        'mock': {
+            'id': 'mock',
+            'name': 'Mock (bez sítě)',
+            'is_configured': True,
+            'default_model': 'mock',
+            'models': ['mock'],
+            'description': 'Deterministické odpovědi bez API klíče. Výchozí pro vývoj, testy a CI.'
+        },
+        'gemini': {
+            'id': 'gemini',
+            'name': 'Google Gemini',
+            'is_configured': bool(os.environ.get('GEMINI_API_KEY')),
+            'default_model': models[0],
+            'models': models,
+            'description': 'Google AI Studio (Gemini API), jen placený tier.'
+        },
+    }
+    return Response({'providers': [providers[p] for p in SUPPORTED_PROVIDERS]})

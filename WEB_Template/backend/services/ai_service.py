@@ -1,299 +1,563 @@
 """
-AI Service – Provider Abstraction Layer for Hackathons
-Supports: Google Gemini, OpenAI, Anthropic Claude, Ollama, and a Smart Mock Provider.
-Zero-config: works out of the box with MockProvider even if no API keys are provided.
+AI služba MDT Copilot: abstrakce providerů (ARCHITEKTURA §5.7, D-008).
+
+Providery:
+- ``GeminiProvider``: Google AI Studio (Gemini API, **jen placený tier**) přes SDK ``google-genai``.
+- ``MockAIProvider``: deterministický a bez sítě. Výchozí pro vývoj, testy a CI (``AI_PROVIDER=mock``).
+
+Rozhraní je u obou providerů stejné:
+
+- ``generate(prompt, system_prompt=..., response_schema=PydanticModel) -> dict``
+  vrátí ``{"status": "success", "response": text, "data": dict | None, "provider", "model",
+  "tokens_in", "tokens_out", "tokens_used", "latency_ms", "prompt_hash", "is_mock"}``,
+  nebo ``{"status": "error", "error": ...}``. S ``response_schema`` je ``data`` vždy
+  zvalidované pydantic schématem; nevalidní výstup modelu je ``error``, nikdy ne ``success``.
+- ``embed(texts, task_type=...) -> list[list[float]]``: ``EMBEDDING_DIM`` čísel na text, L2 normalizované.
+- ``transcribe(audio, mime_type) -> dict``: jako ``generate``, ``data`` podle schématu ``Transcript``.
+
+Model ID jsou jen v env (``AI_MODEL``, ``AI_MODEL_STRONG``, ``EMBEDDING_MODEL``, ``EMBEDDING_DIM``,
+``TRANSCRIBE_MODEL``). Výchozí hodnoty níže odpovídají ARCHITEKTURA §9.
 """
-import os
+from __future__ import annotations
+
+import hashlib
+import io
 import json
 import logging
-import urllib.request
-import urllib.error
+import math
+import os
+import re
+import time
+import unicodedata
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Any, Sequence
+
+from pydantic import BaseModel, Field, ValidationError
 
 logger = logging.getLogger(__name__)
 
+# ── Konfigurace (env, výchozí hodnoty podle ARCHITEKTURA §9) ─────────────────
+DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_EMBEDDING_MODEL = "gemini-embedding-001"
+DEFAULT_EMBEDDING_DIM = 1536
+DEFAULT_TEMPERATURE = 0.2          # ARCHITEKTURA §5.1: teplota 0–0.2
+DEFAULT_TIMEOUT_S = 90
+RETRY_ATTEMPTS = 3                 # včetně prvního pokusu; SDK opakuje 408, 429 a 5xx
+EMBED_BATCH_SIZE = 100
+INLINE_AUDIO_MAX_BYTES = 20 * 1024 * 1024   # větší audio jde přes Files API
 
+# task_type pro embeddingy (ARCHITEKTURA §4.5)
+TASK_RETRIEVAL_DOCUMENT = "RETRIEVAL_DOCUMENT"   # chunky do IRIS
+TASK_RETRIEVAL_QUERY = "RETRIEVAL_QUERY"         # dotazy
+TASK_FACT_VERIFICATION = "FACT_VERIFICATION"     # ověření tvrzení (grounding)
+
+
+def _env(name: str, default: str) -> str:
+    return os.environ.get(name) or default
+
+
+def ai_model() -> str:
+    return _env("AI_MODEL", DEFAULT_MODEL)
+
+
+def ai_model_strong() -> str:
+    return _env("AI_MODEL_STRONG", ai_model())
+
+
+def embedding_model() -> str:
+    return _env("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
+
+
+def embedding_dim() -> int:
+    return int(_env("EMBEDDING_DIM", str(DEFAULT_EMBEDDING_DIM)))
+
+
+def transcribe_model() -> str:
+    return _env("TRANSCRIBE_MODEL", ai_model())
+
+
+class AIProviderError(RuntimeError):
+    """Chyba providera u volání, která nevrací dict se ``status`` (``embed``)."""
+
+
+# ── Schéma přepisu (BON-3, ARCHITEKTURA §5.6) ─────────────────────────────────
+class TranscriptSegment(BaseModel):
+    speaker: str = Field(description="Role mluvčího, např. předseda, onkolog, chirurg, radiolog, patolog")
+    start: str = Field(description="Čas začátku úseku ve formátu MM:SS")
+    text: str = Field(description="Doslovný přepis úseku")
+
+
+class Transcript(BaseModel):
+    segments: list[TranscriptSegment]
+
+
+TRANSCRIBE_PROMPT = (
+    "Přepiš nahrávku diskuse multidisciplinární onkologické komise doslova a v původním jazyce. "
+    "Rozliš mluvčí podle role (předseda, onkolog, chirurg, radiolog, patolog, radiační onkolog, "
+    "pacient). U každého úseku uveď čas začátku ve formátu MM:SS. Nic nedomýšlej, "
+    "nesrozumitelný úsek označ [nesrozumitelné]."
+)
+
+
+# ── JSON Schema pro Gemini ────────────────────────────────────────────────────
+# Gemini `response_json_schema` podporuje jen podmnožinu JSON Schema. Pydantic navíc
+# generuje `const`, `default`, `pattern`, `minLength`… a `$ref` se sourozenci, což Gemini
+# odmítá. Posíláme proto očištěné schéma a omezení hlídá až validace pydantic.
+_GEMINI_SCHEMA_KEYS = {
+    "$id", "$defs", "$ref", "$anchor", "type", "format", "title", "description", "enum",
+    "items", "prefixItems", "minItems", "maxItems", "minimum", "maximum", "anyOf", "oneOf",
+    "properties", "additionalProperties", "required",
+}
+
+
+def gemini_json_schema(schema: type[BaseModel]) -> dict[str, Any]:
+    """Pydantic model → JSON Schema v podmnožině, kterou přijme Gemini."""
+    return _clean_schema(schema.model_json_schema())
+
+
+def _clean_schema(node: Any) -> Any:
+    if isinstance(node, list):
+        return [_clean_schema(n) for n in node]
+    if not isinstance(node, dict):
+        return node
+    if "$ref" in node:
+        return {k: v for k, v in node.items() if k.startswith("$")}
+    if "allOf" in node and len(node["allOf"]) == 1:
+        merged = {k: v for k, v in node.items() if k != "allOf"}
+        merged.update(node["allOf"][0])
+        return _clean_schema(merged)
+
+    out: dict[str, Any] = {}
+    const = node.get("const")
+    if "const" in node and "enum" not in node and isinstance(const, (str, int, float)) and not isinstance(const, bool):
+        out["enum"] = [const]
+    for key, value in node.items():
+        if key not in _GEMINI_SCHEMA_KEYS:
+            continue
+        if key in ("properties", "$defs"):
+            out[key] = {name: _clean_schema(sub) for name, sub in value.items()}
+        elif key in ("items", "prefixItems", "additionalProperties", "anyOf", "oneOf"):
+            out[key] = _clean_schema(value)
+        else:
+            out[key] = value
+    if out.get("properties"):
+        out["propertyOrdering"] = list(out["properties"])
+    return out
+
+
+# ── Pomocné funkce ────────────────────────────────────────────────────────────
+def prompt_hash(prompt: str, system_prompt: str = "") -> str:
+    """Hash promptu pro audit (`LlmCallLog`, NFR-4); prompt samotný se neloguje."""
+    return hashlib.sha256(f"{system_prompt}\n\n{prompt}".encode("utf-8")).hexdigest()
+
+
+def l2_normalize(vector: Sequence[float]) -> list[float]:
+    norm = math.sqrt(sum(v * v for v in vector))
+    if norm == 0:
+        raise AIProviderError("Nulový vektor nelze normalizovat")
+    return [v / norm for v in vector]
+
+
+def _check_texts(texts: Sequence[str]) -> list[str]:
+    if isinstance(texts, str):
+        raise TypeError("embed() bere seznam textů, ne jeden string")
+    texts = list(texts)
+    if any(not t or not t.strip() for t in texts):
+        raise ValueError("Prázdný text nelze embedovat")
+    return texts
+
+
+def _validate(schema: type[BaseModel], payload: Any) -> dict[str, Any]:
+    return schema.model_validate(payload).model_dump(mode="json")
+
+
+def _short(exc: Exception, limit: int = 500) -> str:
+    text = str(exc)
+    return text if len(text) <= limit else text[:limit] + "…"
+
+
+# ── Providery ─────────────────────────────────────────────────────────────────
 class BaseAIProvider(ABC):
-    """Abstraktní bázová třída pro AI providery"""
+    """Společné rozhraní providerů. Viz docstring modulu."""
+
+    is_mock = False
+
+    @property
+    @abstractmethod
+    def provider_name(self) -> str:
+        ...
 
     @abstractmethod
     def generate(
         self,
         prompt: str,
         system_prompt: str = "",
-        model: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1500,
-    ) -> Dict[str, Any]:
-        pass
+        model: str | None = None,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        response_schema: type[BaseModel] | None = None,
+    ) -> dict[str, Any]:
+        ...
 
-    @property
     @abstractmethod
-    def provider_name(self) -> str:
-        pass
+    def embed(
+        self,
+        texts: Sequence[str],
+        task_type: str = TASK_RETRIEVAL_DOCUMENT,
+        model: str | None = None,
+        dim: int | None = None,
+    ) -> list[list[float]]:
+        ...
+
+    @abstractmethod
+    def transcribe(
+        self,
+        audio: bytes,
+        mime_type: str,
+        prompt: str = TRANSCRIBE_PROMPT,
+        model: str | None = None,
+        response_schema: type[BaseModel] = Transcript,
+    ) -> dict[str, Any]:
+        ...
+
+    def _success(self, *, text: str, data: Any, model: str, tokens_in: int, tokens_out: int,
+                 tokens_total: int | None, started: float, p_hash: str) -> dict[str, Any]:
+        return {
+            "status": "success",
+            "response": text,
+            "data": data,
+            "provider": self.provider_name,
+            "model": model,
+            "tokens_in": tokens_in,
+            "tokens_out": tokens_out,
+            "tokens_used": tokens_total if tokens_total is not None else tokens_in + tokens_out,
+            "latency_ms": int((time.monotonic() - started) * 1000),
+            "prompt_hash": p_hash,
+            "is_mock": self.is_mock,
+        }
+
+    def _error(self, error: str, *, model: str, started: float, p_hash: str) -> dict[str, Any]:
+        return {
+            "status": "error",
+            "error": error,
+            "provider": self.provider_name,
+            "model": model,
+            "latency_ms": int((time.monotonic() - started) * 1000),
+            "prompt_hash": p_hash,
+            "is_mock": self.is_mock,
+        }
 
 
 class MockAIProvider(BaseAIProvider):
     """
-    Zero-config Mock Provider pro okamžitý start na hackathonu bez API klíčů.
-    Vrací inteligentní kontextové odpovědi pro prezentace a testování.
+    Deterministický provider bez sítě (testy, CI, vývoj bez klíče).
+
+    - ``generate`` se schématem vrátí minimální instanci, která projde validací schématu,
+      nebo odpověď zaregistrovanou v ``responses`` (klíč = název třídy schématu, hodnota =
+      data nebo ``callable(prompt) -> data``).
+    - ``embed`` vrací hashované bag-of-words vektory: stejný text = stejný vektor,
+      podobné texty mají vyšší kosinovou podobnost než nesouvisející.
     """
+
+    is_mock = True
+
+    def __init__(self, responses: dict[str, Any] | None = None):
+        self.responses = dict(responses or {})
+
     @property
     def provider_name(self) -> str:
         return "mock"
 
-    def generate(
-        self,
-        prompt: str,
-        system_prompt: str = "",
-        model: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1500,
-    ) -> Dict[str, Any]:
-        prompt_lower = prompt.lower()
-
-        if "code" in prompt_lower or "funkc" in prompt_lower or "react" in prompt_lower or "python" in prompt_lower:
-            content = (
-                "```typescript\n"
-                "// Vygenerováno pro váš hackathon projekt\n"
-                "export async function processDataStream<T>(items: T[]): Promise<T[]> {\n"
-                "  console.log(`Zpracovávám ${items.length} položek v reálném čase...`);\n"
-                "  return items.map((item) => ({\n"
-                "    ...item,\n"
-                "    processed: true,\n"
-                "    timestamp: new Date().toISOString(),\n"
-                "  }));\n"
-                "}\n"
-                "```\n\n"
-                "Tato implementace zajišťuje efektivní a škálovatelné zpracování dat."
-            )
-        elif "summar" in prompt_lower or "shrň" in prompt_lower:
-            content = (
-                "### Klíčové body a shrnutí projektu:\n\n"
-                "1. **Rychlost vývoje:** Šablona zkracuje čas od nápadu k funkčnímu prototypu pod 10 minut.\n"
-                "2. **Architektura:** Plná integrace Next.js 16 + Django REST + WebSockets.\n"
-                "3. **Škálovatelnost:** Připraveno pro okamžitou demonstraci i nasazení do produkce."
-            )
+    def generate(self, prompt, system_prompt="", model=None, temperature=None, max_tokens=None,
+                 response_schema=None):
+        started = time.monotonic()
+        model_name = model or "mock"
+        p_hash = prompt_hash(prompt, system_prompt)
+        data = None
+        if response_schema is None:
+            text = f"Simulovaná odpověď (AI_PROVIDER=mock). Dotaz: {prompt[:120]}"
         else:
-            content = (
-                f"**[Hackathon AI Studio – Režim simulace]**\n\n"
-                f"Úspěšně jsem zpracoval váš dotaz: *\"{prompt[:80]}{'...' if len(prompt) > 80 else ''}\"*\n\n"
-                f"Systém je připraven. Pro zapnutí živého LLM stačí nastavit proměnnou prostředí `GEMINI_API_KEY` nebo `OPENAI_API_KEY` v `.env`."
-            )
+            try:
+                data = _validate(response_schema, self._payload(response_schema, prompt))
+            except ValidationError as exc:
+                return self._error(f"Mock odpověď neodpovídá schématu {response_schema.__name__}: {_short(exc)}",
+                                   model=model_name, started=started, p_hash=p_hash)
+            text = json.dumps(data, ensure_ascii=False)
+        tokens_in = len(f"{system_prompt} {prompt}".split())
+        tokens_out = len(text.split())
+        return self._success(text=text, data=data, model=model_name, tokens_in=tokens_in,
+                             tokens_out=tokens_out, tokens_total=None, started=started, p_hash=p_hash)
 
-        return {
-            "response": content,
-            "provider": "mock",
-            "model": model or "hackathon-mock-v1",
-            "tokens_used": len(prompt.split()) + len(content.split()),
-            "status": "success",
-            "is_mock": True,
-        }
+    def embed(self, texts, task_type=TASK_RETRIEVAL_DOCUMENT, model=None, dim=None):
+        texts = _check_texts(texts)
+        return [hashed_embedding(t, dim or embedding_dim()) for t in texts]
+
+    def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
+        started = time.monotonic()
+        model_name = model or "mock"
+        p_hash = hashlib.sha256(audio).hexdigest()
+        try:
+            data = _validate(response_schema, self._payload(response_schema, prompt))
+        except ValidationError as exc:
+            return self._error(f"Mock přepis neodpovídá schématu: {_short(exc)}",
+                               model=model_name, started=started, p_hash=p_hash)
+        text = json.dumps(data, ensure_ascii=False)
+        return self._success(text=text, data=data, model=model_name, tokens_in=0,
+                             tokens_out=len(text.split()), tokens_total=None, started=started, p_hash=p_hash)
+
+    def _payload(self, schema: type[BaseModel], prompt: str) -> Any:
+        if schema.__name__ in self.responses:
+            payload = self.responses[schema.__name__]
+            return payload(prompt) if callable(payload) else payload
+        if schema is Transcript:
+            return {"segments": [
+                {"speaker": "předseda", "start": "00:00", "text": "Simulovaný přepis (AI_PROVIDER=mock)."},
+            ]}
+        return mock_instance(schema)
 
 
 class GeminiProvider(BaseAIProvider):
-    """Google Gemini REST Provider (bez nutnosti instalace těžkého SDK)"""
+    """Google Gemini API (Google AI Studio) přes SDK ``google-genai``."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None, client: Any = None):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
+        self._client = client
 
     @property
     def provider_name(self) -> str:
         return "gemini"
 
-    def generate(
-        self,
-        prompt: str,
-        system_prompt: str = "",
-        model: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1500,
-    ) -> Dict[str, Any]:
-        if not self.api_key:
-            logger.warning("GEMINI_API_KEY není nastaven, přecházím na MockProvider")
-            return MockAIProvider().generate(prompt, system_prompt, model, temperature, max_tokens)
+    @property
+    def client(self):
+        if self._client is None:
+            if not self.api_key:
+                raise AIProviderError("GEMINI_API_KEY není nastaven")
+            from google import genai
+            from google.genai import types
 
-        model_name = model or "gemini-1.5-flash"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
+            timeout_ms = int(float(_env("AI_TIMEOUT_S", str(DEFAULT_TIMEOUT_S))) * 1000)
+            self._client = genai.Client(
+                api_key=self.api_key,
+                http_options=types.HttpOptions(
+                    timeout=timeout_ms,
+                    retry_options=types.HttpRetryOptions(attempts=RETRY_ATTEMPTS),
+                ),
+            )
+        return self._client
 
-        contents = []
+    def generate(self, prompt, system_prompt="", model=None, temperature=None, max_tokens=None,
+                 response_schema=None):
+        from google.genai import types
+
+        config: dict[str, Any] = {
+            "temperature": DEFAULT_TEMPERATURE if temperature is None else temperature,
+        }
         if system_prompt:
-            contents.append({"role": "user", "parts": [{"text": f"System instructions: {system_prompt}"}]})
-            contents.append({"role": "model", "parts": [{"text": "Understood. I will follow these instructions."}]})
-        contents.append({"role": "user", "parts": [{"text": prompt}]})
+            config["system_instruction"] = system_prompt
+        if max_tokens:
+            config["max_output_tokens"] = max_tokens
+        thinking_level = os.environ.get("AI_THINKING_LEVEL")
+        if thinking_level:
+            config["thinking_config"] = types.ThinkingConfig(thinking_level=thinking_level)
+        return self._call(
+            model=model or ai_model(),
+            contents=prompt,
+            config=config,
+            response_schema=response_schema,
+            p_hash=prompt_hash(prompt, system_prompt),
+        )
 
-        body = json.dumps({
-            "contents": contents,
-            "generationConfig": {
-                "temperature": temperature,
-                "maxOutputTokens": max_tokens,
+    def embed(self, texts, task_type=TASK_RETRIEVAL_DOCUMENT, model=None, dim=None):
+        from google.genai import errors, types
+
+        texts = _check_texts(texts)
+        model_name = model or embedding_model()
+        dim = dim or embedding_dim()
+        config = types.EmbedContentConfig(task_type=task_type, output_dimensionality=dim)
+        vectors: list[list[float]] = []
+        for i in range(0, len(texts), EMBED_BATCH_SIZE):
+            batch = texts[i:i + EMBED_BATCH_SIZE]
+            try:
+                resp = self.client.models.embed_content(model=model_name, contents=batch, config=config)
+            except errors.APIError as exc:
+                raise AIProviderError(f"Gemini embed HTTP {exc.code}: {_short(exc)}") from exc
+            embeddings = resp.embeddings or []
+            if len(embeddings) != len(batch):
+                raise AIProviderError(f"Gemini vrátil {len(embeddings)} embeddingů pro {len(batch)} textů")
+            for emb in embeddings:
+                values = emb.values or []
+                if len(values) != dim:
+                    raise AIProviderError(f"Embedding má {len(values)} dimenzí, čekáno {dim}")
+                # pod 3072 dimenzí Google vyžaduje L2 normalizaci (ARCHITEKTURA §4.5)
+                vectors.append(l2_normalize(values))
+        return vectors
+
+    def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
+        from google.genai import errors, types
+
+        started = time.monotonic()
+        model_name = model or transcribe_model()
+        p_hash = hashlib.sha256(audio).hexdigest()
+        if len(audio) <= INLINE_AUDIO_MAX_BYTES:
+            media: Any = types.Part.from_bytes(data=audio, mime_type=mime_type)
+        else:
+            try:
+                media = self.client.files.upload(
+                    file=io.BytesIO(audio), config=types.UploadFileConfig(mime_type=mime_type))
+            except (errors.APIError, AIProviderError) as exc:
+                return self._error(f"Gemini Files API: {_short(exc)}", model=model_name, started=started, p_hash=p_hash)
+        return self._call(
+            model=model_name,
+            contents=[media, prompt],
+            config={"temperature": 0.0},
+            response_schema=response_schema,
+            p_hash=p_hash,
+        )
+
+    def _call(self, *, model: str, contents: Any, config: dict[str, Any],
+              response_schema: type[BaseModel] | None, p_hash: str) -> dict[str, Any]:
+        from google.genai import errors, types
+
+        started = time.monotonic()
+        if response_schema is not None:
+            config = {
+                **config,
+                "response_mime_type": "application/json",
+                "response_json_schema": gemini_json_schema(response_schema),
             }
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            url,
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                candidates = data.get("candidates", [])
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    text = "".join([p.get("text", "") for p in parts])
-                    return {
-                        "response": text,
-                        "provider": "gemini",
-                        "model": model_name,
-                        "tokens_used": data.get("usageMetadata", {}).get("totalTokenCount", 0),
-                        "status": "success",
-                        "is_mock": False,
-                    }
-                return {"error": "No response from Gemini API", "status": "error"}
-        except urllib.error.HTTPError as e:
-            err_msg = e.read().decode('utf-8')
-            logger.error(f"Gemini API error: {err_msg}")
-            return {"error": f"Gemini HTTP {e.code}: {err_msg}", "status": "error"}
-        except Exception as e:
-            logger.error(f"Gemini request failed: {e}")
-            return {"error": str(e), "status": "error"}
+            resp = self.client.models.generate_content(
+                model=model, contents=contents, config=types.GenerateContentConfig(**config))
+        except errors.APIError as exc:
+            logger.error("Gemini API error %s (model %s)", exc.code, model)
+            return self._error(f"Gemini HTTP {exc.code}: {_short(exc)}", model=model, started=started, p_hash=p_hash)
+        except AIProviderError as exc:
+            return self._error(str(exc), model=model, started=started, p_hash=p_hash)
+        except Exception as exc:  # síť, timeout…
+            logger.error("Gemini request failed (model %s): %s", model, type(exc).__name__)
+            return self._error(f"Gemini request failed: {_short(exc)}", model=model, started=started, p_hash=p_hash)
+
+        candidate = resp.candidates[0] if resp.candidates else None
+        finish = getattr(candidate, "finish_reason", None)
+        finish_name = getattr(finish, "name", None) or (str(finish) if finish else None)
+        text = resp.text
+        if finish_name == "MAX_TOKENS":
+            return self._error("Výstup modelu byl uříznut (MAX_TOKENS)", model=model, started=started, p_hash=p_hash)
+        if not text:
+            reason = finish_name or getattr(getattr(resp, "prompt_feedback", None), "block_reason", None)
+            return self._error(f"Gemini nevrátil text (důvod: {reason})", model=model, started=started, p_hash=p_hash)
+
+        data = None
+        if response_schema is not None:
+            try:
+                data = _validate(response_schema, json.loads(text))
+            except (json.JSONDecodeError, ValidationError) as exc:
+                return self._error(f"Výstup neodpovídá schématu {response_schema.__name__}: {_short(exc)}",
+                                   model=model, started=started, p_hash=p_hash)
+
+        usage = resp.usage_metadata
+        tokens_in = (usage.prompt_token_count or 0) if usage else 0
+        tokens_out = ((usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)) if usage else 0
+        return self._success(text=text, data=data, model=resp.model_version or model, tokens_in=tokens_in,
+                             tokens_out=tokens_out, tokens_total=usage.total_token_count if usage else None,
+                             started=started, p_hash=p_hash)
 
 
-class OpenAIProvider(BaseAIProvider):
-    """OpenAI REST Provider"""
-
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
-
-    @property
-    def provider_name(self) -> str:
-        return "openai"
-
-    def generate(
-        self,
-        prompt: str,
-        system_prompt: str = "",
-        model: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1500,
-    ) -> Dict[str, Any]:
-        if not self.api_key:
-            return MockAIProvider().generate(prompt, system_prompt, model, temperature, max_tokens)
-
-        model_name = model or "gpt-4o-mini"
-        url = "https://api.openai.com/v1/chat/completions"
-
-        messages = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": prompt})
-
-        body = json.dumps({
-            "model": model_name,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            url,
-            data=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}",
-            },
-            method="POST"
-        )
-
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                text = data["choices"][0]["message"]["content"]
-                return {
-                    "response": text,
-                    "provider": "openai",
-                    "model": model_name,
-                    "tokens_used": data.get("usage", {}).get("total_tokens", 0),
-                    "status": "success",
-                    "is_mock": False,
-                }
-        except Exception as e:
-            return {"error": str(e), "status": "error"}
+# ── Mock: generování dat podle schématu a hashované embeddingy ────────────────
+def mock_instance(schema: type[BaseModel]) -> Any:
+    """Minimální data, která projdou validací schématu (jen povinná pole)."""
+    root = schema.model_json_schema()
+    return _mock_value(root, root.get("$defs", {}), 0)
 
 
-class OllamaProvider(BaseAIProvider):
-    """Lokální Ollama Provider pro offline hackathony"""
+def _mock_value(node: dict[str, Any], defs: dict[str, Any], depth: int) -> Any:
+    if depth > 32:
+        return None
+    if "$ref" in node:
+        return _mock_value(defs[node["$ref"].rsplit("/", 1)[-1]], defs, depth + 1)
+    if "const" in node:
+        return node["const"]
+    if node.get("enum"):
+        return node["enum"][0]
+    for key in ("anyOf", "oneOf"):
+        if key in node:
+            options = [o for o in node[key] if o.get("type") != "null"] or node[key]
+            return _mock_value(options[0], defs, depth + 1)
+    if "allOf" in node:
+        merged: dict[str, Any] = {}
+        for part in node["allOf"]:
+            merged.update(part)
+        return _mock_value(merged, defs, depth + 1)
 
-    def __init__(self, base_url: Optional[str] = None):
-        self.base_url = base_url or os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-
-    @property
-    def provider_name(self) -> str:
-        return "ollama"
-
-    def generate(
-        self,
-        prompt: str,
-        system_prompt: str = "",
-        model: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1500,
-    ) -> Dict[str, Any]:
-        model_name = model or "llama3.2"
-        url = f"{self.base_url}/api/generate"
-
-        body = json.dumps({
-            "model": model_name,
-            "prompt": prompt,
-            "system": system_prompt,
-            "stream": False,
-            "options": {"temperature": temperature}
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            url,
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST"
-        )
-
-        try:
-            with urllib.request.urlopen(req, timeout=40) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                return {
-                    "response": data.get("response", ""),
-                    "provider": "ollama",
-                    "model": model_name,
-                    "tokens_used": data.get("eval_count", 0),
-                    "status": "success",
-                    "is_mock": False,
-                }
-        except Exception as e:
-            logger.warning(f"Ollama nedostupná ({e}), padám na MockProvider")
-            return MockAIProvider().generate(prompt, system_prompt, model, temperature, max_tokens)
+    kind = node.get("type")
+    if kind == "object" or "properties" in node:
+        required = set(node.get("required", []))
+        return {name: _mock_value(sub, defs, depth + 1)
+                for name, sub in node.get("properties", {}).items() if name in required}
+    if kind == "array":
+        return [_mock_value(node.get("items", {}), defs, depth + 1) for _ in range(node.get("minItems", 0))]
+    if kind == "string":
+        fmt = node.get("format")
+        if fmt == "date":
+            return "2026-01-01"
+        if fmt == "date-time":
+            return "2026-01-01T00:00:00Z"
+        value = "mock".ljust(node.get("minLength", 0), "x")
+        return value[:node["maxLength"]] if "maxLength" in node else value
+    if kind in ("integer", "number"):
+        value: float = 0
+        if "minimum" in node:
+            value = max(value, node["minimum"])
+        if "exclusiveMinimum" in node:
+            value = max(value, node["exclusiveMinimum"] + 1)
+        if "maximum" in node:
+            value = min(value, node["maximum"])
+        return int(value) if kind == "integer" else float(value)
+    if kind == "boolean":
+        return False
+    return None
 
 
-def get_ai_provider(provider_name: Optional[str] = None) -> BaseAIProvider:
-    """Factory pro získání požadovaného AI providera"""
-    chosen = (provider_name or os.environ.get("AI_PROVIDER", "mock")).lower()
+_TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 
-    if chosen == "gemini":
-        return GeminiProvider()
-    elif chosen in ("openai", "gpt"):
-        return OpenAIProvider()
-    elif chosen == "ollama":
-        return OllamaProvider()
-    elif chosen == "mock":
+
+def hashed_embedding(text: str, dim: int) -> list[float]:
+    """Deterministický L2-normalizovaný vektor (hashovaná slova + znakové trigramy)."""
+    plain = unicodedata.normalize("NFKD", text.lower())
+    plain = "".join(c for c in plain if not unicodedata.combining(c))
+    vector = [0.0] * dim
+    for word in _TOKEN_RE.findall(plain):
+        features = [(word, 1.0)]
+        padded = f"#{word}#"
+        features += [(padded[i:i + 3], 0.5) for i in range(len(padded) - 2)]
+        for feature, weight in features:
+            digest = hashlib.blake2b(feature.encode("utf-8"), digest_size=8).digest()
+            index = int.from_bytes(digest[:4], "little") % dim
+            sign = 1.0 if digest[4] & 1 else -1.0
+            vector[index] += sign * weight
+    if not any(vector):
+        vector[0] = 1.0
+    return l2_normalize(vector)
+
+
+# ── Factory ───────────────────────────────────────────────────────────────────
+SUPPORTED_PROVIDERS = ("mock", "gemini")
+
+
+def get_ai_provider(provider_name: str | None = None) -> BaseAIProvider:
+    """
+    Provider podle ``provider_name`` nebo env ``AI_PROVIDER`` (výchozí ``mock``).
+
+    ``gemini`` bez ``GEMINI_API_KEY`` spadne na mock s varováním; výsledek má pak
+    ``provider == "mock"`` a ``is_mock == True``, takže záměna je vidět.
+    Data pacientů se smí posílat jen s placeným tierem (ARCHITEKTURA §5.7, Q9).
+    """
+    chosen = (provider_name or os.environ.get("AI_PROVIDER") or "mock").lower()
+    if chosen == "mock":
         return MockAIProvider()
-
-    # Default fallback
-    if os.environ.get("GEMINI_API_KEY"):
+    if chosen == "gemini":
+        if not os.environ.get("GEMINI_API_KEY"):
+            logger.warning("AI_PROVIDER=gemini, ale GEMINI_API_KEY není nastaven: používám MockAIProvider")
+            return MockAIProvider()
         return GeminiProvider()
-    if os.environ.get("OPENAI_API_KEY"):
-        return OpenAIProvider()
-
-    return MockAIProvider()
+    raise ValueError(f"Neznámý AI provider {chosen!r}, podporované: {', '.join(SUPPORTED_PROVIDERS)}")

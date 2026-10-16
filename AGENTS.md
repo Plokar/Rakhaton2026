@@ -20,6 +20,7 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 - `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele.
 - `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), později `EVAL.md` a `DEMO.md`.
 - `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej Gemini**.
+  - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDT Copilot“ má přednost před textem skillu (ARCH §4.8).
 
 ## Příkazy
 

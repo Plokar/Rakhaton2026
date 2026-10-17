@@ -362,7 +362,8 @@ def case_create(request):
     """Zařazení pacienta do boardu (FR-P4): `{session, patient_id, ecog, intent, imaging_recent_checked,
     skipped_fields, acknowledge}`. Nominace už má případ (seed_mdt) → doplní ho a přesune (200), jinak založí (201)."""
     _require(request, roles.ADMIN, roles.DOCTOR)
-    data = request.data
+    # stav po zařazení určuje server (`ready`); klient ho posílá z typu MdtCase a lékaři by jinak padl na 403
+    data = {k: v for k, v in request.data.items() if k != 'status'}
     _validate_case_input(request, data)
     session = get_object_or_404(MdtSession, pk=data.get('session'))
     if session.status == 'closed':

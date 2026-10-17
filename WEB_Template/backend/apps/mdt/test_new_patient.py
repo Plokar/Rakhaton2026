@@ -61,7 +61,8 @@ def test_new_patient_report_intake_and_brief(seeded):
     assert intake['service_request_id'] == 'P07-zad01' and intake['ecog_physician']['value'] == 1
     case = as_user('pneumolog').post('/api/mdt/cases/', {
         'session': board.pk, 'patient_id': pid, 'ecog': 1, 'intent': 'C', 'imaging_recent_checked': True,
-        'skipped_fields': [], 'acknowledge': []}, format='json')
+        'skipped_fields': [], 'acknowledge': [], 'acknowledged_warnings': [], 'status': 'nominated'},   # tělo jako z UI
+        format='json')
     assert case.status_code == 201, case.json()
     assert pid in next(s for s in as_user('chirurg').get('/api/mdt/sessions/').json() if s['id'] == board.pk)['patients']
 

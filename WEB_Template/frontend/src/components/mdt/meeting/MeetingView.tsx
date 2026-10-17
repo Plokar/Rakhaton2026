@@ -205,7 +205,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       {cases.length > 0 && wide ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
           <ResizablePanel defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
-            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} recorder={<DiscussionRecorder current={current} />} />
+            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} recorder={<DiscussionRecorder cases={cases} current={current} />} />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Šířka agendy" />
           <ResizablePanel className="min-h-0">
@@ -215,7 +215,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       ) : (
         <div className="relative min-h-0 flex-1 overflow-y-auto">
           {cases.length > 0 && <AgendaPicker cases={cases} current={current} onSelect={select} />}
-          {cases.length > 0 && <DiscussionRecorder current={current} className="border-b bg-card" />}
+          {cases.length > 0 && <DiscussionRecorder cases={cases} current={current} className="border-b bg-card" />}
           {main}
         </div>
       )}

@@ -246,6 +246,13 @@ function DecisionContent({ caseId }: { caseId: string }) {
         </div>
       )}
       {current && canEdit && !isDemo && <ScribePanel caseId={caseId} onDraft={reloadDraft} />}
+      {current && !confirmed && !canEdit && !isDemo && location.item && (
+        <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm">
+          Jen pro čtení: závěr upravuje a audio z diskuse importuje předseda, zadávající lékař
+          {location.item.created_by ? ` (${location.item.created_by.name})` : ''} nebo přizvaný lékař. Přizvat vás může
+          předseda nebo zadávající lékař v dialogu Spolupráce.
+        </p>
+      )}
 
       {current && (
         <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>

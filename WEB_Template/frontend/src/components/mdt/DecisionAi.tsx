@@ -75,7 +75,7 @@ export function ScribePanel({ caseId, onDraft }: { caseId: string; onDraft: () =
               }}
             />
             <Button variant="outline" onClick={() => fileRef.current?.click()} isLoading={job.starting === 'audio'} disabled={job.starting !== null}>
-              <FileAudio aria-hidden /> Nahrát nahrávku diskuse
+              <FileAudio aria-hidden /> Importovat audio z diskuse
             </Button>
           </div>
           <label className="flex flex-col gap-1.5 text-sm">

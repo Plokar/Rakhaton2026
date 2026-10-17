@@ -33,7 +33,7 @@
 
 Všechno je v UI (T-322, T-323):
 
-- **AI zapisovatel (krok 6):** v Závěru komise „Nahrát nahrávku diskuse“ = `data/audio/P03_mdt02.m4a` (Groq Whisper + NVIDIA, ~30 s), nebo v jednání komise přepínač **„Nahrávat diskusi“** v boku agendy (po přepnutí pacienta se úsek sám odešle). Bez sítě: vložit přepis z `data/audio/P03_mdt02.md`.
+- **AI zapisovatel (krok 6):** v Závěru komise „Importovat audio z diskuse“ = `data/audio/P03_mdt02.m4a` (předseda, zadávající nebo přizvaný lékař; ostatní vidí závěr jen pro čtení) (Groq Whisper + NVIDIA, ~30 s), nebo v jednání komise přepínač **„Nahrávat diskusi“** v boku agendy (po přepnutí pacienta se úsek sám odešle). Bez sítě: vložit přepis z `data/audio/P03_mdt02.md`.
 - **Shrnutí pro pacienta:** po potvrzení v Závěru komise „Připravit shrnutí pro pacienta“; text je i v PDF exportu („Shrnutí pro pacienta [AI návrh]“).
 - **Nový pacient a vložení zprávy (BON-7):** v zařazení „Nový pacient“ (pseudonym Pxx do IRIS), pak „Vložit zprávu“: text nebo PDF (parser, sken přes OCR) → návrh hodnot se zněním odstavce → zápis do IRIS → podklad cituje odstavce zprávy.
 

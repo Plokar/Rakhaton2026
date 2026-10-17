@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage } from '@/lib/queries';
 import { cn } from '@/lib/utils';
+import type { MdtCase } from '@/types/mdt';
 import { can, useMe } from '../me';
 
 const MIN_SECONDS = 5;                       // kratší úsek = omylem zapnuté, neodesílá se
@@ -35,9 +36,10 @@ async function waitForJob(jobId: number): Promise<void> {
 /**
  * Nahrávání diskuse komise (BON-3): zapnutý přepínač nahrává pacienta na řadě; po přepnutí na dalšího pacienta
  * (nebo vypnutí) se jeho úsek sám odešle k přepisu (Whisper) a vznikne draft závěru s citacemi úseků přepisu.
- * Nahrávat smí předseda a zadávající lékař; potvrzený závěr zapisovatel nepřepíše (409).
+ * Nahrává se jen pacient, jehož případ uživatel smí měnit (předseda, zadávající nebo přizvaný lékař, T-326); ostatní
+ * se přeskočí, jinak by přepis skončil 403. Potvrzený závěr zapisovatel nepřepíše (409).
  */
-export function DiscussionRecorder({ current, className }: { current: { id: number; patient_id: string } | null; className?: string }) {
+export function DiscussionRecorder({ cases, current, className }: { cases: MdtCase[]; current: MdtCase | null; className?: string }) {
   const router = useRouter();
   const me = useMe();
   const [on, setOn] = React.useState(false);
@@ -95,12 +97,14 @@ export function DiscussionRecorder({ current, className }: { current: { id: numb
     stream.current = null;
   }, [finish]);
 
-  // Přepnutí pacienta během nahrávání: úsek předchozího se odešle, nový začne.
+  const allowed = current !== null && can.editCase(me, current);
+
+  // Přepnutí pacienta během nahrávání: úsek předchozího se odešle, nový začne (jen u případu, který smím měnit).
   React.useEffect(() => {
     if (!on || !current || segment.current?.caseId === current.id) return;
     finish();
-    start(current.id, current.patient_id);
-  }, [on, current, finish, start]);
+    if (allowed && current.id != null) start(current.id, current.patient_id);
+  }, [on, current, allowed, finish, start]);
 
   React.useEffect(() => {
     if (!on) return;
@@ -110,7 +114,7 @@ export function DiscussionRecorder({ current, className }: { current: { id: numb
 
   React.useEffect(() => stopAll, [stopAll]);            // odchod ze stránky: poslední úsek se odešle
 
-  if (!can.generateBrief(me)) return null;
+  if (!cases.some((c) => can.editCase(me, c))) return null;
 
   const toggle = async () => {
     setError(null);
@@ -134,10 +138,15 @@ export function DiscussionRecorder({ current, className }: { current: { id: numb
 
   return (
     <div className={cn('flex flex-col gap-2 border-t border-border px-3 py-3', className)}>
-      <Button variant={on ? 'destructive' : 'outline'} size="sm" aria-pressed={on} onClick={() => void toggle()} disabled={!current && !on}>
+      <Button variant={on ? 'destructive' : 'outline'} size="sm" aria-pressed={on} onClick={() => void toggle()} disabled={!allowed && !on}>
         {on ? <Square aria-hidden /> : <Mic aria-hidden />} {on ? 'Ukončit nahrávání' : 'Nahrávat diskusi'}
       </Button>
-      {on ? (
+      {!allowed && current ? (
+        <p className="text-xs text-muted-foreground" aria-live="polite">
+          Případ <span translate="no" className="font-medium">{current.patient_id}</span> zapisuje předseda, zadávající nebo přizvaný lékař,
+          diskuse k němu se nenahrává.
+        </p>
+      ) : on ? (
         <p className="flex items-center gap-2 text-xs" aria-live="polite">
           <span className="size-2 shrink-0 animate-pulse rounded-full bg-red-600 motion-reduce:animate-none" aria-hidden />
           <span>

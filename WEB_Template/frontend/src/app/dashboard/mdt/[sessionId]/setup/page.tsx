@@ -104,13 +104,18 @@ function SetupContent({ sessionId }: { sessionId: string }) {
       )}
       <PageHeader
         title="Nastavení podkladu"
-        meta={
-          <>
-            {session ? `${session.title}, ${formatDate(session.date)}` : 'Načítám zasedání…'}
-            {editable ? '' : '. Nastavuje předseda komise, bloky si můžete sbalit u sebe v podkladu.'}
-          </>
-        }
+        meta={session ? `${session.title}, ${formatDate(session.date)}` : 'Načítám zasedání…'}
       />
+      <p className="text-sm text-muted-foreground">
+        Určuje, jak AI sestaví podklad pro všechny pacienty tohoto boardu: které části obsahuje a v jakém pořadí, jak
+        podrobně, kdo sedí u stolu (podle odborností se zvýrazní, co koho zajímá) a jestli skrýt neověřená tvrzení.
+        Uloží se pro board a použije se při dalším generování podkladů.
+      </p>
+      {!editable && (
+        <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm">
+          Jen pro čtení: nastavení boardu mění předseda komise. Bloky si můžete sbalit u sebe v podkladu.
+        </p>
+      )}
 
       {loading && <Skeleton className="h-96 w-full" />}
       {error && <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}

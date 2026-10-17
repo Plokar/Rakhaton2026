@@ -4,7 +4,6 @@ Načtení datasetu pro testy (AGENTS.md: JSON a .md datasetu jen pro ingest, tes
 Resources jsou sanitizované stejnou funkcí jako při ingestu do IRIS (`services.fhir.ingest`, T-101),
 takže testy vidí stejná ID a data jako aplikace za běhu.
 """
-import os
 from pathlib import Path
 
 import pytest
@@ -13,15 +12,11 @@ from services.fhir import ingest
 
 
 def dataset_dir() -> Path:
-    env = os.environ.get("DATASET_DIR")
-    if env:
-        path = Path(env)
-    else:   # repo checkout (CI): <repo>/WEB_Template/backend/services/tests/dataset.py
-        parents = Path(__file__).resolve().parents
-        path = parents[min(4, len(parents) - 1)] / "Dataset_MDT_Copilot_v1.1_pre_timy" / "Dataset_MDT_Copilot_v1.1"
-    if not (path / "pacienti").is_dir():
-        pytest.skip(f"dataset není k dispozici ({path})")
-    return path
+    """Dataset jako při ingestu (env `DATASET_DIR`, jinak checkout repa); bez datasetu se test přeskočí."""
+    try:
+        return ingest.dataset_dir()
+    except ingest.DatasetError as e:
+        pytest.skip(f"dataset není k dispozici ({e})")
 
 
 def load_patient(patient_id: str) -> list[dict]:

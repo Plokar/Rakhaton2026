@@ -59,7 +59,6 @@ def health_check(request):
 
     # Storage check
     try:
-        import tempfile
         from django.conf import settings
         test_file = os.path.join(settings.MEDIA_ROOT, '.health_check')
         os.makedirs(settings.MEDIA_ROOT, exist_ok=True)

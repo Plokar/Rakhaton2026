@@ -3,7 +3,7 @@ import re
 
 from services.fhir import client as fhir
 from services.fhir.writeback import RE_MDT
-from services.patients import _ref_id
+from services.fhir.values import ref_id
 
 TASK_ID = re.compile(r'^(P\d{2})-(mdt\d+)-task\d+$')
 STATUSES = ('requested', 'in-progress', 'completed')
@@ -20,19 +20,19 @@ def _re_mdt(plan: dict | None) -> dict | None:
 def _item(t: dict, plans: dict, names: dict) -> dict:
     pid, mdt = TASK_ID.match(t['id']).groups()
     owner = t.get('owner', {})
-    oid = _ref_id(owner) if owner.get('reference') else None
+    oid = ref_id(owner) if owner.get('reference') else None
     return {
         'id': t['id'], 'patient_id': pid, 'mdt_record': f'{pid}-{mdt}', 'description': t.get('description', ''),
         'owner': {'id': oid, 'name': names.get(oid) or owner.get('display') or oid},
         'due_date': t.get('restriction', {}).get('period', {}).get('end'), 'status': t['status'],
         'authored_on': t.get('authoredOn'),
-        're_mdt': _re_mdt(plans.get(_ref_id((t.get('basedOn') or [{}])[0]))),
+        're_mdt': _re_mdt(plans.get(ref_id((t.get('basedOn') or [{}])[0]))),
     }
 
 
 def _context(tasks: list[dict]) -> tuple[dict, dict]:
     plans = {p['id']: p for p in fhir.search('CarePlan') if re.search(r'-mdt\d+-careplan$', p['id'])}
-    lek = sorted({_ref_id(t['owner']) for t in tasks if t.get('owner', {}).get('reference', '').startswith('Practitioner/')})
+    lek = sorted({ref_id(t['owner']) for t in tasks if t.get('owner', {}).get('reference', '').startswith('Practitioner/')})
     names = {}
     if lek:
         # IRIS neznámé parametry ignoruje, proto filtr i u klienta

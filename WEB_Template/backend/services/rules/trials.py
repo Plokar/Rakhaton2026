@@ -19,7 +19,8 @@ from services.rules import red_flags as rf
 from services.rules.compatibility import (
     FLR_VALUE, OXALIPLATIN_IRINOTECAN_ATC, PARPI_ATC, Facts, _her2_samples, _mutation_state, _percent,
 )
-from services.rules.red_flags import STALE_DAYS, _cc_text, _code, _date
+from services.fhir.values import cc_text, fhir_code
+from services.rules.red_flags import STALE_DAYS, _date
 
 
 @dataclass
@@ -77,19 +78,19 @@ def _flr_below_30(f: Facts) -> CriterionResult:
 
 
 def _other_metastases(f: Facts) -> list[dict]:
-    return [c for c in f.oncologic if re.match(r"C7[89]", _code(c.get("code"), "icd-10"))
-            and not _code(c.get("code"), "icd-10").startswith("C78.7")]
+    return [c for c in f.oncologic if re.match(r"C7[89]", fhir_code(c.get("code"), "icd-10"))
+            and not fhir_code(c.get("code"), "icd-10").startswith("C78.7")]
 
 
 def _chest_staging(f: Facts) -> tuple[dict | None, int | None]:
-    chest = [r for r in f.radiology() if "hrudník" in _cc_text(r.get("code")).lower()]
+    chest = [r for r in f.radiology() if "hrudník" in cc_text(r.get("code")).lower()]
     if not chest:
         return None, None
     return chest[-1], f.days_before_mdt(_date(chest[-1].get("effectiveDateTime")))
 
 
 def _liver_only(f: Facts) -> CriterionResult:
-    liver = [c["id"] for c in f.oncologic if _code(c.get("code"), "icd-10").startswith("C78.7")]
+    liver = [c["id"] for c in f.oncologic if fhir_code(c.get("code"), "icd-10").startswith("C78.7")]
     others = _other_metastases(f)
     if others:
         return CriterionResult("not_met", [c["id"] for c in others])
@@ -136,7 +137,7 @@ def _weight_loss(f: Facts) -> CriterionResult:
 
 def _recent_treatment(f: Facts) -> list[dict]:
     return [m for m in f.recent_administrations(90)
-            if _code(m.get("medicationCodeableConcept"), "atc").startswith(("L01", "L02"))]
+            if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(("L01", "L02"))]
 
 
 def _active_treatment(f: Facts) -> CriterionResult:
@@ -179,7 +180,7 @@ def _hrr_alteration(f: Facts) -> CriterionResult:
 
 def _prior_systemic_line(f: Facts) -> CriterionResult:
     treatment = [m for m in f.by_type.get("MedicationAdministration", []) + f.by_type.get("MedicationRequest", [])
-                 if _code(m.get("medicationCodeableConcept"), "atc").startswith(("L01", "L02"))]
+                 if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(("L01", "L02"))]
     return CriterionResult("met", [treatment[-1]["id"]]) if treatment else \
         CriterionResult("unknown", missing="Předchozí systémová léčba v datech není")
 
@@ -219,7 +220,7 @@ def _brain_mets_allowed(f: Facts) -> CriterionResult:
     if not brain:
         return CriterionResult("met", [c["id"] for c in f.oncologic])
     dexamethasone = [m for m in f.active_medications()
-                     if _code(m.get("medicationCodeableConcept"), "atc").startswith("H02AB02")]
+                     if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith("H02AB02")]
     dose = re.search(r"(\d+(?:[,.]\d+)?)\s*mg", (dexamethasone[-1].get("dosageInstruction") or [{}])[0].get("text", "")) \
         if dexamethasone else None
     if dose and float(dose.group(1).replace(",", ".")) > 2:
@@ -273,7 +274,7 @@ def _esr1_ctdna(f: Facts) -> CriterionResult:
 def _drug_history(pattern: str) -> Callable[[Facts], CriterionResult]:
     def check(f: Facts) -> CriterionResult:
         items = [m for m in f.by_type.get("MedicationAdministration", []) + f.by_type.get("MedicationRequest", [])
-                 if re.search(pattern, _cc_text(m.get("medicationCodeableConcept")), re.I)]
+                 if re.search(pattern, cc_text(m.get("medicationCodeableConcept")), re.I)]
         return CriterionResult("met", [items[-1]["id"]]) if items else CriterionResult("not_met")
     return check
 

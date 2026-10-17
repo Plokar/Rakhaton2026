@@ -130,7 +130,7 @@ def test_citations_exist_in_context(patient_id, flags, guidelines):
 
 def _extension_back_to_derived_from(resources):
     """Tvar před Q15 (jako v datasetu): extension `derived-from` zpět do `derivedFrom`."""
-    from services.rules.red_flags import DERIVED_FROM_EXTENSION
+    from services.fhir.ids import DERIVED_FROM_EXTENSION
     out = []
     for r in resources:
         ext = [e for e in r.get("extension", []) if e.get("url") == DERIVED_FROM_EXTENSION]

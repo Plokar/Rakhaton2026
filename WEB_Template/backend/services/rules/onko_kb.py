@@ -17,7 +17,8 @@ from pathlib import Path
 from typing import Iterable
 
 from services.rules.compatibility import LIGHT_ORDER, Facts, lung_histology
-from services.rules.red_flags import SYMPTOMS, _code, _date
+from services.fhir.values import fhir_code
+from services.rules.red_flags import SYMPTOMS, _date
 
 MODALITY = (("CHIR", "chirurgie"), ("ABL", "chirurgie"), ("RT", "rt"), ("NUK", "rt"), ("CHT", "chemoterapie"),
             ("IO", "imunoterapie"), ("TT", "cilena"), ("ADC", "cilena"), ("HT", "hormonalni"), ("SYS", "jina-systemova"),
@@ -96,9 +97,9 @@ def patient_facts(resources: list[dict], comorbidities_confirmed: bool = False) 
         if value is not None:
             facts[name], cites[name] = value, [c for c in citations if c]
 
-    primary = next((c for c in f.oncologic if not re.match(r"C7[789]|C80", _code(c.get("code"), "icd-10"))), None)
+    primary = next((c for c in f.oncologic if not re.match(r"C7[789]|C80", fhir_code(c.get("code"), "icd-10"))), None)
     if primary:
-        put("dg", _code(primary.get("code"), "icd-10"), primary["id"])
+        put("dg", fhir_code(primary.get("code"), "icd-10"), primary["id"])
     patient = (f.by_type.get("Patient") or [{}])[0]
     put("age", f.age, patient.get("id"))
     put("sex", {"male": "M", "female": "Z"}.get(patient.get("gender")), patient.get("id"))
@@ -106,19 +107,19 @@ def patient_facts(resources: list[dict], comorbidities_confirmed: bool = False) 
     for row in q().kb()["fakta"]:                       # laboratoř a další LOINC: poslední hodnota
         m = LOINC_FACT.search(row["zdroj"])
         if m and not row["zdroj"].startswith("odvoz"):
-            series = [o for o in f.observations if _code(o.resource.get("code"), "loinc.org") == m[1]
+            series = [o for o in f.observations if fhir_code(o.resource.get("code"), "loinc.org") == m[1]
                       and isinstance(o.value, (int, float))]
             if series:
                 put(row["fakt"], series[-1].value, series[-1].id)
         m = ICD_FACT.search(row["zdroj"])
         if m and row["typ"] == "b":                     # komorbidity podle MKN-10
-            hit = next((c for c in f.conditions if _icd_match(m[1], _code(c.get("code"), "icd-10"))), None)
+            hit = next((c for c in f.conditions if _icd_match(m[1], fhir_code(c.get("code"), "icd-10"))), None)
             put(row["fakt"], "ano" if hit else ("ne" if comorbidities_confirmed else None), hit and hit["id"])
         m = ATC_FACT.search(row["zdroj"])
         if m and row["typ"] == "b":                     # léky podle ATC
             prefixes = tuple(m[1].split(", "))
             meds = [r for t in ("MedicationRequest", "MedicationStatement", "MedicationAdministration")
-                    for r in f.by_type.get(t, []) if _code(r.get("medicationCodeableConcept"), "atc").startswith(prefixes)]
+                    for r in f.by_type.get(t, []) if fhir_code(r.get("medicationCodeableConcept"), "atc").startswith(prefixes)]
             put(row["fakt"], "ano" if meds else ("ne" if comorbidities_confirmed else None), meds and meds[-1]["id"])
 
     ecog = f.latest("ecog")
@@ -141,7 +142,7 @@ def patient_facts(resources: list[dict], comorbidities_confirmed: bool = False) 
     if crcl:
         put("lab.crcl", round(crcl[0], 1), *crcl[1]["inputs"])
     for name, loinc in (("lab.bili_xuln", "14631-6"), ("lab.alt_xuln", "1742-6"), ("lab.alp_xuln", "6768-6")):
-        series = [o for o in f.observations if _code(o.resource.get("code"), "loinc.org") == loinc and isinstance(o.value, (int, float))]
+        series = [o for o in f.observations if fhir_code(o.resource.get("code"), "loinc.org") == loinc and isinstance(o.value, (int, float))]
         high = ((series[-1].resource.get("referenceRange") or [{}])[0].get("high") or {}).get("value") if series else None
         if series and high:
             put(name, round(series[-1].value / high, 2), series[-1].id)
@@ -150,7 +151,7 @@ def patient_facts(resources: list[dict], comorbidities_confirmed: bool = False) 
         put("lvef", lvef[-1].value, lvef[-1].id)
         put("lvef.drop", max(o.value for o in lvef) - lvef[-1].value, *(o.id for o in lvef[-2:]))
     mdt = f.mdt_date or date.today()
-    mi = next((c for c in f.conditions if re.match(r"I2[12]|I25\.2", _code(c.get("code"), "icd-10"))), None)
+    mi = next((c for c in f.conditions if re.match(r"I2[12]|I25\.2", fhir_code(c.get("code"), "icd-10"))), None)
     if mi and _date(mi.get("onsetDateTime")):
         put("card.mi_days", (mdt - _date(mi.get("onsetDateTime"))).days, mi["id"])
     pci = next((p for p in f.by_type.get("Procedure", []) if re.search(r"PCI|stent", _code_text(p), re.I)), None)
@@ -197,7 +198,7 @@ def _metastatic(f: Facts) -> bool:
     if tnm and re.search(r"\b[cpy]*M1|stadium IV", tnm[-1].value):
         return True
     # C78–C79 = vzdálené metastázy; C77 jsou regionální uzliny (P04 cN2 M0)
-    return any(re.match(r"C7[89]", _code(c.get("code"), "icd-10")) for c in f.oncologic)
+    return any(re.match(r"C7[89]", fhir_code(c.get("code"), "icd-10")) for c in f.oncologic)
 
 
 def _castration(f: Facts) -> str | None:

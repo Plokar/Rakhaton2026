@@ -87,13 +87,6 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {message}',
             'style': '{',
         },
-        'json': {
-            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-            'format': '%(levelname)s %(asctime)s %(module)s %(message)s',
-        } if False else {  # JSON logging (odkomentovat pokud nainstalován python-json-logger)
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
     },
     'handlers': {
         'console': {

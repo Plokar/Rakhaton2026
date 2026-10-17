@@ -19,6 +19,8 @@ from datetime import date
 from typing import Callable, Iterable
 
 from services.ai.text import resource_paragraphs, resource_text
+from services.fhir.ids import derived_from_ids
+from services.fhir.values import cc_text, fhir_code, ref_id
 from services.rules.guideline_sets import guideline_sets_for, is_oncologic
 
 SEVERITY_ORDER = {"high": 0, "moderate": 1, "low": 2}
@@ -110,35 +112,6 @@ def _num(value: float) -> str:
     return (str(int(value)) if float(value).is_integer() else str(round(value, 1))).replace(".", ",")
 
 
-def _cc_text(cc: dict | None) -> str:
-    if not cc:
-        return ""
-    return cc.get("text") or next((c.get("display") or c.get("code", "") for c in cc.get("coding", [])), "")
-
-
-def _code(cc: dict | None, system_part: str) -> str:
-    return next((c.get("code", "") for c in (cc or {}).get("coding", []) if system_part in c.get("system", "")), "")
-
-
-def _ref_id(ref: dict | None) -> str:
-    return ((ref or {}).get("reference") or "").rsplit("/", 1)[-1]
-
-
-DERIVED_FROM_EXTENSION = "https://rakathon.example.org/fhir/StructureDefinition/derived-from"
-
-
-def derived_from(resource: dict) -> list[str]:
-    """ID zdrojových dokumentů hodnoty: `derivedFrom` + extension `derived-from`.
-
-    IRIS odmítá `derivedFrom` → DiagnosticReport (Q15, DATASET §6.2), ingest ho proto může přesunout
-    do extension s `valueReference`. Čteme obojí, ať citace zdroje nezmizí.
-    """
-    refs = list(resource.get("derivedFrom") or [])
-    refs += [e["valueReference"] for e in resource.get("extension", [])
-             if e.get("url") == DERIVED_FROM_EXTENSION and e.get("valueReference")]
-    return [i for i in dict.fromkeys(_ref_id(r) for r in refs) if i]
-
-
 @dataclass
 class Obs:
     id: str
@@ -149,7 +122,7 @@ class Obs:
 
     @property
     def source(self) -> str | None:
-        sources = derived_from(self.resource)
+        sources = derived_from_ids(self.resource)
         return sources[0] if sources else None
 
 
@@ -165,14 +138,14 @@ class PatientData:
         patient = (self.by_type.get("Patient") or [{}])[0]
         self.patient_id = patient.get("id", "")
         self.request = (self.by_type.get("ServiceRequest") or [{}])[0]
-        self.task = next((t for t in self.by_type.get("Task", []) if _ref_id(t.get("focus")) == self.request.get("id")),
+        self.task = next((t for t in self.by_type.get("Task", []) if ref_id(t.get("focus")) == self.request.get("id")),
                          (self.by_type.get("Task") or [{}])[0])
         self.mdt_date = _date(self.task.get("restriction", {}).get("period", {}).get("start"))
         self.age = next((e.get("valueInteger") for e in patient.get("extension", [])
                          if e.get("url", "").endswith("/vek-k-datu-mdt")), None)
         self.conditions = self.by_type.get("Condition", [])
         self.oncologic = [c for c in self.conditions if is_oncologic(c)]
-        self.icd10 = [_code(c.get("code"), "icd-10") for c in self.oncologic]
+        self.icd10 = [fhir_code(c.get("code"), "icd-10") for c in self.oncologic]
         self.sets = guideline_sets_for(self.icd10)
         self.observations = [self._obs(o) for o in self.by_type.get("Observation", [])]
         self.observations.sort(key=lambda o: (o.date or date.min, o.id))
@@ -188,16 +161,16 @@ class PatientData:
             value = o["valueInteger"]
         elif "valueString" in o:
             value = o["valueString"]
-        return Obs(o["id"], _date(o.get("effectiveDateTime")), _cc_text(o.get("code")), value, o)
+        return Obs(o["id"], _date(o.get("effectiveDateTime")), cc_text(o.get("code")), value, o)
 
     # ── dotazy ──
     def by_loinc(self, key: str) -> list[Obs]:
-        return [o for o in self.observations if _code(o.resource.get("code"), "loinc.org") == LOINC[key]
+        return [o for o in self.observations if fhir_code(o.resource.get("code"), "loinc.org") == LOINC[key]
                 and isinstance(o.value, (int, float))]
 
     def by_category(self, text: str) -> list[Obs]:
         return [o for o in self.observations
-                if any(text.lower() in _cc_text(c).lower() for c in o.resource.get("category", []))]
+                if any(text.lower() in cc_text(c).lower() for c in o.resource.get("category", []))]
 
     def answers(self, qr: dict) -> dict[str, object]:
         out: dict[str, object] = {}
@@ -247,7 +220,7 @@ class PatientData:
 
     def radiology(self) -> list[dict]:
         reports = [r for r in self.by_type.get("DiagnosticReport", [])
-                   if _code((r.get("category") or [{}])[0], "v2-0074") == "RAD"]
+                   if fhir_code((r.get("category") or [{}])[0], "v2-0074") == "RAD"]
         return sorted(reports, key=lambda r: (r.get("effectiveDateTime", ""), r["id"]))
 
     def active_medications(self) -> list[dict]:
@@ -347,14 +320,14 @@ def rf_stale(data: PatientData) -> list[RedFlag]:
     age = data.days_before_mdt(_date(last.get("effectiveDateTime")))
     if age is not None and age > STALE_DAYS:
         flags.append(_flag("RF-STALE", last["id"], "moderate", f"Zobrazení starší než 6 týdnů ({age} dní)",
-                           f"Poslední zobrazení {_cc_text(last.get('code'))} je z {last['effectiveDateTime'][:10]}, "
+                           f"Poslední zobrazení {cc_text(last.get('code'))} je z {last['effectiveDateTime'][:10]}, "
                            f"k datu MDT {data.mdt_date} je to {age} dní (limit {STALE_DAYS} dní).",
                            [last["id"], data.task.get("id")], "OBC-1.2"))
 
     # Plánovaná resekce jater (KRC-2.4): CT hrudníku, břicha a pánve + MR jater ne starší než 4–6 týdnů
     codes = {c.get("code") for c in (data.request.get("reasonCode") or [{}])[0].get("coding", [])}
     if "KRC" in data.sets and "indikace-operace" in codes:
-        chest = [r for r in reports if "hrudník" in _cc_text(r.get("code")).lower()]
+        chest = [r for r in reports if "hrudník" in cc_text(r.get("code")).lower()]
         chest_age = data.days_before_mdt(_date(chest[-1].get("effectiveDateTime"))) if chest else None
         if chest_age is None or chest_age > STALE_DAYS:
             not_requested = next((p for r in reversed(reports)
@@ -414,7 +387,7 @@ def rf_med(data: PatientData) -> list[RedFlag]:
     if NOTHING.match(extra):
         return []
     medications = data.active_medications()
-    listed = " ".join(_plain(_cc_text(m.get("medicationCodeableConcept"))) for m in medications)
+    listed = " ".join(_plain(cc_text(m.get("medicationCodeableConcept"))) for m in medications)
     missing = []
     for item in _supplement_items(extra):
         words = [w for w in re.findall(r"\w+", _plain(item)) if len(w) >= 4]
@@ -432,10 +405,10 @@ def rf_med(data: PatientData) -> list[RedFlag]:
         if stem not in plain_extra:
             continue
         drugs = [m for m in data.recent_administrations() + medications
-                 if any(_code(m.get("medicationCodeableConcept"), "atc").startswith(p) for p in CYP3A_SUBSTRATE_ATC)]
+                 if any(fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(p) for p in CYP3A_SUBSTRATE_ATC)]
         if not drugs:
             continue
-        names = sorted({_cc_text(d.get("medicationCodeableConcept")) for d in drugs})
+        names = sorted({cc_text(d.get("medicationCodeableConcept")) for d in drugs})
         warnings = data.find_paragraphs(warning_pattern)
         latest = max(drugs, key=lambda d: d.get("effectiveDateTime") or d.get("authoredOn") or "")
         flags.append(_flag("RF-MED", f"interakce-{stem}", "high", f"Léková interakce: {label} a {', '.join(names)}",
@@ -489,12 +462,12 @@ def rf_lab(data: PatientData) -> list[RedFlag]:
                                "upravit před léčbou.", [last.id, first.id], data.guideline({"PLI": "PLI-3.2"})))
     glucose = data.by_loinc("glu")
     steroids = [m for m in data.active_medications()
-                if any(_code(m.get("medicationCodeableConcept"), "atc").startswith(p) for p in STEROID_ATC)]
+                if any(fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(p) for p in STEROID_ATC)]
     if glucose and steroids and glucose[-1].value > GLUCOSE_STEROID:
         last = glucose[-1]
         flags.append(_flag("RF-LAB", last.id, "moderate", f"Glykémie {_num(last.value)} mmol/l při kortikoidech",
                            f"Glykémie {_num(last.value)} mmol/l ({last.date}) u pacienta na "
-                           f"{_cc_text(steroids[0].get('medicationCodeableConcept'))}. Monitorovat glykémii a upravit "
+                           f"{cc_text(steroids[0].get('medicationCodeableConcept'))}. Monitorovat glykémii a upravit "
                            f"antidiabetickou léčbu (práh {_num(GLUCOSE_STEROID)} mmol/l je konvence týmu).",
                            [last.id, steroids[0]["id"]], "OBC-3.1"))
     lvef = [o for o in data.observations if "lvef" in o.text.lower() and isinstance(o.value, (int, float))]
@@ -553,16 +526,16 @@ def rf_lesion(data: PatientData) -> list[RedFlag]:
     flags = []
     guideline = data.guideline({"PLI": "PLI-1.2"}, "OBC-1.4")
     for c in data.oncologic:
-        if _code(c.get("verificationStatus"), "") == "provisional":
+        if fhir_code(c.get("verificationStatus"), "") == "provisional":
             evidence = [o.id for o in data.observations
-                        if any(_ref_id(f) == c["id"] for f in o.resource.get("focus", []))]
-            flags.append(_flag("RF-LESION", c["id"], "high", f"Neověřená diagnóza: {_cc_text(c.get('code'))}",
-                               f"Diagnóza {_code(c.get('code'), 'icd-10')} je vedená jako provizorní (bez "
+                        if any(ref_id(f) == c["id"] for f in o.resource.get("focus", []))]
+            flags.append(_flag("RF-LESION", c["id"], "high", f"Neověřená diagnóza: {cc_text(c.get('code'))}",
+                               f"Diagnóza {fhir_code(c.get('code'), 'icd-10')} je vedená jako provizorní (bez "
                                "histologického ověření). Před zásadní změnou léčby ověřit histologicky včetně "
                                "imunohistochemie.",
                                [c["id"], *evidence, data.request.get("id")], guideline))
     pathology = [r for r in data.by_type.get("DiagnosticReport", [])
-                 if _code((r.get("category") or [{}])[0], "v2-0074") == "SP"]
+                 if fhir_code((r.get("category") or [{}])[0], "v2-0074") == "SP"]
     unclear: dict[tuple, list[tuple[dict, str, str]]] = {}     # orgán → [(zpráva, odstavec, věta)]
     for report in data.radiology():
         paragraph = data.paragraph_with(report["id"], LESION_UNCLEAR)
@@ -583,7 +556,7 @@ def rf_lesion(data: PatientData) -> list[RedFlag]:
         report, paragraph, sentence = findings[-1]
         earlier = [p for _, p, _ in findings[:-1]]
         flags.append(_flag("RF-LESION", paragraph, "high", "Nejasné ložisko bez histologického ověření",
-                           f"Zobrazení {_cc_text(report.get('code'))} ({report['effectiveDateTime'][:10]}): "
+                           f"Zobrazení {cc_text(report.get('code'))} ({report['effectiveDateTime'][:10]}): "
                            f"„{sentence.strip()}“ Novější histologie tohoto nálezu není; bez ověření nelze stanovit "
                            "stadium.", [paragraph, *earlier, data.request.get("id")], guideline))
     return flags
@@ -653,13 +626,13 @@ def rf_nomination(data: PatientData) -> list[RedFlag]:
                                    f"{_num(last.value)}{unit} ({last.date}).",
                                    [f"{data.request['id']}#{p.index}", last.id], "OBC-1.1"))
                 break
-    primaries = [c for c in data.oncologic if not re.match(r"C7[789]|C80", _code(c.get("code"), "icd-10"))]
-    nominated = {_ref_id(r) for r in data.request.get("reasonReference", [])}
+    primaries = [c for c in data.oncologic if not re.match(r"C7[789]|C80", fhir_code(c.get("code"), "icd-10"))]
+    nominated = {ref_id(r) for r in data.request.get("reasonReference", [])}
     omitted = [c for c in primaries if c["id"] not in nominated]
     if len(primaries) > 1 and omitted:
         flags.append(_flag("RF-NOMINATION", "nadory", "moderate", "Nominace neuvádí všechny nádory",
                            "Při duplicitě malignit má nominace uvést všechny nádory; chybí "
-                           + ", ".join(_cc_text(c.get("code")) for c in omitted) + ".",
+                           + ", ".join(cc_text(c.get("code")) for c in omitted) + ".",
                            [data.request["id"], *(c["id"] for c in omitted)], "OBC-1.4"))
     return flags
 
@@ -667,7 +640,7 @@ def rf_nomination(data: PatientData) -> list[RedFlag]:
 def rf_tnm(data: PatientData) -> list[RedFlag]:
     groups: dict[tuple, list[Obs]] = {}
     for o in data.by_category("Staging"):
-        focus = tuple(sorted(_ref_id(f) for f in o.resource.get("focus", [])))
+        focus = tuple(sorted(ref_id(f) for f in o.resource.get("focus", [])))
         groups.setdefault((o.text, focus), []).append(o)
     flags = []
     for (kind, _), series in groups.items():
@@ -689,7 +662,7 @@ def rf_tnm(data: PatientData) -> list[RedFlag]:
 
 
 def rf_palliative(data: PatientData) -> list[RedFlag]:
-    advanced = [c for c in data.oncologic if re.match(r"C7[89]", _code(c.get("code"), "icd-10"))]
+    advanced = [c for c in data.oncologic if re.match(r"C7[89]", fhir_code(c.get("code"), "icd-10"))]
     advanced += [] if advanced else [c for c in data.oncologic if re.search(r"\bIV\b|M1", str(c.get("stage", "")))]
     if not advanced or not data.proms or data.any_text(PALLIATIVE_CARE):
         return []
@@ -732,9 +705,9 @@ def rf_roles(data: PatientData) -> list[RedFlag]:
 def rf_steroid(data: PatientData) -> list[RedFlag]:
     flags = []
     for m in data.active_medications():
-        if not any(_code(m.get("medicationCodeableConcept"), "atc").startswith(p) for p in STEROID_ATC):
+        if not any(fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(p) for p in STEROID_ATC):
             continue
-        name = _cc_text(m.get("medicationCodeableConcept"))
+        name = cc_text(m.get("medicationCodeableConcept"))
         mentions = data.find_paragraphs(re.compile(re.escape(name[:6]), re.I))
         if any(STEROID_TAPER.search(p_text) for p_text in (data.paragraph_text(p) for p in mentions)):
             continue
@@ -780,7 +753,7 @@ def rf_identity(data: PatientData) -> list[RedFlag]:
     """Dokument nesedí k pacientovi: strana těla, kvadrant, pohlaví (věk a data hlídá RF-LLM a RF-DATAQUALITY)."""
     flags = []
     for c in data.oncologic:
-        site = " ".join(_cc_text(b) for b in c.get("bodySite", []))
+        site = " ".join(cc_text(b) for b in c.get("bodySite", []))
         side = _side(site)
         organ = next((key for key in ORGANS if key in _plain(site)), None)
         if side is None or organ is None:
@@ -791,7 +764,7 @@ def rf_identity(data: PatientData) -> list[RedFlag]:
             if mentioned != side:
                 flags.append(_flag("RF-IDENTITY", evidence_id, "high", f"Strana těla nesedí: {SIDE[mentioned]} vs. "
                                    f"{SIDE[side]}",
-                                   f"Dokument uvádí nádor {SIDE[mentioned]}, diagnóza {_code(c.get('code'), 'icd-10')} "
+                                   f"Dokument uvádí nádor {SIDE[mentioned]}, diagnóza {fhir_code(c.get('code'), 'icd-10')} "
                                    f"je {SIDE[side]} ({site}). Ověřit, zda dokument patří k pacientovi a k tomuto "
                                    "nádoru.", [evidence_id, c["id"]], None))
         quadrant = QUADRANT.search(site)
@@ -816,7 +789,7 @@ def prior_procedures(data: PatientData) -> dict[str, list[dict]]:
     """Implantáty, předchozí operace a radioterapie z `Procedure` (FR-A4, RF-PRIOR-PROC)."""
     out: dict[str, list[dict]] = {"implant": [], "surgery": [], "radiotherapy": []}
     for p in sorted(data.by_type.get("Procedure", []), key=lambda p: p.get("performedDateTime", "")):
-        text, category = _cc_text(p.get("code")), _cc_text(p.get("category")).lower()
+        text, category = cc_text(p.get("code")), cc_text(p.get("category")).lower()
         if IMPLANT.search(text):
             out["implant"].append(p)
         elif "radioterap" in category:
@@ -852,8 +825,8 @@ def rf_prior_proc(data: PatientData) -> list[RedFlag]:
     labels = {"implant": "implantáty", "surgery": "předchozí operace", "radiotherapy": "předchozí radioterapie"}
     for kind, items in procedures.items():
         if items:
-            parts.append(f"{labels[kind]}: " + "; ".join(f"{_cc_text(p.get('code'))} ({_performed(p)})" for p in items))
-            citations += [p["id"] for p in items] + [_ref_id(r) for p in items for r in p.get("report", [])]
+            parts.append(f"{labels[kind]}: " + "; ".join(f"{cc_text(p.get('code'))} ({_performed(p)})" for p in items))
+            citations += [p["id"] for p in items] + [ref_id(r) for p in items for r in p.get("report", [])]
     if allergy:
         texts = list(dict.fromkeys(text.strip().rstrip(".") for text, _ in allergy))
         parts.append("alergie: " + "; ".join(texts))
@@ -869,10 +842,10 @@ def rf_prior_proc(data: PatientData) -> list[RedFlag]:
 def rf_dataquality(data: PatientData) -> list[RedFlag]:
     flags = []
     # strukturovaná hodnota bez zdrojového dokumentu (mezera v dohledatelnosti); laboratoř má zdroj v panelu LAB
-    no_source = [o for o in data.observations if not derived_from(o.resource)
+    no_source = [o for o in data.observations if not derived_from_ids(o.resource)
                  and not any("v2-0074" in c.get("system", "") for cat in o.resource.get("category", [])
                              for c in cat.get("coding", []))
-                 and _code(o.resource.get("code"), "loinc.org") not in (LOINC["weight"],)]
+                 and fhir_code(o.resource.get("code"), "loinc.org") not in (LOINC["weight"],)]
     if no_source:
         flags.append(_flag("RF-DATAQUALITY", "bez-zdroje", "low", "Hodnoty bez zdrojového dokumentu",
                            "Bez odkazu na zdrojový dokument (derivedFrom): "
@@ -882,7 +855,7 @@ def rf_dataquality(data: PatientData) -> list[RedFlag]:
     units: dict[str, dict[str, str]] = {}
     for o in data.observations:
         quantity = o.resource.get("valueQuantity") or {}
-        loinc = _code(o.resource.get("code"), "loinc.org")
+        loinc = fhir_code(o.resource.get("code"), "loinc.org")
         if loinc and quantity.get("code"):
             units.setdefault(loinc, {}).setdefault(quantity["code"], o.id)
     for loinc, by_unit in units.items():

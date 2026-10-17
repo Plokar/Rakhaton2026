@@ -22,7 +22,8 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from services.ai.abbreviations import uncertainty_warnings
-from services.rules.red_flags import STALE_DAYS, PatientData, RedFlag, _cc_text, _code, _date, _num, evaluate
+from services.fhir.values import cc_text, fhir_code
+from services.rules.red_flags import STALE_DAYS, PatientData, RedFlag, _date, _num, evaluate
 from services.rules.templates import recommended_warnings
 
 UNSKIPPABLE = {"mdt.question"}     # OBC-1.1: bez otázky je případ neúplný
@@ -108,12 +109,12 @@ def _text_field(data: PatientData, field_id: str, label: str, pattern: re.Patter
 
 def _radiology_field(data: PatientData, field_id: str, label: str, pattern: str, required_by: str,
                      max_days: int | None = None) -> IntakeField:
-    reports = [r for r in data.radiology() if re.search(pattern, _cc_text(r.get("code")), re.IGNORECASE)]
+    reports = [r for r in data.radiology() if re.search(pattern, cc_text(r.get("code")), re.IGNORECASE)]
     if not reports:
         return IntakeField(field_id, label, "missing", required_by=required_by)
     last = reports[-1]
     age = data.days_before_mdt(_date(last.get("effectiveDateTime")))
-    value = f"{_cc_text(last.get('code'))} ({last['effectiveDateTime'][:10]}"
+    value = f"{cc_text(last.get('code'))} ({last['effectiveDateTime'][:10]}"
     value += f", {age} dní před MDT)" if age is not None else ")"
     status = "missing" if max_days is not None and age is not None and age > max_days else "present"
     return IntakeField(field_id, label, status, value, last["id"], required_by)
@@ -129,7 +130,7 @@ def _common_fields(data: PatientData) -> list[IntakeField]:
                        if e.get("url", "").endswith("/icd-o-3-morfologie")), None)
     histology_note = _note_paragraph(data, r"Histologie")
     if morphology or histology_note:     # text nominace má i grade; jinak morfologie ICD-O-3 z diagnózy
-        value = data.paragraph_text(histology_note) if histology_note else _cc_text(morphology)
+        value = data.paragraph_text(histology_note) if histology_note else cc_text(morphology)
         fields.append(IntakeField("dx.histology", "Histologie a grade", "present", value,
                                   histology_note or data.oncologic[0]["id"], "OBC-1.1"))
     else:
@@ -147,11 +148,11 @@ def _common_fields(data: PatientData) -> list[IntakeField]:
                               str(data.answers(proms_ecog)["samostatnost"]) if proms_ecog else None,
                               proms_ecog["id"] if proms_ecog else None, "OBC-1.3"))
 
-    comorbidities = [c for c in data.conditions if "komorbid" in _cc_text((c.get("category") or [{}])[0]).lower()]
+    comorbidities = [c for c in data.conditions if "komorbid" in cc_text((c.get("category") or [{}])[0]).lower()]
     comorbidity_note = _note_paragraph(data, r"Relevantní komorbidity")
     if comorbidities:
         fields.append(IntakeField("comorbidities", "Komorbidity", "present",
-                                  "; ".join(f"{_code(c.get('code'), 'icd-10')} {_cc_text(c.get('code'))}"
+                                  "; ".join(f"{fhir_code(c.get('code'), 'icd-10')} {cc_text(c.get('code'))}"
                                             for c in comorbidities), comorbidities[0]["id"], "OBC-1.1"))
     else:   # „bez komorbidit“ je platný údaj, když ho uvádí nominace
         fields.append(IntakeField("comorbidities", "Komorbidity", "present" if comorbidity_note else "missing",
@@ -272,7 +273,7 @@ def _colorectal_fields(data: PatientData) -> list[IntakeField]:
                                   data.paragraph_text(flr[-1])[:160] if flr else None,
                                   flr[-1] if flr else None, "KRC-2.1"))
     bevacizumab = [m for m in data.by_type.get("MedicationAdministration", [])
-                   if _code(m.get("medicationCodeableConcept"), "atc").startswith("L01FG01")]
+                   if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith("L01FG01")]
     if bevacizumab:
         last = max(bevacizumab, key=lambda m: m.get("effectiveDateTime", ""))
         fields.append(IntakeField("treatment.bevacizumab", "Poslední dávka bevacizumabu", "present",
@@ -308,7 +309,7 @@ def _lab_warnings(data: PatientData, flagged: set[str]) -> list[IntakeWarning]:
         if o.resource.get("interpretation") is not None or "referenceRange" in o.resource:
             if any(c.get("code") == "laboratory" for cat in o.resource.get("category", [])
                    for c in cat.get("coding", [])):
-                latest[_code(o.resource.get("code"), "loinc.org") or o.text] = o
+                latest[fhir_code(o.resource.get("code"), "loinc.org") or o.text] = o
     warnings = []
     for o in latest.values():
         flags = [c.get("code") for i in o.resource.get("interpretation", []) for c in i.get("coding", [])]
@@ -391,7 +392,7 @@ def intake_prefill(resources: Iterable[dict], skipped_fields: Iterable[str] = ()
 
     ecog = data.by_loinc("ecog")
     care_plans = sorted(data.by_type.get("CarePlan", []), key=lambda c: c.get("created", ""))
-    intent_code = _code((care_plans[-1].get("category") or [{}])[0], "mdt-lecebny-zamer") if care_plans else ""
+    intent_code = fhir_code((care_plans[-1].get("category") or [{}])[0], "mdt-lecebny-zamer") if care_plans else ""
     prefill = {
         "patient_id": data.patient_id,
         "service_request_id": data.request.get("id"),

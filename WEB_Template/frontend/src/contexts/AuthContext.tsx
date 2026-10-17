@@ -7,7 +7,10 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { authApi, type RegisterData, type User } from '@/lib/api';
+import { authApi, refreshSession, type RegisterData, type User } from '@/lib/api';
+
+/** Access cookie platí 15 min: obnovit dřív, ať nevyprší, dokud je aplikace otevřená (T-336). */
+const RENEW_EVERY_MS = 10 * 60_000;
 
 interface AuthState {
   user: User | null;
@@ -36,6 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () =>
       authApi
         .checkStatus()
+        // access cookie mohla vypršet, refresh cookie ale platí 7 dní (T-336)
+        .then(async (status) => (status.authenticated || !(await refreshSession()) ? status : authApi.checkStatus()))
         .then((status) =>
           setState({ user: status.user, isAuthenticated: status.authenticated, isLoading: false }),
         )
@@ -47,6 +52,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void refreshUser();
   }, [refreshUser]);
+
+  // Průběžná obnova přihlášení: přechod mezi stránkami (proxy.ts) ani živý chat (SSE) po 15 min neodpadne (T-336).
+  // Uspaná záložka časovač brzdí, proto obnova i po návratu do okna.
+  useEffect(() => {
+    if (!state.isAuthenticated) return;
+    let last = Date.now();
+    const renew = () => {
+      last = Date.now();
+      void refreshSession();
+    };
+    const timer = setInterval(renew, RENEW_EVERY_MS);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && Date.now() - last >= RENEW_EVERY_MS) renew();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [state.isAuthenticated]);
 
   const login = useCallback(
     async (username: string, password: string) => {

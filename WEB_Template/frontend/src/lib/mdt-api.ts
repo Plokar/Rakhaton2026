@@ -15,6 +15,7 @@ import type {
   Me,
   MdtCase,
   MdtTask,
+  PatientDetail,
   PatientListItem,
   ProcedureCompatibility,
   Readiness,
@@ -42,6 +43,40 @@ export interface GenerationJob {
 
 /** GET /api/mdt/cases/{cid}/brief/ vrací Brief + identifikaci uloženého podkladu. */
 export type StoredBrief = Brief & { brief_id?: number; created_at?: string };
+
+/** Shrnutí pro pacienta (BON-4), `Decision.patient_summary` §8.4. */
+export type PatientSummary = NonNullable<Decision['patient_summary']>;
+
+/** Hodnota z vložené zprávy (BON-7, ARCH §6.3); `source` = znění odstavce, `reasons` jen u neověřených. */
+export interface ImportValue {
+  kind: 'lab' | 'biomarker' | 'ecog' | 'tnm' | 'vital';
+  label: string;
+  value_text: string;
+  value_number?: number | null;
+  unit?: string | null;
+  date?: string | null;
+  paragraph: number;
+  citation: string;
+  source?: string | null;
+  reasons?: string[];
+}
+
+/** POST /api/mdt/patients/{pid}/import/: návrh, nic se nezapisuje. */
+export interface ImportProposal {
+  patient_id: string;
+  document_id: string;
+  title: string;
+  date: string | null;
+  text: string;
+  values: ImportValue[];
+  rejected: ImportValue[];
+}
+
+const fileBody = (name: string, file: Blob) => {
+  const data = new FormData();
+  data.append(name, file);
+  return data;
+};
 
 export const mdtApi = {
   getMe: () => apiFetch<Me>('/api/mdt/me/'),
@@ -113,11 +148,43 @@ export const mdtApi = {
   confirmDecision: (caseId: string) =>
     apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/confirm/`, { method: 'POST' }),
 
+  /** AI zapisovatel (BON-3): nahrávka nebo text přepisu → job → draft závěru s citacemi úseků. */
+  scribe: (caseId: string, input: { audio: File } | { transcript: string }) =>
+    apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/scribe/`, {
+      method: 'POST',
+      body: 'audio' in input ? fileBody('audio', input.audio) : JSON.stringify(input),
+    }),
+
+  /** Shrnutí pro pacienta (BON-4); 404, dokud nevzniklo. */
+  getPatientSummary: (caseId: string) =>
+    apiFetch<PatientSummary>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`),
+
+  /** Spustí shrnutí z potvrzeného závěru (409 bez potvrzení) → job. */
+  generatePatientSummary: (caseId: string) =>
+    apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`, { method: 'POST' }),
+
+  /** Vstup zprávy (BON-7): text nebo PDF → návrh hodnot s citací odstavce, nic se nezapisuje. */
+  proposeImport: (patientId: string, input: { text: string } | { pdf: File }) =>
+    apiFetch<ImportProposal>(`/api/mdt/patients/${encodeURIComponent(patientId)}/import/`, {
+      method: 'POST',
+      body: 'pdf' in input ? fileBody('pdf', input.pdf) : JSON.stringify(input),
+    }),
+
+  /** Potvrzení lékařem: server návrh znovu ověří a zapíše do IRIS s Provenance. */
+  confirmImport: (proposal: ImportProposal) =>
+    apiFetch<{ fhir_written: string[] }>(`/api/mdt/patients/${encodeURIComponent(proposal.patient_id)}/import/confirm/`, {
+      method: 'POST',
+      body: JSON.stringify(proposal),
+    }),
+
   getEvidence: (evidenceId: string) =>
     apiFetch<EvidenceSource>(`/api/evidence/?id=${encodeURIComponent(evidenceId)}`),
 
   /** Pacienti z IRIS (hlavička bez jména a RČ). */
   getPatients: () => apiFetch<PatientListItem[]>('/api/patients/'),
+
+  /** Detail pacienta: diagnózy, komorbidity, TNM v čase, ECOG lékař i pacient. */
+  getPatient: (patientId: string) => apiFetch<PatientDetail>(`/api/patients/${encodeURIComponent(patientId)}/`),
 
   /** Předvyplnění formuláře zařazení: povinné údaje s citacemi a varování (FR-P4, §8.6). */
   getIntake: (patientId: string) =>

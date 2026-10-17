@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -356,7 +356,10 @@ function DetailLayout({
       <PageCrumbs
         items={[
           ...(session ? [{ label: session.title, href: `/dashboard/mdt/${session.id}` }] : []),
-          { label: item?.patient_id ?? brief?.patient_id ?? sources.patientId },
+          {
+            label: item?.patient_id ?? brief?.patient_id ?? sources.patientId,
+            href: isDemo ? undefined : `/dashboard/patients/${encodeURIComponent(sources.patientId)}`,
+          },
         ]}
       />
       <StickyCaseHeader caseKey={caseKey} sources={sources} session={session} item={item} brief={brief} canGenerate={canGenerate} sections={sections} />
@@ -548,6 +551,11 @@ function StickyCaseHeader({
                 <DropdownMenuItem onClick={() => { if (!briefWindow(caseKey)) router.push(`/brief/${caseKey}`); }}>
                   <PanelRightOpen aria-hidden /> Úzké okno vedle PACS
                 </DropdownMenuItem>
+                {!isDemo && (
+                  <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${encodeURIComponent(sources.patientId)}`)}>
+                    <UserRound aria-hidden /> Karta pacienta, vložit zprávu
+                  </DropdownMenuItem>
+                )}
                 {canGenerate && brief && (
                   <DropdownMenuItem onClick={() => void job.start()} disabled={job.running || job.starting}>
                     <RefreshCw aria-hidden /> Přegenerovat podklad

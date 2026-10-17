@@ -30,6 +30,8 @@ import re
 import threading
 import time
 import unicodedata
+import urllib.error
+import urllib.request
 from abc import ABC, abstractmethod
 from typing import Any, Sequence
 
@@ -39,6 +41,8 @@ logger = logging.getLogger(__name__)
 
 # ── Konfigurace (env, výchozí hodnoty podle ARCHITEKTURA §9) ─────────────────
 DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_VERIFIER_MODEL = "gpt-6-astra"
+DEFAULT_OPENAI_BASE_URL = "https://apim-rakathon-q7146n.azure-api.net/openai/v1"
 DEFAULT_EMBEDDING_MODEL = "gemini-embedding-001"
 DEFAULT_EMBEDDING_DIM = 1536
 DEFAULT_TEMPERATURE = 0.2          # ARCHITEKTURA §5.1: teplota 0–0.2
@@ -77,6 +81,10 @@ def _env(name: str, default: str) -> str:
 
 def ai_model() -> str:
     return _env("AI_MODEL", DEFAULT_MODEL)
+
+
+def verifier_model() -> str:
+    return _env("VERIFIER_MODEL", DEFAULT_VERIFIER_MODEL)
 
 
 def ai_model_strong() -> str:
@@ -333,6 +341,99 @@ class MockAIProvider(BaseAIProvider):
                 {"speaker": "předseda", "start": "00:00", "text": "Simulovaný přepis (AI_PROVIDER=mock)."},
             ]}
         return mock_instance(schema)
+
+
+def _strip_fence(text: str) -> str:
+    """Remove a single surrounding Markdown code fence, preserving the JSON inside."""
+    return re.sub(r"\A```(?:json)?\s*\n?(.*?)\n?```\Z", r"\1", text.strip(),
+                  flags=re.IGNORECASE | re.DOTALL).strip()
+
+
+class OpenAICompatProvider(BaseAIProvider):
+    """Generate-only provider for the hackathon OpenAI v1 gateway (api-key auth)."""
+
+    def __init__(self, api_key: str | None = None, base_url: str | None = None, *, opener=None):
+        self.api_key = api_key if api_key is not None else os.environ.get("OPENAI_API_KEY", "")
+        self.base_url = (base_url or _env("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)).rstrip("/")
+        self._opener = opener or urllib.request.urlopen
+
+    @property
+    def provider_name(self) -> str:
+        return "openai"
+
+    def generate(self, prompt, system_prompt="", model=None, temperature=None, max_tokens=None,
+                 response_schema=None):
+        started = time.monotonic()
+        model_name = model or verifier_model()
+        p_hash = prompt_hash(prompt, system_prompt)
+
+        def error(message):
+            return self._error(message, model=model_name, started=started, p_hash=p_hash)
+
+        if not self.api_key:
+            return error("OPENAI_API_KEY není nastaven")
+        # This alias is specific to the team's gateway; other endpoints receive the model verbatim.
+        deployment = ("gpt-6-astra-global" if model_name == DEFAULT_VERIFIER_MODEL
+                      and self.base_url == DEFAULT_OPENAI_BASE_URL else model_name)
+        messages = ([{"role": "system", "content": system_prompt}] if system_prompt else [])
+        messages.append({"role": "user", "content": prompt})
+        body = {"model": deployment, "messages": messages,
+                "temperature": DEFAULT_TEMPERATURE if temperature is None else temperature}
+        if max_tokens is not None:
+            body["max_completion_tokens"] = max_tokens
+        if response_schema is not None:
+            body["response_format"] = {"type": "json_schema", "json_schema": {
+                "name": response_schema.__name__, "strict": False, "schema": response_schema.model_json_schema(),
+            }}
+        for attempt in range(RETRY_ATTEMPTS):
+            try:
+                req = urllib.request.Request(
+                    f"{self.base_url}/chat/completions", data=json.dumps(body).encode("utf-8"), method="POST",
+                    headers={"api-key": self.api_key, "Content-Type": "application/json", "Accept": "application/json"},
+                )
+                with self._opener(req, timeout=float(_env("AI_TIMEOUT_S", str(DEFAULT_TIMEOUT_S)))) as resp:
+                    payload = json.loads(resp.read())
+                choice = payload["choices"][0]
+                if choice.get("finish_reason") == "length":
+                    return error("Výstup modelu byl uříznut (length)")
+                if choice.get("finish_reason") not in (None, "stop") or choice["message"].get("refusal"):
+                    return error("Model odpověď nedokončil nebo odmítl")
+                raw = choice["message"].get("content")
+                if not isinstance(raw, str) or not raw.strip():
+                    return error("Model nevrátil text")
+                text = _strip_fence(raw)
+                data = _validate(response_schema, json.loads(text)) if response_schema else None
+                usage = payload.get("usage") or {}
+                return self._success(text=text, data=data, model=model_name,
+                                     tokens_in=usage.get("prompt_tokens") or 0,
+                                     tokens_out=usage.get("completion_tokens") or 0,
+                                     tokens_total=usage.get("total_tokens"), started=started, p_hash=p_hash)
+            except urllib.error.HTTPError as exc:
+                code = exc.code
+                exc.close()
+                if attempt == RETRY_ATTEMPTS - 1:
+                    return error(f"OpenAI gateway HTTP {code}")
+                if code == 400 and "temperature" in body:
+                    body.pop("temperature")
+                elif code == 400 and body.get("response_format", {}).get("type") == "json_schema":
+                    schema = body["response_format"]["json_schema"]["schema"]
+                    body["response_format"] = {"type": "json_object"}
+                    messages.append({"role": "system", "content": "Vrať pouze JSON podle schématu: " + json.dumps(schema)})
+                elif code in (408, 429) or 500 <= code <= 599:
+                    time.sleep(2 ** attempt)
+                else:
+                    return error(f"OpenAI gateway HTTP {code}")
+            except Exception as exc:
+                # Never put the HTTP body, credentials or patient prompt into an error/log.
+                return error(f"OpenAI gateway: {type(exc).__name__}")
+        return error("OpenAI gateway: vyčerpány pokusy")
+
+    def embed(self, texts, task_type=TASK_RETRIEVAL_DOCUMENT, model=None, dim=None):
+        raise AIProviderError("OpenAICompatProvider nepodporuje embed")
+
+    def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
+        return self._error("OpenAICompatProvider nepodporuje transcribe", model=model or verifier_model(),
+                           started=time.monotonic(), p_hash=hashlib.sha256(audio).hexdigest())
 
 
 class GeminiProvider(BaseAIProvider):
@@ -625,3 +726,19 @@ def provider_for_patient_id(patient_id: str) -> BaseAIProvider:
     except Exception:
         resources = []
     return provider_for_patient(resources)
+
+
+def get_verifier_provider(resources) -> BaseAIProvider | None:
+    """Separate verifier factory; primary AI_PROVIDER remains mock/gemini. Enforces D-021."""
+    chosen = _env("VERIFIER_PROVIDER", "openai" if os.environ.get("OPENAI_API_KEY") else "off").strip().lower()
+    if chosen not in ("off", "mock", "openai", "gemini"):
+        raise ValueError(f"Neznámý verifier provider {chosen!r}")
+    if chosen == "off" or not (is_synthetic_patient(resources) or real_patient_data_allowed()):
+        return None
+    if chosen == "mock":
+        return MockAIProvider()
+    key = "OPENAI_API_KEY" if chosen == "openai" else "GEMINI_API_KEY"
+    if not os.environ.get(key):
+        logger.warning("VERIFIER_PROVIDER=%s, ale %s není nastaven: kontrola vypnuta", chosen, key)
+        return None
+    return OpenAICompatProvider() if chosen == "openai" else GeminiProvider()

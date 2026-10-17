@@ -95,10 +95,20 @@ export interface BriefHeader {
   alerts: Claim[];
 }
 
+export interface BriefVerifier {
+  status: "ok" | "partial" | "error" | "off";
+  model: string;
+  checked: number;
+  rejected: number;
+  unchecked: number;
+  issues: { claim_id: string; verdict: "unsupported" | "uncertain" | "unchecked"; issue: string }[];
+}
+
 export interface Brief {
   case_id: string;
   /** "P03" */
   patient_id: string;
+  verifier?: BriefVerifier | null;
   /** ISO 8601 */
   generated_at: string;
   /** "gemini-3.8-flash" */

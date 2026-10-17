@@ -717,10 +717,15 @@ Každé tvrzení (`claim`) z LLM projde kontrolami:
 4. **Sémantická podobnost (IRIS Vector Search):** embedding tvrzení (`FACT_VERIFICATION`) se porovná s embeddingem citovaného odstavce přes `VECTOR_COSINE`. Pod prahem je výsledek `unverified`. Práh nastavit podle evalu, výchozí 0,55.
 5. **Chybějící údaje:** deterministický checklist pro sekci (OBC-1.1 + povinné biomarkery podle diagnózy, viz [§5.4](#54-red-flags)). Co nemá evidenci nebo má hodnotu „nevyšetřeno“, doplní se jako `kind: "missing"`, i když ho LLM nezmínil.
 6. **UI:** `unverified` tvrzení se zobrazí s varováním (nebo se skryjí; přepínač `hide_unverified`). Cíl pro demo je **0 neověřených tvrzení**.
+7. **Druhá AI (T-331):** volitelný ověřovatel `gpt-6-astra` kontroluje pouze `kind=claim`, `verification=verified` bez `_computed` v souhrnu, anamnéze, pohledech rolí a `decision_support.treatment_options[].rationale`. Verdikty `unsupported` a `uncertain` mění tvrzení na `unverified`; nikdy neopravují text ani barvu semaforu. Výpadek nebo chybějící verdikt ponechá původní stav a zvýší `unchecked`.
 
 Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-evaluace)) a do pitche.
 
-**Implementace (T-106, T-213):**
+**Implementace (T-106, T-213, T-331):**
+
+- `services/ai/verifier.py:cross_check` posílá paralelně dávky nejvýše 20 tvrzení a plné citované zdroje z `grounding.source_text`. Každá dávka se audituje jako `brief.verifier`. `Brief.verifier` uvádí model, počty a problémy; `checked` je počet jednoznačně vrácených verdiktů, `rejected` zahrnuje unsupported i uncertain, `unchecked` jsou způsobilá tvrzení bez verdiktu (i při off). `ok` = všechny kontroly dokončené (může obsahovat zamítnutí), `partial` = část bez verdiktu, `error` = žádný použitelný verdikt, `off` = vypnuto. Interní klíče se odstraní a statistiky spočtou až poté.
+- `OpenAICompatProvider` používá urllib, `/chat/completions`, hlavičku `api-key`, JSON schema (`strict: false`), fallback při HTTP 400 bez temperature a potom JSON object se schématem v promptu; 408/429/5xx nejvýše tři HTTP pokusy celkem (včetně fallbacků). Podporuje pouze generate. `get_ai_provider` zůstává mock/gemini. Gateway mapuje výchozí model `gpt-6-astra` na deployment `gpt-6-astra-global`.
+- Ověřovatel respektuje D-021: bez syntetického tagu a bez `AI_REAL_PATIENT_DATA=True` se vypne. Global deployment hackathonu používat **jen pro syntetická data**; přepínač pro skutečná data není schválení tohoto endpointu. Pro skutečná data je nutný samostatně schválený endpoint/tier a umístění dat.
 
 - `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí `0.55`); chybějící vektor nebo nedostupné IRIS znamená `unverified`. Bod 4 běží jen u tvrzení, jejichž **všechny** citace mají vektor (odstavce `#n`, textové zprávy `DocumentReference` / `DiagnosticReport` / `Composition` / `ServiceRequest`, pasáže guidelines, kritéria studií). Strukturovaná data (`bm`, `tnm`, `dg`, `proc`, ECOG, labs) vektor nemají a stačí jim body 1–3 (Q23). Bod 4 se přeskočí i u tvrzení, která sestavil kód (`_computed`, např. RECIST), a odvozená čísla (`_derived`, např. % změny SLD) se v bodě 2 nekontrolují. Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
 - `services/ai/brief.py:generate_brief(case, config, progress)` je generátor pro joby z T-107.
@@ -1314,6 +1319,12 @@ interface Brief {
   sections: BriefSection[];                     // textové sekce v pořadí podle config
   red_flags: RedFlag[];
   decision_support?: DecisionSupport;
+  verifier?: {
+    status: "ok" | "partial" | "error" | "off";
+    model: string;
+    checked: number; rejected: number; unchecked: number;
+    issues: { claim_id: string; verdict: "unsupported" | "uncertain" | "unchecked"; issue: string }[];
+  } | null;                                    // starší podklady pole nemají
   stats: { claims_total: number; claims_unverified: number; missing_total: number };   // ze všech Claim v podkladu (hlavička, sekce i B2), compute_stats()
 }
 
@@ -1712,11 +1723,15 @@ interface BoardRecord extends MdtSession {      // GET /api/mdt/records/, /api/m
 | `IRIS_HOST` / `IRIS_PORT` | backend | `iris` / `1972` |
 | `IRIS_NAMESPACE` | backend | `FHIRSERVER` |
 | `IRIS_USER` / `IRIS_PASSWORD` | backend | dev `SuperUser` / `SYS`, **na VPS jiné** |
-| `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4` |
+| `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4`; ACI `http://<PUBLIC_IP>:52773/fhir/r4`, postup [AZURE_IRIS.md](docs/AZURE_IRIS.md) |
 | `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1`; bez proměnné ho `ingest.dataset_dir()` najde v checkoutu repa (CI, testy) |
 | `AI_PROVIDER` | backend | `gemini` (prod) / `mock` (testy, CI) |
 | `GEMINI_API_KEY` | backend | Google AI Studio (free tier jen nad syntetickým datasetem, D-021; jinak placený tier); nikdy do gitu ani do frontendu |
 | `AI_REAL_PATIENT_DATA` | backend | `False` (výchozí): data pacientů bez tagu `fiktivni-data` do LLM ani embeddingů nejdou (D-021, `provider_for_patient`). `True` jen s placeným tierem / Vertex AI EU |
+| `VERIFIER_PROVIDER` | backend | `off` / `mock` / `openai` / `gemini`; bez nastavení `openai` při OPENAI_API_KEY, jinak `off`; chybějící klíč vypne kontrolu |
+| `VERIFIER_MODEL` | backend | `gpt-6-astra` (gateway deployment `gpt-6-astra-global`); pro gemini nastavit Gemini model |
+| `OPENAI_BASE_URL` | backend | `https://apim-rakathon-q7146n.azure-api.net/openai/v1` (syntetická data; Global). Alternativní EU deploymenty gateway: `gpt-6-luna`, `gpt-6.1-sol` |
+| `OPENAI_API_KEY` | backend | prázdné v šabloně; klíč týmu pouze lokálně v ignorovaném `WEB_Template/.env`, hlavička `api-key`, nikdy do gitu ani frontendu |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_MODEL_STRONG` | backend | `gemini-4-argon` (volitelně, pro porovnání a těžké sekce) |
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |

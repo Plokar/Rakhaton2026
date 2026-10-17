@@ -30,7 +30,8 @@ from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.red_flags_llm import detect_llm_red_flags
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import load_roles, role_section
-from services.ai_service import BaseAIProvider, provider_for_patient
+from services.ai.verifier import cross_check
+from services.ai_service import BaseAIProvider, get_verifier_provider, provider_for_patient
 from services.fhir.values import cc_text, fhir_code, ref_id
 from services.rules import red_flags as rules
 from services.rules.alerts import header_alerts
@@ -59,6 +60,7 @@ DEFAULT_CONFIG = {
 }
 TITLES = {"summary": "Souhrn případu", "timeline": "Časová osa", "anamnesis": "Anamnéza",
           "modalities": "Léčebné metody a odborníci"}
+LLM_SECTIONS = {"summary", "anamnesis", "role_views"}
 
 
 # ── Výstup LLM (response_schema) ──────────────────────────────────────────────
@@ -89,7 +91,8 @@ def generate_brief(case, config: dict, progress: Callable[[int], None], *,
         log_call = _llm_call_log
     return build_brief(
         case.patient_fhir_id, resources, studies=studies, guidelines=passages, config=config,
-        provider=provider, case_id=str(case.pk), skipped_fields=getattr(case, "skipped_fields", None) or [],
+        provider=provider, verifier=get_verifier_provider(resources), case_id=str(case.pk),
+        skipped_fields=getattr(case, "skipped_fields", None) or [],
         intent_letter=getattr(case, "intent", None), progress=progress, log_call=log_call, notices=notices,
     )
 
@@ -117,6 +120,7 @@ def guideline_notices(sets: Iterable[str], passages: Iterable, resources: list[d
 
 def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dict] = (), guidelines: Iterable = (),
                 config: dict | None = None, provider: BaseAIProvider | None = None, case_id: str = "",
+                verifier: BaseAIProvider | None = None,
                 skipped_fields: Iterable[str] = (), intent_letter: str | None = None,
                 progress: Callable[[int], None] = lambda _: None,
                 log_call: Callable[[str, dict], Any] = lambda purpose, result: None,
@@ -159,7 +163,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         if not section.get("enabled", True):
             continue
         if section["id"] == "role_views":
-            sections += [{**rs, "items": [_public(c) for c in verify_claims(rs["items"], context)]}
+            sections += [{**rs, "items": verify_claims(rs["items"], context)}
                          for rs in role_sections]
             continue
         if section["id"] not in TITLES:
@@ -173,7 +177,16 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         else:
             items = _timeline_items(data, context)
         sections.append({"id": section["id"], "title": TITLES[section["id"]], "ai_generated": True,
-                         "items": [_public(c) for c in verify_claims(items, context)]})
+                         "items": verify_claims(items, context)})
+    to_check = [c for s in sections if s["id"] in LLM_SECTIONS for c in s["items"]]
+    if decision_support:
+        to_check += [c for option in decision_support["treatment_options"] for c in option["rationale"]]
+    verifier_result = cross_check(to_check, context, verifier, log_call)
+    for section in sections:
+        section["items"] = [_public(c) for c in section["items"]]
+    if decision_support:
+        for option in decision_support["treatment_options"]:
+            option["rationale"] = [_public(c) for c in option["rationale"]]
     progress(90)
 
     header = _header(data, context, intent_letter)
@@ -194,6 +207,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         "sections": sections,
         "red_flags": red_flags,
         "decision_support": decision_support,
+        "verifier": verifier_result,
         "stats": {
             "claims_total": sum(1 for c in claims if c["kind"] == "claim"),
             "claims_unverified": sum(1 for c in claims if c["kind"] == "claim" and c["verification"] == "unverified"),

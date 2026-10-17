@@ -362,6 +362,21 @@ class BriefStats(BaseModel):
     missing_total: int
 
 
+class VerifierIssue(BaseModel):
+    claim_id: str
+    verdict: Literal["unsupported", "uncertain", "unchecked"]
+    issue: str
+
+
+class BriefVerifier(BaseModel):
+    status: Literal["ok", "partial", "error", "off"]
+    model: str
+    checked: int = Field(ge=0)
+    rejected: int = Field(ge=0)
+    unchecked: int = Field(ge=0)
+    issues: list[VerifierIssue]
+
+
 class Brief(BaseModel):
     case_id: str
     patient_id: str = Field(description='"P03"')
@@ -373,6 +388,7 @@ class Brief(BaseModel):
     sections: list[BriefSection] = Field(description="V pořadí podle config")
     red_flags: list[RedFlag]
     decision_support: DecisionSupport | None = None
+    verifier: BriefVerifier | None = None
     stats: BriefStats
 
 

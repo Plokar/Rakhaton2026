@@ -92,12 +92,12 @@ services:
       ONKO_GUIDELINES_DIR: /data/dataset/guidelines
       ONKO_DATASET_DIR: /data/dataset
       MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
-      IRIS_HOST: iris
-      IRIS_PORT: "1972"
-      IRIS_NAMESPACE: FHIRSERVER
+      IRIS_HOST: ${IRIS_HOST:-iris}
+      IRIS_PORT: "${IRIS_PORT:-1972}"
+      IRIS_NAMESPACE: ${IRIS_NAMESPACE:-FHIRSERVER}
       IRIS_USER: ${IRIS_USER:-SuperUser}
       IRIS_PASSWORD: ${IRIS_PASSWORD:-SYS}
-      FHIR_BASE_URL: http://iris:52773/fhir/r4
+      FHIR_BASE_URL: ${FHIR_BASE_URL:-http://iris:52773/fhir/r4}
     ports:
       - "8000:8000"   # Přímý přístup pro debugging
     depends_on:

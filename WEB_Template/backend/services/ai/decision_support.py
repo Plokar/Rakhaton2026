@@ -12,7 +12,6 @@ from services.ai.abbreviations import prompt_rules
 from services.ai.prompt_config import prompt_settings
 from services.ai_service import BaseAIProvider
 from services.rules.compatibility import Facts
-from services.rules.compatibility import load_catalog
 from services.rules.trials import evaluate_criterion, overall
 
 class OptionClaim(BaseModel):
@@ -64,11 +63,9 @@ def _treatment_options(context: PatientContext, compatibility: list[dict], provi
         return []
     draft = None
     if not provider.is_mock:
-        catalog = load_catalog()
-        menu = [{"procedure_id": pid, "title": catalog_item["title"],
-                 "guidelines": catalog_item.get("guidelines", [])}
-                for pid, catalog_item in ((p["id"], next((x for x in catalog["procedures"] if x["id"] == p["id"]), {}))
-                                          for p in compatibility)]
+        # Menu z výsledků semaforu (katalog i báze data/onko, T-316), ne jen z katalogu
+        menu = [{"procedure_id": p["id"], "title": p["title"], "guidelines": p.get("guideline_citations", [])}
+                for p in compatibility]
         prompt = context.render() + "\n## Možnosti v katalogu\n" + repr(menu)
         system = f"{OPTIONS_PROMPT}\n\n{prompt_rules()}\n\n{prompt_settings(config, 'decision_support')}"
         result = provider.generate(prompt, system_prompt=system, response_schema=OptionsDraft, temperature=0.1)

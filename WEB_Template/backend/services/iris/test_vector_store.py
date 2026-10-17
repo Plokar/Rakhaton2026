@@ -146,15 +146,15 @@ def test_ingest_command_builds_vectors_from_iris(fake_fhir, fake_iris, dataset_r
     text = out.getvalue()
     from_files = len(indexing.evidence_chunks('P03', ingest.load_patient(dataset_root, 'P03')))
     assert from_files == 85 and f'MDT.EvidenceChunk P03: {from_files} odstavců' in text    # čteno z FHIR = soubory
-    assert "'KRC': 9" in text and "'EXT': 13" in text and 'MDT.TrialCriterion:' in text and 'AI_PROVIDER=mock' in text
+    assert "'KRC': 9" in text and "'EXT': 106" in text and 'MDT.TrialCriterion:' in text and 'AI_PROVIDER=mock' in text
     assert {r['PatientId'] for r in fake_iris.rows('MDT.EvidenceChunk')} == {'P03'}
-    assert len(fake_iris.rows('MDT.GuidelineChunk')) == 42 + 13 and fake_iris.open_connections == 0
+    assert len(fake_iris.rows('MDT.GuidelineChunk')) == 42 + 106 and fake_iris.open_connections == 0
 
 
 def test_ingest_command_dry_run_counts_vectors_offline(dataset_root):
     out = StringIO()
     call_command('ingest_dataset', '--dry-run', dataset_dir=str(dataset_root), stdout=out)
-    assert '= 665, guidelines 55 (z toho EXT 13)' in out.getvalue()
+    assert '= 665, guidelines 148 (z toho EXT 106)' in out.getvalue()
 
 
 def test_search_iris_command(indexed):

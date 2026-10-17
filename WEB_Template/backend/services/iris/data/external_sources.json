@@ -8,7 +8,9 @@
       "url": "https://www.ema.europa.eu/en/documents/referral/fluorouracil-and-fluorouracil-related-substances-article-31-referral-new-testing-and-treatment-recommendations-fluorouracil-capecitabine-tegafur-and-flucytosine_en.pdf",
       "region": "EU",
       "icd_prefixes": "*",
-      "rules": ["VS-KRC-09"],
+      "rules": [
+        "VS-KRC-09"
+      ],
       "verified": "ověřeno 16. 10. 2026",
       "text": "5-FU, kapecitabin: kontrola deficitu DPD. Normální aktivita DPD → bez omezení. Částečný deficit → snížit úvodní dávku. Úplný deficit → nepodávat."
     },
@@ -19,7 +21,9 @@
       "url": "https://ACR.org/-/media/ACR/Files/RADS/Lung-RADS/Lung-RADS-2022-Summary-_Final.pdf",
       "region": "US",
       "icd_prefixes": "C34",
-      "rules": ["BON-6"],
+      "rules": [
+        "BON-6"
+      ],
       "verified": "⚠ kategorie ověřit proti PDF ACR",
       "text": "Lung-RADS platí jen pro nález ze screeningového nízkodávkového CT plic; u jiného CT nelze použít. Solidní uzel: 2 = < 6 mm · 3 = 6 až < 8 mm · 4A = 8 až < 15 mm · 4B = ≥ 15 mm · 4X = přídatné suspektní znaky."
     },
@@ -30,7 +34,9 @@
       "url": "https://consultqd.clevelandclinic.org/incidental-pulmonary-nodules-a-summary-of-the-2017-fleischner-society-guidelines",
       "region": "INT",
       "icd_prefixes": "C34",
-      "rules": ["BON-6"],
+      "rules": [
+        "BON-6"
+      ],
       "verified": "⚠ tabulka velikostí a intervalů zatím není převzatá (doplnit z originální publikace)",
       "text": "Fleischner 2017 platí jen pro náhodně zjištěný plicní uzel u dospělého ≥ 35 let bez známého nádoru, bez imunosuprese a mimo screening. U pacienta se známým nádorem se nevztahuje. Tabulka velikostí a intervalů kontrol zatím není převzatá, do té doby nelze posoudit."
     },
@@ -41,7 +47,9 @@
       "url": "https://www.mdcalc.com/calc/10426/g8-geriatric-screening-tool",
       "region": "INT",
       "icd_prefixes": "*",
-      "rules": ["VS-OBC-03"],
+      "rules": [
+        "VS-OBC-03"
+      ],
       "verified": "ověřeno 16. 10. 2026",
       "text": "Intenzivní léčba u věku ≥ 70 let: G8 > 14 → bez omezení; G8 ≤ 14 → komplexní geriatrické hodnocení. Povinnost screeningu: OBC-2.2."
     },
@@ -52,7 +60,9 @@
       "url": "https://link.springer.com/article/10.1007/s40137-016-0158-x",
       "region": "INT",
       "icd_prefixes": "C34",
-      "rules": ["VS-PLI-02"],
+      "rules": [
+        "VS-PLI-02"
+      ],
       "verified": "⚠ sekundární souhrn, zdroje se liší; ověřit v ERS/ESTS 2025",
       "text": "Lobektomie, zátěžová spiroergometrie: VO2max > 20 ml/kg/min → nízké riziko; 10–20 ml/kg/min → střední riziko; < 10 ml/kg/min → vysoké riziko. Zátěžový test je indikovaný při ppoFEV1 nebo ppoDLCO < 60 % (PLI-3.1)."
     },
@@ -63,7 +73,9 @@
       "url": "https://jamanetwork.com/journals/jamasurgery/fullarticle/2825366",
       "region": "INT",
       "icd_prefixes": "*",
-      "rules": ["VS-CHIR-01"],
+      "rules": [
+        "VS-CHIR-01"
+      ],
       "verified": "⚠ sekundární souhrny",
       "text": "Velká operace: infarkt myokardu před > 60 dny a stent před > 6 měsíci → bez omezení. Lékový stent ≤ 6 měsíců → pozor. Infarkt myokardu ≤ 60 dní → vysoké riziko."
     },
@@ -74,7 +86,9 @@
       "url": "https://www.healio.com/news/hematology-oncology/20120325/panel-proposes-consensus-definition-of-cisplatin-ineligibility-criteria",
       "region": "INT",
       "icd_prefixes": "*",
-      "rules": ["VS-PLI-11"],
+      "rules": [
+        "VS-PLI-11"
+      ],
       "verified": "⚠ kritéria vznikla u uroteliálního karcinomu, pro plíce potvrdí lékař",
       "text": "Cisplatina: CrCl ≥ 60 ml/min a žádné další kritérium → bez omezení. CrCl < 60 ml/min, neuropatie ≥ G2, ztráta sluchu ≥ G2, ECOG 2 nebo srdeční selhání NYHA III → zvážit karboplatinu."
     },
@@ -85,7 +99,9 @@
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6045736",
       "region": "INT",
       "icd_prefixes": "*",
-      "rules": ["VS-PLI-08"],
+      "rules": [
+        "VS-PLI-08"
+      ],
       "verified": "⚠ k ověření lékařem",
       "text": "Imunoterapie: autoimunitní onemocnění se systémovou léčbou nebo transplantace → pozor. Takoví pacienti byli vyřazeni z registračních studií a hrozí vzplanutí autoimunity."
     },
@@ -96,7 +112,10 @@
       "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/125085s337lbl.pdf",
       "region": "US",
       "icd_prefixes": "*",
-      "rules": ["VS-KRC-08", "VS-CHIR-03"],
+      "rules": [
+        "VS-KRC-08",
+        "VS-CHIR-03"
+      ],
       "verified": "ověřeno 16. 10. 2026",
       "text": "Bevacizumab: krevní tlak pod kontrolou, bez arteriální tromboembolie, proteinurie < 2 g/24 h → bez omezení. Arteriální tromboembolie nebo infarkt myokardu v anamnéze → opatrnost. Nekontrolovaná hypertenze → nezahajovat; proteinurie ≥ 2 g/24 h → přerušit; nefrotický syndrom → ukončit. Interval před operací uvádí americký příbalový text 28 dní; dodané guidelines jsou přísnější (≥ 6 týdnů, KRC-2.3)."
     },
@@ -107,7 +126,10 @@
       "url": "https://pro.novartis.com/uk-en/sites/pro_novartis_com_uk/files/2025-01/kisqali-pi.pdf",
       "region": "UK",
       "icd_prefixes": "C50",
-      "rules": ["VS-PRS-05", "VS-PRS-09"],
+      "rules": [
+        "VS-PRS-05",
+        "VS-PRS-09"
+      ],
       "verified": "ověřeno 16. 10. 2026",
       "text": "Ribociklib: QTcF < 450 ms → bez omezení; QTcF ≥ 450 ms → nezahajovat; QTcF > 480 ms → přerušit. Silné inhibitory CYP3A (např. grapefruit) a induktory (např. třezalka) při léčbě → vyřešit."
     },
@@ -118,7 +140,10 @@
       "url": "https://www.medicines.org.uk/emc/product/12754/smpc/print",
       "region": "UK",
       "icd_prefixes": "*",
-      "rules": ["VS-PRS-12", "VS-OBC-08"],
+      "rules": [
+        "VS-PRS-12",
+        "VS-OBC-08"
+      ],
       "verified": "ověřeno 16. 10. 2026",
       "text": "Kyselina zoledronová: CrCl ≥ 60 ml/min → 4 mg; CrCl 30–59 ml/min → snížit dávku na 3,0–3,5 mg; CrCl < 30 ml/min → nedoporučeno."
     },
@@ -129,7 +154,9 @@
       "url": "https://tga.gov.au/sites/default/files/auspar-alpelisib-200820-pi.pdf",
       "region": "AU",
       "icd_prefixes": "C50",
-      "rules": ["VS-PRS-06"],
+      "rules": [
+        "VS-PRS-06"
+      ],
       "verified": "⚠ k ověření lékařem",
       "text": "Alpelisib (PI3K inhibitor): bez diabetu a s glykémií v normě → bez omezení. Diabetes → upravit glykémii před zahájením. Nekompenzovaný diabetes 2. typu nebo diabetes 1. typu → bezpečnost nestanovena."
     },
@@ -140,9 +167,1224 @@
       "url": "https://pubmed.ncbi.nlm.nih.gov/35430509/",
       "region": "INT",
       "icd_prefixes": "C50",
-      "rules": ["VS-PRS-02"],
+      "rules": [
+        "VS-PRS-02"
+      ],
       "verified": "⚠ přesné znění SmPC ověřit",
       "text": "Trastuzumab deruxtekan (T-DXd): intersticiální plicní onemocnění (ILD) nebo pneumonitida v anamnéze → pozor, riziko ILD hodnotit před léčbou (PRS-2.3; vyřazení ve studii RKT-02/V1)."
+    },
+    {
+      "evidence_id": "EXT-ESMO-NSCLC-EARLY-2017",
+      "title": "ESMO: Early and locally advanced NSCLC (Postmus a kol., Ann Oncol 2017)",
+      "source": "ESMO: Early and locally advanced NSCLC (Postmus a kol., Ann Oncol 2017)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-PLI-13"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Early and locally advanced NSCLC (Postmus a kol., Ann Oncol 2017). Zdroj prahu pravidel semaforu z báze data/onko: VS-PLI-13. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-NSCLC-2023",
+      "title": "ESMO: Metastatic NSCLC, oncogene-addicted a non-oncogene-addicted (Hendriks a kol., Ann Oncol 2023)",
+      "source": "ESMO: Metastatic NSCLC, oncogene-addicted a non-oncogene-addicted (Hendriks a kol., Ann Oncol 2023)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Metastatic NSCLC, oncogene-addicted a non-oncogene-addicted (Hendriks a kol., Ann Oncol 2023). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-NSCLC-LG",
+      "title": "ESMO Living Guideline NSCLC (průběžně aktualizovaná)",
+      "source": "ESMO Living Guideline NSCLC (průběžně aktualizovaná)",
+      "url": "https://www.esmo.org/living-guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO Living Guideline NSCLC (průběžně aktualizovaná). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-SCLC-2021",
+      "title": "ESMO: Small-cell lung cancer (Dingemans a kol., Ann Oncol 2021)",
+      "source": "ESMO: Small-cell lung cancer (Dingemans a kol., Ann Oncol 2021)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Small-cell lung cancer (Dingemans a kol., Ann Oncol 2021). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-EBC-2024",
+      "title": "ESMO: Early breast cancer (Loibl a kol., Ann Oncol 2024)",
+      "source": "ESMO: Early breast cancer (Loibl a kol., Ann Oncol 2024)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-PRS-16"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Early breast cancer (Loibl a kol., Ann Oncol 2024). Zdroj prahu pravidel semaforu z báze data/onko: VS-PRS-16. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-MBC-LG",
+      "title": "ESMO Metastatic Breast Cancer Living Guideline (Gennari a kol., Ann Oncol 2021 + aktualizace)",
+      "source": "ESMO Metastatic Breast Cancer Living Guideline (Gennari a kol., Ann Oncol 2021 + aktualizace)",
+      "url": "https://www.esmo.org/living-guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO Metastatic Breast Cancer Living Guideline (Gennari a kol., Ann Oncol 2021 + aktualizace). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-COLON-2020",
+      "title": "ESMO: Localised colon cancer (Argilés a kol., Ann Oncol 2020)",
+      "source": "ESMO: Localised colon cancer (Argilés a kol., Ann Oncol 2020)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Localised colon cancer (Argilés a kol., Ann Oncol 2020). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-RECTUM-2017",
+      "title": "ESMO: Rectal cancer (Glynne-Jones a kol., Ann Oncol 2017)",
+      "source": "ESMO: Rectal cancer (Glynne-Jones a kol., Ann Oncol 2017)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Rectal cancer (Glynne-Jones a kol., Ann Oncol 2017). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-MCRC-2023",
+      "title": "ESMO: Metastatic colorectal cancer (Cervantes a kol., Ann Oncol 2023)",
+      "source": "ESMO: Metastatic colorectal cancer (Cervantes a kol., Ann Oncol 2023)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-13"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Metastatic colorectal cancer (Cervantes a kol., Ann Oncol 2023). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-13. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-GASTRIC-2022",
+      "title": "ESMO: Gastric cancer (Lordick a kol., Ann Oncol 2022)",
+      "source": "ESMO: Gastric cancer (Lordick a kol., Ann Oncol 2022)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Gastric cancer (Lordick a kol., Ann Oncol 2022). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-OESO-2022",
+      "title": "ESMO: Oesophageal cancer (Obermannová a kol., Ann Oncol 2022)",
+      "source": "ESMO: Oesophageal cancer (Obermannová a kol., Ann Oncol 2022)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Oesophageal cancer (Obermannová a kol., Ann Oncol 2022). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-PANC-2023",
+      "title": "ESMO: Pancreatic cancer (Conroy a kol., Ann Oncol 2023)",
+      "source": "ESMO: Pancreatic cancer (Conroy a kol., Ann Oncol 2023)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-PAN-01"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Pancreatic cancer (Conroy a kol., Ann Oncol 2023). Zdroj prahu pravidel semaforu z báze data/onko: VS-PAN-01. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-OVARY-2023",
+      "title": "ESMO: Newly diagnosed and relapsed epithelial ovarian cancer (González-Martín a kol., Ann Oncol 2023)",
+      "source": "ESMO: Newly diagnosed and relapsed epithelial ovarian cancer (González-Martín a kol., Ann Oncol 2023)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Newly diagnosed and relapsed epithelial ovarian cancer (González-Martín a kol., Ann Oncol 2023). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-ENDOMETRIUM-2022",
+      "title": "ESMO: Endometrial cancer (Oaknin a kol., Ann Oncol 2022)",
+      "source": "ESMO: Endometrial cancer (Oaknin a kol., Ann Oncol 2022)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Endometrial cancer (Oaknin a kol., Ann Oncol 2022). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-MELANOMA-2019",
+      "title": "ESMO: Cutaneous melanoma (Michielin a kol., Ann Oncol 2019)",
+      "source": "ESMO: Cutaneous melanoma (Michielin a kol., Ann Oncol 2019)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Cutaneous melanoma (Michielin a kol., Ann Oncol 2019). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-HN-2020",
+      "title": "EHNS–ESMO–ESTRO: SCC dutiny ústní, hrtanu, orofaryngu a hypofaryngu (Machiels a kol., Ann Oncol 2020)",
+      "source": "EHNS–ESMO–ESTRO: SCC dutiny ústní, hrtanu, orofaryngu a hypofaryngu (Machiels a kol., Ann Oncol 2020)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-15"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EHNS–ESMO–ESTRO: SCC dutiny ústní, hrtanu, orofaryngu a hypofaryngu (Machiels a kol., Ann Oncol 2020). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-15. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-BONE-2020",
+      "title": "ESMO: Bone health in cancer (Coleman a kol., Ann Oncol 2020)",
+      "source": "ESMO: Bone health in cancer (Coleman a kol., Ann Oncol 2020)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HT-02"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Bone health in cancer (Coleman a kol., Ann Oncol 2020). Zdroj prahu pravidel semaforu z báze data/onko: VS-HT-02. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-PREG-2013",
+      "title": "ESMO: Cancer, pregnancy and fertility (Peccatori a kol., Ann Oncol 2013)",
+      "source": "ESMO: Cancer, pregnancy and fertility (Peccatori a kol., Ann Oncol 2013)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-14",
+        "VS-OBC-15"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Cancer, pregnancy and fertility (Peccatori a kol., Ann Oncol 2013). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-14, VS-OBC-15. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-FERT-2020",
+      "title": "ESMO: Fertility preservation and post-treatment pregnancies (Lambertini a kol., Ann Oncol 2020)",
+      "source": "ESMO: Fertility preservation and post-treatment pregnancies (Lambertini a kol., Ann Oncol 2020)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-16"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Fertility preservation and post-treatment pregnancies (Lambertini a kol., Ann Oncol 2020). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-16. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESMO-IRAE-2022",
+      "title": "ESMO: Management of toxicities from immunotherapy (Haanen a kol., Ann Oncol 2022)",
+      "source": "ESMO: Management of toxicities from immunotherapy (Haanen a kol., Ann Oncol 2022)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-IO-01",
+        "VS-IO-02",
+        "VS-IO-04",
+        "VS-IO-06"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESMO: Management of toxicities from immunotherapy (Haanen a kol., Ann Oncol 2022). Zdroj prahu pravidel semaforu z báze data/onko: VS-IO-01, VS-IO-02, VS-IO-04, VS-IO-06. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EANO-ESMO-BM-2021",
+      "title": "EANO–ESMO: Brain metastasis from solid tumours (Le Rhun a kol., Ann Oncol 2021)",
+      "source": "EANO–ESMO: Brain metastasis from solid tumours (Le Rhun a kol., Ann Oncol 2021)",
+      "url": "https://www.esmo.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-08",
+        "VS-RT-09"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EANO–ESMO: Brain metastasis from solid tumours (Le Rhun a kol., Ann Oncol 2021). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-08, VS-RT-09. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EANO-GLIOMA-2021",
+      "title": "EANO: Diffuse gliomas of adulthood (Weller a kol., Nat Rev Clin Oncol 2021)",
+      "source": "EANO: Diffuse gliomas of adulthood (Weller a kol., Nat Rev Clin Oncol 2021) · Nat Rev Clin Oncol 2021",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-GBM-01"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EANO: Diffuse gliomas of adulthood (Weller a kol., Nat Rev Clin Oncol 2021). Zdroj prahu pravidel semaforu z báze data/onko: VS-GBM-01. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESGO-CERVIX-2023",
+      "title": "ESGO/ESTRO/ESP: Cervical cancer (Cibula a kol., 2023)",
+      "source": "ESGO/ESTRO/ESP: Cervical cancer (Cibula a kol., 2023) · Int J Gynecol Cancer 2023",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESGO/ESTRO/ESP: Cervical cancer (Cibula a kol., 2023). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESGO-ENDOMETRIUM-2021",
+      "title": "ESGO/ESTRO/ESP: Endometrial carcinoma (Concin a kol., 2021)",
+      "source": "ESGO/ESTRO/ESP: Endometrial carcinoma (Concin a kol., 2021) · Int J Gynecol Cancer 2021",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESGO/ESTRO/ESP: Endometrial carcinoma (Concin a kol., 2021). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EASL-HCC-2018",
+      "title": "EASL Clinical Practice Guidelines: Hepatocellular carcinoma (J Hepatol 2018)",
+      "source": "EASL Clinical Practice Guidelines: Hepatocellular carcinoma (J Hepatol 2018)",
+      "url": "https://easl.eu/publications/clinical-practice-guidelines/",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-ABL-02",
+        "VS-ABL-03",
+        "VS-ABL-04",
+        "VS-HCC-01",
+        "VS-HCC-02",
+        "VS-HCC-04",
+        "VS-HCC-05"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EASL Clinical Practice Guidelines: Hepatocellular carcinoma (J Hepatol 2018). Zdroj prahu pravidel semaforu z báze data/onko: VS-ABL-02, VS-ABL-03, VS-ABL-04, VS-HCC-01, VS-HCC-02, VS-HCC-04, VS-HCC-05. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EAU-RCC-2025",
+      "title": "EAU Guidelines: Renal cell carcinoma 2025",
+      "source": "EAU Guidelines: Renal cell carcinoma 2025",
+      "url": "https://uroweb.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-URO-01",
+        "VS-URO-02"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EAU Guidelines: Renal cell carcinoma 2025. Zdroj prahu pravidel semaforu z báze data/onko: VS-URO-01, VS-URO-02. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EAU-PROSTATE-2025",
+      "title": "EAU-EANM-ESTRO-ESUR-ISUP-SIOG Guidelines: Prostate cancer 2025",
+      "source": "EAU-EANM-ESTRO-ESUR-ISUP-SIOG Guidelines: Prostate cancer 2025",
+      "url": "https://uroweb.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-URO-05"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EAU-EANM-ESTRO-ESUR-ISUP-SIOG Guidelines: Prostate cancer 2025. Zdroj prahu pravidel semaforu z báze data/onko: VS-URO-05. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EAU-MIBC-2025",
+      "title": "EAU Guidelines: Muscle-invasive and metastatic bladder cancer 2025",
+      "source": "EAU Guidelines: Muscle-invasive and metastatic bladder cancer 2025",
+      "url": "https://uroweb.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-URO-04"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EAU Guidelines: Muscle-invasive and metastatic bladder cancer 2025. Zdroj prahu pravidel semaforu z báze data/onko: VS-URO-04. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EAU-NMIBC-2025",
+      "title": "EAU Guidelines: Non-muscle-invasive bladder cancer 2025",
+      "source": "EAU Guidelines: Non-muscle-invasive bladder cancer 2025",
+      "url": "https://uroweb.org/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EAU Guidelines: Non-muscle-invasive bladder cancer 2025. Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESC-NCS-2022",
+      "title": "ESC 2022: Cardiovascular assessment and management of patients undergoing non-cardiac surgery (Halvorsen a kol., Eur Heart J 2022)",
+      "source": "ESC 2022: Cardiovascular assessment and management of patients undergoing non-cardiac surgery (Halvorsen a kol., Eur Heart J 2022)",
+      "url": "https://www.escardio.org/Guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHIR-05",
+        "VS-CHIR-07",
+        "VS-CHIR-08",
+        "VS-CHIR-11"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESC 2022: Cardiovascular assessment and management of patients undergoing non-cardiac surgery (Halvorsen a kol., Eur Heart J 2022). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHIR-05, VS-CHIR-07, VS-CHIR-08, VS-CHIR-11. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESC-CARDIOONC-2022",
+      "title": "ESC 2022: Cardio-oncology (Lyon a kol., Eur Heart J 2022)",
+      "source": "ESC 2022: Cardio-oncology (Lyon a kol., Eur Heart J 2022)",
+      "url": "https://www.escardio.org/Guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-07"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESC 2022: Cardio-oncology (Lyon a kol., Eur Heart J 2022). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-07. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ASCO-HBV-2020",
+      "title": "ASCO: Hepatitis B virus screening and management in cancer therapy (Hwang a kol., J Clin Oncol 2020)",
+      "source": "ASCO: Hepatitis B virus screening and management in cancer therapy (Hwang a kol., J Clin Oncol 2020)",
+      "url": "https://www.asco.org/practice-patients/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-17"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ASCO: Hepatitis B virus screening and management in cancer therapy (Hwang a kol., J Clin Oncol 2020). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-17. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ASCO-VTE-2023",
+      "title": "ASCO: Venous thromboembolism prophylaxis and treatment in cancer (Key a kol., J Clin Oncol 2023)",
+      "source": "ASCO: Venous thromboembolism prophylaxis and treatment in cancer (Key a kol., J Clin Oncol 2023)",
+      "url": "https://www.asco.org/practice-patients/guidelines",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-21"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ASCO: Venous thromboembolism prophylaxis and treatment in cancer (Key a kol., J Clin Oncol 2023). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-21. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ITAC-2022",
+      "title": "ITAC: International guidelines for VTE in cancer (Farge a kol., Lancet Oncol 2022)",
+      "source": "ITAC: International guidelines for VTE in cancer (Farge a kol., Lancet Oncol 2022) · Lancet Oncol 2022",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-22"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ITAC: International guidelines for VTE in cancer (Farge a kol., Lancet Oncol 2022). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-22. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-EORTC-GCSF-2011",
+      "title": "EORTC: G-CSF to reduce febrile neutropenia, aktualizace 2010 (Aapro a kol., Eur J Cancer 2011)",
+      "source": "EORTC: G-CSF to reduce febrile neutropenia, aktualizace 2010 (Aapro a kol., Eur J Cancer 2011) · Eur J Cancer 2011",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-23"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "EORTC: G-CSF to reduce febrile neutropenia, aktualizace 2010 (Aapro a kol., Eur J Cancer 2011). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-23. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESPEN-SURG-2021",
+      "title": "ESPEN practical guideline: Clinical nutrition in surgery (Weimann a kol., Clin Nutr 2021)",
+      "source": "ESPEN practical guideline: Clinical nutrition in surgery (Weimann a kol., Clin Nutr 2021) · Clin Nutr 2021",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-20"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESPEN practical guideline: Clinical nutrition in surgery (Weimann a kol., Clin Nutr 2021). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-20. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-MUNOZ-PBM-2017",
+      "title": "International consensus: peri-operative anaemia and iron deficiency (Muñoz a kol., Anaesthesia 2017)",
+      "source": "International consensus: peri-operative anaemia and iron deficiency (Muñoz a kol., Anaesthesia 2017) · Anaesthesia 2017",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHIR-10"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "International consensus: peri-operative anaemia and iron deficiency (Muñoz a kol., Anaesthesia 2017). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHIR-10. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-CPOC-DM-2021",
+      "title": "CPOC: Perioperative care for people with diabetes undergoing surgery (2021)",
+      "source": "CPOC: Perioperative care for people with diabetes undergoing surgery (2021)",
+      "url": "https://cpoc.org.uk",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHIR-09"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "CPOC: Perioperative care for people with diabetes undergoing surgery (2021). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHIR-09. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ASA-PS-2020",
+      "title": "ASA Physical Status Classification System (2020)",
+      "source": "ASA Physical Status Classification System (2020)",
+      "url": "https://www.asahq.org",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHIR-12"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ASA Physical Status Classification System (2020). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHIR-12. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-JORGENSEN-2014",
+      "title": "Jørgensen a kol., JAMA 2014: čas od CMP a riziko komplikací nekardiální operace",
+      "source": "Jørgensen a kol., JAMA 2014: čas od CMP a riziko komplikací nekardiální operace · JAMA 2014",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHIR-06"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "Jørgensen a kol., JAMA 2014: čas od CMP a riziko komplikací nekardiální operace. Zdroj prahu pravidel semaforu z báze data/onko: VS-CHIR-06. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-SIR-2019",
+      "title": "SIR: Periprocedural management of thrombotic and bleeding risk (Patel a kol., J Vasc Interv Radiol 2019)",
+      "source": "SIR: Periprocedural management of thrombotic and bleeding risk (Patel a kol., J Vasc Interv Radiol 2019) · J Vasc Interv Radiol 2019",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-DG-02",
+        "VS-DG-04",
+        "VS-DG-05"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SIR: Periprocedural management of thrombotic and bleeding risk (Patel a kol., J Vasc Interv Radiol 2019). Zdroj prahu pravidel semaforu z báze data/onko: VS-DG-02, VS-DG-04, VS-DG-05. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-BTS-BIOPSY-2003",
+      "title": "BTS: Radiologically guided lung biopsy (Manhire a kol., Thorax 2003)",
+      "source": "BTS: Radiologically guided lung biopsy (Manhire a kol., Thorax 2003) · Thorax 2003",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-DG-01",
+        "VS-DG-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "BTS: Radiologically guided lung biopsy (Manhire a kol., Thorax 2003). Zdroj prahu pravidel semaforu z báze data/onko: VS-DG-01, VS-DG-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-BTS-PLEURAL-2023",
+      "title": "BTS: Pleural disease guideline (Roberts a kol., Thorax 2023)",
+      "source": "BTS: Pleural disease guideline (Roberts a kol., Thorax 2023) · Thorax 2023",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "BTS: Pleural disease guideline (Roberts a kol., Thorax 2023). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ESTRO-REIRRAD-2022",
+      "title": "ESTRO-EORTC: Consensus on re-irradiation (Andratschke a kol., Lancet Oncol 2022)",
+      "source": "ESTRO-EORTC: Consensus on re-irradiation (Andratschke a kol., Lancet Oncol 2022) · Lancet Oncol 2022",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-01",
+        "VS-RT-02"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ESTRO-EORTC: Consensus on re-irradiation (Andratschke a kol., Lancet Oncol 2022). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-01, VS-RT-02. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-CHOW-SC20-2014",
+      "title": "NCIC CTG SC.20: re-irradiation of painful bone metastases (Chow a kol., Lancet Oncol 2014)",
+      "source": "NCIC CTG SC.20: re-irradiation of painful bone metastases (Chow a kol., Lancet Oncol 2014) · Lancet Oncol 2014",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "NCIC CTG SC.20: re-irradiation of painful bone metastases (Chow a kol., Lancet Oncol 2014). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-LIN-CVD-RT-2008",
+      "title": "Lin a kol., Cancer 2008: toxicita RT u systémových onemocnění pojiva",
+      "source": "Lin a kol., Cancer 2008: toxicita RT u systémových onemocnění pojiva · Cancer 2008",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-04"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "Lin a kol., Cancer 2008: toxicita RT u systémových onemocnění pojiva. Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-04. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-AAPM-TG203-2019",
+      "title": "AAPM TG-203: RT u pacientů s implantovaným kardiostimulátorem nebo ICD (Miften a kol., Med Phys 2019)",
+      "source": "AAPM TG-203: RT u pacientů s implantovaným kardiostimulátorem nebo ICD (Miften a kol., Med Phys 2019) · Med Phys 2019",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-05"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "AAPM TG-203: RT u pacientů s implantovaným kardiostimulátorem nebo ICD (Miften a kol., Med Phys 2019). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-05. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ANKER-BRAF-RT-2016",
+      "title": "ECOG konsenzus: BRAF inhibitory a radioterapie (Anker a kol., Int J Radiat Oncol Biol Phys 2016)",
+      "source": "ECOG konsenzus: BRAF inhibitory a radioterapie (Anker a kol., Int J Radiat Oncol Biol Phys 2016) · Int J Radiat Oncol Biol Phys 2016",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-06"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ECOG konsenzus: BRAF inhibitory a radioterapie (Anker a kol., Int J Radiat Oncol Biol Phys 2016). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-06. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-CHEN-ILD-RT-2017",
+      "title": "Chen a kol., Int J Radiat Oncol Biol Phys 2017: toxicita léčby časného NSCLC při ILD (systematický přehled)",
+      "source": "Chen a kol., Int J Radiat Oncol Biol Phys 2017: toxicita léčby časného NSCLC při ILD (systematický přehled) · Int J Radiat Oncol Biol Phys 2017",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-07"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "Chen a kol., Int J Radiat Oncol Biol Phys 2017: toxicita léčby časného NSCLC při ILD (systematický přehled). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-07. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-HILUS-2021",
+      "title": "HILUS: SBRT centrálních tumorů plic (Lindberg a kol., J Thorac Oncol 2021)",
+      "source": "HILUS: SBRT centrálních tumorů plic (Lindberg a kol., J Thorac Oncol 2021) · J Thorac Oncol 2021",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-16"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "HILUS: SBRT centrálních tumorů plic (Lindberg a kol., J Thorac Oncol 2021). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-16. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-NRG-CC001-2020",
+      "title": "NRG CC001: WBRT se šetřením hipokampů + memantin (Brown a kol., J Clin Oncol 2020)",
+      "source": "NRG CC001: WBRT se šetřením hipokampů + memantin (Brown a kol., J Clin Oncol 2020) · J Clin Oncol 2020",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-10"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "NRG CC001: WBRT se šetřením hipokampů + memantin (Brown a kol., J Clin Oncol 2020). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-10. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-SINS-2010",
+      "title": "SOSG: Spinal Instability Neoplastic Score (Fisher a kol., Spine 2010)",
+      "source": "SOSG: Spinal Instability Neoplastic Score (Fisher a kol., Spine 2010) · Spine 2010",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-11"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SOSG: Spinal Instability Neoplastic Score (Fisher a kol., Spine 2010). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-11. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-PATCHELL-2005",
+      "title": "Patchell a kol., Lancet 2005: dekompresní operace u komprese míchy",
+      "source": "Patchell a kol., Lancet 2005: dekompresní operace u komprese míchy · Lancet 2005",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-12"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "Patchell a kol., Lancet 2005: dekompresní operace u komprese míchy. Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-12. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-MIRELS-1989",
+      "title": "Mirels, Clin Orthop 1989: skóre rizika patologické fraktury",
+      "source": "Mirels, Clin Orthop 1989: skóre rizika patologické fraktury · Clin Orthop Relat Res 1989",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-13"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "Mirels, Clin Orthop 1989: skóre rizika patologické fraktury. Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-13. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ABS-LDR-2012",
+      "title": "ABS: Consensus on LDR prostate brachytherapy (Davis a kol., Brachytherapy 2012)",
+      "source": "ABS: Consensus on LDR prostate brachytherapy (Davis a kol., Brachytherapy 2012) · Brachytherapy 2012",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-RT-14"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "ABS: Consensus on LDR prostate brachytherapy (Davis a kol., Brachytherapy 2012). Zdroj prahu pravidel semaforu z báze data/onko: VS-RT-14. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-SABR-COMET-2019",
+      "title": "SABR-COMET (Palma a kol., Lancet 2019)",
+      "source": "SABR-COMET (Palma a kol., Lancet 2019) · Lancet 2019",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SABR-COMET (Palma a kol., Lancet 2019). Zdroj prahu pravidel semaforu z báze data/onko: –. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-JCOG0802-2022",
+      "title": "JCOG0802: segmentektomie vs. lobektomie (Saji a kol., Lancet 2022)",
+      "source": "JCOG0802: segmentektomie vs. lobektomie (Saji a kol., Lancet 2022) · Lancet 2022",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-PLI-12"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "JCOG0802: segmentektomie vs. lobektomie (Saji a kol., Lancet 2022). Zdroj prahu pravidel semaforu z báze data/onko: VS-PLI-12. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-MACHNC-2021",
+      "title": "MACH-NC: aktualizace metaanalýzy (Lacas a kol., Radiother Oncol 2021)",
+      "source": "MACH-NC: aktualizace metaanalýzy (Lacas a kol., Radiother Oncol 2021) · Radiother Oncol 2021",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HN-01"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "MACH-NC: aktualizace metaanalýzy (Lacas a kol., Radiother Oncol 2021). Zdroj prahu pravidel semaforu z báze data/onko: VS-HN-01. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-PRODIGE4-2011",
+      "title": "PRODIGE 4/ACCORD 11: FOLFIRINOX (Conroy a kol., N Engl J Med 2011), kritéria zařazení",
+      "source": "PRODIGE 4/ACCORD 11: FOLFIRINOX (Conroy a kol., N Engl J Med 2011), kritéria zařazení · N Engl J Med 2011",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-16"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "PRODIGE 4/ACCORD 11: FOLFIRINOX (Conroy a kol., N Engl J Med 2011), kritéria zařazení. Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-16. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-VISION-2021",
+      "title": "VISION: Lu-PSMA-617 (Sartor a kol., N Engl J Med 2021), kritéria zařazení",
+      "source": "VISION: Lu-PSMA-617 (Sartor a kol., N Engl J Med 2021), kritéria zařazení · N Engl J Med 2021",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-NUK-05"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "VISION: Lu-PSMA-617 (Sartor a kol., N Engl J Med 2021), kritéria zařazení. Zdroj prahu pravidel semaforu z báze data/onko: VS-NUK-05. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-IMBRAVE150-2020",
+      "title": "IMbrave150 (Finn a kol., N Engl J Med 2020): gastroskopie ≤6 měsíců a léčba varixů",
+      "source": "IMbrave150 (Finn a kol., N Engl J Med 2020): gastroskopie ≤6 měsíců a léčba varixů · N Engl J Med 2020",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-07"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "IMbrave150 (Finn a kol., N Engl J Med 2020): gastroskopie ≤6 měsíců a léčba varixů. Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-07. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-CARMENA-2018",
+      "title": "CARMENA (Méjean a kol., N Engl J Med 2018)",
+      "source": "CARMENA (Méjean a kol., N Engl J Med 2018) · N Engl J Med 2018",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-URO-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "CARMENA (Méjean a kol., N Engl J Med 2018). Zdroj prahu pravidel semaforu z báze data/onko: VS-URO-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-MILAN-1996",
+      "title": "Milánská kritéria (Mazzaferro a kol., N Engl J Med 1996)",
+      "source": "Milánská kritéria (Mazzaferro a kol., N Engl J Med 1996) · N Engl J Med 1996",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HCC-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "Milánská kritéria (Mazzaferro a kol., N Engl J Med 1996). Zdroj prahu pravidel semaforu z báze data/onko: VS-HCC-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-IAP-2017",
+      "title": "IAP 2017: hraničně resekabilní karcinom pankreatu (Isaji a kol., Pancreatology 2018)",
+      "source": "IAP 2017: hraničně resekabilní karcinom pankreatu (Isaji a kol., Pancreatology 2018) · Pancreatology 2018",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-PAN-02"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "IAP 2017: hraničně resekabilní karcinom pankreatu (Isaji a kol., Pancreatology 2018). Zdroj prahu pravidel semaforu z báze data/onko: VS-PAN-02. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-SIRSPHERES-IFU",
+      "title": "SIR-Spheres: návod k použití (plicní shunt)",
+      "source": "SIR-Spheres: návod k použití (plicní shunt) · výrobce (IFU)",
+      "url": null,
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-ABL-05"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SIR-Spheres: návod k použití (plicní shunt). Zdroj prahu pravidel semaforu z báze data/onko: VS-ABL-05. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-XELODA-SMPC",
+      "title": "SmPC Xeloda (kapecitabin)",
+      "source": "SmPC Xeloda (kapecitabin)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/xeloda",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-OBC-18",
+        "VS-OBC-19",
+        "VS-CHT-05",
+        "VS-CHT-14"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Xeloda (kapecitabin). Zdroj prahu pravidel semaforu z báze data/onko: VS-OBC-18, VS-OBC-19, VS-CHT-05, VS-CHT-14. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ALIMTA-SMPC",
+      "title": "SmPC Alimta (pemetrexed)",
+      "source": "SmPC Alimta (pemetrexed)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/alimta",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-04"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Alimta (pemetrexed). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-04. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-TAXOTERE-SMPC",
+      "title": "SmPC Taxotere (docetaxel)",
+      "source": "SmPC Taxotere (docetaxel)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/taxotere",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-12",
+        "VS-CHT-13"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Taxotere (docetaxel). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-12, VS-CHT-13. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-TEMODAL-SMPC",
+      "title": "SmPC Temodal (temozolomid)",
+      "source": "SmPC Temodal (temozolomid)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/temodal",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-15"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Temodal (temozolomid). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-15. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-TRODELVY-SMPC",
+      "title": "SmPC Trodelvy (sacituzumab govitekan)",
+      "source": "SmPC Trodelvy (sacituzumab govitekan)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/trodelvy",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-10",
+        "VS-TT-15"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Trodelvy (sacituzumab govitekan). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-10, VS-TT-15. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-KEYTRUDA-SMPC",
+      "title": "SmPC Keytruda (pembrolizumab)",
+      "source": "SmPC Keytruda (pembrolizumab)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/keytruda",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-IO-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Keytruda (pembrolizumab). Zdroj prahu pravidel semaforu z báze data/onko: VS-IO-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-TAGRISSO-SMPC",
+      "title": "SmPC Tagrisso (osimertinib)",
+      "source": "SmPC Tagrisso (osimertinib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/tagrisso",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-01",
+        "VS-TT-02"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Tagrisso (osimertinib). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-01, VS-TT-02. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-LORVIQUA-SMPC",
+      "title": "SmPC Lorviqua (lorlatinib)",
+      "source": "SmPC Lorviqua (lorlatinib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/lorviqua",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Lorviqua (lorlatinib). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-IBRANCE-SMPC",
+      "title": "SmPC Ibrance (palbociklib)",
+      "source": "SmPC Ibrance (palbociklib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/ibrance",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-08"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Ibrance (palbociklib). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-08. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-VERZENIOS-SMPC",
+      "title": "SmPC Verzenios (abemaciklib)",
+      "source": "SmPC Verzenios (abemaciklib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/verzenios",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-09"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Verzenios (abemaciklib). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-09. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-LYNPARZA-SMPC",
+      "title": "SmPC Lynparza (olaparib)",
+      "source": "SmPC Lynparza (olaparib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/lynparza",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-10"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Lynparza (olaparib). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-10. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-BALVERSA-SMPC",
+      "title": "SmPC Balversa (erdafitinib)",
+      "source": "SmPC Balversa (erdafitinib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/balversa",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-11"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Balversa (erdafitinib). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-11. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ELAHERE-SMPC",
+      "title": "SmPC Elahere (mirvetuximab soravtansin)",
+      "source": "SmPC Elahere (mirvetuximab soravtansin)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/elahere",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-11"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Elahere (mirvetuximab soravtansin). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-11. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ERBITUX-SMPC",
+      "title": "SmPC Erbitux (cetuximab)",
+      "source": "SmPC Erbitux (cetuximab)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/erbitux",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-12"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Erbitux (cetuximab). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-12. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-PADCEV-SMPC",
+      "title": "SmPC Padcev (enfortumab vedotin)",
+      "source": "SmPC Padcev (enfortumab vedotin)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/padcev",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-14"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Padcev (enfortumab vedotin). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-14. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-CABOMETYX-SMPC",
+      "title": "SmPC Cabometyx (kabozantinib)",
+      "source": "SmPC Cabometyx (kabozantinib)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/cabometyx",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHIR-13",
+        "VS-TT-04"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Cabometyx (kabozantinib). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHIR-13, VS-TT-04. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-ZYTIGA-SMPC",
+      "title": "SmPC Zytiga (abirateron)",
+      "source": "SmPC Zytiga (abirateron)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/zytiga",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HT-05",
+        "VS-HT-06"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Zytiga (abirateron). Zdroj prahu pravidel semaforu z báze data/onko: VS-HT-05, VS-HT-06. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-XTANDI-SMPC",
+      "title": "SmPC Xtandi (enzalutamid)",
+      "source": "SmPC Xtandi (enzalutamid)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/xtandi",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HT-07"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Xtandi (enzalutamid). Zdroj prahu pravidel semaforu z báze data/onko: VS-HT-07. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-XOFIGO-SMPC",
+      "title": "SmPC Xofigo (radium-223)",
+      "source": "SmPC Xofigo (radium-223)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/xofigo",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-NUK-01",
+        "VS-NUK-02",
+        "VS-NUK-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Xofigo (radium-223). Zdroj prahu pravidel semaforu z báze data/onko: VS-NUK-01, VS-NUK-02, VS-NUK-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-PLUVICTO-SMPC",
+      "title": "SmPC Pluvicto (Lu-PSMA-617)",
+      "source": "SmPC Pluvicto (Lu-PSMA-617)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/pluvicto",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-NUK-04"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Pluvicto (Lu-PSMA-617). Zdroj prahu pravidel semaforu z báze data/onko: VS-NUK-04. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-XGEVA-SMPC",
+      "title": "SmPC Xgeva (denosumab)",
+      "source": "SmPC Xgeva (denosumab)",
+      "url": "https://www.ema.europa.eu/en/medicines/human/EPAR/xgeva",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-BMA-01",
+        "VS-BMA-02",
+        "VS-BMA-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SmPC Xgeva (denosumab). Zdroj prahu pravidel semaforu z báze data/onko: VS-BMA-01, VS-BMA-02, VS-BMA-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-OXALIPLATIN-SPC",
+      "title": "SPC oxaliplatina (národní registrace)",
+      "source": "SPC oxaliplatina (národní registrace)",
+      "url": "https://prehledy.sukl.cz/prehled_leciv.html",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-01",
+        "VS-CHT-02"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SPC oxaliplatina (národní registrace). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-01, VS-CHT-02. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-CARBOPLATIN-SPC",
+      "title": "SPC karboplatina (národní registrace)",
+      "source": "SPC karboplatina (národní registrace)",
+      "url": "https://prehledy.sukl.cz/prehled_leciv.html",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-03"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SPC karboplatina (národní registrace). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-03. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-DOXORUBICIN-SPC",
+      "title": "SPC doxorubicin (národní registrace)",
+      "source": "SPC doxorubicin (národní registrace)",
+      "url": "https://prehledy.sukl.cz/prehled_leciv.html",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-06",
+        "VS-CHT-08"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SPC doxorubicin (národní registrace). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-06, VS-CHT-08. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-IRINOTECAN-SPC",
+      "title": "SPC irinotekan (Campto, národní registrace)",
+      "source": "SPC irinotekan (Campto, národní registrace)",
+      "url": "https://prehledy.sukl.cz/prehled_leciv.html",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-CHT-09",
+        "VS-CHT-10",
+        "VS-CHT-11"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SPC irinotekan (Campto, národní registrace). Zdroj prahu pravidel semaforu z báze data/onko: VS-CHT-09, VS-CHT-10, VS-CHT-11. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-LETROZOLE-SPC",
+      "title": "SPC letrozol (Femara, národní registrace)",
+      "source": "SPC letrozol (Femara, národní registrace)",
+      "url": "https://prehledy.sukl.cz/prehled_leciv.html",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HT-01"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SPC letrozol (Femara, národní registrace). Zdroj prahu pravidel semaforu z báze data/onko: VS-HT-01. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-TAMOXIFEN-SPC",
+      "title": "SPC tamoxifen (národní registrace)",
+      "source": "SPC tamoxifen (národní registrace)",
+      "url": "https://prehledy.sukl.cz/prehled_leciv.html",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-HT-03",
+        "VS-HT-04"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "SPC tamoxifen (národní registrace). Zdroj prahu pravidel semaforu z báze data/onko: VS-HT-03, VS-HT-04. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
+    },
+    {
+      "evidence_id": "EXT-IMDELLTRA-USPI",
+      "title": "FDA Prescribing Information Imdelltra (tarlatamab)",
+      "source": "FDA Prescribing Information Imdelltra (tarlatamab)",
+      "url": "https://www.accessdata.fda.gov",
+      "region": "INT",
+      "icd_prefixes": "*",
+      "rules": [
+        "VS-TT-16"
+      ],
+      "verified": "⚠ neověřeno: zdroj sestavil AI agent v bázi data/onko (T-315), ověřit proti originálu",
+      "text": "FDA Prescribing Information Imdelltra (tarlatamab). Zdroj prahu pravidel semaforu z báze data/onko: VS-TT-16. Znění pasáže zatím nepřevzato, práh je k ověření lékařem."
     }
   ]
 }

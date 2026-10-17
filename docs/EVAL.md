@@ -25,15 +25,15 @@ Pravidla, semafor, screening studií, RECIST a grounding běží bez LLM (`AI_PR
 
 | Pacient | Red flags (key) | Red flags (vše) | Klíčová fakta | Údaj chybí | Nejistota AI | Kritéria studií | Studie celkem | RECIST | Semafor (pravidla) | Neověřená tvrzení | Čas |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| P01 | 7/7 (100%) | 11/12 (92%) | 13/13 (100%) | 4/4 (100%) | – | 14/19 (74%) | 4/6 (67%) | 1/1 (100%) | 4/5 (80%) | 0/80 (0%) | 1 s |
-| P02 | 7/10 (70%) | 11/14 (79%) | 13/13 (100%) | 0/2 (0%) | – | 13/17 (76%) | 3/6 (50%) | 0/1 (0%) | 3/4 (75%) | 0/72 (0%) | 1 s |
-| P03 | 6/6 (100%) | 10/10 (100%) | 19/19 (100%) | 2/3 (67%) | 1/1 (100%) | 18/18 (100%) | 3/6 (50%) | 1/1 (100%) | 13/13 (100%) | 0/72 (0%) | 1 s |
-| P04 | 8/8 (100%) | 9/9 (100%) | 12/12 (100%) | 3/5 (60%) | – | 11/15 (73%) | 1/6 (17%) | – | 12/12 (100%) | 0/65 (0%) | 1 s |
-| P05 | 6/7 (86%) | 8/11 (73%) | 12/12 (100%) | 3/3 (100%) | 1/1 (100%) | 13/17 (76%) | 2/6 (33%) | 1/1 (100%) | 4/7 (57%) | 0/72 (0%) | 1 s |
-| P06 | 9/10 (90%) | 13/14 (93%) | 12/12 (100%) | 2/4 (50%) | 1/1 (100%) | 17/19 (89%) | 4/6 (67%) | 1/1 (100%) | 3/9 (33%) | 0/75 (0%) | 1 s |
-| **Celkem** | **43/48 (90%)** | **62/70 (89%)** | **81/81 (100%)** | **14/21 (67%)** | **3/3 (100%)** | **86/105 (82%)** | **17/36 (47%)** | **4/5 (80%)** | **39/50 (78%)** | **0/436 (0%)** | 7 s |
+| P01 | 7/7 (100%) | 11/12 (92%) | 13/13 (100%) | 4/4 (100%) | – | 14/19 (74%) | 4/6 (67%) | 1/1 (100%) | 5/5 (100%) | 0/86 (0%) | 1 s |
+| P02 | 7/10 (70%) | 11/14 (79%) | 13/13 (100%) | 0/2 (0%) | – | 13/17 (76%) | 3/6 (50%) | 0/1 (0%) | 4/4 (100%) | 0/76 (0%) | 1 s |
+| P03 | 6/6 (100%) | 10/10 (100%) | 19/19 (100%) | 2/3 (67%) | 1/1 (100%) | 18/18 (100%) | 3/6 (50%) | 1/1 (100%) | 13/13 (100%) | 0/79 (0%) | 1 s |
+| P04 | 8/8 (100%) | 9/9 (100%) | 12/12 (100%) | 3/5 (60%) | – | 11/15 (73%) | 1/6 (17%) | – | 12/12 (100%) | 0/82 (0%) | 1 s |
+| P05 | 6/7 (86%) | 8/11 (73%) | 12/12 (100%) | 3/3 (100%) | 1/1 (100%) | 13/17 (76%) | 2/6 (33%) | 1/1 (100%) | 4/7 (57%) | 0/78 (0%) | 1 s |
+| P06 | 9/10 (90%) | 13/14 (93%) | 12/12 (100%) | 2/4 (50%) | 1/1 (100%) | 17/19 (89%) | 4/6 (67%) | 1/1 (100%) | 5/9 (56%) | 0/83 (0%) | 1 s |
+| **Celkem** | **43/48 (90%)** | **62/70 (89%)** | **81/81 (100%)** | **14/21 (67%)** | **3/3 (100%)** | **86/105 (82%)** | **17/36 (47%)** | **4/5 (80%)** | **43/50 (86%)** | **0/484 (0%)** | 7 s |
 
-**Pro pitch:** 90 % klíčových varovných signálů a 100 % klíčových faktů s citací zdroje, **0 neověřených tvrzení z 436**. Všechno deterministicky, bez LLM, takže výsledek je opakovatelný.
+**Pro pitch:** 90 % klíčových varovných signálů, 100 % klíčových faktů s citací zdroje, 86 % barev semaforu, **0 neověřených tvrzení z 484**. Všechno deterministicky, bez LLM, takže výsledek je opakovatelný.
 
 ## Gemini (`gemini-3.8-flash`)
 
@@ -55,18 +55,17 @@ Další běh až po resetu limitu nebo s placeným tierem: `AI_PROVIDER=gemini p
 
 - `RF-GENETIC` pro Lynchův syndrom: kolorektum + nádor Lynchova spektra v rodinné anamnéze + MMR / MSI nevyšetřeno (P03-RF08, OBC-2.4). Klíčové red flags 42 → **43 / 48**.
 - RECIST: nová léze → PD (P02, nové mozkové metastázy). Novou lézi pozná až LLM, bez něj P02 zůstává PR.
+- Znalostní báze `data/onko` v semaforu (T-316): další postupy pro diagnózu pacienta, semafor (pravidla) 39 → **43 / 50**.
 
 ## Zbývající nesoulady (vstup pro další T-302)
 
 Nejvíc chybí rozpory mezi texty (P02 „EF v normě“ vs. LVEF 52 %, P05 „únava mírná“ vs. 8/10) a nesplněná doporučení kontrol (echokardiografie u P02 a P06). Najít je má RF-LLM, tedy Gemini. Část kritérií studií je `unknown`, kde ground truth zná odpověď (RKT-01, RKT-02, RKT-06): deterministická pravidla pro tato kritéria zatím chybí.
 
 - **P01 · trials:** RKT-01/Z3: čekáno met, podklad unknown; RKT-01/Z4: čekáno met, podklad unknown; RKT-01/V4: čekáno not_met, podklad unknown; RKT-06/V1: čekáno not_met, podklad unknown; RKT-06/V2: čekáno not_met, podklad unknown
-- **P01 · compatibility:** VS-OBC-02: čekáno orange, podklad None
 - **P02 · red_flags_key:** P02-RF07 RF-NOMINATION: Zpráva k nominaci uvádí „EF v normě“, poslední LVEF je 52 %; P02-RF08 RF-MISSING: Chybí kontrolní echokardiografie; P02-RF10 RF-LLM: TNM v záznamu MDT cN2 vs. cN1
 - **P02 · missing_data:** P02-M01: Kontrolní echokardiografie (doporučena za 3–4 týdny od 20. 8.); P02-M02: Plán snižování dexametazonu
 - **P02 · trials:** RKT-02/Z2: čekáno met, podklad unknown; RKT-02/V1: čekáno not_met, podklad unknown; RKT-02/V2: čekáno not_met, podklad unknown; RKT-06/V3: čekáno met, podklad unknown
 - **P02 · recist:** čekáno PD, podklad: RECIST 1.1, cílové léze: SLD 112 → 46 mm (-59 % od baseline), nadir 46 mm; odpov
-- **P02 · compatibility:** VS-OBC-02: čekáno orange, podklad None
 - **P03 · missing_data:** P03-M03: Stav DPD před fluoropyrimidiny
 - **P04 · missing_data:** P04-M04: Ověření ložiska levé nadledviny (MR nadledvin / biopsie); P04-M05: Vyšetření SIADH (osmolalita séra a moči, natriurie)
 - **P04 · trials:** RKT-04/V2: čekáno not_met, podklad unknown; RKT-05/Z1: čekáno met, podklad unknown; RKT-05/V1: čekáno not_met, podklad unknown; RKT-06/Z2: čekáno not_met, podklad unknown
@@ -76,4 +75,4 @@ Nejvíc chybí rozpory mezi texty (P02 „EF v normě“ vs. LVEF 52 %, P05 „�
 - **P06 · red_flags_key:** P06-RF05 RF-MISSING: Chybí kontrolní echokardiografie (začátek října)
 - **P06 · missing_data:** P06-M03: Kontrolní echokardiografie (začátek října 2026); P06-M04: Ověření nádoru ledviny a stanovisko urologa
 - **P06 · trials:** RKT-02/V1: čekáno not_met, podklad unknown; RKT-02/V2: čekáno not_met, podklad unknown
-- **P06 · compatibility:** VS-OBC-02: čekáno orange, podklad None; VS-OBC-03: čekáno grey, podklad None; VS-OBC-04: čekáno orange, podklad None; VS-OBC-08: čekáno orange, podklad None; VS-URO-01: čekáno orange, podklad None; VS-DG-01: čekáno orange, podklad None
+- **P06 · compatibility:** VS-OBC-03: čekáno grey, podklad None; VS-OBC-04: čekáno orange, podklad None; VS-URO-01: čekáno orange, podklad None; VS-DG-01: čekáno orange, podklad None

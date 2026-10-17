@@ -158,6 +158,7 @@ async def test_stream_heartbeat_and_endpoint(settings, monkeypatch, thread_db):
     client.cookies['access_token'] = token
     response = await client.get(f'/api/mdt/sessions/{sid}/stream/', headers={'Last-Event-ID': '0'})
     assert response.status_code == 200 and response['Content-Type'] == 'text/event-stream'
+    assert 'no-transform' in response['Cache-Control']      # jinak proxy s kompresí stream bufferuje
     content = aiter(response.streaming_content)
     try:
         assert await anext(content) == b'retry: 3000\n\n'

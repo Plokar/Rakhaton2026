@@ -162,6 +162,7 @@ async def session_stream(request, sid):
     except ValidationError:
         return JsonResponse({'after': 'Očekáváno ID zprávy (celé číslo).'}, status=400)
     response = StreamingHttpResponse(_events(sid, after), content_type='text/event-stream')
-    response['Cache-Control'] = 'no-cache'
+    # no-transform: proxy s kompresí (rewrite v Next.js, `next start`) by stream zabalila do gzipu a bufferovala
+    response['Cache-Control'] = 'no-cache, no-transform'
     response['X-Accel-Buffering'] = 'no'     # proxy typu nginx stream nebufferuje
     return response

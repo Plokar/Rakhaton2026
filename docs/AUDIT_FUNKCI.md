@@ -18,5 +18,5 @@
 | Okno projektoru `/projector`, úzké okno `/brief/3` | ✅ | ✅ | ✅ | nový vzhled T-330, pořadí T-332 |
 | Ukončení boardu → stažení PDF / FHIR / ZIP | ✅ | — | — | T-333, testy backendu |
 
-**Výsledek:** 19 obrazovek × 3 role bez chyby konzole, pádu ani neočekávané HTTP chyby. Backend 638 testů ✅, lint 0 chyb, tsc a `next build` OK.
+**Výsledek:** 19 obrazovek × 3 role se načte bez chyby konzole, pádu ani neočekávané HTTP chyby. Interakce (výběr lékaře v popupu, potvrzení závěru, moje úkoly, ukončení boardu a ZIP) jsou ověřené backendovými testy a dřívějším proklikáním nad mock API, tady znovu neproklikané. Backend 638 testů ✅, lint 0 chyb, tsc a `next build` OK.
 **Neověřeno tady:** skutečné IRIS (Vector Search, transakce) a Gemini; ověřit na stroji s Dockerem (`dev.sh up`).

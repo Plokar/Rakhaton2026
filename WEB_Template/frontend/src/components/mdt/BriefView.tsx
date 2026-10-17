@@ -9,7 +9,7 @@ import type { Brief, EvidenceId, SectionId } from '@/types/mdt';
 import { AiBlock } from './AiBlock';
 import { CaseHeader } from './CaseHeader';
 import { CitationProvider, Citations, collectCitations } from './citations';
-import { ClaimList } from './ClaimList';
+import { SectionClaims } from './ClaimList';
 import { BriefDataProvider, type BriefDataSource } from './data-source';
 import { RedFlagList } from './RedFlagList';
 import { RoleSection } from './RoleSection';
@@ -73,7 +73,7 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
           status={brief.status}
           defaultOpen={id === 'summary' ? true : allExpanded}
         >
-          <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+          <SectionClaims section={s} hideUnverified={hideUnverified} />
         </AiBlock>
       ));
 

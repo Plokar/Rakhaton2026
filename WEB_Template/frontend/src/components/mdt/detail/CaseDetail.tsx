@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import type { Brief, BriefSection, MdtCase, MdtSessionDetail, SectionId, TimelineEvent } from '@/types/mdt';
 import { AiBlock } from '../AiBlock';
 import { Citations } from '../citations';
-import { ClaimItem, ClaimList } from '../ClaimList';
+import { ClaimItem, ClaimList, SectionClaims } from '../ClaimList';
 import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-source';
 import { GenerateBrief, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
@@ -238,7 +238,7 @@ function DetailLayout({
                 <div className="flex flex-col gap-5">
                   {sectionsOf(brief, 'anamnesis').map((s) => (
                     <AiBlock key={s.title} title={s.title || 'Anamnéza'} status={brief?.status} headingLevel="h3">
-                      <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+                      <SectionClaims section={s} hideUnverified={hideUnverified} />
                     </AiBlock>
                   ))}
                   {brief && brief.header.comorbidities.length > 0 && (

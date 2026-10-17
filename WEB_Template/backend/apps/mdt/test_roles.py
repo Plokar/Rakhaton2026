@@ -63,6 +63,22 @@ def test_move_case_updates_task_in_iris(seeded):
     assert task['restriction']['period']['start'] == '2026-10-14T14:00:00+02:00'
 
 
+def test_sessions_expand_cases_for_calendar(seeded):
+    """T-518: kalendář jedním dotazem: agendy (MdtCase + hlavička z IRIS) a připravenost, filtr dnů."""
+    client = as_user('chirurg')
+    plain = client.get('/api/mdt/sessions/').json()
+    assert 'cases' not in plain[0] and len(plain) == 4
+    expanded = client.get('/api/mdt/sessions/?expand=cases').json()
+    assert [s['patients'] for s in expanded] == [s['patients'] for s in plain]
+    case = next(c for s in expanded for c in s['cases'] if c['patient_id'] == 'P03')
+    assert case['patient']['display_name'].startswith('P03') and case['created_by']['name']
+    assert case['readiness']['patient_id'] == 'P03' and 0 <= case['readiness']['score']['percent'] <= 100
+    week = client.get('/api/mdt/sessions/?from=2026-10-19&to=2026-10-25&expand=cases').json()
+    assert {s['title'] for s in week} == {'Mamární komise', 'GIT – kolorektální karcinom / hepatobiliární',
+                                          'Hrudní – karcinom plic'}
+    assert client.get('/api/mdt/sessions/?from=21.10.').status_code == 400
+
+
 def test_closed_board_rejects_move_and_intake(seeded):
     """Na uzavřený board nejde pacienta přesunout ani zařadit (409, T-518); úpravy v něm ano."""
     closed = MdtSession.objects.get(title='Mamární komise (urgentní)')

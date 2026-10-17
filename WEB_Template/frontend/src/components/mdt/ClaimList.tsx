@@ -1,5 +1,9 @@
+'use client';
+
+import * as React from 'react';
 import { TriangleAlert } from 'lucide-react';
-import type { Claim } from '@/types/mdt';
+import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
+import type { BriefSection, Claim } from '@/types/mdt';
 import { Citations } from './citations';
 import { MissingData } from './MissingData';
 
@@ -27,6 +31,31 @@ export function ClaimItem({ claim }: { claim: Claim }) {
       {claim.text}
       <Citations ids={claim.citations} />
     </p>
+  );
+}
+
+/**
+ * Tvrzení sekce podkladu. Dlouhá anamnéza má shrnutí AI i doslovné znění (`verbatim`, FR-A5): lékař přepne,
+ * obojí s citací odstavce zprávy.
+ */
+export function SectionClaims({ section, hideUnverified = false }: { section: BriefSection; hideUnverified?: boolean }) {
+  const [mode, setMode] = React.useState<'ai' | 'verbatim'>('ai');
+  if (!section.verbatim?.length) return <ClaimList claims={section.items} hideUnverified={hideUnverified} />;
+  return (
+    <div className="flex flex-col gap-3">
+      <ToggleGroup
+        value={[mode]}
+        onValueChange={(v) => v[0] && setMode(v[0] as 'ai' | 'verbatim')}
+        variant="outline"
+        size="sm"
+        spacing={0}
+        aria-label="Znění anamnézy"
+      >
+        <ToggleGroupItem value="ai">Shrnutí AI</ToggleGroupItem>
+        <ToggleGroupItem value="verbatim">Doslovně ze zpráv</ToggleGroupItem>
+      </ToggleGroup>
+      <ClaimList claims={mode === 'verbatim' ? section.verbatim : section.items} hideUnverified={hideUnverified} />
+    </div>
   );
 }
 

@@ -1,7 +1,10 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
 import base64
 import json
+import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -30,6 +33,8 @@ from . import config as cfg
 from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
 from .models import BriefConfig, Decision, MdtCase, MdtSession
+
+logger = logging.getLogger(__name__)
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
@@ -128,7 +133,8 @@ def user_detail(request, uid):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def session_list(request):
-    """GET: boardy s pacienty v pořadí agendy. POST (jen předseda): `{date, title, config_id?}`."""
+    """GET: boardy s pacienty v pořadí agendy; `?from=&to=` (YYYY-MM-DD, místní den) omezí rozsah,
+    `?expand=cases` přidá agendy (`MdtCase` + hlavička z IRIS) a připravenost (T-518). POST (jen předseda)."""
     if request.method == 'POST':
         _require(request, roles.ADMIN)
         if not request.data.get('title'):
@@ -136,8 +142,38 @@ def session_list(request):
         s = MdtSession.objects.create(date=_datetime(request.data.get('date')), title=request.data['title'],
                                       chair=request.user, config_id=request.data.get('config_id'))
         return Response(_session(s), status=201)
-    sessions = MdtSession.objects.select_related('chair').prefetch_related('cases')
-    return Response([{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions])
+    sessions = MdtSession.objects.select_related('chair').prefetch_related('cases__created_by')
+    for param, lookup in (('from', 'date__date__gte'), ('to', 'date__date__lte')):
+        if request.query_params.get(param):
+            try:
+                sessions = sessions.filter(**{lookup: date.fromisoformat(request.query_params[param])})
+            except ValueError:
+                raise ValidationError({param: 'Datum YYYY-MM-DD.'}) from None
+    sessions = list(sessions)
+    listed = [{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions]
+    if request.query_params.get('expand') != 'cases':
+        return Response(listed)
+    cases = [c for s in sessions for c in s.cases.all()]
+    by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
+    ready = _readiness_all(cases)
+    return Response([{**item, 'cases': [{**_case(c, by_id.get(c.patient_fhir_id)), 'readiness': ready.get(c.pk)}
+                                        for c in s.cases.all()]}
+                     for item, s in zip(listed, sessions)])
+
+
+def _readiness_all(cases: list[MdtCase]) -> dict[int, dict | None]:
+    """Připravenost všech případů najednou (pacienti z IRIS souběžně); pacient, kterého IRIS nevrátí, má `None`."""
+    def one(case):
+        try:
+            return case.pk, readiness.evaluate_readiness(patients.load_patient(case.patient_fhir_id), case.skipped_fields)
+        except (FhirError, LookupError, ValueError):
+            logger.warning('Připravenost %s nejde spočítat', case.patient_fhir_id, exc_info=True)
+            return case.pk, None
+
+    if not cases:
+        return {}
+    with ThreadPoolExecutor(max_workers=8) as pool:        # FHIR přes HTTP, bez Django DB ve vláknech
+        return dict(pool.map(one, cases))
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])

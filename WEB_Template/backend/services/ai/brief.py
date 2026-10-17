@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
-from services.ai.anamnesis import anamnesis_items
+from services.ai.anamnesis import anamnesis_items, anamnesis_verbatim
 from services.ai.decision_support import build_decision_support
 from services.ai.diagnosis_data import modality_items
 from services.ai.grounding import verify_claims
@@ -139,16 +139,19 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
             continue
         if section["id"] not in TITLES:
             continue
+        verbatim = []
         if section["id"] == "summary":
             items = summary_items + _missing_items(resources, skipped_fields)
-        elif section["id"] == "anamnesis":            # FR-A5 (T-507)
+        elif section["id"] == "anamnesis":            # FR-A5 (T-507): shrnutí AI + doslovné znění k přepnutí
             items = anamnesis
+            verbatim = anamnesis_verbatim(context)
         elif section["id"] == "modalities":           # FR-D5 (T-506)
             items = modality_items(context, compatibility + kb, {r: c["title"] for r, c in load_roles().items()})
         else:
             items = _timeline_items(data, context)
         sections.append({"id": section["id"], "title": TITLES[section["id"]], "ai_generated": True,
-                         "items": [_public(c) for c in verify_claims(items, context)]})
+                         "items": [_public(c) for c in verify_claims(items, context)],
+                         **({"verbatim": [_public(c) for c in verify_claims(verbatim, context)]} if verbatim else {})})
     progress(90)
 
     header = _header(data, context, intent_letter)

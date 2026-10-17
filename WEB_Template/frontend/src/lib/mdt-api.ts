@@ -8,6 +8,7 @@ import type {
   CaseTemplate,
   MdtRole,
   RoleId,
+  SectionId,
   SpecialtyView,
   Decision,
   EvidenceSource,
@@ -139,7 +140,8 @@ export const mdtApi = {
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
 
-  generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig } = {}) =>
+  /** Nový podklad; `feedback` = co bylo v předchozí verzi špatně (jde do promptů vybraných částí, T-323). */
+  generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig; feedback?: { text: string; sections?: SectionId[] } } = {}) =>
     apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`, {
       method: 'POST',
       body: JSON.stringify(body),

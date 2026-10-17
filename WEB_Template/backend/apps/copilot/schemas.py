@@ -364,6 +364,14 @@ class BriefStats(BaseModel):
     missing_total: int
 
 
+class BriefFeedback(BaseModel):
+    """Zpětná vazba lékaře k předchozí verzi, podle které podklad vznikl (T-323)."""
+    text: str = Field(description="Co bylo špatně / na co se zaměřit (pseudonymizováno)")
+    sections: list[SectionId] = Field(default_factory=list, description="Kterých částí se týká; prázdné = všech")
+    by: str
+    at: str = Field(description="ISO 8601")
+
+
 class Brief(BaseModel):
     case_id: str
     patient_id: str = Field(description='"P03"')
@@ -376,6 +384,7 @@ class Brief(BaseModel):
     red_flags: list[RedFlag]
     decision_support: DecisionSupport | None = None
     stats: BriefStats
+    feedback: BriefFeedback | None = Field(default=None, description="Přegenerováno podle zpětné vazby lékaře")
 
 
 # ── §8.4 Decision (závěr komise) ──────────────────────────────────────────────

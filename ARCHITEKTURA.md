@@ -22,7 +22,7 @@
   - **Django 5.2 + DRF** na **VPS** (`WEB_Template/backend`) v Dockeru s Traefikem;
   - vedle běží **InterSystems IRIS for Health** jako **nemocniční databáze** (FHIR R4 server + Vector Search);
   - PostgreSQL drží jen stav aplikace.
-- **AI:** **Google AI Studio (Gemini API, placený tier)**: LLM, embeddingy i přepis audia ([§5.7](#57-model-a-ochrana-údajů)).
+- **AI:** výchozí **NVIDIA** (`nemotron-3-super-120b-a12b` + embeddingy `nemotron-3-embed-1b`, OCR `nemotron-parse`), přepis audia **Groq Whisper**, alternativa **Gemini**; výběr v `.env` ([§5.7](#57-model-a-ochrana-údajů), T-323). V produkci NIM on-prem / EU.
 - **Data:** dataset od Asseco **už je FHIR R4**:
   - 6 pacientů, 1 091 resources;
   - 42 číslovaných pasáží guidelines;
@@ -832,19 +832,20 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   1. nahrajeme vlastní simulovanou diskusi komise k demo pacientovi (2–3 min, více mluvčích, audio `m4a`/`mp3`);
   2. případně napíšeme textový přepis.
 - **Přepis:**
-  - Gemini s audio vstupem (`gemini-3.8-flash`; v seznamu modelů je i `gemini-3.5-transcribe`, **ověřit**);
-  - prompt: mluvčí (role), časové značky `MM:SS`, výstup jako JSON segmenty (`response_schema`);
+  - výchozí **Groq Whisper** `whisper-large-v3` (`verbose_json`, čeština, slovník domény; 3 min nahrávky ≈ 3 s). Whisper mluvčí nerozlišuje: role úseků doplní LLM (`scribe.label_speakers`, „neuvedeno“, když to nejde poznat). Alternativa Gemini s audio vstupem (rozliší mluvčí sám);
+  - časové značky `MM:SS`, výstup jako segmenty (`Transcript`);
+  - **nahrávání přímo v jednání komise** (T-323): přepínač „Nahrávat diskusi“ v boku agendy nahrává pacienta na řadě (MediaRecorder, opus 32 kb/s), po přepnutí pacienta úsek sám odešle na `…/scribe/` → draft závěru;
   - limity: inline audio ≤ 20 MB na request, větší soubory přes Files API.
 - **Výstup:**
   - draft `Decision` (rozhodnutí, zdůvodnění, úkoly s vlastníkem a termínem, re-MDT) s citacemi na segmenty přepisu (`P03-mdt02-prepis#12`);
   - přepis se uloží jako `DocumentReference/Pxx-mdtNN-prepis`.
 - Vždy jen **draft**. Předseda edituje a potvrzuje.
 - **Implementace (T-305):** `POST /api/mdt/cases/{cid}/scribe/` (předseda, lékař; multipart `audio` ≤ 20 MB, nebo JSON `{transcript}` „MM:SS mluvčí: text“ / `{segments}`) → job `scribe` → `services/ai/scribe.py:generate_scribe`.
-  1. Audio přepíše `provider.transcribe` (Gemini, `Transcript`).
+  1. Audio přepíše `transcription_provider().transcribe` (Groq Whisper, jinak Gemini; `Transcript`), chybějící mluvčí doplní `label_speakers`.
   2. Přepis se uloží jako `DocumentReference/{next_mdt_id}-prepis` (text/plain, úsek = odstavec, takže `#n` = n-tý úsek a resolver citací ho umí); vazba `context.related` na nominaci `ServiceRequest`, protože `Composition` vznikne až potvrzením.
   3. LLM (`ScribeDraft`) z přepisu a kontextu pacienta sestaví draft `Decision`. Citace mimo přepis a kontext se zahodí, úkol bez termínu dostane termín re-MDT (jinak MDT + 14 dní), `study_ids` jen `RKT-nn`, `transcript_ref` = ID přepisu.
   4. Bez LLM (mock) se nic nevymýšlí: závěr = poslední slovo předsedy s citací, úkoly prázdné.
-  5. Potvrzený závěr zapisovatel nepřepíše (409). Živě s Gemini: nahrávka P03 (3:01) → 13 úseků a draft se 4 úkoly jako v `expected_decision` za 54 s.
+  5. Potvrzený závěr zapisovatel nepřepíše (409). Živě s Gemini: nahrávka P03 (3:01) → 13 úseků a draft se 4 úkoly za 54 s. **Živě s Groq + NVIDIA (T-323):** 18 úseků za 3,4 s, role mluvčích, draft se záměrem kurativní a 5 úkoly; přítomní z rolí mluvčích.
 
 ### 5.7 Model a ochrana údajů
 
@@ -1142,7 +1143,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
 | GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
-| POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
+| POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config, feedback?}`, vrátí `{job_id}`. **Zpětná vazba lékaře** (T-323): `feedback: {text, sections?: SectionId[]}` = co bylo v předchozí verzi špatně a na co se zaměřit; text 3–1000 znaků, pseudonymizovaný, jde do promptů vybraných částí (nic = všech, `services/ai/prompt_config.feedback_note`), uloží se v parametrech jobu a v `Brief.feedback` (kdo, kdy) |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
 | GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, lékař) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
@@ -1305,6 +1306,7 @@ interface Brief {
   red_flags: RedFlag[];
   decision_support?: DecisionSupport;
   stats: { claims_total: number; claims_unverified: number; missing_total: number };   // ze všech Claim v podkladu (hlavička, sekce i B2), compute_stats()
+  feedback?: { text: string; sections: SectionId[]; by: string; at: string };          // přegenerováno podle zpětné vazby lékaře (T-323)
 }
 
 // sections[] obsahuje jen textové sekce: summary, timeline, anamnesis, role_views, modalities.

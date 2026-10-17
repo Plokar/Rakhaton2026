@@ -10,6 +10,7 @@ import { AiBlock } from './AiBlock';
 import { CaseHeader } from './CaseHeader';
 import { CitationProvider, Citations, collectCitations } from './citations';
 import { SectionClaims } from './ClaimList';
+import { FeedbackNote } from './GenerateBrief';
 import { BriefDataProvider, type BriefDataSource } from './data-source';
 import { RedFlagList } from './RedFlagList';
 import { RoleSection } from './RoleSection';
@@ -200,6 +201,7 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
             <p className="text-sm text-muted-foreground">Možnosti léčby, studie a otázky k diskusi v tomto podkladu zatím nejsou.</p>
           )}
 
+          {brief.feedback && <FeedbackNote feedback={brief.feedback} />}
           <p className="border-t border-border pt-4 text-xs text-muted-foreground">
             Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
             <span className="tabular-nums">{brief.stats.claims_total}</span>, neověřených <span className="tabular-nums">{brief.stats.claims_unverified}</span>,

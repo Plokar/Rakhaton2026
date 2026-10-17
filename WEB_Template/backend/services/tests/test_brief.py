@@ -48,6 +48,22 @@ def section(brief, section_id):
     return next(s for s in brief["sections"] if s["id"] == section_id)
 
 
+def test_doctor_feedback_goes_only_to_chosen_part_and_is_kept_with_brief():
+    """T-323: připomínka lékaře při přegenerování jde jen do promptu vybrané části; podklad ji nese, snapshot ne."""
+    feedback = {"text": "Souhrn vynechal, že CT hrudníku chybí", "sections": ["summary"], "by": "Předseda",
+                "at": "2026-10-17T10:00:00+02:00"}
+    provider = PromptCaptureProvider(responses={"SummaryOutput": P03_SUMMARY})
+    brief = brief_for("P03", provider, config={"_feedback": feedback})
+    with_note = [p for p in provider.system_prompts if "Zpětná vazba lékaře" in p]
+    assert len(with_note) == 1 and with_note[0].startswith(brief_module.SUMMARY_PROMPT) and feedback["text"] in with_note[0]
+    assert brief["feedback"] == feedback and "_feedback" not in brief["config"]
+    schemas.Brief.model_validate(brief)
+    everywhere = PromptCaptureProvider(responses={"SummaryOutput": P03_SUMMARY})
+    brief_for("P03", everywhere, config={"_feedback": {**feedback, "sections": []}})          # bez výběru = všechny části
+    assert sum("Zpětná vazba lékaře" in p for p in everywhere.system_prompts) > 1
+    assert "feedback" not in brief_for("P03")
+
+
 # ── DoD: P03 ──────────────────────────────────────────────────────────────────
 def test_p03_brief_valid_and_grounded():
     brief = brief_for("P03", MockAIProvider(responses={"SummaryOutput": P03_SUMMARY}))

@@ -18,7 +18,7 @@ import { AiBlock } from '../AiBlock';
 import { Citations } from '../citations';
 import { ClaimItem, ClaimList, SectionClaims } from '../ClaimList';
 import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-source';
-import { GenerateBrief, useBriefJob } from '../GenerateBrief';
+import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
 import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
@@ -393,6 +393,7 @@ function DetailLayout({
             <React.Fragment key={b.def.id}>{b.node}</React.Fragment>
           ))}
 
+          {brief?.feedback && <FeedbackNote feedback={brief.feedback} />}
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">
               Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
@@ -473,6 +474,7 @@ function StickyCaseHeader({
   const isDemo = caseKey === DEMO_CASE;
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
+  const [regenerating, setRegenerating] = React.useState(false);
   const flags = brief?.red_flags.length ?? 0;
 
   return (
@@ -557,8 +559,8 @@ function StickyCaseHeader({
                   </DropdownMenuItem>
                 )}
                 {canGenerate && brief && (
-                  <DropdownMenuItem onClick={() => void job.start()} disabled={job.running || job.starting}>
-                    <RefreshCw aria-hidden /> Přegenerovat podklad
+                  <DropdownMenuItem onClick={() => setRegenerating(true)} disabled={job.running || job.starting}>
+                    <RefreshCw aria-hidden /> Přegenerovat s připomínkou…
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -566,6 +568,7 @@ function StickyCaseHeader({
           </div>
         </div>
         {job.progress}
+        <RegenerateDialog open={regenerating} onClose={() => setRegenerating(false)} onSubmit={(feedback) => void job.start(feedback)} />
         <div className="xl:hidden">
           <SectionNav sections={sections} variant="tabs" />
         </div>

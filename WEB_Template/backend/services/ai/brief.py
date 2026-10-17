@@ -166,7 +166,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         "patient_id": patient_id,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "model": getattr(provider, "model_name", None) or _model_name(provider),
-        "config": config,
+        "config": {k: v for k, v in config.items() if not k.startswith("_")},     # `_feedback` mimo snapshot §8.5
         "status": "draft",
         "header": header,
         "sections": sections,
@@ -177,6 +177,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
             "claims_unverified": sum(1 for c in claims if c["kind"] == "claim" and c["verification"] == "unverified"),
             "missing_total": sum(1 for c in claims if c["kind"] == "missing"),
         },
+        **({"feedback": config["_feedback"]} if config.get("_feedback") else {}),
     }
     progress(100)
     return brief

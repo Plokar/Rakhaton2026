@@ -145,7 +145,8 @@ function DetailLayout({
 }) {
   const me = useMe();
   const isDemo = caseKey === DEMO_CASE;
-  const canGenerate = !isDemo && can.generateBrief(me);
+  // T-326: podklad generuje zadávající lékař, přizvaný lékař nebo předseda
+  const canGenerate = !isDemo && (item ? can.editCase(me, item) : can.manageBoards(me));
   const hideUnverified = brief?.config.hide_unverified ?? false;
   const forMe = useForMeQuery(isDemo ? null : Number(caseKey), me?.specialty && me.specialty !== 'patient' ? me.specialty : null);
   const view = forMe.data ?? null;

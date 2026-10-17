@@ -101,7 +101,10 @@ def test_register_requires_specialty_and_sees_all_patients(seeded):
 
 def test_chair_manages_roles_and_specialty(seeded):
     chirurg = get_user_model().objects.get(username='chirurg')
-    assert as_user('onkolog').get('/api/mdt/users/').status_code == 403
+    assert as_user('chirurg').get('/api/mdt/users/').status_code == 403      # člen komise jen ke čtení
+    assert as_user('onkolog').get('/api/mdt/users/').status_code == 200      # lékař vybírá spolupracovníky (T-326)
+    predseda = get_user_model().objects.get(username='predseda')
+    assert as_user('onkolog').patch(f'/api/mdt/users/{predseda.pk}/', {'role': 'mdt_viewer'}, format='json').status_code == 403
     users = {u['username']: u for u in as_user('predseda').get('/api/mdt/users/').json()}
     assert users['chirurg']['specialty'] == 'surgeon' and users['predseda']['role'] == 'mdt_admin'
     r = as_user('predseda').patch(f'/api/mdt/users/{chirurg.pk}/', {'role': 'mdt_doctor', 'specialty': 'radiologist'},

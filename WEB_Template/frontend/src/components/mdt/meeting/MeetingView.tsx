@@ -44,6 +44,7 @@ import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
 import { AddPatientSheet } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
+import { CollaboratorsDialog } from '../CollaboratorsDialog';
 import { dayLabel, timeLabel } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
@@ -81,6 +82,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const wide = useMediaQuery('(min-width: 1024px)');
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
+  const [collaborating, setCollaborating] = React.useState(false);
   useFocusLayout();
 
   React.useEffect(() => {
@@ -145,7 +147,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         caseId={current.id}
         warningsHref={`/dashboard/cases/${current.id}#varovani`}
         anamnesisEmpty={
-          sources.brief.data === null && can.generateBrief(me) ? (
+          sources.brief.data === null && can.editCase(me, current) ? (
             <div className="flex flex-col items-start gap-2">
               <p className="text-sm text-muted-foreground">
                 Podklad zatím nevznikl. Přehled výše stojí na datech z IRIS a pravidlech, anamnézu doplní AI.
@@ -164,9 +166,11 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
             onNext={() => go(1)}
             onToggleDiscussed={toggleDiscussed}
             busy={status.isPending}
+            onCollaborate={can.inviteToCase(me, current) ? () => setCollaborating(true) : undefined}
           />
         }
       />
+      {collaborating && <CollaboratorsDialog key={`collab-${current.id}`} item={current} open onOpenChange={setCollaborating} />}
     </div>
   ) : (
     <div className="flex flex-1 items-center justify-center p-6">
@@ -464,6 +468,7 @@ function CaseToolbar({
   onNext,
   onToggleDiscussed,
   busy,
+  onCollaborate,
 }: {
   item: Case;
   index: number;
@@ -473,6 +478,8 @@ function CaseToolbar({
   onNext: () => void;
   onToggleDiscussed: () => void;
   busy: boolean;
+  /** Přizvat ke spolupráci (T-326): jen předseda nebo zadávající lékař. */
+  onCollaborate?: () => void;
 }) {
   const done = isDiscussed(item);
   return (
@@ -491,6 +498,20 @@ function CaseToolbar({
           <Button variant="outline" size="lg" onClick={onToggleDiscussed} disabled={busy} aria-pressed={done} title="Označit jako projednané (H)">
             <CircleCheck aria-hidden className={cn(done && 'text-emerald-700 dark:text-emerald-400')} />
             {done ? 'Projednáno' : 'Projednat'} <Kbd className="ml-1 hidden @3xl:inline-flex">H</Kbd>
+          </Button>
+        )}
+        {onCollaborate && (
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={onCollaborate}
+            aria-label={item.collaborators?.length ? `Spolupráce, přizváno ${item.collaborators.length}` : 'Spolupráce'}
+            title={item.collaborators?.length ? `Spolupracují: ${item.collaborators.map((u) => u.name).join(', ')}` : 'Přizvat lékaře ke spolupráci'}
+          >
+            <UsersRound aria-hidden />
+            {/* popisek až na široké ploše, jinak se lišta zalomí (1440 px s agendou) */}
+            <span className="hidden @5xl:inline">Spolupráce</span>
+            {item.collaborators?.length ? <span className="tabular-nums">{item.collaborators.length}</span> : null}
           </Button>
         )}
       </span>

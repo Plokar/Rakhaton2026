@@ -1,12 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Scale, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import type { Decision, RedFlag, RoleId, Source } from '@/types/mdt';
+import type { Decision, EvidenceId, Light, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
 import { Citations } from './citations';
+import { CompatibilityLight } from './CompatibilityLight';
 import { ROLE_META } from './roles';
 
 type Sections = Decision['sections'];
@@ -144,20 +145,246 @@ function Optional({
 }
 
 /**
+ * Kontrola souladu s guidelines při zápisu (zadání B2), stejné pravidlo jako backend `guideline_deviation`:
+ * zvolený postup má v semaforu „pozor“ / „vylučuje“, nebo předseda uvedl „není v souladu“ → chce krátké zdůvodnění.
+ * Odchylka nic neblokuje; bez zdůvodnění jen nejde závěr potvrdit.
+ */
+export function guidelineDeviation(s: Sections): string | null {
+  const risky = (s.options_considered ?? []).filter((o) => o.chosen && (o.light === 'red' || o.light === 'orange')).map((o) => o.title);
+  const compliance = s.guideline_compliance;
+  if (risky.length === 0 && !(compliance && !compliance.compliant)) return null;
+  if (compliance?.reason.trim()) return null;
+  return risky.length
+    ? `Zvolený postup má v semaforu „pozor“ nebo „vylučuje“ (${risky.join('; ')}). Uveďte soulad s doporučenými postupy a krátké zdůvodnění.`
+    : 'Závěr se odchyluje od doporučených postupů. Doplňte krátké zdůvodnění odchylky.';
+}
+
+type OptionRow = { id: string; title: string; light: Light | null; citations: EvidenceId[]; considered: boolean; chosen: boolean };
+
+/**
+ * Zvažované možnosti (všechny postupy ze semaforu, i červené, D-015) se zvoleným postupem a soulad s guidelines
+ * (ano / ne + důvod odchylky). Barvu semaforu počítá kód, tady se jen uloží do záznamu.
+ */
+function GuidelineCompliance({
+  s,
+  set,
+  options,
+  readOnly,
+}: {
+  s: Sections;
+  set: (patch: Partial<Sections>) => void;
+  options: ProcedureCompatibility[];
+  readOnly: boolean;
+}) {
+  const saved = new Map((s.options_considered ?? []).map((o) => [o.id, o]));
+  const rows: OptionRow[] = options.length
+    ? options.map((o) => ({
+        id: o.id,
+        title: o.title,
+        light: o.compatibility.overall,
+        citations: o.guideline_citations,
+        considered: saved.has(o.id),
+        chosen: saved.get(o.id)?.chosen ?? false,
+      }))
+    : (s.options_considered ?? []).map((o) => ({ ...o, light: o.light ?? null, citations: [], considered: true }));
+  const shown = readOnly ? rows.filter((r) => r.considered) : rows;
+  const compliance = s.guideline_compliance ?? null;
+  const deviation = guidelineDeviation(s);
+  const reasonId = React.useId();
+
+  const write = (row: OptionRow, next: { considered: boolean; chosen: boolean }) => {
+    const rest = (s.options_considered ?? []).filter((o) => o.id !== row.id);
+    set({
+      options_considered: next.considered || next.chosen
+        ? [...rest, { id: row.id, title: row.title, light: row.light, chosen: next.chosen }]
+        : rest,
+    });
+  };
+  const setCompliant = (compliant: boolean) => {
+    const chosenCitations = rows.filter((r) => r.chosen).flatMap((r) => r.citations);
+    set({
+      guideline_compliance: {
+        compliant,
+        reason: compliance?.reason ?? '',
+        citations: compliance?.citations.length ? compliance.citations : [...new Set(chosenCitations)],
+      },
+    });
+  };
+
+  return (
+    <Field
+      label="Zvažované možnosti a soulad s doporučenými postupy"
+      hint={<span className="font-normal text-muted-foreground">semafor počítá kód, rozhoduje komise</span>}
+    >
+      {shown.length > 0 ? (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {shown.map((row) => (
+            <li key={row.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
+              <label className="flex min-w-0 flex-1 items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={row.considered}
+                  disabled={readOnly}
+                  onChange={(e) => write(row, { considered: e.target.checked, chosen: e.target.checked && row.chosen })}
+                />
+                <span className="min-w-0">
+                  {row.title}
+                  <Citations ids={row.citations} />
+                </span>
+              </label>
+              {row.light && <CompatibilityLight light={row.light} />}
+              <label className={cn('flex items-center gap-1.5 text-xs font-medium', row.chosen ? 'text-foreground' : 'text-muted-foreground')}>
+                <input
+                  type="checkbox"
+                  checked={row.chosen}
+                  disabled={readOnly}
+                  onChange={(e) => write(row, { considered: true, chosen: e.target.checked })}
+                />
+                zvoleno
+              </label>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {readOnly ? 'Zvažované možnosti nebyly zapsány.' : 'Možnosti ze semaforu se načítají z podkladu případu.'}
+        </p>
+      )}
+
+      <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-sm">
+        <legend className="sr-only">Soulad s doporučenými postupy</legend>
+        <span className="text-[13px] font-medium">V souladu s guidelines?</span>
+        {([true, false] as const).map((value) => (
+          <label key={String(value)} className="flex items-center gap-1.5">
+            <input
+              type="radio"
+              name="guideline-compliance"
+              checked={compliance?.compliant === value}
+              disabled={readOnly}
+              onChange={() => setCompliant(value)}
+            />
+            {value ? 'Ano' : 'Ne, odchylka'}
+          </label>
+        ))}
+        {compliance && compliance.citations.length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            Pasáže:
+            <Citations ids={compliance.citations} />
+          </span>
+        )}
+      </fieldset>
+      {(deviation || (compliance && (!compliance.compliant || compliance.reason))) && (
+        <div className="space-y-1">
+          <label htmlFor={reasonId} className="text-[13px] font-medium">Zdůvodnění odchylky</label>
+          <Input
+            id={reasonId}
+            value={compliance?.reason ?? ''}
+            disabled={readOnly}
+            placeholder="Krátce, proč se komise od doporučených postupů odchyluje"
+            onChange={(e) =>
+              set({ guideline_compliance: { compliant: compliance?.compliant ?? false, citations: compliance?.citations ?? [], reason: e.target.value } })
+            }
+          />
+        </div>
+      )}
+      {deviation && (
+        <p role="status" className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-400/10 dark:text-amber-200">
+          <Scale className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            <span className="font-medium">Kontrola souladu s guidelines:</span> {deviation} Závěr to neblokuje, bez zdůvodnění ho ale nejde potvrdit.
+          </span>
+        </p>
+      )}
+    </Field>
+  );
+}
+
+/** Odlišná stanoviska členů komise (zadání C): kdo, v jaké roli a co. */
+function Dissent({ s, set, readOnly }: { s: Sections; set: (patch: Partial<Sections>) => void; readOnly: boolean }) {
+  const items = s.dissent ?? [];
+  const update = (i: number, patch: Partial<NonNullable<Sections['dissent']>[number]>) =>
+    set({ dissent: items.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+  return (
+    <Field label="Odlišná stanoviska členů">
+      {items.length === 0 && <p className="text-sm text-muted-foreground">Bez odlišného stanoviska.</p>}
+      <ul className="space-y-2">
+        {items.map((d, i) => (
+          <li key={i} className="space-y-1.5 rounded-lg border border-border p-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                className="min-w-0 flex-1"
+                value={d.member}
+                disabled={readOnly}
+                aria-label="Člen komise"
+                placeholder="Jméno nebo kód lékaře"
+                onChange={(e) => update(i, { member: e.target.value })}
+              />
+              <select
+                className={fieldClass}
+                value={d.role}
+                disabled={readOnly}
+                aria-label="Role"
+                onChange={(e) => update(i, { role: e.target.value as RoleId | 'chair' })}
+              >
+                {ATTENDEE_ROLES.map((r) => (
+                  <option key={r} value={r}>{roleLabel(r)}</option>
+                ))}
+              </select>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => set({ dissent: items.filter((_, j) => j !== i) })}
+                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-destructive"
+                  aria-label="Odebrat stanovisko"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <Textarea
+              rows={2}
+              value={d.text}
+              disabled={readOnly}
+              aria-label="Stanovisko"
+              placeholder="V čem se stanovisko liší a proč"
+              onChange={(e) => update(i, { text: e.target.value })}
+            />
+          </li>
+        ))}
+      </ul>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={() => set({ dissent: [...items, { member: '', role: 'surgeon', text: '' }] })}
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+        >
+          <Plus className="h-3.5 w-3.5" aria-hidden /> Přidat odlišné stanovisko
+        </button>
+      )}
+    </Field>
+  );
+}
+
+/**
  * Zápis závěru komise ve struktuře záznamu MDT z datasetu (FR-C1, C2, R4, D-009): otázka, zhodnocení,
- * záměr, postup po modalitách, diagnostika, studie, re-MDT, závěr, podmíněné doporučení (OBC-1.1),
- * priorita nádorů (OBC-1.4), přítomní, úkoly a varovné signály. AI text je odlišený, rozhoduje lékař.
+ * záměr, postup po modalitách, zvažované možnosti a soulad s guidelines (zadání B2, C), diagnostika, studie,
+ * re-MDT, závěr, podmíněné doporučení (OBC-1.1), priorita nádorů (OBC-1.4), přítomní, odlišná stanoviska,
+ * úkoly a varovné signály. AI text je odlišený, rozhoduje lékař.
  */
 export function DecisionEditor({
   decision,
   onChange,
   readOnly,
   redFlags,
+  options = [],
 }: {
   decision: Decision;
   onChange: (d: Decision) => void;
   readOnly: boolean;
   redFlags: RedFlag[];
+  /** Postupy ze semaforu (GET compatibility) pro zvažované možnosti; bez nich se ukáže jen uložený výběr. */
+  options?: ProcedureCompatibility[];
 }) {
   const s = decision.sections;
   const set = (patch: Partial<Sections>) => onChange({ ...decision, sections: { ...s, ...patch } });
@@ -254,6 +481,8 @@ export function DecisionEditor({
           </button>
         )}
       </Field>
+
+      <GuidelineCompliance s={s} set={set} options={options} readOnly={readOnly} />
 
       <Optional
         present={!!s.extra_diagnostics}
@@ -421,6 +650,8 @@ export function DecisionEditor({
           Pacient byl přítomen
         </label>
       </Field>
+
+      <Dissent s={s} set={set} readOnly={readOnly} />
 
       <Field label="Úkoly po zasedání">
         <ul className="space-y-2">

@@ -38,11 +38,18 @@ def _require(request, *allowed: str) -> None:
         raise PermissionDenied('Na tuto akci nemáte oprávnění (role MDT).')
 
 
+def can_edit_case(user, case: MdtCase) -> bool:
+    """Předseda jakýkoli případ, zadávající lékař svého pacienta, přizvaný lékař případ, ke kterému byl přizván
+    (T-326; přizvání dává právo úprav i členovi komise s rolí jen ke čtení, např. chirurgovi k resekabilitě)."""
+    r = roles.role(user)
+    if r == roles.ADMIN or (r == roles.DOCTOR and case.created_by_id == user.pk):
+        return True
+    return case.pk is not None and case.collaborators.filter(pk=user.pk).exists()
+
+
 def _require_case_edit(request, case: MdtCase) -> None:
-    """Předseda jakýkoli případ, zadávající lékař jen svého pacienta."""
-    r = roles.role(request.user)
-    if not (r == roles.ADMIN or (r == roles.DOCTOR and case.created_by_id == request.user.pk)):
-        raise PermissionDenied('Případ smí měnit jen zadávající lékař nebo předseda.')
+    if not can_edit_case(request.user, case):
+        raise PermissionDenied('Případ smí měnit jen zadávající lékař, přizvaný lékař nebo předseda.')
 
 
 # ── serializace ──────────────────────────────────────────────────────────────
@@ -66,7 +73,8 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'service_request_id': c.service_request_fhir_id, 'question': c.question, 'status': c.status,
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
-            'created_by': _user(c.created_by), 'patient': patient}
+            'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
+            'patient': patient}
 
 
 def _datetime(value) -> timezone.datetime:
@@ -100,8 +108,9 @@ def me(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_list(request):
-    """Uživatelé s rolí a odborností (`Me[]`, T-319), jen předseda."""
-    _require(request, roles.ADMIN)
+    """Uživatelé s rolí a odborností (`Me[]`, T-319). Číst smí předseda a lékař (T-326: zadávající lékař vybírá,
+    koho přizvat ke spolupráci); role a odbornost mění jen předseda (`user_detail`)."""
+    _require(request, roles.ADMIN, roles.DOCTOR)
     users = get_user_model().objects.filter(is_active=True).order_by('username')
     return Response([_member(u) for u in users])
 
@@ -201,7 +210,7 @@ def session_order(request, sid):
 
 def _agenda_response(s: MdtSession) -> Response:
     """Board + agenda v pořadí `MdtCase.order` (hlavička pacienta z IRIS)."""
-    cases = list(s.cases.select_related('created_by'))
+    cases = list(s.cases.select_related('created_by').prefetch_related('collaborators'))
     by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
     return Response({**_session(s), 'cases': [_case(c, by_id.get(c.patient_fhir_id)) for c in cases]})
 
@@ -242,13 +251,14 @@ def case_detail(request, cid):
     přeskočené údaje, `acknowledge: [warning_id]` (odkliknutí se jen přidává, D-019), `status` (jen předseda)."""
     case = get_object_or_404(MdtCase.objects.select_related('session', 'created_by'), pk=cid)
     _require_case_edit(request, case)
-    _validate_case_input(request, request.data)
+    _validate_case_input(request, request.data, case)
+    _validate_collaborators(request, request.data, case)
     with transaction.atomic():
         written = _apply_case_input(request, case, request.data)
     return Response({**_case(case), 'fhir_written': written})
 
 
-def _validate_case_input(request, data) -> None:
+def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
     if 'ecog' in data and data['ecog'] is not None and data['ecog'] not in range(5):
         raise ValidationError({'ecog': 'ECOG 0–4 nebo null.'})
     if 'intent' in data and data['intent'] not in ('C', 'P', None):
@@ -262,6 +272,21 @@ def _validate_case_input(request, data) -> None:
         _require(request, roles.ADMIN)
         if data['status'] not in dict(MdtCase.STATUS):
             raise ValidationError({'status': f'Jen {", ".join(dict(MdtCase.STATUS))}.'})
+
+
+def _validate_collaborators(request, data, case: MdtCase | None) -> None:
+    """`collaborators: [user_id]` mění jen předseda nebo zadávající lékař; přizvaný lékař další nepřizývá."""
+    if 'collaborators' not in data:
+        return
+    ids = data['collaborators']
+    if not (isinstance(ids, list) and all(isinstance(x, int) and not isinstance(x, bool) for x in ids)):
+        raise ValidationError({'collaborators': 'Seznam ID uživatelů.'})
+    creator = case.created_by_id if case else request.user.pk
+    if not (roles.role(request.user) == roles.ADMIN or creator == request.user.pk):
+        raise PermissionDenied('Ke spolupráci přizývá zadávající lékař nebo předseda.')
+    known = set(get_user_model().objects.filter(pk__in=ids, is_active=True).values_list('pk', flat=True))
+    if missing := sorted(set(ids) - known):
+        raise ValidationError({'collaborators': f'Neznámí uživatelé: {missing}.'})
 
 
 def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None) -> list[str]:
@@ -282,6 +307,8 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
     start = len(case.acknowledged_warnings)
     case.acknowledged_warnings += new_acks
     case.save()
+    if 'collaborators' in data:      # ověřeno v _validate_collaborators; zadávající lékař sám sebe nepřizývá
+        case.collaborators.set([uid for uid in data['collaborators'] if uid != case.created_by_id])
     ecog = data.get('ecog') if 'ecog' in data else None
     intent = data.get('intent')
     if ecog is None and not intent and not new_acks:
@@ -386,6 +413,7 @@ def case_create(request):
     _require(request, roles.ADMIN, roles.DOCTOR)
     data = request.data
     _validate_case_input(request, data)
+    _validate_collaborators(request, data, None)
     session = get_object_or_404(MdtSession, pk=data.get('session'))
     pid = data.get('patient_id')
     prefill = intake.intake_prefill(_patient_resources(pid), data.get('skipped_fields', []))
@@ -415,14 +443,14 @@ def case_create(request):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def case_brief(request, cid):
-    """GET: poslední podklad (Brief §8.2). POST `{config_id | config}` (předseda, lékař): spustí generování → `{job_id}`."""
+    """GET: poslední podklad (Brief §8.2). POST `{config_id | config}` (předseda, zadávající nebo přizvaný lékař): spustí generování → `{job_id}`."""
     case = get_object_or_404(MdtCase.objects.select_related('session__config'), pk=cid)
     if request.method == 'GET':
         brief = case.briefs.first()
         if brief is None:
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
         return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
-    _require(request, roles.ADMIN, roles.DOCTOR)
+    _require_case_edit(request, case)
     job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
                                        created_by=request.user)
     jobs.start(job)
@@ -433,13 +461,13 @@ def case_brief(request, cid):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def case_patient_summary(request, cid):
-    """Shrnutí pro pacienta (BON-4). GET: uložené shrnutí. POST (předseda, lékař): job z potvrzeného závěru → 202 `{job_id}`."""
+    """Shrnutí pro pacienta (BON-4). GET: uložené shrnutí. POST (předseda, zadávající nebo přizvaný lékař): job z potvrzeného závěru → 202 `{job_id}`."""
     case = get_object_or_404(MdtCase, pk=cid)
     decision = Decision.objects.filter(case=case).first()
     if request.method == 'GET':
         summary = (decision.content if decision else {}).get('patient_summary')
         return Response(summary) if summary else Response({'detail': 'Shrnutí ještě není.'}, status=404)
-    _require(request, roles.ADMIN, roles.DOCTOR)
+    _require_case_edit(request, case)
     if not decision or decision.status != 'confirmed':
         return Response({'detail': 'Shrnutí pro pacienta vzniká až z potvrzeného závěru.'}, status=409)
     job = GenerationJob.objects.create(case=case, kind='patient_summary', params={}, created_by=request.user)
@@ -510,8 +538,8 @@ AUDIO_MAX_BYTES = 20 * 1024 * 1024          # inline limit Gemini (ARCH §5.6)
 @permission_classes([IsAuthenticated])
 def case_scribe(request, cid):
     """AI zapisovatel (BON-3): multipart `audio` nebo JSON `{transcript}` / `{segments}` → job → draft závěru (202 `{job_id}`)."""
-    _require(request, roles.ADMIN, roles.DOCTOR)
     case = get_object_or_404(MdtCase, pk=cid)
+    _require_case_edit(request, case)
     if Decision.objects.filter(case=case, status='confirmed').exists():
         return Response({'detail': 'Závěr je potvrzený, zapisovatel ho nemůže přepsat.'}, status=409)
     audio = request.FILES.get('audio')
@@ -563,14 +591,14 @@ def config_detail(request, cfg_id):
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def case_decision(request, cid):
-    """Draft závěru (Decision §8.4). PUT (předseda, lékař) validuje schéma; potvrzený závěr nejde měnit."""
+    """Draft závěru (Decision §8.4). PUT (předseda, zadávající nebo přizvaný lékař, T-326) validuje schéma; potvrzený závěr nejde měnit."""
     case = get_object_or_404(MdtCase, pk=cid)
     decision = Decision.objects.filter(case=case).first()
     if request.method == 'GET':
         if decision is None:
             return Response({'detail': 'Závěr ještě není.'}, status=404)
         return Response(decision.content)
-    _require(request, roles.ADMIN, roles.DOCTOR)
+    _require_case_edit(request, case)
     if decision and decision.status == 'confirmed':
         return Response({'detail': 'Závěr je potvrzený a zapsaný v IRIS, nelze ho měnit.'}, status=409)
     try:
@@ -594,6 +622,9 @@ def case_decision_confirm(request, cid):
         decision = get_object_or_404(Decision.objects.select_for_update(), case=case)
         if decision.status == 'confirmed':
             return Response({'detail': 'Závěr už je potvrzený.', 'fhir_ids': decision.fhir_ids}, status=409)
+        deviation = writeback.guideline_deviation(decision.content['sections'])
+        if deviation:                                   # zadání B2: odchylka od guidelines chce krátké zdůvodnění
+            return Response({'detail': deviation, 'field': 'guideline_compliance'}, status=400)
         brief = case.briefs.first()
         red_flags = {f['id']: f for f in (brief.content.get('red_flags', []) if brief else [])}
         now = timezone.localtime()

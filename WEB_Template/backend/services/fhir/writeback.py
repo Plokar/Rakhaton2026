@@ -24,6 +24,7 @@ ROLES_CS = {'chair': 'předseda komise', 'surgeon': 'chirurg', 'oncologist': 'kl
             'radiation_oncologist': 'radiační onkolog', 'radiologist': 'radiolog', 'pathologist': 'patolog',
             'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient'}
 SEVERITY = {'high': 'high', 'moderate': 'moderate', 'low': 'low'}
+LIGHTS = {'green': 'nevylučuje', 'orange': 'pozor', 'red': 'vylučuje', 'grey': 'nelze posoudit', 'skipped': 'nehodnoceno'}
 RE_MDT = 'Plánované re-MDT'
 _FOCUS_PREFIX = 'Požadované zaměření MDT:'
 
@@ -85,6 +86,49 @@ def _cited_resources(evidence_ids) -> list[dict]:
         if rtype and re.match(r'^P\d{2}-', base):
             out[base] = _ref(rtype, base)
     return list(out.values())
+
+
+def record_extras(s: dict) -> list[tuple[str, str]]:
+    """Zvažované možnosti, soulad s guidelines a odlišná stanoviska (zadání C, T-326) jako sekce záznamu MDT."""
+    out = []
+    options = s.get('options_considered') or []
+    if options:
+        lines = []
+        for i, o in enumerate(options, 1):
+            light = f" (semafor: {LIGHTS[o['light']]})" if o.get('light') in LIGHTS else ''
+            lines.append(f"{i}. {o['title']}{' – zvoleno' if o.get('chosen') else ''}{light}")
+        out.append(('Zvažované možnosti', '\n'.join(lines)))
+    compliance = s.get('guideline_compliance')
+    if compliance:
+        text = 'Ano.' if compliance['compliant'] else 'Ne.'
+        if compliance.get('reason'):
+            text += f" Zdůvodnění: {compliance['reason']}"
+        if compliance.get('citations'):
+            text += f" ({', '.join(compliance['citations'])})"
+        out.append(('Soulad s doporučenými postupy', text))
+    dissent = s.get('dissent') or []
+    if dissent:
+        out.append(('Odlišná stanoviska', '\n'.join(
+            f"{d['member']} ({ROLES_CS.get(d['role'], d['role'])}): {d['text']}" for d in dissent)))
+    return out
+
+
+def guideline_deviation(s: dict) -> str | None:
+    """Kontrola souladu s guidelines při zápisu (zadání B2): odchylka nic neblokuje, jen chce krátké zdůvodnění.
+
+    Odchylka = komise zvolila postup, který má v semaforu „pozor“ nebo „vylučuje“ (barvu počítá kód, D-015),
+    nebo předseda sám uvedl „není v souladu“. Vrátí text pro lékaře, nebo None.
+    """
+    risky = [o['title'] for o in s.get('options_considered') or [] if o.get('chosen') and o.get('light') in ('red', 'orange')]
+    compliance = s.get('guideline_compliance')
+    if not risky and not (compliance and not compliance['compliant']):
+        return None
+    if compliance and compliance.get('reason', '').strip():
+        return None
+    if risky:
+        return (f"Zvolený postup má v semaforu „pozor“ nebo „vylučuje“ ({'; '.join(risky)}). "
+                'Uveďte soulad s doporučenými postupy a krátké zdůvodnění.')
+    return 'Závěr se odchyluje od doporučených postupů. Doplňte krátké zdůvodnění odchylky.'
 
 
 def build_decision_bundle(decision: dict, *, patient_id: str, service_request: dict, task: dict, mdt_id: str,
@@ -173,6 +217,7 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
         sections.append(('Podmíněné doporučení', f"{s['conditional']['text']} Chybí: {', '.join(s['conditional']['missing'])}."))
     if s.get('tumor_priority'):
         sections.append(('Priorita nádorů', s['tumor_priority']['text']))
+    sections.extend(record_extras(s))
     sections.append(('Závěr MDT', s['conclusion']['text']))
     composition_sections = [{'title': title, 'text': _div(text)} for title, text in sections]
     composition_sections[1]['entry'] = _cited_resources(s['assessment']['citations'])

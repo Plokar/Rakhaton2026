@@ -127,3 +127,52 @@ def test_tasks_after_confirmation(case, decision):
     assert as_user('chirurg').get('/api/mdt/tasks/?status=x').status_code == 400
     assert as_user('chirurg').get('/api/mdt/tasks/?patient=P04').json() == []
     assert as_user('onkolog').patch('/api/mdt/tasks/P03-zad01-task/', {'status': 'completed'}, format='json').status_code == 400
+
+
+def test_decision_only_by_creator_collaborator_or_chair(case, decision):
+    """T-326: závěr upravuje zadávající lékař (P03 = onkolog), přizvaný lékař nebo předseda, ne jiný lékař."""
+    from django.contrib.auth import get_user_model
+    url = f'/api/mdt/cases/{case.pk}/decision/'
+    assert as_user('pneumolog').put(url, decision, format='json').status_code == 403
+    assert as_user('pneumolog').post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').status_code == 403
+    pneumolog = get_user_model().objects.get(username='pneumolog')
+    r = as_user('onkolog').patch(f'/api/mdt/cases/{case.pk}/', {'collaborators': [pneumolog.pk]}, format='json')
+    assert r.status_code == 200, r.json()
+    assert as_user('pneumolog').put(url, decision, format='json').status_code == 200
+
+
+def test_guideline_deviation_needs_reason(case, decision):
+    """Zadání B2 a C: zvolený postup s „pozor“ / „vylučuje“ nebo „není v souladu“ chce zdůvodnění; zápis do Composition a PDF."""
+    url = f'/api/mdt/cases/{case.pk}/decision/'
+    sections = {**decision['sections'],
+                'options_considered': [
+                    {'id': 'krc-resekce', 'title': 'Resekce jaterních metastáz', 'light': 'orange', 'chosen': True},
+                    {'id': 'krc-anti-egfr', 'title': 'Anti-EGFR', 'light': 'red', 'chosen': False}],
+                'dissent': [{'member': 'LEK-P03-03', 'role': 'surgeon', 'text': 'Preferuje nejdřív konverzní chemoterapii.'}]}
+    assert as_user('predseda').put(url, {**decision, 'sections': sections}, format='json').status_code == 200
+    r = as_user('predseda').post(f'{url}confirm/')
+    assert r.status_code == 400 and r.json()['field'] == 'guideline_compliance' and 'Resekce' in r.json()['detail']
+
+    sections['guideline_compliance'] = {'compliant': False, 'reason': ' ', 'citations': ['KRC-2.1']}
+    as_user('predseda').put(url, {**decision, 'sections': sections}, format='json')
+    assert as_user('predseda').post(f'{url}confirm/').status_code == 400
+
+    sections['guideline_compliance']['reason'] = 'FLR 38 % jen po dvoudobém výkonu, HPB chirurg souhlasí.'
+    as_user('predseda').put(url, {**decision, 'sections': sections}, format='json')
+    r = as_user('predseda').post(f'{url}confirm/')
+    assert r.status_code == 200, r.json()
+    titles = {s['title']: s['text']['div'] for s in client.read('Composition', 'P03-mdt02')['section']}
+    assert 'zvoleno' in titles['Zvažované možnosti'] and 'pozor' in titles['Zvažované možnosti']
+    assert 'Ne. Zdůvodnění: FLR 38 %' in titles['Soulad s doporučenými postupy'] and 'KRC-2.1' in titles['Soulad s doporučenými postupy']
+    assert 'LEK-P03-03 (chirurg)' in titles['Odlišná stanoviska']
+    assert as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/export.pdf').content.startswith(b'%PDF')
+
+
+def test_guideline_deviation_rule():
+    from services.fhir.writeback import guideline_deviation
+    assert guideline_deviation({}) is None
+    assert guideline_deviation({'options_considered': [{'id': 'a', 'title': 'A', 'light': 'green', 'chosen': True}]}) is None
+    assert guideline_deviation({'options_considered': [{'id': 'a', 'title': 'A', 'light': 'red', 'chosen': False}]}) is None
+    assert 'A' in guideline_deviation({'options_considered': [{'id': 'a', 'title': 'A', 'light': 'red', 'chosen': True}]})
+    assert guideline_deviation({'guideline_compliance': {'compliant': False, 'reason': ''}})
+    assert guideline_deviation({'guideline_compliance': {'compliant': True, 'reason': ''}}) is None

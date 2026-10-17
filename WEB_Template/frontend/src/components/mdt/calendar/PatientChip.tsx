@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useDraggable } from '@dnd-kit/core';
 import { m } from 'motion/react';
-import { ArrowRightLeft, FileText, GripVertical, MonitorUp, MoreHorizontal, PanelRight, Undo2 } from 'lucide-react';
+import { ArrowRightLeft, FileText, GripVertical, MonitorUp, MoreHorizontal, PanelRight, Undo2, UsersRound } from 'lucide-react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -39,6 +39,8 @@ export interface ChipActions {
   /** Kam smí přesunout (prázdné = přesun nepovolen). */
   moveTargets: MdtSessionListItem[];
   onMove: (target: MdtSessionListItem) => void;
+  /** Přizvat ke spolupráci (T-326); jen předseda nebo zadávající lékař. */
+  onCollaborate?: () => void;
 }
 
 /** Obsah čipu „P05 · Ž · 68  C50.4  81 %“; v úzkém sloupci se MKN a připravenost zalomí pod jméno. */
@@ -165,6 +167,11 @@ export const PatientChip = React.memo(function PatientChip({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             )}
+            {actions.onCollaborate && (
+              <DropdownMenuItem onClick={actions.onCollaborate}>
+                <UsersRound aria-hidden /> Spolupráce{item.collaborators?.length ? ` (${item.collaborators.length})` : '…'}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={projector}>
               <MonitorUp aria-hidden /> Okno pro projektor
@@ -193,6 +200,11 @@ export const PatientChip = React.memo(function PatientChip({
               ))}
             </ContextMenuSubContent>
           </ContextMenuSub>
+        )}
+        {actions.onCollaborate && (
+          <ContextMenuItem onClick={actions.onCollaborate}>
+            <UsersRound aria-hidden /> Spolupráce{item.collaborators?.length ? ` (${item.collaborators.length})` : '…'}
+          </ContextMenuItem>
         )}
         <ContextMenuSeparator />
         <ContextMenuItem onClick={projector}>

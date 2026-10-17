@@ -948,6 +948,8 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 5. Lékař varování může odkliknout (stačí klik, bez důvodu). Komise v podkladu dál vidí problém, ale ne to, kdo ho odklikl (D-019). Odkliknutí jde do auditu (`DetectedIssue.mitigation`).
 6. Lékař zadá nebo potvrdí ECOG (velká číslice) a záměr **C/P** a zaškrtne připomínku „Snímek mladší než 3 měsíce“. Záměr se předvyplní z poslední MDT; když minulá MDT rozhodnutí odložila, nepředvyplní se.
 
+**Doporučené údaje a šablony (T-317 → T-318):** `data/onko/udaje.tsv` doplňuje povinná pole o doporučené údaje podle diagnózy. Chybějící se hlásí jako `IntakeWarning` s `kind: "missing"`, `severity: "low"`, id `DOP:<údaj>`, titulkem „Doporučeno: …“ a citací zmínky v podkladech. Do readiness se nepočítají. `data/onko/sablony.tsv` dává doporučený `BriefConfig` pro projektor podle diagnózy.
+
 **Zkratky (T-509, FR-R5):** `services/ai/abbreviations.py` a pravidla jako data v `services/ai/data/abbreviations.yaml` (docs/POZADAVKY_LEKARE.md §7.2).
 
 - Výklad je deterministický: sekce („OA:“), pak nejbližší kontextové slovo v odstavci, pak název zprávy a oddělení. Když se výklady přetahují nebo kontext chybí, je výsledek NEJISTOTA AI, nikdy odhad.

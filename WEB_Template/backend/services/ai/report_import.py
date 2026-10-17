@@ -1,6 +1,6 @@
 """Vstup PDF nebo vloženého textu → FHIR (BON-7, T-510).
 
-1. **Návrh** (`propose`): text zprávy (vložený, nebo z PDF parserem `pypdf`; sken přes Gemini) → `DocumentReference/Pxx-impNN`
+1. **Návrh** (`propose`): text zprávy (vložený, nebo z PDF: `services/ai/pdf_text.py`, sken přes OCR) → `DocumentReference/Pxx-impNN`
    s odstavci → LLM vytáhne hodnoty (laboratoř, biomarkery, ECOG, TNM, hmotnost) s číslem odstavce →
    každá hodnota se ověří proti svému odstavci (číslo i datum musí být ve zdroji). Nic se nezapisuje.
 2. **Potvrzení lékařem** (`confirm`): klient pošle návrh zpět (případně jen vybrané hodnoty); server ho znovu
@@ -10,19 +10,22 @@
 from __future__ import annotations
 
 import base64
-import io
+import hashlib
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any, Callable, Literal
 
 from pydantic import BaseModel, Field
 
+from services.ai import pdf_text as pdf_parser
 from services.ai.grounding import _numbers
 from services.ai.text import split_paragraphs
-from services.ai_service import BaseAIProvider, get_ai_provider
+from services.ai_service import AIProviderError, BaseAIProvider, get_ai_provider
 
 AI_TAG = {"system": "https://rakathon.example.org/fhir/CodeSystem/ai-generated", "code": "ai"}
 CATEGORY = {"lab": "laboratory", "biomarker": "laboratory", "ecog": "survey", "tnm": "exam", "vital": "vital-signs"}
+ID_KIND = {"lab": "lab", "biomarker": "bm", "ecog": "ecog", "tnm": "tnm", "vital": "vit"}   # druh v ID jako v datasetu
 LOINC = {"ecog": ("89247-1", "ECOG Performance Status score")}
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -53,37 +56,50 @@ class DocumentText(BaseModel):
     text: str
 
 
-def pdf_text_layer(pdf: bytes) -> str:
-    """Textová vrstva PDF parserem (`pypdf`), bez AI: stránka = odstavce oddělené prázdným řádkem."""
-    from pypdf import PdfReader
-    from pypdf.errors import PdfReadError
-
-    try:
-        reader = PdfReader(io.BytesIO(pdf))
-        if reader.is_encrypted and not reader.decrypt(""):
-            raise ValueError("PDF je zaheslované.")
-        pages = [page.extract_text(extraction_mode="layout") or "" for page in reader.pages]
-    except (PdfReadError, OSError) as exc:
-        raise ValueError(f"Soubor nejde přečíst jako PDF: {exc}") from None
-    # řádky vyrovnané na šířku stránky → bez koncových mezer; víc prázdných řádků = jeden předěl odstavce
-    text = "\n\n".join(re.sub(r"\n{3,}", "\n\n", "\n".join(line.rstrip() for line in page.splitlines())).strip()
-                       for page in pages)
-    return text.strip()
+def _ocr_provider(provider: BaseAIProvider) -> BaseAIProvider | None:
+    """Kdo přečte sken: NVIDIA (`nemotron-parse`, stránka po stránce), jinak Gemini (celé PDF), mock nikdo."""
+    if provider.is_mock:
+        return None
+    for candidate in (provider, get_ai_provider("nvidia"), get_ai_provider("gemini")):
+        if not candidate.is_mock and candidate.provider_name in ("nvidia", "gemini"):
+            return candidate
+    return None
 
 
 def pdf_text(pdf: bytes, provider: BaseAIProvider, log_call: Callable[[str, dict], Any]) -> str:
-    """Text PDF: parser (textová vrstva), u skenu bez textu čtení PDF přes Gemini, jinak srozumitelná chyba."""
-    text = pdf_text_layer(pdf)
-    if len(re.sub(r"\s", "", text)) >= 20:
-        return text
-    reader = provider if provider.is_mock or provider.provider_name == "gemini" else get_ai_provider("gemini")
-    if reader.provider_name != "gemini":
-        raise ValueError("PDF nemá textovou vrstvu (sken). Vložte text zprávy, nebo nastavte GEMINI_API_KEY pro čtení skenů.")
-    result = reader.transcribe(pdf, "application/pdf", prompt=TEXT_PROMPT, response_schema=DocumentText)
-    log_call("import.pdf_text", result)
-    if result.get("status") != "success":
-        raise ValueError(f"Text ze skenu PDF se nepodařilo získat: {result.get('error')}")
-    return (result.get("data") or {}).get("text", "")
+    """Text PDF lékařské zprávy (services/ai/pdf_text.py): textová vrstva parserem, skenované stránky přes OCR."""
+    pages = pdf_parser.text_layer_pages(pdf)
+    scans = [i for i, page in enumerate(pages) if pdf_parser.is_scan(page)]
+    if scans:
+        ocr = _ocr_provider(provider)
+        if ocr is None:
+            raise ValueError("PDF nemá textovou vrstvu (sken). Vložte text zprávy, nebo nastavte NVIDIA_API_KEY pro OCR.")
+        if ocr.provider_name == "gemini":
+            if len(scans) != len(pages):
+                raise ValueError("Smíšené PDF (text + sken) čte OCR jen přes NVIDIA. Vložte text zprávy.")
+            result = ocr.transcribe(pdf, "application/pdf", prompt=TEXT_PROMPT, response_schema=DocumentText)
+            log_call("import.pdf_text", result)
+            if result.get("status") != "success":
+                raise ValueError(f"Text ze skenu PDF se nepodařilo získat: {result.get('error')}")
+            pages = [(result.get("data") or {}).get("text", "")]
+        else:
+            elements = []
+            for i in scans:
+                started = time.monotonic()
+                png = pdf_parser.render_page(pdf, i)
+                try:
+                    elements.append(ocr.parse_page_image(png))
+                except AIProviderError as exc:
+                    raise ValueError(f"OCR stránky {i + 1} se nepovedlo: {exc}") from None
+                log_call("import.ocr", ocr._success(text="", data=None, model=pdf_parser.ocr_model(), tokens_in=0,
+                                                    tokens_out=0, tokens_total=0, started=started,
+                                                    p_hash=hashlib.sha256(png).hexdigest()))
+            for i, text in zip(scans, pdf_parser.ocr_pages_text(elements)):
+                pages[i] = text
+    text = pdf_parser.clean_text(pages)
+    if pdf_parser.is_scan(text):
+        raise ValueError("Z PDF se nepodařilo získat text.")
+    return text
 
 
 def _check(value: dict, paragraphs: dict[int, str]) -> list[str]:
@@ -112,10 +128,12 @@ def _document(patient_id: str, doc_id: str, text: str, title: str, date: str | N
 
 def _observation(patient_id: str, doc_id: str, index: int, value: dict, doc_date: str | None) -> dict:
     obs: dict = {
-        "resourceType": "Observation", "id": f"{doc_id}-obs{index:02d}", "status": "final",
+        "resourceType": "Observation", "id": f"{doc_id}-{ID_KIND[value['kind']]}{index:02d}", "status": "final",
         "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category",
                                   "code": CATEGORY[value["kind"]]}]}],
-        "code": {"text": value["label"]}, "subject": {"reference": f"Patient/{patient_id}"},
+        # hlavička a pravidla poznají TNM podle „TNM“ v názvu (jako dataset)
+        "code": {"text": value["label"] if value["kind"] != "tnm" or "TNM" in value["label"].upper() else f"TNM – {value['label']}"},
+        "subject": {"reference": f"Patient/{patient_id}"},
         "derivedFrom": [{"reference": f"DocumentReference/{doc_id}"}],
         "note": [{"text": f"Zdroj: {doc_id}#{value['paragraph']}"}], "meta": {"tag": [AI_TAG]},
     }
@@ -163,9 +181,10 @@ def confirm(proposal: dict, *, user_name: str) -> list[dict]:
     if not re.match(rf"^{re.escape(pid)}-imp\d{{2}}$", doc_id):
         raise ValueError("Neplatné ID dokumentu.")
     paragraphs = {p.index: p.text for p in split_paragraphs(text)}
+    if not paragraphs:
+        raise ValueError("Zpráva je prázdná.")
+    # bez hodnot se zapíše jen zpráva (anamnéza, popis): text je pak v RAG a citovatelný po odstavcích
     values = [v for v in proposal.get("values") or [] if not _check(v, paragraphs)]
-    if not values:
-        raise ValueError("V návrhu není žádná ověřitelná hodnota.")
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     doc = _document(pid, doc_id, text, proposal.get("title", ""), proposal.get("date"))
     observations = [_observation(pid, doc_id, i, v, proposal.get("date")) for i, v in enumerate(values, 1)]

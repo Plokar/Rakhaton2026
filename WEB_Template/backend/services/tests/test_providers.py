@@ -1,11 +1,8 @@
-"""NVIDIA (LLM, embeddingy), Groq (Whisper), výběr providerů z env a čtení PDF (T-323), bez sítě: `_post` je podvržený."""
-import io
-
+"""NVIDIA (LLM, embeddingy, OCR), Groq (Whisper) a výběr providerů z env (T-323), bez sítě: `_post` je podvržený."""
 import pytest
 from pydantic import BaseModel
 
 from services import ai_service as ai
-from services.ai import report_import
 from services.ai.scribe import label_speakers
 from services.ai_service import MockAIProvider
 
@@ -116,27 +113,3 @@ def test_label_speakers_from_llm_never_guesses():
     assert [s['speaker'] for s in label_speakers(segments, llm, lambda *a: None)] == ['předseda', 'chirurg']
     wrong = MockAIProvider(responses={'SpeakerLabels': {'speakers': ['předseda']}})     # jiný počet → nic nepřiřadí
     assert [s['speaker'] for s in label_speakers(segments, wrong, lambda *a: None)] == ['neuvedeno', 'neuvedeno']
-
-
-def _pdf(*lines: str) -> bytes:
-    from reportlab.pdfgen import canvas
-
-    buffer = io.BytesIO()
-    page = canvas.Canvas(buffer)
-    for i, line in enumerate(lines):
-        page.drawString(72, 750 - 30 * i, line)
-    page.save()
-    return buffer.getvalue()
-
-
-def test_pdf_text_layer_by_parser():
-    text = report_import.pdf_text(_pdf('Laborator 12. 10. 2026', 'CEA 15,2 ug/l, CA 19-9 40 kU/l'), MockAIProvider(),
-                                  lambda *a: None)
-    assert 'CEA 15,2 ug/l' in text and 'Laborator' in text
-
-
-def test_pdf_scan_without_text_layer_or_broken_file():
-    with pytest.raises(ValueError, match='sken'):
-        report_import.pdf_text(_pdf(), MockAIProvider(), lambda *a: None)
-    with pytest.raises(ValueError, match='PDF'):
-        report_import.pdf_text(b'not a pdf', MockAIProvider(), lambda *a: None)

@@ -43,6 +43,9 @@ gunicorn>=21.0.0
 reportlab>=4.0
 pypdf>=4.0               # text z PDF lokálně, bez LLM (nový pacient, T-323)
 
+# Čtení PDF zpráv parserem (BON-7, T-323)
+pdfplumber>=0.11,<0.12
+
 # InterSystems IRIS (DB-API + native API)
 intersystems-irispython>=5.0
 

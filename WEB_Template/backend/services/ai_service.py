@@ -29,6 +29,7 @@ Model ID jsou jen v env (Gemini: ``AI_MODEL``, ``AI_MODEL_STRONG``, ``EMBEDDING_
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import io
 import json
@@ -85,6 +86,7 @@ DEFAULT_NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
 DEFAULT_NVIDIA_EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b"
 DEFAULT_NVIDIA_EMBEDDING_DIM = 2048          # nemotron-3-embed-1b umí jen 2048
 DEFAULT_NVIDIA_MAX_TOKENS = 16384            # reasoning model: přemýšlení se počítá do max_tokens
+DEFAULT_NVIDIA_PARSE_MODEL = "nvidia/nemotron-parse"   # OCR skenů PDF (stránka → text)
 NVIDIA_EMBED_BATCH_SIZE = 50
 DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 DEFAULT_GROQ_TRANSCRIBE_MODEL = "whisper-large-v3"
@@ -659,6 +661,21 @@ class NvidiaProvider(BaseAIProvider):
                     raise AIProviderError(f"Embedding má {len(item['embedding'])} dimenzí, čekáno {dim} (NVIDIA_EMBEDDING_DIM)")
                 vectors.append(l2_normalize(item["embedding"]))
         return vectors
+
+    def parse_page_image(self, png: bytes) -> list[dict]:
+        """OCR stránky skenu (`nemotron-parse`): prvky `{type, bbox, text}` (Page-header, Section-header, Text,
+        Table v LaTeXu, Page-footer…), text skládá `services/ai/pdf_text.ocr_page_text`. Chyba = `AIProviderError`."""
+        model = _env("NVIDIA_PARSE_MODEL", DEFAULT_NVIDIA_PARSE_MODEL)
+        tool = {"type": "function", "function": {"name": "markdown_bbox"}}
+        resp = _post(f"{self.base_url}/chat/completions", self.api_key, json={
+            "model": model, "tools": [tool], "tool_choice": tool,
+            "messages": [{"role": "user", "content": [
+                {"type": "image_url", "image_url": {"url": "data:image/png;base64," + base64.b64encode(png).decode()}}]}]})
+        calls = ((resp.get("choices") or [{}])[0].get("message") or {}).get("tool_calls") or []
+        if not calls:
+            raise AIProviderError(f"{model} nevrátil text stránky")
+        elements = json.loads(calls[0]["function"]["arguments"])
+        return [e for group in elements for e in (group if isinstance(group, list) else [group]) if isinstance(e, dict)]
 
     def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
         return self._error("NVIDIA LLM audio nepřepisuje: nastav GROQ_API_KEY (TRANSCRIBE_PROVIDER=groq)",

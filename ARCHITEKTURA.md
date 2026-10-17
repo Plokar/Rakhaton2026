@@ -797,6 +797,8 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   Sada se pošle celá (≤ 23 pasáží). IRIS Vector Search ji seřadí podle relevance k otázce komise.
 
   **Co je onkologická diagnóza** (T-320): kategorie „onkologická diagnóza“, nebo kód novotvaru (C00–C97, D00–D09, D37–D48) u `Condition` bez kategorie komorbidita / nežádoucí účinek léčby (data z jiného systému). Jediné pravidlo `services/rules/guideline_sets.py:is_oncologic` platí pro výběr guidelines, kontext AI, hlavičku, seznam pacientů, semafor i mCODE export. Diagnóza bez sady (např. C61, C21) dostane jen OBC. Hrany ověřují testovací pacienti P07–P12 v `data/dataset_test` (`run_checks.py`).
+
+  **Guidelines, které chybí nebo nesedí** (T-325, `brief.guideline_notices`): když sada pacienta v IRIS chybí, nebo jde o malobuněčný karcinom plic (SCLC) a dodaná sada PLI je výtah pro nemalobuněčný, dostane souhrn podkladu položku „údaj chybí“ a kontext AI stejný řádek (nic se z guidelines nedomýšlí). Studie jen pro NSCLC (RKT-04) se u SCLC nenabízí (`trial_is_relevant(…, lung_histology)`); neuvedená histologie nic nevyřadí.
 - **Možnosti léčby:**
   1. LLM vrátí **2–4 možnosti**, každou s citací pasáže (`PRS-3.3`) a s vazbou na fakta pacienta (citace);
   2. u každé možnosti uvede, co pro ni chybí (např. „EGFR neznámý, viz PLI-1.3“);

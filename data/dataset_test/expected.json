@@ -51,7 +51,6 @@
       "OBC"
     ],
     "trials": [
-      "RKT-04",
       "RKT-05",
       "RKT-06"
     ],
@@ -62,8 +61,7 @@
     "options_exclude": [
       "Neoadjuvantní chemoimunoterapie"
     ],
-    "tests": "C34 vede na PLI, i když PLI je výtah pro NEmalobuněčný karcinom (mezera mapy).",
-    "gap": "AI dostane guidelines PLI a studii RKT-04, obojí pro nemalobuněčný karcinom (semafor už SCLC rozlišuje, výběr guidelines podle MKN-10 ne)."
+    "tests": "C34 vede na PLI (staging, operabilita, SIADH platí i u SCLC), ale PLI je výtah pro NEmalobuněčný karcinom: podklad to hlásí jako „údaj chybí“ a studie RKT-04 (jen NSCLC) se nenabízí (T-325)."
   },
   "P10": {
     "dx": [

@@ -28,6 +28,7 @@ from services.fhir import export, writeback
 from services.fhir.client import FhirError
 from services.rules import intake, readiness
 from services.rules.compatibility import evaluate_compatibility
+from services.rules.guideline_sets import NEOPLASM_ICD10
 
 from . import config as cfg
 from . import roles
@@ -424,6 +425,48 @@ def case_patient_summary(request, cid):
     job = GenerationJob.objects.create(case=case, kind='patient_summary', params={}, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+ICD10 = re.compile(r'^[A-Z]\d{2}(\.\d{1,2})?$')
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def patient_create(request):
+    """Nový pacient (předseda, lékař): `{sex, birth_year, icd10, diagnosis, stage?, question, session?}` → do IRIS
+    `Patient` (pseudonym Pxx) + onkologická `Condition` + nominace (`ServiceRequest` + `Task`) + `Provenance`.
+    Zprávy se pak nahrají přes `…/import/`, zařazení do boardu přes `POST /cases/`."""
+    _require(request, roles.ADMIN, roles.DOCTOR)
+    data = request.data
+    errors = {}
+    if data.get('sex') not in ('male', 'female', 'other', 'unknown'):
+        errors['sex'] = 'male, female, other nebo unknown.'
+    try:
+        birth_year = int(data.get('birth_year'))
+        if not 1900 <= birth_year <= timezone.localdate().year:
+            raise ValueError
+    except (TypeError, ValueError):
+        errors['birth_year'] = f'Rok narození 1900–{timezone.localdate().year}.'
+    icd10 = str(data.get('icd10', '')).strip().upper()
+    if not ICD10.match(icd10) or not NEOPLASM_ICD10.match(icd10):
+        errors['icd10'] = 'Onkologická diagnóza MKN-10 (C00–C97, D00–D09, D37–D48), např. C34.1.'
+    for field in ('diagnosis', 'question'):
+        if not str(data.get(field, '')).strip():
+            errors[field] = 'Povinné.' if field == 'diagnosis' else 'Bez otázky pro MDT nelze pacienta zařadit (OBC-1.1).'
+    if errors:
+        raise ValidationError(errors)
+    session = get_object_or_404(MdtSession, pk=data['session']) if data.get('session') else None
+    if session and session.status == 'closed':
+        return Response(CLOSED_BOARD, status=409)
+    pid, written = writeback.create_patient(
+        sex=data['sex'], birth_year=birth_year, icd10=icd10, diagnosis=str(data['diagnosis']).strip(),
+        stage=str(data.get('stage') or '').strip() or None, question=str(data['question']).strip(),
+        focus=session.title if session else str(data.get('focus') or 'neurčeno').strip(),
+        mdt_date=timezone.localtime(session.date) if session else None,
+        created_by=request.user.get_full_name() or request.user.username, now=timezone.localtime())
+    return Response({'patient_id': pid, 'fhir_written': written,
+                     'patient': patients.summary(pid, patients.load_patient(pid))}, status=201)
 
 
 def _next_import_id(pid: str) -> str:

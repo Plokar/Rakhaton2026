@@ -222,6 +222,68 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
     return bundle, ids
 
 
+def next_patient_id() -> str:
+    """Další volný pseudonym `Pxx` (IRIS = zdroj pravdy; `ids.py` zná jen dvě číslice)."""
+    numbers = [int(m[1]) for p in fhir.search('Patient') if (m := re.fullmatch(r'P(\d{2})', p['id']))]
+    if max(numbers, default=0) >= 99:
+        raise ValueError('Volná ID P01–P99 došla.')
+    return f'P{max(numbers, default=0) + 1:02d}'
+
+
+def build_patient_bundle(*, patient_id: str, sex: str, birth_year: int, icd10: str, diagnosis: str, stage: str | None,
+                         question: str, focus: str, mdt_date: datetime | None, created_by: str,
+                         now: datetime) -> tuple[dict, list[str]]:
+    """Nový pacient ve struktuře datasetu (Patient, onkologická Condition, nominace ServiceRequest + Task) s Provenance.
+
+    Bez jména a RČ (pseudonym `Pxx`, D-018). Otázka pro MDT je povinná (OBC-1.1), bez ní pacienta nejde zařadit.
+    """
+    patient_ref, dg_id, sr_id = _ref('Patient', patient_id), f'{patient_id}-dg1', f'{patient_id}-zad01'
+    patient = {'resourceType': 'Patient', 'id': patient_id,
+               'identifier': [{'system': f'{BASE}/sid/pacient', 'value': patient_id}],
+               'name': [{'text': f'Pacient {patient_id}'}], 'gender': sex, 'birthDate': str(birth_year),
+               # věk k datu MDT jako v datasetu (hlavička, RF-GERI); bez termínu k dnešku
+               'extension': [{'url': f'{SD}/vek-k-datu-mdt', 'valueInteger': (mdt_date or now).year - birth_year}]}
+    condition = {
+        'resourceType': 'Condition', 'id': dg_id,
+        'clinicalStatus': {'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/condition-clinical', 'code': 'active'}]},
+        'verificationStatus': {'coding': [{'system': 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+                                           'code': 'confirmed'}]},
+        'category': [{'text': 'onkologická diagnóza'}],
+        'code': {'coding': [{'system': 'http://hl7.org/fhir/sid/icd-10', 'code': icd10, 'display': diagnosis}],
+                 'text': diagnosis},
+        'subject': patient_ref, 'recordedDate': now.date().isoformat(),
+        'stage': [{'summary': {'text': stage}, 'type': {'text': 'klinické'}}] if stage else [],
+    }
+    service_request = {
+        'resourceType': 'ServiceRequest', 'id': sr_id, 'identifier': [{'system': f'{BASE}/sid/mdt-zadanka', 'value': sr_id}],
+        'status': 'active', 'intent': 'order', 'category': [{'text': f'{_FOCUS_PREFIX} {focus}'}], 'priority': 'routine',
+        'subject': patient_ref, 'authoredOn': now.isoformat(), 'requester': {'display': created_by},
+        'reasonCode': [{'text': question}], 'reasonReference': [_ref('Condition', dg_id)],
+    }
+    task = {
+        'resourceType': 'Task', 'id': f'{sr_id}-task', 'status': 'accepted',
+        'businessStatus': _coding('mdt-stav-zadanky', 'naplanovana', 'Naplánovaná'), 'intent': 'order',
+        'focus': _ref('ServiceRequest', sr_id), 'for': patient_ref, 'authoredOn': now.isoformat(),
+        'requester': {'display': created_by},
+        'restriction': {'period': {'start': mdt_date.isoformat()}} if mdt_date else {},
+    }
+    resources = [patient, condition, service_request, task]
+    resources.append({
+        'resourceType': 'Provenance', 'id': f'{patient_id}-novy-prov', 'recorded': now.isoformat(),
+        'target': [_ref(r['resourceType'], r['id']) for r in resources],
+        'agent': [{'type': _participant('author', 'Author'), 'who': {'display': created_by}}],
+    })
+    return _transaction(resources), [f"{r['resourceType']}/{r['id']}" for r in resources]
+
+
+def create_patient(**fields) -> tuple[str, list[str]]:
+    """Zapíše nového pacienta do IRIS jednou transakcí; vrací `(Pxx, zapsané resources)`."""
+    patient_id = next_patient_id()
+    bundle, written = build_patient_bundle(patient_id=patient_id, **fields)
+    fhir.transaction(bundle)
+    return patient_id, written
+
+
 def _transaction(resources: list[dict]) -> dict:
     """Transaction Bundle s `PUT`; `prune`, protože IRIS odmítne prázdné pole (např. závěr bez kroků → `CarePlan.activity: []`)."""
     return {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [

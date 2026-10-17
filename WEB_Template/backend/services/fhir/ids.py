@@ -59,8 +59,13 @@ _PATIENT_RULES = (  # část ID za `Pxx-`
     (r'mdt\d+-rf\d+', 'DetectedIssue'),
     (r'mdt\d+-rs\d+', 'ResearchSubject'),
     (r'mdt\d+-prov', 'Provenance'),
-    (r'mdt\d+-(prepis|pdf)', 'DocumentReference'),
+    (r'mdt\d+-(prepis|pdf|pacient)', 'DocumentReference'),
     (r'case\d+-w\d+', 'DetectedIssue'),                   # odkliknuté varování (FR-P4)
+    (r'case\d+-prov', 'Provenance'),
+    (r'imp\d+', 'DocumentReference'),                     # zpráva vložená lékařem (BON-7)
+    (r'imp\d+-(lab|bm|tnm|ecog|vit)\d+', 'Observation'),  # hodnota ze zprávy, druh v ID jako v datasetu
+    (r'imp\d+-prov', 'Provenance'),
+    (r'novy-prov', 'Provenance'),                         # pacient založený v aplikaci
 )
 _GLOBAL = [(re.compile(p), t) for p, t in _GLOBAL_RULES]
 _PATIENT = [(re.compile(p), t) for p, t in _PATIENT_RULES]

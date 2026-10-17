@@ -42,9 +42,9 @@ def test_import_api_proposes_then_doctor_confirms(mocked):
     tampered = {**proposal, 'values': [*proposal['values'], {**proposal['values'][0], 'value_text': '99 µg/l', 'value_number': 99}]}
     r = as_user('onkolog').post(url + 'confirm/', tampered, format='json')
     assert r.status_code == 201
-    assert r.json()['fhir_written'] == ['DocumentReference/P03-imp01', 'Observation/P03-imp01-obs01',
-                                        'Observation/P03-imp01-obs02', 'Provenance/P03-imp01-prov']   # podvrh vypadl
-    cea = client.read('Observation', 'P03-imp01-obs01')
+    assert r.json()['fhir_written'] == ['DocumentReference/P03-imp01', 'Observation/P03-imp01-lab01',
+                                        'Observation/P03-imp01-lab02', 'Provenance/P03-imp01-prov']   # podvrh vypadl
+    cea = client.read('Observation', 'P03-imp01-lab01')
     assert cea['valueQuantity'] == {'value': 15.2, 'unit': 'µg/l'} and cea['effectiveDateTime'] == '2026-10-12'
     assert cea['derivedFrom'] == [{'reference': 'DocumentReference/P03-imp01'}]
     prov = client.read('Provenance', 'P03-imp01-prov')
@@ -57,5 +57,15 @@ def test_confirm_rejects_foreign_or_empty_proposal(mocked):
     proposal = report_import.propose('P03', 'P03-imp01', TEXT, MockAIProvider(responses={'Extraction': EXTRACTION}),
                                      lambda *a: None)
     assert as_user('onkolog').post('/api/mdt/patients/P05/import/confirm/', proposal, format='json').status_code == 400
-    empty = {**proposal, 'values': []}
-    assert as_user('onkolog').post('/api/mdt/patients/P03/import/confirm/', empty, format='json').status_code == 400
+    blank = {**proposal, 'text': '   '}
+    assert as_user('onkolog').post('/api/mdt/patients/P03/import/confirm/', blank, format='json').status_code == 400
+
+
+def test_report_without_values_is_stored_and_citable(mocked):
+    """Zpráva bez čísel (anamnéza) se zapíše jen jako dokument; citace odstavce jde otevřít (resolver)."""
+    proposal = report_import.propose('P03', 'P03-imp01', TEXT, MockAIProvider(responses={'Extraction': EXTRACTION}),
+                                     lambda *a: None)
+    r = as_user('onkolog').post('/api/mdt/patients/P03/import/confirm/', {**proposal, 'values': []}, format='json')
+    assert r.status_code == 201 and r.json()['fhir_written'] == ['DocumentReference/P03-imp01', 'Provenance/P03-imp01-prov']
+    source = as_user('chirurg').get('/api/evidence/?id=P03-imp01%232').json()
+    assert source['resource_type'] == 'DocumentReference' and source['text'][source['highlight']['start']:].startswith('CEA')

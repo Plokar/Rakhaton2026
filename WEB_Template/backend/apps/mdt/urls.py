@@ -12,6 +12,7 @@ urlpatterns = [
     path('configs/<int:cfg_id>/', views.config_detail, name='config-detail'),
     path('tasks/', views.task_list, name='task-list'),
     path('tasks/<str:tid>/', views.task_detail, name='task-detail'),
+    path('patients/', views.patient_create, name='patient-create'),
     path('patients/<str:pid>/intake/', views.patient_intake, name='patient-intake'),
     path('patients/<str:pid>/import/', views.patient_import, name='patient-import'),
     path('patients/<str:pid>/import/confirm/', views.patient_import_confirm, name='patient-import-confirm'),

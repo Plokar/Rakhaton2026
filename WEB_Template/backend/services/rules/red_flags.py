@@ -27,7 +27,7 @@ SEVERITY_ORDER = {"high": 0, "moderate": 1, "low": 2}
 
 LOINC = {"ecog": "89247-1", "weight": "29463-7", "hb": "718-7", "na": "2951-2", "glu": "15074-8",
          "alb": "1751-7", "cea": "2039-6", "ca199": "24108-3", "ca153": "6875-3", "neu": "751-8", "plt": "777-3",
-         "krea": "14682-9", "bili": "14631-6"}
+         "krea": "14682-9", "bili": "14631-6", "height": "8302-2", "bmi": "39156-5"}
 MARKERS = {"cea": "CEA", "ca199": "CA 19-9", "ca153": "CA 15-3"}
 SYMPTOMS = {"bolest": "bolest", "unava": "únava", "nevolnost": "nevolnost", "dusnost": "dušnost",
             "chut": "chuť k jídlu", "brneni": "brnění", "prujem": "průjem", "psychika": "psychika",
@@ -514,6 +514,40 @@ def rf_weight(data: PatientData) -> list[RedFlag]:
                   "k nutričnímu vyšetření.", [last[2], peak[2]], "OBC-2.3")]
 
 
+def patient_bmi(data: PatientData) -> tuple[float, list[str]] | None:
+    """BMI k poslednímu vážení: zapsané BMI (LOINC 39156-5), jinak z poslední změřené výšky (8302-2).
+    Bez výšky `None`: BMI se nikdy neodhaduje (T-341)."""
+    from services.rules.fact_categories import bmi
+
+    weight = data.by_loinc("weight")
+    if not weight:
+        return None
+    last = weight[-1]
+    recorded = data.by_loinc("bmi")
+    if recorded and (recorded[-1].date or date.min) >= (last.date or date.min):
+        return round(float(recorded[-1].value), 1), [recorded[-1].id]
+    heights = data.by_loinc("height")
+    if not heights:
+        return None
+    quantity = heights[-1].resource.get("valueQuantity") or {}
+    value = bmi(float(last.value), float(heights[-1].value), quantity.get("unit") or quantity.get("code"))
+    return (value, [last.id, heights[-1].id]) if value else None
+
+
+def rf_bmi(data: PatientData) -> list[RedFlag]:
+    """BMI pod hranicí malnutrice GLIM z Modré knihy ČOS (oddíl 31.3): < 20 do 70 let, < 22 od 70 let."""
+    from services.rules.fact_categories import BMI_SOURCE, bmi_threshold
+
+    value = patient_bmi(data)
+    if value is None or value[0] >= bmi_threshold(data.age):
+        return []
+    threshold = bmi_threshold(data.age)
+    return [_flag("RF-BMI", value[1][0], "moderate", f"BMI {_num(value[0])} pod hranicí malnutrice",
+                  f"BMI {_num(value[0])} kg/m² < {_num(threshold)} kg/m² (fenotypické kritérium malnutrice GLIM "
+                  f"{'od 70 let' if threshold > 20 else 'do 70 let'}). Indikace k nutričnímu vyšetření.",
+                  value[1], BMI_SOURCE)]
+
+
 def rf_geri(data: PatientData) -> list[RedFlag]:
     if data.age is None or data.age < GERI_AGE or data.any_text(GERI_SCREEN):
         return []
@@ -887,7 +921,7 @@ def rf_dataquality(data: PatientData) -> list[RedFlag]:
 
 
 RULES: tuple[Callable[[PatientData], list[RedFlag]], ...] = (
-    rf_ecog, rf_proms, rf_tox, rf_stale, rf_missing, rf_med, rf_newsymptom, rf_lab, rf_weight, rf_geri,
+    rf_ecog, rf_proms, rf_tox, rf_stale, rf_missing, rf_med, rf_newsymptom, rf_lab, rf_weight, rf_bmi, rf_geri,
     rf_lesion, rf_genetic, rf_nomination, rf_tnm, rf_palliative, rf_roles, rf_steroid,
     rf_identity, rf_prior_proc, rf_dataquality,
 )
@@ -905,6 +939,7 @@ RULE_CATALOG: dict[str, tuple[str, str]] = {
     "RF-NEWSYMPTOM": ("Nový symptom bez cíleného vyšetření", "PRS-4.2"),
     "RF-LAB": ("Laboratoř mimo normu a trend markerů", "OBC-3.1"),
     "RF-WEIGHT": ("Úbytek hmotnosti", "OBC-2.3"),
+    "RF-BMI": ("Nízké BMI (kritérium malnutrice GLIM, Modrá kniha)", "EXT-MK-31.3-2"),
     "RF-GERI": ("Geriatrický screening u věku od 70 let", "OBC-2.2"),
     "RF-LESION": ("Neověřené ložisko nebo diagnóza", "OBC-1.4"),
     "RF-GENETIC": ("Indikace genetického poradenství", "OBC-2.4"),

@@ -23,7 +23,8 @@ from typing import Iterable
 
 from services.ai.abbreviations import uncertainty_warnings
 from services.fhir.values import cc_text, fhir_code
-from services.rules.red_flags import STALE_DAYS, PatientData, RedFlag, _date, _num, evaluate
+from services.rules.fact_categories import field_category, warning_category
+from services.rules.red_flags import STALE_DAYS, PatientData, RedFlag, _date, _num, evaluate, patient_bmi
 from services.rules.templates import recommended_warnings
 
 UNSKIPPABLE = {"mdt.question"}     # OBC-1.1: bez otázky je případ neúplný
@@ -57,7 +58,8 @@ class IntakeField:
 
     def as_dict(self) -> dict:
         return {k: v for k, v in {"id": self.id, "label": self.label, "value": self.value, "citation": self.citation,
-                                  "status": self.status, "required_by": self.required_by}.items() if v is not None}
+                                  "status": self.status, "required_by": self.required_by,
+                                  "category": field_category(self.id)}.items() if v is not None}
 
 
 @dataclass
@@ -71,7 +73,8 @@ class IntakeWarning:
 
     def as_dict(self) -> dict:
         return {"id": self.id, "kind": self.kind, "severity": self.severity, "title": self.title,
-                "detail": self.detail, "citations": self.citations}
+                "detail": self.detail, "citations": self.citations,
+                "category": warning_category(self.id, self.citations)}
 
 
 # ── Pole formuláře ────────────────────────────────────────────────────────────
@@ -181,7 +184,7 @@ def _common_fields(data: PatientData) -> list[IntakeField]:
 
     weight = data.by_loinc("weight")
     fields.append(IntakeField("weight", "Hmotnost a trend", "present" if weight else "missing",
-                              f"{_num(weight[-1].value)} kg ({weight[-1].date})" if weight else None,
+                              _weight_value(data, weight[-1]) if weight else None,
                               weight[-1].id if weight else None, "OBC-2.3"))
 
     if data.age is not None and data.age >= 70:
@@ -190,6 +193,13 @@ def _common_fields(data: PatientData) -> list[IntakeField]:
                                   "present" if g8 else "missing", data.paragraph_text(g8[-1])[:160] if g8 else None,
                                   g8[-1] if g8 else None, "OBC-2.2"))
     return fields
+
+
+def _weight_value(data: PatientData, last) -> str:
+    """„71 kg (2026-10-06) · BMI 24,6“; BMI jen ze změřené výšky nebo zapsaného BMI, nikdy odhadem (T-341)."""
+    text = f"{_num(last.value)} kg ({last.date})"
+    value = patient_bmi(data)
+    return f"{text} · BMI {_num(value[0])}" if value else f"{text} · BMI: chybí výška"
 
 
 def _note_paragraph(data: PatientData, prefix: str) -> str | None:

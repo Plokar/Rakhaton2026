@@ -579,6 +579,9 @@ class Decision(BaseModel):
 WarningKind = Literal["missing", "out_of_range", "conflict", "ai_uncertain"]   # CHYBÍ · MIMO NORMU · ROZPOR · NEJISTOTA AI
 
 
+FactCategory = Literal["staging", "molecular", "imaging", "function", "history", "lab", "patient", "alerts"]
+
+
 class IntakeField(BaseModel):
     id: str = Field(description='"bm.mmr" | "spiro.ppo_dlco" | "ecog.physician"')
     label: str
@@ -586,6 +589,7 @@ class IntakeField(BaseModel):
     citation: EvidenceId | None = None
     status: Literal["present", "missing", "pending", "skipped"]
     required_by: EvidenceId | None = Field(default=None, description='Proč je údaj povinný: "KRC-1.1"')
+    category: FactCategory | None = Field(default=None, description="Kategorie klíčového údaje (T-338, D-024)")
 
 
 class IntakeWarning(BaseModel):
@@ -595,6 +599,7 @@ class IntakeWarning(BaseModel):
     title: str
     detail: str
     citations: list[EvidenceId]
+    category: FactCategory | None = Field(default=None, description="patient = z dotazníku PROMs, jinak alerts")
 
 
 class EcogPrefill(BaseModel):

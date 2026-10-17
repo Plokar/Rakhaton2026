@@ -61,6 +61,25 @@ def test_confirm_rejects_foreign_or_empty_proposal(mocked):
     assert as_user('onkolog').post('/api/mdt/patients/P03/import/confirm/', blank, format='json').status_code == 400
 
 
+def test_value_number_unit_and_loinc_like_dataset(mocked):
+    """Model nevyplnil číslo: doplní se z textu; Hb dostane LOINC jako dataset, takže ho vidí pravidla i grafy."""
+    extraction = {'title': 'Laboratoř', 'date': '2026-10-12', 'values': [
+        {'kind': 'lab', 'label': 'Hemoglobin', 'value_text': '118 g/l', 'paragraph': 3},
+        {'kind': 'lab', 'label': 'Leukocyty', 'value_text': '8,4 10^9/l', 'paragraph': 3},
+        {'kind': 'lab', 'label': 'CRP', 'value_text': '<5 mg/l', 'paragraph': 3}]}
+    text = 'Laboratoř 12. 10. 2026\n\nCEA 15,2 µg/l.\n\nHemoglobin 118 g/l, leukocyty 8,4 10^9/l, CRP <5 mg/l.'
+    proposal = report_import.propose('P03', 'P03-imp01', text, MockAIProvider(responses={'Extraction': extraction}),
+                                     lambda *a: None)
+    assert [(v['value_number'], v.get('unit')) for v in proposal['values']] == [(118.0, 'g/l'), (8.4, '10^9/l'), (None, None)]
+    as_user('onkolog').post('/api/mdt/patients/P03/import/confirm/', proposal, format='json')
+    hb = client.read('Observation', 'P03-imp01-lab01')
+    assert hb['valueQuantity'] == {'value': 118.0, 'unit': 'g/l'} and hb['code']['coding'][0]['code'] == '718-7'
+    assert client.read('Observation', 'P03-imp01-lab03')['valueString'] == '<5 mg/l'
+    series = {s['code']: s for s in as_user('chirurg').get('/api/patients/P03/observations/').json()}
+    assert 'P03-imp01-lab01' in [p['citation'] for p in series['718-7']['points']]       # v řadě Hb s datasetem
+    assert 'text:leukocyty' in series
+
+
 def test_report_without_values_is_stored_and_citable(mocked):
     """Zpráva bez čísel (anamnéza) se zapíše jen jako dokument; citace odstavce jde otevřít (resolver)."""
     proposal = report_import.propose('P03', 'P03-imp01', TEXT, MockAIProvider(responses={'Extraction': EXTRACTION}),

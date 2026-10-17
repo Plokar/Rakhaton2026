@@ -32,16 +32,18 @@ export default function StoragePage() {
   const [success, setSuccess] = React.useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const loadFiles = React.useCallback(async () => {
-    try {
-      const res = await storageApi.list();
-      setFiles(res);
-    } catch {
-      // handled
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Stav se nastavuje jen v callbacku promise (react-hooks/set-state-in-effect)
+  const loadFiles = React.useCallback(
+    () =>
+      storageApi
+        .list()
+        .then(setFiles)
+        .catch(() => {
+          // handled
+        })
+        .finally(() => setLoading(false)),
+    [],
+  );
 
   React.useEffect(() => {
     loadFiles();

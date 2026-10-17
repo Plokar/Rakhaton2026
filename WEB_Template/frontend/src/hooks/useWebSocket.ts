@@ -75,6 +75,8 @@ export function useWebSocket(
   const attemptsRef = useRef(0);
 
   const url = `${WS_BASE}${path}`;
+  /** Znovupřipojení z `onclose` volá poslední verzi `connect` (sama sebe nemůže referencovat před deklarací). */
+  const connectRef = useRef<() => void>(() => {});
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -119,7 +121,7 @@ export function useWebSocket(
         setReconnectAttempts(attemptsRef.current);
 
         reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
+          connectRef.current();
         }, delay);
       }
     };
@@ -129,6 +131,10 @@ export function useWebSocket(
       onError?.(event);
     };
   }, [url, maxReconnectAttempts, reconnectInterval, onMessage, onOpen, onClose, onError]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   // Připojit při mount
   useEffect(() => {

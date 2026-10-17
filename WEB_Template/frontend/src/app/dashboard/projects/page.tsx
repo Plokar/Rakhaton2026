@@ -58,25 +58,25 @@ export default function ProjectsPage() {
   const [projCategory, setProjCategory] = React.useState<Project['category']>('ai');
   const [creatingProject, setCreatingProject] = React.useState(false);
 
-  const loadData = React.useCallback(async () => {
-    try {
-      const [projList, taskList] = await Promise.all([
-        projectsApi.list(),
-        tasksApi.list(),
-      ]);
-      const validProjs = Array.isArray(projList) ? projList : [];
-      const validTasks = Array.isArray(taskList) ? taskList : [];
-      setProjects(validProjs);
-      setTasks(validTasks);
-      if (validProjs.length > 0 && !taskProject) {
-        setTaskProject(validProjs[0].id);
-      }
-    } catch {
-      // handled
-    } finally {
-      setLoading(false);
-    }
-  }, [taskProject]);
+  // Stav se nastavuje jen v callbacku promise (react-hooks/set-state-in-effect)
+  const loadData = React.useCallback(
+    () =>
+      Promise.all([projectsApi.list(), tasksApi.list()])
+        .then(([projList, taskList]) => {
+          const validProjs = Array.isArray(projList) ? projList : [];
+          const validTasks = Array.isArray(taskList) ? taskList : [];
+          setProjects(validProjs);
+          setTasks(validTasks);
+          if (validProjs.length > 0 && !taskProject) {
+            setTaskProject(validProjs[0].id);
+          }
+        })
+        .catch(() => {
+          // handled
+        })
+        .finally(() => setLoading(false)),
+    [taskProject],
+  );
 
   React.useEffect(() => {
     loadData();

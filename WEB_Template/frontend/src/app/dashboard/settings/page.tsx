@@ -42,13 +42,14 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = React.useState('');
   const [pwError, setPwError] = React.useState('');
 
-  React.useEffect(() => {
-    if (user) {
-      setFirstName(user.first_name || '');
-      setLastName(user.last_name || '');
-      setEmail(user.email || '');
-    }
-  }, [user]);
+  // Formulář převezme údaje po načtení uživatele (úprava stavu při renderu místo efektu)
+  const [formUser, setFormUser] = React.useState(user);
+  if (user && user !== formUser) {
+    setFormUser(user);
+    setFirstName(user.first_name || '');
+    setLastName(user.last_name || '');
+    setEmail(user.email || '');
+  }
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

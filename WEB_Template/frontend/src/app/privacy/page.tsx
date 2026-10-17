@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useCookieConsent } from '@/contexts/CookieContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   ShieldCheck,
@@ -15,9 +14,7 @@ import {
   Bot,
   UserCheck,
   FileText,
-  Mail,
   SlidersHorizontal,
-  ExternalLink,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';

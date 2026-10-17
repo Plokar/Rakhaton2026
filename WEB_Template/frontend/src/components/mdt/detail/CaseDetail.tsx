@@ -31,6 +31,8 @@ import { TrialScreening } from '../TrialScreening';
 import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './DetailSection';
 import { ForMePanel } from './ForMePanel';
 import { MyTasks } from '../MyTasks';
+import { CaseAsk } from '../CaseAsk';
+import { SimilarCases } from '../SimilarCases';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -109,7 +111,7 @@ const DETAIL_SECTION: Partial<Record<SectionId, string>> = {
   trials: 'lecba',
   questions: 'otazky',
 };
-const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'pacient', 'otazky'];
+const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'podobne', 'pacient', 'otazky', 'dotaz'];
 
 /** Rychlý přehled zůstává první (ARCH §7.3), pak podle `sections` (předseda nebo odbornost), pak zbytek. */
 function detailOrder(sections: SectionId[], forMe: boolean): string[] {
@@ -208,6 +210,11 @@ function DetailLayout({
           {brief ? (
             <div className="flex flex-col gap-5">
               <RedFlagList flags={redFlags} />
+              {(brief.config.disabled_rules?.length ?? 0) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Pravidla vypnutá v nastavení boardu: <span translate="no">{brief.config.disabled_rules?.join(', ')}</span>.
+                </p>
+              )}
               {alerts.length > 0 && (
                 <AiBlock title="Alergie, implantáty a předchozí výkony" status={brief.status} headingLevel="h3">
                   <ul className="flex flex-col gap-1.5">
@@ -343,6 +350,28 @@ function DetailLayout({
                   </ol>
                   <p className="mt-3 text-xs text-muted-foreground">{ds.disclaimer}</p>
                 </AiBlock>
+              </DetailSection>
+            ),
+          }
+        : null,
+    podobne:
+      !isDemo && item?.id
+        ? {
+            def: { id: 'podobne', label: 'Podobné případy' },
+            node: (
+              <DetailSection id="podobne" title="Podobné případy">
+                <SimilarCases caseId={item.id} />
+              </DetailSection>
+            ),
+          }
+        : null,
+    dotaz:
+      !isDemo && item?.id
+        ? {
+            def: { id: 'dotaz', label: 'Zeptat se na případ' },
+            node: (
+              <DetailSection id="dotaz" title="Zeptat se na případ">
+                <CaseAsk caseId={item.id} />
               </DetailSection>
             ),
           }

@@ -5,7 +5,10 @@ import { apiFetch } from '@/lib/api';
 import type {
   Brief,
   BriefConfig,
+  CaseAnswer,
   CaseTemplate,
+  RuleInfo,
+  SimilarCases,
   MdtRole,
   RoleId,
   SectionId,
@@ -209,6 +212,27 @@ export const mdtApi = {
   /** Shrnutí pro pacienta (BON-4); 404, dokud nevzniklo. */
   getPatientSummary: (caseId: string) =>
     apiFetch<PatientSummary>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`),
+
+  /** Zpráva pro praktického lékaře (T-332); 404, dokud nevznikne se shrnutím pro pacienta. */
+  getGpReport: (caseId: string) =>
+    apiFetch<PatientSummary>(`/api/mdt/cases/${encodeURIComponent(caseId)}/gp-report/`),
+
+  /** Nová verze potvrzeného závěru s důvodem změny (T-332, předseda). */
+  reviseDecision: (caseId: string, reason: string) =>
+    apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/revise/`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+
+  /** Otázka nad případem: odpověď jen z dat pacienta v IRIS, s citacemi (T-332). */
+  askCase: (caseId: number, question: string) =>
+    apiFetch<CaseAnswer>(`/api/mdt/cases/${caseId}/ask/`, { method: 'POST', body: JSON.stringify({ question }) }),
+
+  /** Podobné případy: předchozí závěry MDT jiných pacientů s obdobnou diagnózou (T-332). */
+  getSimilarCases: (caseId: number) => apiFetch<SimilarCases>(`/api/mdt/cases/${caseId}/similar/`),
+
+  /** Katalog pravidel varovných signálů pro nastavení podkladu (T-332). */
+  getRules: () => apiFetch<RuleInfo[]>('/api/mdt/rules/'),
 
   /** Spustí shrnutí z potvrzeného závěru (409 bez potvrzení) → job. */
   generatePatientSummary: (caseId: string) =>

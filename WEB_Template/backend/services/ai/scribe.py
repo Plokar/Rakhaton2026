@@ -26,7 +26,9 @@ log = logging.getLogger(__name__)
 
 SPEAKER_ROLES = {"předseda": "chair", "onkolog": "oncologist", "chirurg": "surgeon", "radiolog": "radiologist",
                  "patolog": "pathologist", "radiační onkolog": "radiation_oncologist", "radioterapeut": "radiation_oncologist",
-                 "pneumolog": "pulmonologist", "kardiolog": "cardiologist", "pacient": "patient"}
+                 "pneumolog": "pulmonologist", "kardiolog": "cardiologist", "pacient": "patient",
+                 "nukleární medicína": "nuclear_medicine", "paliatr": "palliative_care", "geriatr": "geriatrician",
+                 "genetik": "geneticist", "koordinátor": "coordinator", "sestra": "coordinator"}
 LINE = re.compile(r"^\s*(?:\[?(\d{1,2}:\d{2})\]?\s*)?([^:]{2,40}):\s*(.+)$")
 INTENT = {"C": "kurativni", "P": "paliativni"}
 

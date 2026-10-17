@@ -22,6 +22,11 @@ export type RoleId =
   | 'pathologist'
   | 'pulmonologist'
   | 'cardiologist'
+  | 'nuclear_medicine'
+  | 'palliative_care'
+  | 'geriatrician'
+  | 'geneticist'
+  | 'coordinator'
   | 'patient';
 export type SectionId =
   | 'summary'
@@ -47,6 +52,8 @@ export interface Claim {
   verification: Verification;
   /** U "missing": kde by měl údaj být. */
   expected_source?: string;
+  /** Míra jistoty 0–1: sémantická shoda s citovaným textem (grounding v2, T-332); chybí u strukturovaných dat. */
+  confidence?: number | null;
 }
 
 /**
@@ -405,9 +412,29 @@ export interface Decision {
     document_reference_pdf?: string;
     /** "P03-mdt02-pacient" (BON-4) */
     document_reference_patient?: string;
+    /** Zpráva pro praktického lékaře (T-332). */
+    document_reference_gp?: string;
   };
   /** Shrnutí pro pacienta (BON-4): z potvrzeného závěru, každá věta s citací. */
   patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };
+  /** Zpráva pro praktického lékaře (T-332): odborná, ze stejného potvrzeného zápisu. */
+  gp_report?: { items: Claim[]; generated_at: string; document_reference: string } | null;
+  /** Verze záznamu (T-332): potvrzený závěr je zamčený, změna = nová verze s auditní stopou. */
+  version?: number;
+  /** Composition, kterou nová verze nahradí (stejné ID v IRIS). */
+  revision_of?: string | null;
+  /** Dřívější potvrzené verze: kdo potvrdil, kdo a proč změnil. */
+  history?: DecisionVersion[];
+}
+
+export interface DecisionVersion {
+  version: number;
+  composition?: string | null;
+  confirmed_by?: { user_id: string; name: string } | null;
+  confirmed_at?: string | null;
+  revised_by: { user_id: string; name: string };
+  revised_at: string;
+  reason: string;
 }
 
 // ── §8.5 BriefConfig ──────────────────────────────────────────────────────────
@@ -423,6 +450,43 @@ export interface BriefConfig {
   detail_level: DetailLevel;
   language: 'cs' | 'sk' | 'en';
   hide_unverified: boolean;
+  /** Pravidla varovných signálů vypnutá pro board (T-332, GET /api/mdt/rules/). */
+  disabled_rules?: string[];
+}
+
+/** GET /api/mdt/rules/ → katalog pravidel varovných signálů (T-332). */
+export interface RuleInfo {
+  id: string;
+  title: string;
+  /** Pasáž guidelines, ze které pravidlo vychází. */
+  source: EvidenceId | null;
+}
+
+/** POST /api/mdt/cases/{cid}/ask/ → odpověď jen z dat pacienta, s citacemi (T-332). */
+export interface CaseAnswer {
+  question: string;
+  /** "ai" = LLM nad podklady; "search" = vyhledání v dokumentaci bez LLM. */
+  mode: 'ai' | 'search';
+  items: Claim[];
+  answered_at: string;
+}
+
+/** GET /api/mdt/cases/{cid}/similar/ → předchozí závěry MDT jiných pacientů (anonymizovaně, T-332). */
+export interface SimilarCases {
+  diagnosis: { icd10: string; text: string } | null;
+  cases: {
+    composition_id: string;
+    date: string;
+    match: 'code' | 'category';
+    diagnosis: { icd10: string; text: string };
+    /** Jen pohlaví a věková dekáda. */
+    patient: string;
+    question?: string;
+    intent?: string;
+    recommendation?: string;
+    conclusion?: string;
+    citations: EvidenceId[];
+  }[];
 }
 
 // ── §8.6 Zařazení pacienta (MdtCase, IntakeWarning) ───────────────────────────

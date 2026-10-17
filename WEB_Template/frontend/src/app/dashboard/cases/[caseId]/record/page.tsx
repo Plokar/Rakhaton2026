@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import { CircleCheck, FileDown, FileJson, Save, ShieldCheck } from 'lucide-react';
+import { CircleCheck, FileDown, FileJson, History, Save, ShieldCheck } from 'lucide-react';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { buttonVariants } from '@/components/shadcn/button';
@@ -11,13 +11,14 @@ import { DEMO_CASE } from '@/components/mdt/detail/CaseDetail';
 import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
-import { PatientSummaryPanel, ScribePanel } from '@/components/mdt/DecisionAi';
+import { GpReportPanel, PatientSummaryPanel, ScribePanel } from '@/components/mdt/DecisionAi';
 import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
 import { SourceDrawer } from '@/components/mdt/SourceDrawer';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError, apiUrl } from '@/lib/api';
 import { briefP03, decisionP03 } from '@/lib/fixtures';
@@ -86,6 +87,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const [saving, setSaving] = React.useState(false);
   const [message, setMessage] = React.useState<{ kind: 'error' | 'info'; text: string } | null>(null);
   const [confirming, setConfirming] = React.useState(false);
+  const [revising, setRevising] = React.useState(false);
+  const [reason, setReason] = React.useState('');
   const [openId, setOpenId] = React.useState<EvidenceId | null>(null);
   const close = React.useCallback(() => setOpenId(null), []);
   const location = useCaseLocation(isDemo ? null : Number(caseId));
@@ -138,6 +141,24 @@ function DecisionContent({ caseId }: { caseId: string }) {
       })
       .catch((err: unknown) => setMessage({ kind: 'error', text: err instanceof Error ? err.message : 'Draft se nepodařilo načíst.' }));
   }, [caseId]);
+
+  /** Nová verze potvrzeného závěru (T-332): potvrzená verze přejde do auditní stopy s důvodem změny. */
+  const revise = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const next = await mdtApi.reviseDecision(caseId, reason);
+      setDraft(next);
+      setSavedAt(nowLabel());
+      setRevising(false);
+      setReason('');
+      setMessage({ kind: 'info', text: `Založena verze ${next.version}. Po úpravě ji předseda znovu potvrdí; předchozí verze zůstává v auditní stopě.` });
+    } catch (err) {
+      setMessage({ kind: 'error', text: err instanceof Error ? err.message : 'Novou verzi se nepodařilo založit.' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const confirm = async () => {
     if (!current?.sections.question.text.trim() || !current.sections.conclusion.text.trim()) {
@@ -216,9 +237,10 @@ function DecisionContent({ caseId }: { caseId: string }) {
 
       {confirmed && current && (
         <div className="rounded-xl border border-border bg-card p-4 text-sm">
-          <p className="flex items-center gap-2 font-semibold">
+          <p className="flex flex-wrap items-center gap-2 font-semibold">
             <CircleCheck className="size-4 text-emerald-700 dark:text-emerald-400" aria-hidden />
             Potvrzeno: {current.confirmed_by?.name}, {formatDate(current.confirmed_at?.slice(0, 16))}
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium">verze {current.version ?? 1} · zamčeno</span>
           </p>
           {current.fhir_ids && (
             <p className="mt-1 text-xs text-muted-foreground">
@@ -228,6 +250,11 @@ function DecisionContent({ caseId }: { caseId: string }) {
           )}
           {!isDemo && (
             <div className="mt-3 flex flex-wrap gap-2">
+              {can.manageBoards(me) && !revising && (
+                <Button variant="outline" size="lg" onClick={() => setRevising(true)}>
+                  <History aria-hidden /> Upravit (nová verze)
+                </Button>
+              )}
               <a href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.pdf`)} className={buttonVariants({ size: 'lg' })}>
                 <FileDown aria-hidden /> Export PDF
               </a>
@@ -237,6 +264,46 @@ function DecisionContent({ caseId }: { caseId: string }) {
             </div>
           )}
         </div>
+      )}
+
+      {confirmed && revising && (
+        <form
+          className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void revise();
+          }}
+        >
+          <label htmlFor="revise-reason" className="text-sm font-medium">Proč se potvrzený závěr mění</label>
+          <Input
+            id="revise-reason"
+            value={reason}
+            maxLength={500}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Např. doplněno stanovisko HPB chirurga"
+          />
+          <p className="text-xs text-muted-foreground">Potvrzená verze se nepřepíše: zůstane v auditní stopě i v historii záznamu v IRIS.</p>
+          <div className="flex gap-2">
+            <Button type="submit" isLoading={saving} disabled={!reason.trim()}>Založit novou verzi</Button>
+            <Button type="button" variant="outline" onClick={() => setRevising(false)}>Zrušit</Button>
+          </div>
+        </form>
+      )}
+      {current && (current.history?.length ?? 0) > 0 && (
+        <section aria-labelledby="history-title" className="rounded-xl border border-border bg-card p-4 text-sm">
+          <h2 id="history-title" className="flex items-center gap-2 font-semibold">
+            <History className="size-4" aria-hidden /> Auditní stopa verzí (teď verze {current.version ?? 1})
+          </h2>
+          <ol className="mt-2 flex flex-col gap-1.5">
+            {current.history?.map((h) => (
+              <li key={h.version} className="text-[13px]">
+                <span className="font-medium">Verze {h.version}</span> potvrdil {h.confirmed_by?.name ?? '–'}{' '}
+                {formatDate(h.confirmed_at?.slice(0, 16))}; změnu založil {h.revised_by.name} {formatDate(h.revised_at.slice(0, 16))}:{' '}
+                <span className="text-muted-foreground">{h.reason}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
 
       {!current && (
@@ -257,6 +324,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
       {current && (
         <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
           {confirmed && !isDemo && <PatientSummaryPanel caseId={caseId} canGenerate={can.generateBrief(me)} />}
+          {confirmed && !isDemo && <GpReportPanel caseId={caseId} />}
           <section className="rounded-xl border border-border bg-card p-5">
             <DecisionEditor
               decision={current}

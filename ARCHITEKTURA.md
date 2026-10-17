@@ -1156,18 +1156,23 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-<druh>NN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}`. Bez hodnot se zapíše jen zpráva (text je pak citovatelný v podkladu); ID hodnot nesou druh jako dataset (`Pxx-impNN-lab01`, `-bm`, `-tnm`, `-ecog`, `-vit`) |
 | POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1), na uzavřený board (`status: closed`) 409. Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST |
-| GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
+| GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); `disabled_rules` jen ID z `GET /api/mdt/rules/` (T-332); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
 | GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
+| POST | `/api/mdt/cases/{cid}/ask/` | otázka nad případem (BONUS Q&A, T-332): `{question}` (≤ 500 znaků) → `{question, mode: "ai" \| "search", items: Claim[], answered_at}`; odpověď jen z pseudonymizovaného kontextu pacienta, každá věta s citací přes grounding validátor, co v datech není → `missing` „V dostupné dokumentaci se nenachází…“. Bez LLM (mock, výpadek) `mode: "search"` = řádky dokumentace doslova. Nic se neukládá |
+| GET | `/api/mdt/cases/{cid}/similar/` | podobné případy (BONUS B2, T-332): `{diagnosis, cases[]}` = předchozí `Composition` „Záznam MDT“ jiných pacientů se stejným kódem MKN-10 (`match: "code"`), pak stejnou kategorií (`"category"`), nejvýš 3; anonymizovaně (`patient` = pohlaví a věková dekáda), sekce otázka / záměr / postup / závěr a citace záznamu. Bez AI, inspirace, ne doporučení |
+| GET | `/api/mdt/rules/` | katalog pravidel varovných signálů (T-332): `[{id, title, source}]` pro `BriefConfig.disabled_rules` |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config, feedback?}`, vrátí `{job_id}`; předseda, zadávající nebo přizvaný lékař (T-326). **Zpětná vazba lékaře** (T-323): `feedback: {text, sections?: SectionId[]}` = co bylo v předchozí verzi špatně a na co se zaměřit; text 3–1000 znaků, pseudonymizovaný, jde do promptů vybraných částí (nic = všech, `services/ai/prompt_config.feedback_note`), uloží se v parametrech jobu a v `Brief.feedback` (kdo, kdy) |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
 | GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, zadávající nebo přizvaný lékař, T-326) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
+| GET | `/api/mdt/cases/{cid}/gp-report/` | zpráva pro praktického lékaře (T-332): vzniká v jobu `patient-summary` spolu se shrnutím pro pacienta z **potvrzeného** závěru, každá věta s citací odstavce zápisu → `Decision.gp_report` + `DocumentReference/Pxx-mdtNN-pl` (v PDF i FHIR exportu); 404, dokud není |
 | POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3); předseda, zadávající nebo přizvaný lékař (T-326) |
 | GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4); PUT předseda, zadávající nebo přizvaný lékař (T-326) |
 | POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids`. Kontrola souladu s guidelines (zadání B2, T-326): zvolená možnost s „pozor“ / „vylučuje“ nebo `guideline_compliance.compliant = false` bez `reason` → 400 `{detail, field: "guideline_compliance"}` |
+| POST | `/api/mdt/cases/{cid}/decision/revise/` | nová verze potvrzeného závěru (T-332, jen `mdt_admin`): `{reason}` (povinné) → potvrzená verze přejde do `Decision.history` (kdo potvrdil, kdo a proč mění), závěr je znovu draft s `version + 1` a `revision_of`; další potvrzení zapíše **stejnou** `Composition` se `status: amended` (IRIS drží předchozí verzi v historii). Potvrzený závěr jinak nejde měnit (PUT 409) |
 | GET | `/api/mdt/cases/{cid}/export.pdf` | PDF |
 | GET | `/api/mdt/cases/{cid}/export.fhir.json` | FHIR document Bundle |
 | GET | `/api/mdt/tasks/?status=…&patient=…&mine=1&drafts=1` | úkoly po zasedání (z FHIR `Task/Pxx-mdtNN-taskNN`, `MdtTask[]` §8.6), seřazené podle stavu a termínu; `mine` = přiřazené přihlášenému (jeho lékař v IRIS), `drafts` přidá úkoly z nepotvrzených závěrů (`draft: true`) (T-328) |
@@ -1271,7 +1276,8 @@ type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#4" 
 type Verification = "verified" | "unverified";
 type Severity = "high" | "moderate" | "low";
 type Light = "green" | "orange" | "red" | "grey" | "skipped";   // semafor souladu (§5.9)
-type RoleId = "surgeon" | "oncologist" | "radiation_oncologist" | "radiologist" | "pathologist" | "pulmonologist" | "cardiologist" | "patient";
+type RoleId = "surgeon" | "oncologist" | "radiation_oncologist" | "radiologist" | "pathologist" | "pulmonologist" | "cardiologist" | "patient"
+  | "nuclear_medicine" | "palliative_care" | "geriatrician" | "geneticist" | "coordinator";   // další role (BONUS B, T-332)
 type SectionId = "summary" | "timeline" | "role_views" | "red_flags" | "decision_support" | "trials" | "questions" | "anamnesis" | "modalities" | "mdt_question";
 
 interface Claim {
@@ -1281,6 +1287,7 @@ interface Claim {
   citations: EvidenceId[];                      // u "claim" ≥ 1
   verification: Verification;                   // nastavuje grounding validátor, ne LLM
   expected_source?: string;                     // u "missing": kde by měl údaj být
+  confidence?: number | null;                   // míra jistoty 0–1: sémantická shoda s citovaným textem (grounding v2, T-332); u strukturovaných dat chybí
 }
 
 interface Criterion {                           // společné pro studie i posouzení role
@@ -1497,8 +1504,14 @@ interface Decision {
     composition: string;  careplan: string;  careteam: string;
     tasks: string[];  detected_issues: string[];  research_subjects: string[];
     provenance: string;  document_reference_pdf?: string;  document_reference_patient?: string;   // "P03-mdt02-pacient"
+    document_reference_gp?: string;   // "P03-mdt02-pl": zpráva pro praktického lékaře (T-332)
   };
   patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };   // BON-4, po potvrzení
+  gp_report?: { items: Claim[]; generated_at: string; document_reference: string } | null;   // zpráva pro PL, po potvrzení (T-332)
+  version?: number;                             // 1, 2…: potvrzený závěr je zamčený, změna = nová verze (T-332)
+  revision_of?: string | null;                  // Composition, kterou nová verze nahradí (stejné ID)
+  history?: { version: number; composition?: string | null; confirmed_by?: { user_id: string; name: string } | null;
+              confirmed_at?: string | null; revised_by: { user_id: string; name: string }; revised_at: string; reason: string }[];
 }
 ```
 
@@ -1514,6 +1527,7 @@ interface BriefConfig {
   detail_level: "brief" | "standard" | "detailed";
   language: "cs" | "sk" | "en";
   hide_unverified: boolean;
+  disabled_rules?: string[];                    // pravidla varovných signálů vypnutá pro board (T-332); výchozí [] = všechna zapnutá
 }
 ```
 

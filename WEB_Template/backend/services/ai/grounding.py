@@ -134,6 +134,7 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
         citations = claim["citations"]
         semantic = (claim.get("kind") != "missing" and not claim.get("_computed")
                     and all(has_vector(context, c) for c in citations))
+        confidence = None
         if result.verified and semantic:
             try:
                 from services.iris.vector_store import similarity
@@ -141,6 +142,8 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
                 scores = similarity(claim.get("text", ""), citations)
                 valid_scores = [score for score in scores.values()
                                 if isinstance(score, (int, float)) and math.isfinite(score)]
+                if valid_scores:                       # míra jistoty pro UI (T-332): nejlepší shoda se zdrojem
+                    confidence = round(min(max(max(valid_scores), 0.0), 1.0), 2)
                 if not valid_scores:
                     result = GroundingResult(False, ["citované zdroje nemají dostupné vektory"])
                 elif max(valid_scores) < min_similarity:
@@ -153,6 +156,8 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
                 log.warning("Grounding v2 nedostupný: %s", exc)
                 result = GroundingResult(False, ["sémantickou podobnost se nepodařilo ověřit"])
         item = {**claim, "verification": "verified" if result.verified else "unverified"}
+        if confidence is not None:
+            item["confidence"] = confidence
         if result.reasons:
             item["_grounding"] = result.reasons
         out.append(item)

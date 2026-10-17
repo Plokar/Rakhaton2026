@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { mdtApi } from '@/lib/mdt-api';
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { Citations } from '@/components/mdt/citations';
 import { ApiError } from '@/lib/api';
 import { queryKeys } from '@/lib/queries';
@@ -44,6 +44,7 @@ function SetupContent({ sessionId }: { sessionId: string }) {
   const editable = can.manageBoards(me);
   const [version, setVersion] = React.useState(0);
   const { data, error, loading } = useApiData(fetchSetup, `${sessionId}|${version}`);
+  const rules = useQuery({ queryKey: ['rules'], queryFn: () => mdtApi.getRules(), staleTime: Infinity });
   const [draft, setDraft] = React.useState<BriefConfig | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [message, setMessage] = React.useState<{ kind: 'error' | 'info'; text: string } | null>(null);
@@ -181,6 +182,7 @@ function SetupContent({ sessionId }: { sessionId: string }) {
               onChange={setDraft}
               readOnly={!editable}
               requirements={requirements}
+              rules={rules.data ?? []}
             />
             {editable && (
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">

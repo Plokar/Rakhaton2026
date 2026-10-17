@@ -893,8 +893,37 @@ RULES: tuple[Callable[[PatientData], list[RedFlag]], ...] = (
 )
 
 
-def evaluate(resources: Iterable[dict], roles_present: Iterable[str] | None = None) -> list[RedFlag]:
-    """Všechna deterministická pravidla; seřazeno podle závažnosti, pak podle pravidla."""
+# Katalog pravidel pro nastavení podkladu (T-332): předseda je může pro board vypnout (`BriefConfig.disabled_rules`),
+# výchozí jsou zapnutá všechna. Hodnota = (název pro lékaře, pasáž guidelines, ze které pravidlo vychází, nebo "").
+RULE_CATALOG: dict[str, tuple[str, str]] = {
+    "RF-ECOG": ("ECOG lékaře a pacienta se liší", "OBC-1.3"),
+    "RF-PROMS": ("Výrazná symptomová zátěž podle pacienta", "OBC-1.3"),
+    "RF-TOX": ("Toxicita podle lékaře a pacienta nesedí", "KRC-3.2"),
+    "RF-STALE": ("Zastaralý staging nebo restaging", "OBC-1.2"),
+    "RF-MISSING": ("Chybí povinný údaj nebo biomarker", "OBC-1.1"),
+    "RF-MED": ("Léky mimo záznam a lékové interakce", ""),
+    "RF-NEWSYMPTOM": ("Nový symptom bez cíleného vyšetření", "PRS-4.2"),
+    "RF-LAB": ("Laboratoř mimo normu a trend markerů", "OBC-3.1"),
+    "RF-WEIGHT": ("Úbytek hmotnosti", "OBC-2.3"),
+    "RF-GERI": ("Geriatrický screening u věku od 70 let", "OBC-2.2"),
+    "RF-LESION": ("Neověřené ložisko nebo diagnóza", "OBC-1.4"),
+    "RF-GENETIC": ("Indikace genetického poradenství", "OBC-2.4"),
+    "RF-NOMINATION": ("Nominace neodpovídá dokumentaci", "OBC-1.4"),
+    "RF-TNM": ("Rozpor ve stadiu mezi zprávami", ""),
+    "RF-PALIATIVE": ("Včasné zapojení paliativního týmu", "OBC-2.1"),
+    "RF-ROLES": ("Chybí odbornost vyžadovaná guidelines", "KRC-2.1"),
+    "RF-STEROID": ("Kortikoidy bez plánu snižování", "OBC-3.1"),
+    "RF-IDENTITY": ("Strana těla, pohlaví nebo lokalizace nesedí", ""),
+    "RF-PRIOR-PROC": ("Předchozí výkony, implantáty a alergie (informace)", ""),
+    "RF-DATAQUALITY": ("Kvalita dat: jednotky, duplicity, data", ""),
+    "RF-LLM": ("Rozpory mezi zdroji nalezené AI", ""),
+}
+
+
+def evaluate(resources: Iterable[dict], roles_present: Iterable[str] | None = None,
+             disabled: Iterable[str] = ()) -> list[RedFlag]:
+    """Všechna deterministická pravidla kromě vypnutých předsedou; seřazeno podle závažnosti, pak podle pravidla."""
     data = PatientData(resources, roles_present)
-    flags = [flag for rule in RULES for flag in rule(data)]
+    off = set(disabled)
+    flags = [flag for rule in RULES for flag in rule(data) if flag.rule not in off]
     return sorted(flags, key=lambda f: (SEVERITY_ORDER.get(f.severity, 9), f.rule, f.id))

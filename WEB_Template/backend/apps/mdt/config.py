@@ -7,7 +7,9 @@ from .models import DETAIL_LEVELS, BriefConfig
 SECTION_ORDER = ('summary', 'timeline', 'red_flags', 'anamnesis', 'role_views', 'modalities',
                  'decision_support', 'trials', 'questions', 'mdt_question')
 ROLE_IDS = {'surgeon', 'oncologist', 'radiation_oncologist', 'radiologist', 'pathologist', 'pulmonologist',
-            'cardiologist', 'patient'}
+            'cardiologist', 'patient',
+            # další role (BONUS zadání B, T-332)
+            'nuclear_medicine', 'palliative_care', 'geriatrician', 'geneticist', 'coordinator'}
 DETAILS = {d for d, _ in DETAIL_LEVELS}
 
 
@@ -17,7 +19,7 @@ def _sections(enabled=SECTION_ORDER) -> list[dict]:
 
 DEFAULT_CONFIG = {'name': 'Výchozí', 'sections': _sections(),
                   'roles_present': ['oncologist', 'surgeon', 'radiologist', 'pathologist', 'patient'],
-                  'detail_level': 'standard', 'language': 'cs', 'hide_unverified': False}
+                  'detail_level': 'standard', 'language': 'cs', 'hide_unverified': False, 'disabled_rules': []}
 
 PRESETS = [
     {**DEFAULT_CONFIG, 'name': 'Standardní podklad'},
@@ -32,7 +34,8 @@ class BriefConfigSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BriefConfig
-        fields = ['id', 'name', 'is_preset', 'sections', 'roles_present', 'detail_level', 'language', 'hide_unverified']
+        fields = ['id', 'name', 'is_preset', 'sections', 'roles_present', 'detail_level', 'language', 'hide_unverified',
+                  'disabled_rules']
 
     def get_id(self, obj) -> str:
         return str(obj.pk)
@@ -51,6 +54,13 @@ class BriefConfigSerializer(serializers.ModelSerializer):
         if not isinstance(value, list) or not set(value) <= ROLE_IDS:
             raise serializers.ValidationError(f'Role jen z RoleId: {sorted(ROLE_IDS)}.')
         return value
+
+    def validate_disabled_rules(self, value):
+        from services.rules.red_flags import RULE_CATALOG
+
+        if not isinstance(value, list) or not set(value) <= set(RULE_CATALOG):
+            raise serializers.ValidationError(f'Pravidla jen z katalogu: {sorted(RULE_CATALOG)}.')
+        return sorted(set(value))
 
 
 def validated(data: dict) -> dict:

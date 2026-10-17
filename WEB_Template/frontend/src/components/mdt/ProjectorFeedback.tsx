@@ -109,7 +109,7 @@ export function ProjectorFeedback({ caseId }: { caseId: number }) {
           <DialogHeader>
             <DialogTitle>Nahlásit chybu v podkladu AI</DialogTitle>
             <DialogDescription>
-            Zpráva se uloží k případu. Pokud zvolíte vodítko pro AI, při další generaci tohoto podkladu se předá jako neověřená instrukce; současný výstup se nezmění.
+            Zpráva se uloží k případu. Pokud zvolíte vodítko pro AI, při další generaci souhrnu se předá jako neověřená instrukce; současný výstup se nezmění.
             </DialogDescription>
           </DialogHeader>
           <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="feedback-section">
@@ -130,7 +130,7 @@ export function ProjectorFeedback({ caseId }: { caseId: number }) {
               onChange={(event) => setGuideAi(event.target.checked)}
               className="mt-0.5 size-4 shrink-0 accent-primary"
             />
-            <span>Použít tuto zprávu jako vodítko pro AI při dalších generacích podkladu tohoto případu. AI ji musí ověřit proti dokumentaci; zpráva není zdrojem faktů ani citací.</span>
+            <span>Použít tuto zprávu jako vodítko pro AI při dalších generacích souhrnu tohoto případu. AI ji musí ověřit proti dokumentaci; zpráva není zdrojem faktů ani citací.</span>
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="feedback-message">
             Co je chybně nebo neúplné?

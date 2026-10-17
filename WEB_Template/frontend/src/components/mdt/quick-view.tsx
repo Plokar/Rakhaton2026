@@ -16,6 +16,8 @@ import {
 } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type {
+  ProjectorLayout,
+  ProjectorSection,
   CaseTemplate,
   IntakePrefill,
   IntakeWarning,
@@ -203,7 +205,7 @@ function Metric({
   warn?: boolean;
 }) {
   return (
-    <div className="flex min-w-15 flex-col items-center rounded-lg bg-muted/70 px-2.5 py-1.5" title={title}>
+    <div className="flex min-w-15 flex-col items-center rounded-xl border border-border bg-background px-2.5 py-1.5" title={title}>
       <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
       <dd className="text-[1.75rem] font-semibold leading-8 tabular-nums">{value}</dd>
       {sub && (
@@ -484,15 +486,47 @@ function packFacts(group: KeyFact[], unitsOf: (fact: KeyFact) => CellUnits = (fa
 }
 
 /**
+ * Pořadí údajů na projektoru (T-332): připnuté v pořadí z `projector_layout.facts`, ostatní za nimi
+ * výchozím pořadím (závažné, mimo normu, chybějící, zaznamenané, v normě; balené do řádků).
+ */
+export function projectorFactOrder(facts: KeyFact[], layout: ProjectorLayout | null | undefined): KeyFact[] {
+  const byId = new Map(facts.map((f) => [f.id, f]));
+  const pinned = (layout?.facts ?? []).map((id) => byId.get(id)).filter((f): f is KeyFact => Boolean(f));
+  const pinnedIds = new Set(pinned.map((f) => f.id));
+  const groups = orderFacts(facts.filter((f) => !pinnedIds.has(f.id)));
+  return [...pinned, ...[groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap((group) => packFacts(group))];
+}
+
+export const PROJECTOR_BLOCKS: Record<ProjectorSection, string> = {
+  anamnesis: 'Anamnéza',
+  facts: 'Klíčové údaje',
+  template: 'Šablona (úplnost podle diagnózy)',
+  treatments: 'Léčebné postupy',
+};
+const DEFAULT_BLOCKS: ProjectorSection[] = ['anamnesis', 'facts', 'template', 'treatments'];
+
+/** Bloky v okně projektoru (T-330: šablona je jen v rychlém přehledu, na projektoru ne). */
+export const PROJECTOR_WINDOW_BLOCKS: ProjectorSection[] = ['anamnesis', 'facts', 'treatments'];
+
+/**
+ * Bloky v pořadí z `projector_layout.sections`, chybějící výchozím pořadím za nimi. Šablona, kterou okno
+ * projektoru nemá (a dialog ji proto neřadí), zůstává v rychlém přehledu hned za klíčovými údaji.
+ */
+export function projectorBlockOrder(layout: ProjectorLayout | null | undefined): ProjectorSection[] {
+  const order = [...new Set([...(layout?.sections ?? []), ...DEFAULT_BLOCKS.filter((b) => b !== 'template')])];
+  if (!order.includes('template')) order.splice(order.indexOf('facts') + 1, 0, 'template');
+  return order;
+}
+
+/**
  * Hustá mřížka pro projektor (T-326, T-327): buňka = jeden řádek se zkratkou, hodnotou a ikonou stavu. Důvod
  * barvy, datum a plný název jsou v bublině po najetí nebo fokusu; klik otevře zdroj (dohledatelnost, zadání §3.3).
  * Pořadí: závažné, mimo normu, chybějící, zaznamenané, v normě; poslední buňka řádku se roztáhne (žádné díry).
  */
 export function KeyFactsGrid() {
-  const { facts, sources } = useQuickView();
+  const { facts, sources, item } = useQuickView();
   const open = useCitationOpen();
-  const groups = orderFacts(facts);
-  const ordered = [groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap((group) => packFacts(group));
+  const ordered = projectorFactOrder(facts, item?.projector_layout);
   const loading = sources.intake.loading || sources.observations.loading;
 
   return (
@@ -889,16 +923,31 @@ export function CaseQuickViewNarrow({
         </header>
         <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3.5 px-3 py-3">
-            <AnamnesisPanel compact />
-            <KeyFactsGrid />
-            <TemplateSummary />
-            <TreatmentList compact />
+            <NarrowBlocks />
           </div>
         </div>
-        <QuestionStrip className="shrink-0 px-3 py-2" clampLines={2} />
+        <QuestionStrip className="shrink-0 border-t-2 border-t-primary/40 px-3 py-2" clampLines={2} />
         {footer}
       </article>
     </QuickViewRoot>
+  );
+}
+
+/** Bloky úzkého panelu v pořadí, které nastavil zadávající lékař nebo předseda (T-332). */
+function NarrowBlocks() {
+  const { item } = useQuickView();
+  const blocks: Record<ProjectorSection, React.ReactNode> = {
+    anamnesis: <AnamnesisPanel compact />,
+    facts: <KeyFactsGrid />,
+    template: <TemplateSummary />,
+    treatments: <TreatmentList compact />,
+  };
+  return (
+    <>
+      {projectorBlockOrder(item?.projector_layout).map((id) => (
+        <React.Fragment key={id}>{blocks[id]}</React.Fragment>
+      ))}
+    </>
   );
 }
 
@@ -1118,8 +1167,12 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
 }
 
 function ProjectorFacts() {
-  const { facts, sources } = useQuickView();
-  const groups = orderFacts(facts);
+  const { facts, sources, item } = useQuickView();
+  // T-332: údaje v pořadí lékaře jsou nahoře jako vlastní skupina, ostatní ve výchozích skupinách
+  const byId = new Map(facts.map((f) => [f.id, f]));
+  const pinned = (item?.projector_layout?.facts ?? []).map((id) => byId.get(id)).filter((f): f is KeyFact => Boolean(f));
+  const pinnedIds = new Set(pinned.map((f) => f.id));
+  const groups = { pinned, ...orderFacts(facts.filter((f) => !pinnedIds.has(f.id))) };
   const loading = sources.intake.loading || sources.observations.loading;
   return (
     <section aria-labelledby="pj-facts" className={cn(PJ_CARD, '@container flex flex-col gap-2')}>
@@ -1131,7 +1184,7 @@ function ProjectorFacts() {
       ) : facts.length === 0 ? (
         <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
       ) : (
-        PJ_GROUPS.map(({ key, title }) =>
+        [{ key: 'pinned' as const, title: 'Pořadí lékaře' }, ...PJ_GROUPS].map(({ key, title }) =>
           groups[key].length ? (
             <div key={key}>
               <h3 className="mx-0.5 mb-1.5 flex justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1139,7 +1192,7 @@ function ProjectorFacts() {
                 <span className="tabular-nums">{groups[key].length}</span>
               </h3>
               <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
-                {packFacts(groups[key], pjUnits).map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
+                {(key === 'pinned' ? groups.pinned : packFacts(groups[key], pjUnits)).map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
               </ul>
             </div>
           ) : null,
@@ -1273,6 +1326,23 @@ function ProjectorAnamnesis() {
   );
 }
 
+/** Bloky okna projektoru v pořadí, které nastavil zadávající lékař nebo předseda (T-332). */
+function ProjectorBlocks() {
+  const { item } = useQuickView();
+  const blocks: Partial<Record<ProjectorSection, React.ReactNode>> = {
+    anamnesis: <ProjectorAnamnesis />,
+    facts: <ProjectorFacts />,
+    treatments: <ProjectorTreatments />,
+  };
+  return (
+    <div className="flex flex-col gap-3">
+      {projectorBlockOrder(item?.projector_layout).map((id) => (
+        <React.Fragment key={id}>{blocks[id]}</React.Fragment>
+      ))}
+    </div>
+  );
+}
+
 /**
  * Okno pro projektor (T-330, podle schváleného náhledu): šedé pozadí s bílými kartami, hlavička a otázka
  * pro MDT vždy vidět, mezi nimi anamnéza (když je), klíčové údaje ve skupinách a postupy se semaforem.
@@ -1294,11 +1364,7 @@ export function CaseQuickViewProjector({
       <article className={cn('flex h-full min-h-0 flex-col gap-3 bg-muted p-3', className)} aria-label="Přehled případu pro projektor">
         <ProjectorHeader as={titleAs} />
         <div className="relative -mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
-          <div className="flex flex-col gap-3">
-            <ProjectorAnamnesis />
-            <ProjectorFacts />
-            <ProjectorTreatments />
-          </div>
+          <ProjectorBlocks />
         </div>
         <ProjectorQuestion />
       </article>

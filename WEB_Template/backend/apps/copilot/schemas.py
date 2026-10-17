@@ -611,6 +611,12 @@ class AcknowledgedWarning(BaseModel):
     at: str
 
 
+class ProjectorLayout(BaseModel):
+    """Pořadí na projektoru (T-332); prázdné = výchozí pořadí."""
+    sections: list[Literal["anamnesis", "facts", "template", "treatments"]] = Field(default_factory=list)
+    facts: list[str] = Field(default_factory=list, description="KeyFact.id v pořadí, zbytek za nimi výchozím pořadím")
+
+
 class MdtCase(BaseModel):
     """POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/"""
     id: int | None = None
@@ -626,6 +632,7 @@ class MdtCase(BaseModel):
     status: Literal["nominated", "ready", "in_discussion", "decided", "confirmed", "returned"]
     order: int | None = Field(default=None, description="Pořadí v agendě (jen čtení)")
     question: str | None = Field(default=None, description="Otázka pro MDT z nominace (jen čtení)")
+    projector_layout: ProjectorLayout | None = Field(default=None, description="Pořadí na projektoru (T-332), mění kdo smí upravit případ")
     patient: PatientListItem | None = Field(default=None, description="Jen v detailu boardu (hlavička z IRIS)")
 
 

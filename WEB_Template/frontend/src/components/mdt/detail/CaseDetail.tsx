@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ListOrdered, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -21,6 +21,7 @@ import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-sou
 import { GenerateBrief, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutDialog';
 import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
 import { RedFlagList } from '../RedFlagList';
 import { ROLE_META } from '../roles';
@@ -476,6 +477,7 @@ function StickyCaseHeader({
   const isDemo = caseKey === DEMO_CASE;
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
+  const [arranging, setArranging] = React.useState(false);
   const flags = brief?.red_flags.length ?? 0;
 
   return (
@@ -564,8 +566,14 @@ function StickyCaseHeader({
                     <RefreshCw aria-hidden /> Přegenerovat podklad
                   </DropdownMenuItem>
                 )}
+                {canGenerate && session && item?.id != null && (
+                  <DropdownMenuItem onClick={() => setArranging(true)}>
+                    <ListOrdered aria-hidden /> Pořadí na projektoru
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
+            {arranging && item && <ProjectorLayoutDialog item={item} sources={sources} open onOpenChange={setArranging} />}
           </div>
         </div>
         {job.progress}

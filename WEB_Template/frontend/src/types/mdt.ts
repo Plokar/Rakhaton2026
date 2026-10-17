@@ -451,6 +451,16 @@ export interface IntakePrefill {
   intent_prefill?: 'C' | 'P';
 }
 
+/** Blok úzkého panelu (okno projektoru, boční panel). */
+export type ProjectorSection = 'anamnesis' | 'facts' | 'template' | 'treatments';
+
+/** Pořadí na projektoru (T-332): bloky a ID klíčových údajů; prázdné = výchozí pořadí. */
+export interface ProjectorLayout {
+  sections?: ProjectorSection[];
+  /** KeyFact.id v pořadí; ostatní údaje za nimi výchozím pořadím. */
+  facts?: string[];
+}
+
 /** POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/ */
 export interface MdtCase {
   id?: number;
@@ -476,6 +486,8 @@ export interface MdtCase {
   question?: string;
   /** Jen v detailu boardu (hlavička z IRIS, §8.2). */
   patient?: PatientListItem | null;
+  /** Pořadí na projektoru (T-332); mění zadávající, přizvaný lékař nebo předseda. */
+  projector_layout?: ProjectorLayout;
 }
 
 /** Stav údaje z katalogu `data/onko/udaje.tsv`: mention = jen zmínka („doporučeno“, „probíhá“). */
@@ -567,6 +579,44 @@ export interface MdtSession {
   chair: { user_id: number; name: string } | null;
   /** Výchozí BriefConfig boardu. */
   config_id: number | null;
+}
+
+/** Přítomný lékař v záznamu boardu (z `Decision.attendees` všech závěrů boardu, T-333). */
+export interface BoardRecordAttendee {
+  /** Lékař v IRIS „LEK-…“, jinak volný kód. */
+  id: string | null;
+  name: string;
+  role: RoleId | 'chair' | null;
+  /** U kterých pacientů byl uvedený v závěru. */
+  patients: string[];
+}
+
+/** Pacient v záznamu boardu: jméno a maskované RČ z IRIS jen tady (předseda), ne v hlavičkách (D-018). */
+export interface BoardRecordCase {
+  id: number;
+  order: number;
+  patient_id: string;
+  status: MdtCase['status'];
+  display_name: string;
+  name: string | null;
+  /** Maskované RČ, vidět jen poslední 4 číslice (T-323); u pacientů z datasetu null. */
+  rc: string | null;
+  diagnosis: { icd10: string; text: string } | null;
+  decision: {
+    status: 'draft' | 'confirmed';
+    record_id: string | null;
+    confirmed_at: string | null;
+    confirmed_by: { user_id: number; name: string } | null;
+  } | null;
+  /** PDF jde u každého závěru (i návrhu), FHIR document Bundle jen u potvrzeného. */
+  exports: { pdf: boolean; fhir: boolean };
+}
+
+/** GET /api/mdt/records/ (uzavřené boardy) a /api/mdt/sessions/{sid}/record/ (T-333, jen předseda). */
+export interface BoardRecord extends MdtSession {
+  attendees: BoardRecordAttendee[];
+  cases: BoardRecordCase[];
+  counts: { patients: number; confirmed: number };
 }
 
 /** GET /api/mdt/sessions/ */

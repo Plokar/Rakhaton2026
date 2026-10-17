@@ -130,3 +130,20 @@ def test_collaborators_validation(seeded):
     # zadávající lékař sám sebe nepřizývá (právo už má)
     me = p04.created_by_id
     assert as_user('pneumolog').patch(url, {'collaborators': [me]}, format='json').json()['collaborators'] == []
+
+
+def test_projector_layout(seeded):
+    """T-332: pořadí na projektoru mění zadávající lékař, přizvaný nebo předseda; ostatní ne. Neplatné tvary → 400."""
+    p04 = MdtCase.objects.get(patient_fhir_id='P04')       # zadal pneumolog
+    url = f'/api/mdt/cases/{p04.pk}/'
+    layout = {'sections': ['treatments', 'facts'], 'facts': ['spiro.ppo_dlco', 'lab:718-7']}
+    assert as_user('chirurg').patch(url, {'projector_layout': layout}, format='json').status_code == 403
+    r = as_user('pneumolog').patch(url, {'projector_layout': layout}, format='json')
+    assert r.status_code == 200
+    assert r.json()['projector_layout'] == layout
+    agenda = as_user('chirurg').get(f'/api/mdt/sessions/{p04.session_id}/').json()
+    assert next(c for c in agenda['cases'] if c['id'] == p04.pk)['projector_layout'] == layout
+    assert as_user('predseda').patch(url, {'projector_layout': {}}, format='json').json()['projector_layout'] == {}
+    for bad in ({'sections': ['nic']}, {'sections': ['facts', 'facts']}, {'facts': 'lab'}, {'poradi': []}, ['facts']):
+        assert as_user('predseda').patch(url, {'projector_layout': bad}, format='json').status_code == 400
+

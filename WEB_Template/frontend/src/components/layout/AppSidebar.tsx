@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, CalendarDays, LayoutGrid, ListChecks, MonitorUp } from 'lucide-react';
+import { Activity, Archive, CalendarDays, LayoutGrid, ListChecks, MonitorUp } from 'lucide-react';
 import { dayLabel, pragueDay, timeLabel, todayPrague } from '@/components/mdt/dates';
 import { openProjectorWindow } from '@/components/mdt/projector';
 import {
@@ -20,7 +20,7 @@ import {
   SidebarMenuSkeleton,
   SidebarRail,
 } from '@/components/shadcn/sidebar';
-import { useMe } from '@/components/mdt/me';
+import { can, useMe } from '@/components/mdt/me';
 import { isOverdue } from '@/components/mdt/MyTasks';
 import { useMyTasksQuery, useSessionsQuery, useTasksQuery } from '@/lib/queries';
 
@@ -28,6 +28,7 @@ const NAV = [
   { href: '/dashboard', label: 'Přehled', icon: LayoutGrid, exact: true },
   { href: '/dashboard/mdt', label: 'Zasedání', icon: CalendarDays },
   { href: '/dashboard/tasks', label: 'Úkoly', icon: ListChecks },
+  { href: '/dashboard/zaznamy', label: 'Záznam boardů', icon: Archive, chair: true },
 ] as const;
 
 /** Postranní panel (NAVRH_UI §5.1): navigace, nejbližší zasedání jedním klikem, okno projektoru. Bez dev služeb. */
@@ -77,7 +78,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.map((item) => {
+              {NAV.filter((item) => !('chair' in item) || can.manageBoards(me)).map((item) => {
                 const active = 'exact' in item && item.exact ? pathname === item.href : pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>

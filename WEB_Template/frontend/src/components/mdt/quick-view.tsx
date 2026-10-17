@@ -33,6 +33,7 @@ import { dayLabel, timeLabel } from './dates';
 import { FactIcon, FactLegend, FACT_META } from './FactIcon';
 import { formatDate } from './format';
 import { KbItemRow } from './KbItem';
+import { ProjectorFeedback } from './ProjectorFeedback';
 import { buildKeyFacts, type KeyFact } from './key-facts';
 import { SourceDrawer, type SourceLoader } from './SourceDrawer';
 
@@ -1298,6 +1299,7 @@ export function CaseQuickViewProjector({
             <ProjectorAnamnesis />
             <ProjectorFacts />
             <ProjectorTreatments />
+            {caseId !== null && <ProjectorFeedback caseId={caseId} />}
           </div>
         </div>
         <ProjectorQuestion />

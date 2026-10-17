@@ -233,6 +233,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | **FR-P2** | Během zasedání: přepínání pacientů v agendě, prezentační režim (velké písmo, projektor) | SHOULD | UX |
 | **FR-P3** | Po zasedání: přehled úkolů a jejich stav, naplánování re-MDT | SHOULD | PROC |
 | **FR-P4** | **Zařazení pacienta do boardu:** formulář předvyplněný z IRIS; chybějící údaj Doplnit / Přeskočit; varování CHYBÍ, MIMO NORMU, ROZPOR, NEJISTOTA AI (lze odkliknout); ECOG + záměr C/P; checkbox „Snímek mladší než 3 měsíce“ (připomínka; automatická kontrola stagingu zůstává ≤ 6 týdnů, OBC-1.2); ruční údaje se zapíší do IRIS jako FHIR + `Provenance` ([§5.10](#510-zařazení-pacienta-a-kontrola-úplnosti)). **Otázku pro MDT přeskočit nelze** (OBC-1.1). *(lékař)* | MUST | PROC, AI |
+| **FR-P5** | Během projekce může oprávněný lékař označit chybný nebo neúplný výstup AI a připojit opravu. Po souhlasu se zpráva při další generaci podkladu případu předá AI jako neověřené vodítko; AI ji musí ověřit proti dokumentaci. Opravu lze také výslovně sdílet jako neověřenou týmovou nápovědu podle rodiny MKN-10 a části podkladu. Nápověda nikdy není pacientský fakt, citace ani automatická změna výstupu. *(lékař)* | SHOULD | PROC, AI, UX |
 | **FR-U1** | Role podle oprávnění: `mdt_admin` (předseda), `mdt_doctor` (zadávající lékař), `mdt_viewer` (člen komise) + odbornost uživatele (D-014). *(lékař)* | MUST | PROC |
 | **FR-U2** | Úzké rozložení: použitelné od 360 px, jeden sloupec, bloky pod sebou; podklad jde otevřít v samostatném úzkém okně bez navigace (D-017). *(lékař)* | MUST | UX |
 
@@ -330,6 +331,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | D-018 | **Hlavička:** `Pxx · pohlaví · věk` (žádné jméno ani RČ), diagnóza + TNM, hlavní otázka, ECOG lékaře velký + ECOG pacienta, záměr **C/P** | orientace do 30 s, ECOG lékař i pacient (§1.3), pseudonymizace |
 | D-019 | **Nic se z podkladu neztratí:** odkliknuté varování jen umlčí upozornění při zařazení, přeskočený údaj se ukáže jako „Chybí (přeskočeno lékařem)“ | red flags a „údaj chybí“ (§1.4) |
 | D-020 | **Práce ve sprintech** = milníky M0–M4. Na konci sprintu merge do `master`, smoke test a přeplánování v PROGRESS.md. | víc lidí, strojů a agentů paralelně |
+| D-022 | **Zpětná vazba není automatický trénink ani důkaz:** ukládá se u oprávněného případu. Lékař může výslovně povolit použití vlastních pokynů při dalších generacích téhož případu; AI je dostane jako neověřený vstup a musí je ověřit proti zdrojům pacienta. Opakovaně použitelné opravy může lékař výslovně sdílet; dalšímu případu se zobrazí bez autora a ID původního případu jako nápověda podle MKN-10 kategorie a části podkladu. Sdílející lékař potvrzuje, že text neobsahuje identifikátory. Zpětná vazba není citace, nesmí změnit citace, deterministická varování ani semafor a nesmí se vydávat za pacientský fakt. | bezpečná iterace podle zkušenosti komise, NFR-2/3 a pravidla grounding |
 
 ### 3.4 Nasazení
 
@@ -1096,6 +1098,7 @@ Nové závislosti v `requirements.txt`:
 | `GenerationJob` | `case` FK, `kind` (brief/scribe/patient_summary), `status` (queued/running/done/error), `progress` (0–100), `result_id`, `error` |
 | `Decision` | `case` FK, `content` JSON (schéma [§8.4](#84-decision-závěr-komise)), `status` (draft/confirmed), `confirmed_by`, `confirmed_at`, `fhir_ids` JSON, `fhir_bundle` JSON |
 | `LlmCallLog` | `purpose`, `provider`, `model`, `prompt_hash`, `tokens_in`, `tokens_out`, `latency_ms`, `ok` |
+| `MdtFeedback` | `case`, `brief` (nullable), `author`, `section`, `message`, `correction`, `guide_ai`, `share_as_hint`, `diagnosis_family`, `created_at`; záznam se nemaže při nové generaci podkladu |
 | `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
 
 `seed_mdt` vytvoří zasedání a případy **z nominací v IRIS**: `ServiceRequest.category` (zaměření komise) + `Task.restriction.period.start` (datum MDT). Vzniknou 4 zasedání:
@@ -1153,6 +1156,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}`; předseda, zadávající nebo přizvaný lékař (T-326) |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
+| GET, POST | `/api/mdt/cases/{cid}/feedback/` | opravy k podkladu (FR-P5): GET vrací vlastní záznamy aktuálního případu a sdílené týmové nápovědy stejné MKN-10 kategorie/sekce; POST `{section, message, correction?, guide_ai, share_as_hint}` vytvoří záznam jen předsedovi, zadávajícímu nebo přizvanému lékaři. `guide_ai=true` zařadí zprávu k pokynům při další generaci případu; `share_as_hint=true` zobrazí opravu u podobné diagnózy bez ID původního případu a autora. API odmítá zjevná RČ/ID pacientů. Pokyny AI ani nápovědy nejsou evidence ani pacientský fakt. |
 | GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, zadávající nebo přizvaný lékař, T-326) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
 | POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3); předseda, zadávající nebo přizvaný lékař (T-326) |
 | GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4); PUT předseda, zadávající nebo přizvaný lékař (T-326) |
@@ -1674,6 +1678,36 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 ```
 
 ---
+
+### 8.7 Zpětná vazba k AI (`MdtFeedback`)
+
+```ts
+type FeedbackSection = "anamnesis" | "key_facts" | "treatment" | "warning" | "other";
+
+interface MdtFeedback {
+  id: number;
+  case_id: number;
+  section: FeedbackSection;
+  message: string;                    // co bylo chybně / neúplné
+  correction: string | null;          // návrh lékaře, není automaticky potvrzeným faktem
+  guide_ai: boolean;                  // po souhlasu přidat k pokynům při dalších generacích případu
+  share_as_hint: boolean;             // výslovný souhlas se sdílením correction bez autora a ID případu
+  created_at: string;
+}
+
+interface FeedbackHint {
+  section: FeedbackSection;
+  correction: string;                 // bez původního case_id a autora; lékař potvrzuje, že text neobsahuje identifikátory
+  label: "neověřená zkušenost lékaře";
+}
+
+interface FeedbackResponse {
+  feedback: MdtFeedback[];             // jen vlastní záznamy aktuálního případu
+  hints: FeedbackHint[];               // pouze sdílené, stejná MKN-10 rodina a sekce
+}
+```
+
+Pokyny `guide_ai` se při další generaci téhož případu přidají do promptu souhrnu jako neověřený text lékaře. Souhrn je může zohlednit pouze v mezích citovaných zdrojů pacienta; nikdy nejsou citací. Sdílený hint slouží lékaři jako podnět k diskusi a do promptu se nepřidává.
 
 ## 9. Konfigurace (env proměnné)
 

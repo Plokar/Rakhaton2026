@@ -36,6 +36,30 @@ export type SectionId =
   | 'mdt_question';
 export type DetailLevel = 'brief' | 'standard' | 'detailed';
 
+export type FeedbackSection = 'anamnesis' | 'key_facts' | 'treatment' | 'warning' | 'other';
+
+export interface MdtFeedback {
+  id: number;
+  case_id: number;
+  section: FeedbackSection;
+  message: string;
+  correction: string | null;
+  guide_ai: boolean;
+  share_as_hint: boolean;
+  created_at: string;
+}
+
+export interface FeedbackHint {
+  section: FeedbackSection;
+  correction: string;
+  label: 'neověřená zkušenost lékaře';
+}
+
+export interface FeedbackResponse {
+  feedback: MdtFeedback[];
+  hints: FeedbackHint[];
+}
+
 export interface Claim {
   id: string;
   kind: 'claim' | 'missing';

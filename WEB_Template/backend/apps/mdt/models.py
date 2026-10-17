@@ -96,6 +96,30 @@ class Decision(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class MdtFeedback(models.Model):
+    """Lékařská zpětná vazba k AI výstupu; sdílená oprava je jen neověřená nápověda (T-331)."""
+    SECTIONS = [
+        ('anamnesis', 'anamnéza'), ('key_facts', 'klíčové údaje'), ('treatment', 'léčebné postupy'),
+        ('warning', 'varování'), ('other', 'jiné'),
+    ]
+    case = models.ForeignKey(MdtCase, on_delete=models.CASCADE, related_name='ai_feedback')
+    brief = models.ForeignKey('copilot.Brief', null=True, blank=True, on_delete=models.SET_NULL,
+                              related_name='mdt_feedback')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                               related_name='mdt_feedback')
+    section = models.CharField(max_length=20, choices=SECTIONS)
+    message = models.CharField(max_length=1000)
+    correction = models.CharField(max_length=2000, blank=True)
+    guide_ai = models.BooleanField(default=False)
+    share_as_hint = models.BooleanField(default=False)
+    diagnosis_family = models.CharField(max_length=3, blank=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        indexes = [models.Index(fields=['diagnosis_family', 'section', 'share_as_hint'], name='mdt_feedback_hint_idx')]
+
+
 class PatientDraft(models.Model):
     """Návrh nového pacienta (T-323): RČ, podklady a nominace před potvrzením do IRIS.
 

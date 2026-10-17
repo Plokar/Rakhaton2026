@@ -11,9 +11,12 @@ import type {
   SpecialtyView,
   Decision,
   EvidenceSource,
+  FeedbackResponse,
+  FeedbackSection,
   IntakePrefill,
   Me,
   MdtCase,
+  MdtFeedback,
   MdtTask,
   PatientListItem,
   Practitioner,
@@ -100,6 +103,12 @@ export const mdtApi = {
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
+
+  getFeedback: (caseId: number) =>
+    apiFetch<FeedbackResponse>(`/api/mdt/cases/${caseId}/feedback/`),
+
+  sendFeedback: (caseId: number, input: { section: FeedbackSection; message: string; correction?: string; guide_ai: boolean; share_as_hint: boolean }) =>
+    apiFetch<MdtFeedback>(`/api/mdt/cases/${caseId}/feedback/`, { method: 'POST', body: JSON.stringify(input) }),
 
   generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig } = {}) =>
     apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`, {

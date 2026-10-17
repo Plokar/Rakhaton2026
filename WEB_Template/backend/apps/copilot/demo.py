@@ -42,12 +42,12 @@ def load_cache(patient_id: str) -> dict | None:
     return json.loads(path.read_text(encoding='utf-8')) if path.is_file() else None
 
 
-def cached_brief(case, config: dict, progress) -> dict:
+def cached_brief(case, config: dict, progress, *, physician_guidance=None) -> dict:
     """Generátor jobu v offline demu: uložený podklad místo LLM; bez cache běžný generátor."""
     content = load_cache(case.patient_fhir_id)
     if content is None:
         log.warning('Offline demo: cache %s chybí, generuji normálně', cache_path(case.patient_fhir_id))
-        return import_string(REAL_GENERATOR)(case, config, progress)
+        return import_string(REAL_GENERATOR)(case, config, progress, physician_guidance=physician_guidance or [])
     progress(100)
     return {**content, 'case_id': str(case.pk)}
 

@@ -29,7 +29,7 @@ from services.rules.compatibility import evaluate_compatibility
 from . import config as cfg
 from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
-from .models import BriefConfig, Decision, MdtCase, MdtSession
+from .models import BriefConfig, Decision, MdtCase, MdtFeedback, MdtSession
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
@@ -487,10 +487,91 @@ def case_brief(request, cid):
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
         return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
-    job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
+    guidance = list(MdtFeedback.objects.filter(case=case, guide_ai=True)
+                    .order_by('-created_at').values('section', 'message', 'correction')[:10])
+    job = GenerationJob.objects.create(case=case, kind='brief', params={
+        'config': _config(request.data, case), 'physician_guidance': guidance,
+    },
                                        created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+def _feedback_item(item: MdtFeedback) -> dict:
+    return {'id': item.pk, 'case_id': item.case_id, 'section': item.section, 'message': item.message,
+            'correction': item.correction or None, 'share_as_hint': item.share_as_hint,
+            'guide_ai': item.guide_ai,
+            'created_at': item.created_at.isoformat()}
+
+
+def _diagnosis_family(brief) -> str:
+    code = str((brief.content.get('header') or {}).get('diagnosis', {}).get('icd10') or '').upper().strip()
+    match = re.match(r'^([A-Z][0-9]{2})', code)
+    return match.group(1) if match else ''
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def case_feedback(request, cid):
+    """T-331: lékařská zpětná vazba k podkladu; sdílené opravy jsou nápovědy bez autora a zdrojového ID."""
+    case = get_object_or_404(MdtCase, pk=cid)
+    brief = case.briefs.first()
+    if request.method == 'GET':
+        # Jen autor vidí svou původní zprávu; sdílená nápověda je oddělená a neobsahuje vazbu na zdrojový případ.
+        feedback = MdtFeedback.objects.filter(case=case, author=request.user)
+        family = _diagnosis_family(brief) if brief else ''
+        hints = []
+        if family:
+            candidates = MdtFeedback.objects.filter(
+                share_as_hint=True, diagnosis_family=family,
+            ).exclude(case=case).order_by('-created_at').values('section', 'correction')[:20]
+            seen = set()
+            for hint in candidates:
+                key = (hint['section'], hint['correction'])
+                if hint['correction'] and key not in seen:
+                    hints.append({'section': hint['section'], 'correction': hint['correction'],
+                                  'label': 'neověřená zkušenost lékaře'})
+                    seen.add(key)
+                if len(hints) == 5:
+                    break
+        return Response({'feedback': [_feedback_item(item) for item in feedback], 'hints': hints})
+
+    _require_case_edit(request, case)
+    if brief is None:
+        return Response({'detail': 'Nejdřív vygenerujte podklad, ke kterému se zpětná vazba vztahuje.'}, status=409)
+    section = request.data.get('section')
+    message = str(request.data.get('message') or '').strip()
+    correction = str(request.data.get('correction') or '').strip()
+    guide_ai = request.data.get('guide_ai', False)
+    share_as_hint = request.data.get('share_as_hint', False)
+    valid_sections = {value for value, _ in MdtFeedback.SECTIONS}
+    if section not in valid_sections:
+        raise ValidationError({'section': f'Vyberte jednu z hodnot: {", ".join(sorted(valid_sections))}.'})
+    if not message:
+        raise ValidationError({'message': 'Popište, co bylo chybně nebo neúplné.'})
+    if len(message) > 1000:
+        raise ValidationError({'message': 'Zpráva může mít nejvýše 1000 znaků.'})
+    if len(correction) > 2000:
+        raise ValidationError({'correction': 'Oprava může mít nejvýše 2000 znaků.'})
+    if not isinstance(share_as_hint, bool):
+        raise ValidationError({'share_as_hint': 'Očekává se true nebo false.'})
+    if not isinstance(guide_ai, bool):
+        raise ValidationError({'guide_ai': 'Očekává se true nebo false.'})
+    if share_as_hint and not correction:
+        raise ValidationError({'correction': 'Pro sdílenou nápovědu je nutné uvést opravu.'})
+    family = _diagnosis_family(brief)
+    if share_as_hint and not family:
+        raise ValidationError({'share_as_hint': 'Podklad nemá platný kód MKN-10, opravu nelze bezpečně přiřadit podobným případům.'})
+    if share_as_hint and (re.search(r'\bP\d{2}\b', correction, re.IGNORECASE)
+                          or re.search(r'\b\d{6}/?\d{3,4}\b', correction)):
+        raise ValidationError({'correction': 'Sdílená nápověda nesmí obsahovat ID pacienta ani rodné číslo.'})
+    item = MdtFeedback.objects.create(
+        case=case, brief=brief, author=request.user, section=section, message=message,
+        correction=correction, guide_ai=guide_ai,
+        share_as_hint=share_as_hint, diagnosis_family=family,
+    )
+    return Response(_feedback_item(item), status=201)
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])

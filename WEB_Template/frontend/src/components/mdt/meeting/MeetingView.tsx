@@ -476,26 +476,26 @@ function CaseToolbar({
 }) {
   const done = isDiscussed(item);
   return (
-    <div className="flex flex-wrap items-center gap-2 border-y border-border py-2">
-      <Button variant="ghost" size="lg" onClick={onPrev} disabled={index <= 0} title="Předchozí pacient (↑ nebo K)">
-        <ChevronUp aria-hidden /> Předchozí
+    <div className="@container flex items-center gap-2 border-y border-border py-2">
+      <Button variant="ghost" size="lg" onClick={onPrev} disabled={index <= 0} title="Předchozí pacient (↑ nebo K)" aria-label="Předchozí pacient">
+        <ChevronUp aria-hidden /> <span className="hidden @3xl:inline">Předchozí</span>
       </Button>
       <span className="mx-auto flex flex-wrap items-center justify-center gap-2">
         <Link href={`/dashboard/cases/${item.id}`} className={buttonVariants({ size: 'lg' })} title="Otevřít detail (D)">
-          <FileText aria-hidden /> Otevřít detail <Kbd className="ml-1 bg-primary-foreground/15 text-primary-foreground">D</Kbd>
+          <FileText aria-hidden /> <span className="@md:hidden">Detail</span><span className="hidden @md:inline">Otevřít detail</span> <Kbd className="ml-1 hidden bg-primary-foreground/15 text-primary-foreground @3xl:inline-flex">D</Kbd>
         </Link>
         <Link href={`/dashboard/cases/${item.id}/record`} className={buttonVariants({ variant: 'outline', size: 'lg' })} title="Závěr komise (Z)">
-          <NotebookPen aria-hidden /> Závěr komise <Kbd className="ml-1">Z</Kbd>
+          <NotebookPen aria-hidden /> Závěr <span className="hidden @md:inline">komise</span> <Kbd className="ml-1 hidden @3xl:inline-flex">Z</Kbd>
         </Link>
         {chair && (
           <Button variant="outline" size="lg" onClick={onToggleDiscussed} disabled={busy} aria-pressed={done} title="Označit jako projednané (H)">
             <CircleCheck aria-hidden className={cn(done && 'text-emerald-700 dark:text-emerald-400')} />
-            {done ? 'Projednáno' : 'Projednat'} <Kbd className="ml-1">H</Kbd>
+            {done ? 'Projednáno' : 'Projednat'} <Kbd className="ml-1 hidden @3xl:inline-flex">H</Kbd>
           </Button>
         )}
       </span>
-      <Button variant="ghost" size="lg" onClick={onNext} disabled={index >= count - 1} title="Další pacient (↓ nebo J)">
-        Další <ChevronDown aria-hidden />
+      <Button variant="ghost" size="lg" onClick={onNext} disabled={index >= count - 1} title="Další pacient (↓ nebo J)" aria-label="Další pacient">
+        <span className="hidden @3xl:inline">Další</span> <ChevronDown aria-hidden />
       </Button>
     </div>
   );

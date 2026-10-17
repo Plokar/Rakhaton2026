@@ -640,7 +640,7 @@ export function CaseQuickViewWide({
 }) {
   return (
     <QuickViewRoot sources={sources} caseId={caseId}>
-      <article className={cn('flex min-h-0 flex-col', className)} aria-label="Rychlý přehled případu">
+      <article className={cn('@container flex min-h-0 flex-col', className)} aria-label="Rychlý přehled případu">
         <header className="flex flex-wrap items-start gap-x-6 gap-y-3 px-1 pb-4">
           <div className="flex min-w-[min(100%,18rem)] flex-1">
             <QuickIdentity size="large" />
@@ -651,7 +651,7 @@ export function CaseQuickViewWide({
           </div>
         </header>
         {toolbar}
-        <div className="grid gap-x-10 gap-y-8 py-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <div className="grid gap-x-10 gap-y-8 py-5 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
           <div className="flex min-w-0 flex-col gap-6">
             <KeyFactsList />
             <AnamnesisPanel defaultOpen={false} empty={anamnesisEmpty} />
@@ -685,9 +685,9 @@ export function CaseQuickViewBody({
 }) {
   return (
     <QuickViewRoot sources={sources} caseId={caseId}>
-      <div className="flex flex-col gap-5">
+      <div className="@container flex flex-col gap-5">
         <QuestionStrip size="large" className="rounded-lg border" />
-        <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <div className="grid gap-x-10 gap-y-8 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
           <div className="flex min-w-0 flex-col gap-6">
             <KeyFactsList />
             <AnamnesisPanel defaultOpen={false} empty={anamnesisEmpty} />

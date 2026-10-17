@@ -1,6 +1,6 @@
 # Návrh UI v2: kalendář zasedání, jednání komise a detail pacienta
 
-> **Stav:** návrh k odsouhlasení (T-515) · @Jarda+claude · So 17. 10. 2026
+> **Stav:** implementováno ve větvi `t-516-ui-v2` (T-516, T-517, T-519–T-522) · návrh @Jarda+claude, implementace @Maty+claude · So 17. 10. 2026. Otevřené otázky Q1–Q7 jsou rozhodnuté ([§14](#14-otevřené-otázky)), API změny (T-518) čekají na API lane; UI do té doby skládá data z existujících endpointů.
 >
 > - **Navazuje na:** T-512 (admin okno a úzký panel `/projector`, větev `t-512-admin-board-overview`, čeká na review) a T-514 (přihlašovací stránka, v `master`).
 > - **Zdroj pravdy pro požadavky** zůstává [ARCHITEKTURA.md](../ARCHITEKTURA.md) a [POZADAVKY_LEKARE.md](POZADAVKY_LEKARE.md). Tento dokument řeší jen podobu a chování UI.
@@ -569,13 +569,14 @@ Verze ověřené v npm registru 17. 10. 2026. Všechny podporují React 19.
 | Balíček | Verze | K čemu | Proč tento |
 |---|---|---|---|
 | `shadcn` (CLI) + `@base-ui/react` | 4.22.0 / 1.9.0 | primitiva: `sidebar`, `dropdown-menu`, `sheet`, `command`, `tooltip`, `hover-card`, `resizable`, `sonner`, `kbd`, `empty`, `item`, `breadcrumb`, `collapsible`, `context-menu` | zdrojový kód zůstává v repu; tokeny už máme se stejnými názvy; přístupnost (fokus, ARIA, klávesnice) zdarma; v4 má Base UI jako výchozí základ (Radix jako varianta, Q2) |
-| `@dnd-kit/core` + `@dnd-kit/sortable` | 6.3.1 / 10.0.0 | přesun pacientů mezi zasedáními | zralé API, senzory pro klávesnici a dotyk, oznámení pro čtečky; nový `@dnd-kit/react` 0.5.1 je zatím před 1.0, přechod později |
+| `@dnd-kit/core` + `@dnd-kit/utilities` | 6.3.1 / 3.2.2 | přesun pacientů mezi zasedáními | zralé API, senzory pro klávesnici a dotyk, oznámení pro čtečky; `sortable` zatím není potřeba (Q6); nový `@dnd-kit/react` 0.5.1 je zatím před 1.0 |
 | `@tanstack/react-query` | 5.104.3 | serverová data, cache, optimistické přesuny s návratem | odstraní duplicitní dotazy mezi sidebarem, kalendářem a Jednáním |
 | `nuqs` | 2.10.2 | stav v URL (týden, pacient) | typované parametry, adaptér pro Next App Router, funguje Zpět a sdílení odkazu |
 | `sonner` | 2.0.8 | toasty s akcí „Vrátit“ | shadcn ho používá; přístupné `aria-live` |
 | `date-fns` + `date-fns/locale/cs` | 4.4.0 | týdny (ISO), dny v mřížce, české názvy dnů | výpočty dat; formát pro zobrazení dál přes `Intl` |
 | `react-resizable-panels` | 4.14.5 | šířka pruhu agendy v Jednání | základ shadcn `resizable`; klávesnicí ovladatelné |
-| `motion` | 14.3.0 | layout animace přesunu čipu, přechod panelu | jen `LazyMotion` + `domAnimation` (malý balík); vše respektuje `prefers-reduced-motion` |
+| `motion` | 13.5.1 | layout animace přesunu čipu („Přesunout na…“, „Vrátit“) | `LazyMotion` + `domMax` jen na kalendáři, `MotionConfig reducedMotion="user"`; 14.3.0 vyšla 15. 10., proto starší stabilní verze |
+| `react-hotkeys-hook` | 5.3.3 | zkratky v Jednání (↑↓ J K D Z P H) | `ignoreEventWhen` vypne zkratky, když je otevřené menu, dialog nebo zdroj citace |
 
 **Zvažováno a zamítnuto:**
 
@@ -626,16 +627,18 @@ Na pitch (So 13:00) a finále (Ne 14:00). Úkoly jsou návrh. Do PROGRESS §4 se
 
 **Pořadí do pitche:** T-516 → T-517 → T-519 (záložní data bez T-518) → T-520. T-521 a T-522 do finále.
 
+**Stav (So 17. 10.):** T-516, T-517, T-519, T-520, T-521 a T-522 hotové ve větvi `t-516-ui-v2`; T-518 (API) volné. Ověřeno nad mock API se syntetickými daty (dataset + dev ground truth): přesun myší, klávesnicí a přes menu včetně „Vrátit“, průchod agendou zkratkami, synchronizace projektoru, šířky 390 / 1024 / 1440 px bez vodorovného posouvání, světlý i tmavý režim. Sken: 0× `text-[9–11px]`, `font-mono`, `uppercase` a `font-bold/extrabold` v klinickém UI; `impeccable detect` hlásí jen záměrné pruhy AI / závažnosti (D-017). Detail P03 má výchozí výšku ~3 obrazovky (dřív 16).
+
 ---
 
 ## 14. Otevřené otázky
 
-| # | Otázka | Doporučení | Kdo rozhoduje |
-|---|---|---|---|
-| Q1 | Barva AI: dnes tyrkysová jako primární akce, POZADAVKY §3.4 chtějí fialovou | **fialová** (`violet-600`), AI se pak neplete s akcí ani se semaforem | UI + lékař |
-| Q2 | shadcn nad Base UI, nebo nad Radix? | **Base UI** (výchozí v shadcn v4, aktivní vývoj); Radix, pokud tým zná jeho API | UI (@Mira) |
-| Q3 | Rozsah kalendáře: 1 týden, 2 týdny, měsíc? | **2 týdny** s posunem po týdnu | předseda / lékař |
-| Q4 | Čas na pacienta v Jednání: zobrazovat? | **ano**, jen informativně, po 5 min oranžově, bez zvuku | předseda |
-| Q5 | Značka: MedTeam (login, admin okno) vs. MDT Copilot (sidebar, metadata) | **MedTeam** všude, „MDT Copilot“ jako popis produktu | tým |
-| Q6 | Přetahování i uvnitř boardu (pořadí agendy)? | **později**, chce zapisovatelné `order` (T-518 bod 3) | předseda + API |
-| Q7 | Potvrzovat přesun mezi daty (zápis do IRIS)? | **nepotvrzovat**, ale „Vrátit“ 8 s v toastu | předseda |
+| # | Otázka | Rozhodnutí (So 17. 10., UI lane) |
+|---|---|---|
+| Q1 | Barva AI: dnes tyrkysová jako primární akce, POZADAVKY §3.4 chtějí fialovou | **fialová**, token `--ai` (`#7c3aed`, v tmavém režimu `#a78bfa`) v `AiBlock`, `AiTag`, závěru komise i potvrzení |
+| Q2 | shadcn nad Base UI, nebo nad Radix? | **Base UI** (`components/shadcn`, kompozice přes `render`) |
+| Q3 | Rozsah kalendáře: 1 týden, 2 týdny, měsíc? | **2 týdny** pod sebou, posun po týdnu, „Dnes“ vrací na aktuální týden |
+| Q4 | Čas na pacienta v Jednání: zobrazovat? | **ano**, v pruhu agendy, po 5 min oranžově, jen `sessionStorage`, do IRIS nic |
+| Q5 | Značka: MedTeam (login, admin okno) vs. MDT Copilot (sidebar, metadata) | **MedTeam** všude (titulek, manifest, sidebar), „MDT Copilot“ v popisu produktu |
+| Q6 | Přetahování i uvnitř boardu (pořadí agendy)? | **později** (chce zapisovatelné `order`, T-518 bod 3) |
+| Q7 | Potvrzovat přesun mezi daty (zápis do IRIS)? | **nepotvrzovat**, toast s „Vrátit“ 8 s; přesun na uzavřený nebo minulý board UI nepustí (backend 409 zatím nemá) |

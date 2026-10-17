@@ -457,7 +457,7 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 
 | Výstup | FHIR resource (ID) | Klíčové prvky |
 |---|---|---|
-| **Záznam MDT** | `Composition/Pxx-mdtNN` | `status` `preliminary` → `final`; `type` `mdt-typ-zaznamu#mdt-zaznam`; `category` = typ projednání (z `ServiceRequest.code`) + zaměření; `author` + `attester` (legal) = předseda; `custodian` `ORG-FN`; `event.detail` → CarePlan + CareTeam; **sekce jako v datasetu:** Projednaná otázka · Klinické zhodnocení · Léčebný záměr · Doporučený postup · Doplňující diagnostika · Klinická studie · Plánované re-MDT · Závěr MDT; navíc sekce **Varovné signály** (odkazy na DetectedIssue); extension `mdt-forma-zasedani`, `mdt-osetrujici-lekar`, `mdt-ucast-pacienta` |
+| **Záznam MDT** | `Composition/Pxx-mdtNN` | `status` `preliminary` → `final`; `type` `mdt-typ-zaznamu#mdt-zaznam`; `category` = typ projednání (z `ServiceRequest.code`) + zaměření; `author` + `attester` (legal) = předseda; `custodian` `ORG-FN`; `event.detail` → CarePlan + CareTeam; **sekce jako v datasetu:** Projednaná otázka · Klinické zhodnocení · Léčebný záměr · Doporučený postup · Doplňující diagnostika · Klinická studie · Plánované re-MDT · Závěr MDT (před ním podle zápisu Zvažované možnosti · Soulad s doporučenými postupy · Odlišná stanoviska, T-326); navíc sekce **Varovné signály** (odkazy na DetectedIssue); extension `mdt-forma-zasedani`, `mdt-osetrujici-lekar`, `mdt-ucast-pacienta` |
 | Doporučení | `CarePlan/Pxx-mdtNN-careplan` | `status=active`, `intent=plan`, `category` `mdt-lecebny-zamer` (kurativni / paliativni / odlozeno), `activity[].detail.code` `mdt-modalita` + `description`, `supportingInfo` → `ServiceRequest/Pxx-zad01` (R4 `basedOn` povoluje jen CarePlan, IRIS jinak vrací 400), `addresses` → Condition |
 | Přítomní | `CareTeam/Pxx-mdtNN-careteam` | `participant[].role.text` + `member` (z konfigurace „kdo je přítomen“) |
 | Úkoly | `Task/Pxx-mdtNN-task01…` | `basedOn` → CarePlan, `intent=order`, `owner`, `restriction.period.end` = termín, `description` |
@@ -1090,7 +1090,7 @@ Nové závislosti v `requirements.txt`:
 | Model | Pole (hlavní) |
 |---|---|
 | `MdtSession` (= board) | `date`, `title` (zaměření komise), `chair` (User), `status` (planned/in_progress/closed), `config` → `BriefConfig` (výchozí podklad nastavený předsedou); zakládá a mění jen `mdt_admin` |
-| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`) |
+| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `collaborators` M2M (přizvaní ke spolupráci, T-326), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`) |
 | `BriefConfig` | `name`, `owner`, `is_preset`, `sections` JSON (`[{id, enabled, order, detail}]`), `roles_present` JSON, `detail_level` (brief/standard/detailed), `language`, `hide_unverified` |
 | `Brief` | `case` FK, `config_snapshot` JSON, `content` JSON (schéma [§8.2](#82-brief-podklad)), `model`, `created_at` |
 | `GenerationJob` | `case` FK, `kind` (brief/scribe/patient_summary), `status` (queued/running/done/error), `progress` (0–100), `result_id`, `error` |
@@ -1133,7 +1133,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
 | POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
-| GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), jen `mdt_admin` (T-319) |
+| GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), `mdt_admin` a `mdt_doctor` (lékař vybírá, koho přizvat ke spolupráci, T-326) |
 | PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319) |
 | GET, POST | `/api/mdt/patient-drafts/` | nový pacient (T-323, předseda, lékař): GET = rozpracované návrhy (lékař své, předseda všechny); POST JSON nebo multipart `{rc, text?, files[]?, synthetic?, session?}` → 201 `PatientDraft` (§8.6) s předvyplněnou nominací a náhledy; 400 neplatné RČ / soubor; 409 `{patient_id}` = RČ už v IRIS, 409 `{draft_id}` = rozpracovaný návrh se stejným RČ |
 | GET, PATCH, DELETE | `/api/mdt/patient-drafts/{id}/` | návrh + náhledy (autor a předseda); PATCH `{fields?, values?, remove_documents?, synthetic?, session?}` → nové náhledy; DELETE zahodí návrh |
@@ -1143,19 +1143,19 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem. Nic se nezapisuje (předseda, lékař) |
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
 | POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1). Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
-| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; zápis do IRIS stejně jako u POST |
+| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
 | GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
-| POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
+| POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}`; předseda, zadávající nebo přizvaný lékař (T-326) |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
-| GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, lékař) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
-| POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3) |
-| GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4) |
-| POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids` |
+| GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, zadávající nebo přizvaný lékař, T-326) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
+| POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3); předseda, zadávající nebo přizvaný lékař (T-326) |
+| GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4); PUT předseda, zadávající nebo přizvaný lékař (T-326) |
+| POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids`. Kontrola souladu s guidelines (zadání B2, T-326): zvolená možnost s „pozor“ / „vylučuje“ nebo `guideline_compliance.compliant = false` bez `reason` → 400 `{detail, field: "guideline_compliance"}` |
 | GET | `/api/mdt/cases/{cid}/export.pdf` | PDF |
 | GET | `/api/mdt/cases/{cid}/export.fhir.json` | FHIR document Bundle |
 | GET | `/api/mdt/tasks/?status=…&patient=…` | úkoly po zasedání (z FHIR `Task/Pxx-mdtNN-taskNN`, `MdtTask[]` §8.6), seřazené podle stavu a termínu |
@@ -1459,6 +1459,9 @@ interface Decision {
     conclusion:      { text: string; source: Source };         // Závěr MDT
     conditional?:    { text: string; missing: string[]; source: Source };   // podmíněné doporučení u neúplného případu (OBC-1.1)
     tumor_priority?: { text: string; source: Source };         // duplicita malignit: priorita a plán druhého nádoru (OBC-1.4)
+    options_considered?: { id: string; title: string; light?: Light | null; chosen: boolean }[];   // zvažované možnosti (ProcedureCompatibility.id, semafor při zápisu) a zvolený postup (T-326)
+    guideline_compliance?: { compliant: boolean; reason: string; citations: EvidenceId[] } | null; // soulad s guidelines: ano / ne + důvod odchylky (zadání B2, C)
+    dissent?: { member: string; role: RoleId | "chair"; text: string }[];   // odlišná stanoviska členů komise
   };
   tasks: {                                                     // → Task
     id: string;
@@ -1542,6 +1545,7 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   patient_id: string;
   service_request_id: string;
   created_by?: { user_id: number; name: string };
+  collaborators?: { user_id: number; name: string }[];   // přizvaní ke spolupráci: smějí případ upravovat jako zadávající (T-326)
   ecog: number | null;
   intent: "C" | "P" | null;
   imaging_recent_checked: boolean;              // „Snímek mladší než 3 měsíce“
@@ -1553,7 +1557,7 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   patient?: PatientListItem | null;             // jen v detailu boardu (hlavička z IRIS, §8.2)
 }
 
-// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[] }.
+// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[] }.
 // `acknowledge` = ID varování; server přidá { id, by, at } do acknowledged_warnings, nikdy neodebírá (D-019).
 // Změna `session` zapíše datum nového boardu do Task.restriction.period.start v IRIS (FR-P1).
 

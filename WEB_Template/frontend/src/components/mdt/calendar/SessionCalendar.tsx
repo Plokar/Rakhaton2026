@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSession, MdtSessionListItem } from '@/types/mdt';
 import { AddPatientSheet } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
+import { CollaboratorsDialog } from '../CollaboratorsDialog';
 import {
   addDays,
   dayLabel,
@@ -96,6 +97,7 @@ export function SessionCalendar() {
   const [animateMoves, setAnimateMoves] = React.useState(true);
   const [addTo, setAddTo] = React.useState<MdtSession | null>(null);
   const [newBoardDay, setNewBoardDay] = React.useState<string | null>(null);
+  const [collabCase, setCollabCase] = React.useState<MdtCase | null>(null);
   const manage = can.manageBoards(me);
   const canAdd = can.generateBrief(me);
 
@@ -167,6 +169,7 @@ export function SessionCalendar() {
           onPrefetch: () => prefetchQuickView(client, { sessionId: session.id, caseId: item.id, patientId: item.patient_id }),
           moveTargets: isOpen(session) && can.editCase(me, item) ? openBoards.filter((t) => t.id !== session.id) : [],
           onMove: (target) => doMove(item, session, target),
+          onCollaborate: can.inviteToCase(me, item) ? () => setCollabCase(item) : undefined,
         }}
       />
     );
@@ -285,6 +288,9 @@ export function SessionCalendar() {
 
         <QuickViewSheet caseId={openCase} onClose={() => void setOpenCase(null)} />
         <AddPatientSheet session={addTo} onClose={() => setAddTo(null)} />
+        {collabCase && (
+          <CollaboratorsDialog key={collabCase.id} item={collabCase} open onOpenChange={(open) => !open && setCollabCase(null)} />
+        )}
         {newBoardDay && (
           <BoardDialog
             open

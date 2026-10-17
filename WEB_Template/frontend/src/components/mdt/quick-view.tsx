@@ -24,9 +24,10 @@ import type {
   ObservationSeries,
   ProcedureCompatibility,
 } from '@/types/mdt';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip';
 import { AiBlock } from './AiBlock';
-import { CitationProvider, Citations, collectCitations } from './citations';
-import { CompatibilityLight, LightIcon } from './CompatibilityLight';
+import { CitationProvider, Citations, collectCitations, useCitationOpen } from './citations';
+import { CompatibilityLight, LightIcon, LIGHT_META } from './CompatibilityLight';
 import { dayLabel, timeLabel } from './dates';
 import { FactIcon, FactLegend, FACT_META } from './FactIcon';
 import { formatDate } from './format';
@@ -394,6 +395,128 @@ export function KeyFactsList({ legend = true }: { legend?: boolean }) {
   );
 }
 
+/**
+ * Hustá mřížka pro projektor (T-326): v buňce jen zkratka, hodnota a ikona stavu. Důvod barvy, datum a plný
+ * název jsou v bublině po najetí nebo fokusu; klik otevře zdroj (dohledatelnost, zadání §3.3).
+ * Pořadí: závažné, mimo normu, chybějící, zaznamenané, v normě.
+ */
+export function KeyFactsGrid() {
+  const { facts, sources } = useQuickView();
+  const open = useCitationOpen();
+  const groups = orderFacts(facts);
+  const ordered = [...groups.attention, ...groups.unresolved, ...groups.recorded, ...groups.normal];
+  const loading = sources.intake.loading || sources.observations.loading;
+
+  return (
+    <section aria-labelledby="qv-facts-grid" className="@container">
+      <h3 id="qv-facts-grid" className="mb-1.5 text-sm font-semibold">Klíčové údaje</h3>
+      {loading ? (
+        <SkeletonRows rows={4} />
+      ) : sources.intake.failed ? (
+        <p role="alert" className="text-sm text-destructive">Údaje pacienta se nepodařilo načíst. Obnovte okno (F5).</p>
+      ) : ordered.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
+      ) : (
+        <>
+          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border @[34rem]:grid-cols-3 @[48rem]:grid-cols-4">
+            {ordered.map((fact) => {
+              const meta = FACT_META[fact.status];
+              const value = fact.value ?? meta.label;
+              // „Chybí“ + „Chybí: Deficit DPD“ → v buňce stačí „Deficit DPD“; celé znění zůstává v bublině
+              const cell = value.startsWith(`${fact.abbr}: `) ? value.slice(fact.abbr.length + 2) : value;
+              const tip = [
+                `${fact.label}: ${value}`,
+                fact.date ? `ze dne ${formatDate(fact.date)}` : null,
+                fact.status !== 'recorded' && fact.status !== 'normal' ? meta.label : null,
+                fact.reason,
+              ].filter(Boolean).join(' · ');
+              const source = fact.citations.find((c) => /^P\d{2}/.test(c)) ?? fact.citations[0];
+              return (
+                <li key={fact.id} className="bg-card">
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          onClick={() => source && open?.(source)}
+                          aria-label={`${fact.label}: ${value}, ${meta.label}${fact.reason ? `. ${fact.reason}` : ''}${source ? '. Otevřít zdroj' : ''}`}
+                          className={cn(
+                            'flex h-full w-full min-w-0 flex-col gap-0.5 px-2.5 py-1.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                            fact.status === 'critical' && 'bg-red-50/70 dark:bg-red-950/30',
+                            fact.status === 'abnormal' && 'bg-amber-50/60 dark:bg-amber-950/25',
+                          )}
+                        />
+                      }
+                    >
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <FactIcon status={fact.status} className="size-3.5 shrink-0" />
+                        <span translate="no" className="truncate text-[13px] font-semibold leading-5">{fact.abbr}</span>
+                      </span>
+                      <span className={cn('line-clamp-2 text-[13px] leading-[1.15rem] tabular-nums', fact.status === 'missing' || fact.status === 'pending' ? 'text-muted-foreground' : 'text-foreground')}>
+                        {cell}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-left leading-snug">{tip}</TooltipContent>
+                  </Tooltip>
+                </li>
+              );
+            })}
+          </ul>
+          <FactLegend className="mt-2" />
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Jedna věta k semaforu: rozhodující pravidlo zkrácené na ~140 znaků + počet dalších. */
+function lightSummary(option: ProcedureCompatibility): string {
+  const { compatibility } = option;
+  const decisive = compatibility.rules.filter((rule) => rule.status === compatibility.overall);
+  const head = decisive[0]?.text ?? compatibility.rules[0]?.text ?? 'Pravidla k tomuto postupu nic nenašla.';
+  const short = head.length > 140 ? `${head.slice(0, 137).trimEnd()}…` : head;
+  const more = decisive.length > 1 ? ` (+ ${decisive.length - 1} další)` : '';
+  return `${LIGHT_META[compatibility.overall].label}: ${short}${more}`;
+}
+
+function TreatmentRowCompact({ option }: { option: ProcedureCompatibility }) {
+  const open = useCitationOpen();
+  const { compatibility } = option;
+  const decisive = compatibility.rules.find((rule) => rule.status === compatibility.overall) ?? compatibility.rules[0];
+  const source = decisive?.patient_citations[0] ?? decisive?.rule_citation;
+  const summary = lightSummary(option);
+  const muted = compatibility.overall === 'grey' || compatibility.overall === 'skipped';
+  return (
+    <li className="flex items-center gap-2 py-1.5">
+      <p className={cn('min-w-0 flex-1 text-[13px] leading-snug', muted ? 'text-muted-foreground' : 'font-medium')}>{option.title}</p>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              onClick={() => source && open?.(source)}
+              aria-label={`${summary}${source ? '. Otevřít zdroj' : ''}`}
+              className="shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          }
+        >
+          <CompatibilityLight light={compatibility.overall} />
+        </TooltipTrigger>
+        <TooltipContent side="left" className="max-w-xs text-left leading-snug">
+          <div className="flex flex-col gap-1">
+            <p>{summary}</p>
+            {decisive && (
+              <p className="text-[11px] opacity-80">
+                Pravidlo {decisive.rule_citation}{source ? ' · kliknutím otevřete zdroj' : ''}
+              </p>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </li>
+  );
+}
+
 function SkeletonRows({ rows }: { rows: number }) {
   return (
     <div className="flex flex-col gap-2.5 py-1" aria-busy="true">
@@ -502,8 +625,11 @@ function TreatmentRow({ option }: { option: ProcedureCompatibility }) {
   );
 }
 
-/** Všechny postupy v pořadí katalogu (ne podle barvy, aby řazení nepůsobilo jako doporučení). */
-export function TreatmentList() {
+/**
+ * Všechny postupy v pořadí katalogu (ne podle barvy, aby řazení nepůsobilo jako doporučení).
+ * `compact` (projektor): řádek = název + semafor, důvod jen v bublině po najetí na barvu.
+ */
+export function TreatmentList({ compact = false }: { compact?: boolean }) {
   const { sources } = useQuickView();
   const options = sources.compatibility.data;
   return (
@@ -520,7 +646,8 @@ export function TreatmentList() {
       ) : (
         <>
           <ul className="divide-y divide-border/60">
-            {options.map((option) => <TreatmentRow key={option.id} option={option} />)}
+            {options.map((option) =>
+              compact ? <TreatmentRowCompact key={option.id} option={option} /> : <TreatmentRow key={option.id} option={option} />)}
           </ul>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             Barvu počítají pravidla z doporučených postupů, ne AI. Ukazuje soulad se stavem pacienta, nejde o doporučení. Rozhoduje komise.
@@ -657,11 +784,11 @@ export function CaseQuickViewNarrow({
           <QuickMetrics />
         </header>
         <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="flex flex-col gap-6 px-4 py-4">
+          <div className="flex flex-col gap-5 px-4 py-4">
             <AnamnesisPanel />
-            <KeyFactsList />
+            <KeyFactsGrid />
             <TemplateSummary />
-            <TreatmentList />
+            <TreatmentList compact />
           </div>
         </div>
         <QuestionStrip className="shrink-0" />

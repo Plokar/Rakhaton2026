@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Iterable
 
-from services.rules.compatibility import LIGHT_ORDER, Facts
+from services.rules.compatibility import LIGHT_ORDER, Facts, is_sclc
 from services.rules.red_flags import SYMPTOMS, _code, _date
 
 MODALITY = (("CHIR", "chirurgie"), ("ABL", "chirurgie"), ("RT", "rt"), ("NUK", "rt"), ("CHT", "chemoterapie"),
@@ -27,7 +27,11 @@ GUIDELINE_ID = re.compile(r"^(KRC|PLI|PRS|OBC)-\d+\.\d+$")
 LOINC_FACT = re.compile(r"LOINC (\d+-\d)")
 ICD_FACT = re.compile(r"Condition(?: ICD)? ([A-Z]\d\d(?:\.\d)?(?:[–-][A-Z]\d\d)?(?:, [A-Z]\d\d(?:\.\d)?(?:[–-][A-Z]\d\d)?)*)")
 ATC_FACT = re.compile(r"ATC ([A-Z]\d\d[A-Z]{0,2}\d{0,2}(?:, [A-Z]\d\d[A-Z]{0,2}\d{0,2})*)")
-M1_CONTEXT = re.compile(r"\bM1\b|\bIV\b|metast|pokročil|\b[1-3]L\b|udržovac|oligometast|rozsáhlé", re.IGNORECASE)
+# mHSPC / mCRPC = metastatický karcinom prostaty (nmCRPC je M0, `\b` ho nechytí)
+M1_CONTEXT = re.compile(r"\bM1\b|\bIV\b|metast|pokročil|\b[1-3]L\b|udržovac|oligometast|rozsáhlé|\bm(?:HSPC|CRPC)\b",
+                        re.IGNORECASE)
+CASTRATION_CONTEXT = re.compile(r"HSPC|CRPC")
+CRPC_TEXT = re.compile(r"kastračn\w* rezistent|\bn?m?CRPC\b", re.IGNORECASE)
 MISSING = re.compile(r"nevyšetř|probíh|čeká|nestanov|nedostat", re.IGNORECASE)
 
 
@@ -262,7 +266,9 @@ def kb_procedures(resources: list[dict], *, existing_ids: Iterable[str] = (), al
     dg = str(facts["dg"]).upper()[:3]
     patient = Facts(resources, comorbidities_confirmed)
     metastatic, stage = _metastatic(patient), _stage(patient)
-    sclc = any(re.search(r"(?<!ne)malobuněčn", t, re.IGNORECASE) for t in patient.texts.values())
+    sclc = is_sclc(patient)
+    # ponytail: kastrační rezistence jen ze zmínky v textech; strukturovaně (PSA progrese na ADT) až s fakty z LLM
+    crpc = dg == "C61" and any(CRPC_TEXT.search(t) for t in patient.texts.values())
     allowed, existing = set(allowed_sources), set(existing_ids)
     out = []
     for p in q().kb()["postupy"]:
@@ -279,6 +285,8 @@ def kb_procedures(resources: list[dict], *, existing_ids: Iterable[str] = (), al
             continue
         if not _stage_fits(p["kontext"], stage) or (p["kontext"].startswith("SCLC") != sclc and dg == "C34"):
             continue                                     # stadium I–IV a histologie SCLC / NSCLC podle kontextu
+        if dg == "C61" and CASTRATION_CONTEXT.search(p["kontext"]) and ("CRPC" in p["kontext"]) != crpc:
+            continue                                     # HSPC před kastrační rezistencí, CRPC až po ní
         result = q().evaluate_postup(p["postup"], facts)
         rules, unknown = [], []
         for r in result["pravidla"]:

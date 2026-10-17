@@ -823,7 +823,24 @@ def _er_positive(f: Facts) -> bool:
                if re.match(r"(ER\b|Estrogen)", o.text))
 
 
+SCLC_MORPHOLOGY = re.compile(r"^804[1-5]/")                 # ICD-O-3 malobuněčný karcinom a jeho varianty
+SCLC_TEXT = re.compile(r"(?<!ne)malobuněčn", re.IGNORECASE)
+
+
+def is_sclc(f: rf.PatientData) -> bool:
+    """Malobuněčný karcinom plic: morfologie ICD-O-3 8041–8045 u C34; bez morfologie zmínka v textech
+    (ne „nemalobuněčný“). Katalog PLI i báze `data/onko` jsou pro NSCLC a SCLC odlišné (T-320)."""
+    lung = [c for c in f.oncologic if _code(c.get("code"), "icd-10").startswith("C34")]
+    morphologies = [x.get("code", "") for c in lung for e in c.get("extension", [])
+                    if e.get("url", "").endswith("/icd-o-3-morfologie")
+                    for x in (e.get("valueCodeableConcept") or {}).get("coding", [])]
+    if morphologies:
+        return any(SCLC_MORPHOLOGY.match(m) for m in morphologies)
+    return any(SCLC_TEXT.search(t) for t in f.texts.values())
+
+
 REQUIRES: dict[str, Callable[[Facts], bool]] = {
+    "nsclc": lambda f: not is_sclc(f),
     "her2_positive": lambda f: any(state == "positive" for _, state in _her2_samples(f)),
     "her2_tested": lambda f: bool(_her2_samples(f)),
     "hr_positive_her2_not_positive": lambda f: _er_positive(f)

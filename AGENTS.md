@@ -54,7 +54,7 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_da
   - text je v `attachment.data` / `presentedForm.data` jako base64;
   - neznámé search parametry IRIS tiše ignoruje, proto filtry ověř.
 - **Za běhu čti data jen z IRIS**, nikdy z JSON nebo `.md` souborů datasetu (ty jsou jen pro ingest, testy a čtení člověkem).
-- **Citace (Evidence ID) = ID z datasetu:** `P03-img03`, `P03-img03#2` (odstavec), `KRC-2.4` (guidelines), `RKT-03/V3` (kritérium studie). Jediná výjimka je `EXT-…` pro externí zdroj prahu u pravidel semaforu (D-016), nikdy pro fakta pacienta. Nevymýšlej jiné formáty.
+- **Citace (Evidence ID) = ID z datasetu:** `P03-img03`, `P03-img03#2` (odstavec), `KRC-2.4` (guidelines), `RKT-03/V3` (kritérium studie). Jediná výjimka je `EXT-…` pro externí zdroj prahu u pravidel semaforu (D-016) a `EXT-MK-…` pro oddíl Modré knihy ČOS (D-023, `data/onko/modra_kniha`), nikdy pro fakta pacienta. Nevymýšlej jiné formáty.
 - **IRIS DB-API:** spojení vždy zavírej (Community Edition má limit spojení). SQL parametry předávej přes `?`. Používej `SELECT TOP n`, ne `LIMIT`.
 - **AI výstupy:** každé tvrzení musí mít citaci a chybějící údaj se hlásí jako `missing`, nikdy se nedomýšlí. AI text musí být v UI odlišený a nic se nestane oficiálním záznamem bez potvrzení lékařem.
   - **Semafor** u léčebných postupů počítá jen kód, s citací faktu pacienta i pravidla (D-015). LLM barvu nepřiřazuje. Vždy se zobrazí všechny možnosti, i červené, a nikdy se nepíše „doporučujeme“.

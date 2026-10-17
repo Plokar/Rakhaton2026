@@ -10,6 +10,7 @@ import {
   ChevronUp,
   CircleCheck,
   FileText,
+  LayoutList,
   MonitorUp,
   MoreHorizontal,
   NotebookPen,
@@ -45,6 +46,7 @@ import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
 import { AddPatientSheet } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { dayLabel, timeLabel } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
@@ -84,6 +86,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
   const [collaborating, setCollaborating] = React.useState(false);
+  const [editingProjector, setEditingProjector] = React.useState(false);
   useFocusLayout();
 
   React.useEffect(() => {
@@ -168,10 +171,12 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
             onToggleDiscussed={toggleDiscussed}
             busy={status.isPending}
             onCollaborate={can.inviteToCase(me, current) ? () => setCollaborating(true) : undefined}
+            onEditProjector={can.editCase(me, current) ? () => setEditingProjector(true) : undefined}
           />
         }
       />
       {collaborating && <CollaboratorsDialog key={`collab-${current.id}`} item={current} open onOpenChange={setCollaborating} />}
+      {editingProjector && <ProjectorLayoutDialog key={`pjl-${current.id}`} item={current} open onOpenChange={setEditingProjector} />}
     </div>
   ) : (
     <div className="flex flex-1 items-center justify-center p-6">
@@ -475,6 +480,7 @@ function CaseToolbar({
   onToggleDiscussed,
   busy,
   onCollaborate,
+  onEditProjector,
 }: {
   item: Case;
   index: number;
@@ -486,6 +492,8 @@ function CaseToolbar({
   busy: boolean;
   /** Přizvat ke spolupráci (T-326): jen předseda nebo zadávající lékař. */
   onCollaborate?: () => void;
+  /** Upravit okno pro projektor (T-333): zadávající, přizvaný lékař nebo předseda. */
+  onEditProjector?: () => void;
 }) {
   const done = isDiscussed(item);
   return (
@@ -518,6 +526,12 @@ function CaseToolbar({
             {/* popisek až na široké ploše, jinak se lišta zalomí (1440 px s agendou) */}
             <span className="hidden @5xl:inline">Spolupráce</span>
             {item.collaborators?.length ? <span className="tabular-nums">{item.collaborators.length}</span> : null}
+          </Button>
+        )}
+        {onEditProjector && (
+          <Button variant="outline" size="lg" onClick={onEditProjector} aria-label="Upravit okno pro projektor" title="Upravit okno pro projektor: skrýt nebo přeskládat údaje">
+            <LayoutList aria-hidden />
+            <span className="hidden @5xl:inline">Okno projektoru</span>
           </Button>
         )}
       </span>

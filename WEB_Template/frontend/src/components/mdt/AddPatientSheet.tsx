@@ -92,6 +92,7 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
         acknowledged_warnings: r.acknowledged.map((id) => ({ id, by: me.user_id, at })),
         acknowledge: r.acknowledged,
         status: 'nominated',
+        ...(r.projector_layout ? { projector_layout: r.projector_layout } : {}),
       },
       {
         onSuccess: () => {
@@ -176,7 +177,7 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
                   {apiErrorMessage(intake.error, 'Údaje pacienta se nepodařilo načíst z IRIS.')}
                 </p>
               ) : intake.data ? (
-                <IntakeForm key={patientId} prefill={intake.data} submitting={create.isPending} onSubmit={submit} />
+                <IntakeForm key={patientId} prefill={intake.data} submitting={create.isPending} onSubmit={submit} patientId={patientId ?? undefined} />
               ) : null}
               <SourceDrawer evidenceId={sourceId} loadSource={mdtApi.getEvidence} onClose={() => setSourceId(null)} />
             </CitationProvider>

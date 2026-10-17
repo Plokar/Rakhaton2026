@@ -537,6 +537,8 @@ export interface MdtCase {
   created_by?: { user_id: number; name: string };
   /** Přizvaní ke spolupráci (T-326): smějí případ upravovat; mění je předseda nebo zadávající lékař. */
   collaborators?: { user_id: number; name: string }[];
+  /** Okno pro projektor upravené zadávajícím lékařem (T-333); skrývá jen v projektoru, podklad zůstává celý. */
+  projector_layout?: ProjectorLayout;
   ecog: number | null;
   intent: 'C' | 'P' | null;
   /** „Snímek mladší než 3 měsíce“ */
@@ -684,4 +686,13 @@ export interface MdtTask {
   re_mdt: { date: string | null; reason: string } | null;
   /** Úkol z nepotvrzeného závěru (`?drafts=1`, T-328): ještě není v IRIS, stav nejde měnit. */
   draft?: boolean;
+}
+
+// ── Okno pro projektor (T-333) ────────────────────────────────────────────────
+export type ProjectorBlock = 'anamnesis' | 'facts' | 'treatments';
+
+/** Rozložení okna pro projektor u případu: pořadí a skrytí karet a klíčových údajů (`KeyFact.id`). */
+export interface ProjectorLayout {
+  blocks?: { order: ProjectorBlock[]; hidden: ProjectorBlock[] };
+  facts?: { order: string[]; hidden: string[] };
 }

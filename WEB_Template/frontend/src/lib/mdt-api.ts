@@ -174,7 +174,7 @@ export const mdtApi = {
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
 
   /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
-  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
+  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),

@@ -24,6 +24,8 @@ import type {
   MdtSessionDetail,
   ObservationSeries,
   ProcedureCompatibility,
+  ProjectorBlock,
+  ProjectorLayout,
 } from '@/types/mdt';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip';
 import { AiBlock } from './AiBlock';
@@ -1003,6 +1005,43 @@ const PJ_PILL: Record<Light, string> = {
   skipped: 'text-muted-foreground ring-1 ring-inset ring-border',
 };
 
+// ── Rozložení okna pro projektor (T-333): zadávající lékař skryje nebo přeskládá karty a údaje ─────────
+
+export const PROJECTOR_BLOCKS: { id: ProjectorBlock; label: string }[] = [
+  { id: 'anamnesis', label: 'Anamnéza' },
+  { id: 'facts', label: 'Klíčové údaje' },
+  { id: 'treatments', label: 'Léčebné postupy' },
+];
+
+/** Karty v pořadí lékaře (neznámé vynechá, chybějící doplní na konec) včetně skrytých. */
+export function orderedBlocks(layout?: ProjectorLayout | null): { id: ProjectorBlock; label: string; hidden: boolean }[] {
+  const ids = PROJECTOR_BLOCKS.map((b) => b.id);
+  const order = [...new Set([...(layout?.blocks?.order ?? []).filter((id) => ids.includes(id)), ...ids])];
+  const hidden = new Set(layout?.blocks?.hidden ?? []);
+  return order.map((id) => ({ ...PROJECTOR_BLOCKS.find((b) => b.id === id)!, hidden: hidden.has(id) }));
+}
+
+/** Výchozí pořadí údajů okna pro projektor: závažné, mimo normu, chybějící, zaznamenané, v normě. */
+export function defaultFactOrder(facts: KeyFact[]): KeyFact[] {
+  const groups = orderFacts(facts);
+  return [...groups.attention, ...groups.unresolved, ...groups.recorded, ...groups.normal];
+}
+
+/** Údaje v pořadí lékaře (bez pořadí výchozí) včetně skrytých; nové údaje, které lékař neviděl, jdou na konec. */
+export function orderedFacts(facts: KeyFact[], layout?: ProjectorLayout | null): { fact: KeyFact; hidden: boolean }[] {
+  const base = defaultFactOrder(facts);
+  const order = layout?.facts?.order ?? [];
+  const rank = new Map(order.map((id, i) => [id, i]));
+  const sorted = order.length
+    ? base.map((fact, i) => ({ fact, key: rank.get(fact.id) ?? order.length + i })).sort((a, b) => a.key - b.key).map((x) => x.fact)
+    : base;
+  const hidden = new Set(layout?.facts?.hidden ?? []);
+  return sorted.map((fact) => ({ fact, hidden: hidden.has(fact.id) }));
+}
+
+/** Rozložení pro okno projektoru: z případu, nebo náhled rozpracovaného v editoru. */
+const ProjectorLayoutContext = React.createContext<ProjectorLayout | null>(null);
+
 const PJ_GROUPS = [
   { key: 'attention', title: 'Pozornost' },
   { key: 'unresolved', title: 'Chybí nebo je staré' },
@@ -1119,7 +1158,12 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
 
 function ProjectorFacts() {
   const { facts, sources } = useQuickView();
-  const groups = orderFacts(facts);
+  const layout = React.useContext(ProjectorLayoutContext);
+  const rows = orderedFacts(facts, layout);
+  const visible = rows.filter((r) => !r.hidden).map((r) => r.fact);
+  const hiddenCount = rows.length - visible.length;
+  const custom = Boolean(layout?.facts?.order?.length);
+  const groups = orderFacts(visible);
   const loading = sources.intake.loading || sources.observations.loading;
   return (
     <section aria-labelledby="pj-facts" className={cn(PJ_CARD, '@container flex flex-col gap-2')}>
@@ -1130,6 +1174,17 @@ function ProjectorFacts() {
         <p role="alert" className="text-sm text-destructive">Údaje pacienta se nepodařilo načíst. Obnovte okno (F5).</p>
       ) : facts.length === 0 ? (
         <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
+      ) : custom ? (
+        // pořadí zadávajícího lékaře platí přesně, bez skupin a bez dobalování řádků
+        <div>
+          <h3 className="mx-0.5 mb-1.5 flex justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span>Pořadí zadávajícího lékaře</span>
+            <span className="tabular-nums">{visible.length}</span>
+          </h3>
+          <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
+            {visible.map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
+          </ul>
+        </div>
       ) : (
         PJ_GROUPS.map(({ key, title }) =>
           groups[key].length ? (
@@ -1144,6 +1199,9 @@ function ProjectorFacts() {
             </div>
           ) : null,
         )
+      )}
+      {hiddenCount > 0 && (
+        <p className="mx-0.5 text-[11px] text-muted-foreground">Skryto zadávajícím lékařem: {hiddenCount} (v podkladu zůstávají).</p>
       )}
     </section>
   );
@@ -1283,25 +1341,44 @@ export function CaseQuickViewProjector({
   caseId,
   titleAs = 'h1',
   className,
+  layout,
 }: {
   sources: QuickViewSources;
   caseId: number | null;
   titleAs?: 'h1' | 'h2';
   className?: string;
+  /** Náhled rozpracovaného rozložení (editor, T-333); jinak platí rozložení uložené u případu. */
+  layout?: ProjectorLayout | null;
 }) {
   return (
     <QuickViewRoot sources={sources} caseId={caseId}>
+      <ProjectorBody titleAs={titleAs} className={className} layout={layout} />
+    </QuickViewRoot>
+  );
+}
+
+const PJ_BLOCK: Record<ProjectorBlock, () => React.ReactNode> = {
+  anamnesis: () => <ProjectorAnamnesis />,
+  facts: () => <ProjectorFacts />,
+  treatments: () => <ProjectorTreatments />,
+};
+
+function ProjectorBody({ titleAs, className, layout }: { titleAs: 'h1' | 'h2'; className?: string; layout?: ProjectorLayout | null }) {
+  const { item } = useQuickView();
+  const effective = layout ?? item?.projector_layout ?? null;
+  return (
+    <ProjectorLayoutContext.Provider value={effective}>
       <article className={cn('flex h-full min-h-0 flex-col gap-3 bg-muted p-3', className)} aria-label="Přehled případu pro projektor">
         <ProjectorHeader as={titleAs} />
         <div className="relative -mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
           <div className="flex flex-col gap-3">
-            <ProjectorAnamnesis />
-            <ProjectorFacts />
-            <ProjectorTreatments />
+            {orderedBlocks(effective).filter((b) => !b.hidden).map((b) => (
+              <React.Fragment key={b.id}>{PJ_BLOCK[b.id]()}</React.Fragment>
+            ))}
           </div>
         </div>
         <ProjectorQuestion />
       </article>
-    </QuickViewRoot>
+    </ProjectorLayoutContext.Provider>
   );
 }

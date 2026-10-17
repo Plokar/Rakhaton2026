@@ -77,7 +77,7 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
             'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
-            'patient': patient}
+            'projector_layout': c.projector_layout or {}, 'patient': patient}
 
 
 def _datetime(value) -> timezone.datetime:
@@ -317,6 +317,28 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
         _require(request, roles.ADMIN)
         if data['status'] not in dict(MdtCase.STATUS):
             raise ValidationError({'status': f'Jen {", ".join(dict(MdtCase.STATUS))}.'})
+    if 'projector_layout' in data:
+        _validate_projector_layout(data['projector_layout'])
+
+
+PROJECTOR_BLOCKS = ('anamnesis', 'facts', 'treatments')
+
+
+def _validate_projector_layout(layout) -> None:
+    """Okno pro projektor (T-333): `{blocks?: {order, hidden}, facts?: {order, hidden}}`; ID údajů jsou `KeyFact.id`."""
+    def ids(value, allowed=None) -> bool:
+        return (isinstance(value, list) and len(value) <= 300
+                and all(isinstance(x, str) and 0 < len(x) <= 120 and (allowed is None or x in allowed) for x in value))
+    if not isinstance(layout, dict) or set(layout) - {'blocks', 'facts'}:
+        raise ValidationError({'projector_layout': 'Objekt s klíči blocks a facts.'})
+    for key, allowed in (('blocks', PROJECTOR_BLOCKS), ('facts', None)):
+        part = layout.get(key)
+        if part is None:
+            continue
+        if not isinstance(part, dict) or set(part) - {'order', 'hidden'} \
+                or not all(ids(part.get(k, []), allowed) for k in ('order', 'hidden')):
+            raise ValidationError({'projector_layout': f'{key}: {{order: [id], hidden: [id]}}'
+                                                       + (f', jen {", ".join(allowed)}' if allowed else '') + '.'})
 
 
 def _validate_collaborators(request, data, case: MdtCase | None) -> None:
@@ -342,7 +364,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
         writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
         case.session = target
         case.order = _next_order(target)               # T-324: na konec agendy nového boardu
-    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status'):
+    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status', 'projector_layout'):
         if field in data:
             setattr(case, field, data[field])
     known = {w['id'] for w in case.acknowledged_warnings}

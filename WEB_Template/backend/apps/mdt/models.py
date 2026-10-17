@@ -62,6 +62,9 @@ class MdtCase(models.Model):
                                    related_name='created_cases')
     # Přizvaní ke spolupráci (T-326): smějí případ upravovat jako zadávající lékař; přizývá předseda nebo zadávající.
     collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='mdt_collaborations')
+    # Okno pro projektor upravené zadávajícím lékařem (T-333): {blocks: {order, hidden}, facts: {order, hidden}}.
+    # Skrývá jen v projektoru, podklad a detail zůstávají celé (D-019).
+    projector_layout = models.JSONField(default=dict, blank=True)
     ecog = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MaxValueValidator(4)])
     intent = models.CharField(max_length=1, choices=INTENT, null=True, blank=True)
     imaging_recent_checked = models.BooleanField(default=False)

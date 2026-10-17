@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, LayoutList, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -32,6 +32,7 @@ import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './
 import { ForMePanel } from './ForMePanel';
 import { MyTasks } from '../MyTasks';
 import { CaseAsk } from '../CaseAsk';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { SimilarCases } from '../SimilarCases';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
@@ -507,6 +508,7 @@ function StickyCaseHeader({
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
   const [regenerating, setRegenerating] = React.useState(false);
+  const [editingProjector, setEditingProjector] = React.useState(false);
   const flags = brief?.red_flags.length ?? 0;
 
   return (
@@ -595,12 +597,18 @@ function StickyCaseHeader({
                     <RefreshCw aria-hidden /> Přegenerovat s připomínkou…
                   </DropdownMenuItem>
                 )}
+                {canGenerate && item && (
+                  <DropdownMenuItem onClick={() => setEditingProjector(true)}>
+                    <LayoutList aria-hidden /> Upravit okno pro projektor…
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
         {job.progress}
         <RegenerateDialog open={regenerating} onClose={() => setRegenerating(false)} onSubmit={(feedback) => void job.start(feedback)} />
+        {editingProjector && item && <ProjectorLayoutDialog item={item} open onOpenChange={setEditingProjector} />}
         <div className="xl:hidden">
           <SectionNav sections={sections} variant="tabs" />
         </div>

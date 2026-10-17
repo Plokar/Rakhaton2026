@@ -1155,7 +1155,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (PDF čte `services/ai/pdf_text.py`: textová vrstva `pdfplumber` po řádcích ze slov, tabulky s linkami jako „buňka | buňka“, bez opakované hlavičky / patičky a čísel stránek, věta přes zlom stránky a nadpisy oddílů drží odstavce; sken přes OCR `nemotron-parse`, jinak Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a `source` = jeho znění (lékař ho vidí před potvrzením) a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem (`reasons`). Nic se nezapisuje (předseda, lékař) |
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-<druh>NN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}`. Bez hodnot se zapíše jen zpráva (text je pak citovatelný v podkladu); ID hodnot nesou druh jako dataset (`Pxx-impNN-lab01`, `-bm`, `-tnm`, `-ecog`, `-vit`) |
 | POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1), na uzavřený board (`status: closed`) 409. Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
-| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST |
+| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST; `projector_layout` (T-333) upravuje zadávající, přizvaný lékař nebo předseda |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); `disabled_rules` jen ID z `GET /api/mdt/rules/` (T-332); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
@@ -1578,6 +1578,8 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   service_request_id: string;
   created_by?: { user_id: number; name: string };
   collaborators?: { user_id: number; name: string }[];   // přizvaní ke spolupráci: smějí případ upravovat jako zadávající (T-326)
+  projector_layout?: { blocks?: { order: ("anamnesis" | "facts" | "treatments")[]; hidden: (…)[] };   // okno pro projektor (T-333):
+                      facts?: { order: string[]; hidden: string[] } };   // KeyFact.id; skrývá jen v projektoru, podklad zůstává celý (D-019)
   ecog: number | null;
   intent: "C" | "P" | null;
   imaging_recent_checked: boolean;              // „Snímek mladší než 3 měsíce“
@@ -1589,7 +1591,8 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   patient?: PatientListItem | null;             // jen v detailu boardu (hlavička z IRIS, §8.2)
 }
 
-// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[] }.
+// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[], projector_layout? }.
+// POST /api/mdt/cases/ (zařazení) přijímá `projector_layout` také: lékař ho upraví už ve formuláři zařazení (T-333).
 // `acknowledge` = ID varování; server přidá { id, by, at } do acknowledged_warnings, nikdy neodebírá (D-019).
 // Změna `session` zapíše datum nového boardu do Task.restriction.period.start v IRIS (FR-P1).
 

@@ -102,7 +102,8 @@ def _env(name: str, default: str) -> str:
 
 
 def ai_provider_name() -> str:
-    return (os.environ.get("AI_PROVIDER") or "mock").lower()
+    """Výchozí LLM je NVIDIA (bez `NVIDIA_API_KEY` spadne na mock s varováním); testy a CI vynucují `mock`."""
+    return (os.environ.get("AI_PROVIDER") or "nvidia").lower()
 
 
 def embedding_provider_name() -> str:
@@ -814,7 +815,7 @@ SUPPORTED_PROVIDERS = ("mock", *PROVIDERS)
 
 def get_ai_provider(provider_name: str | None = None) -> BaseAIProvider:
     """
-    Provider podle ``provider_name`` nebo env ``AI_PROVIDER`` (výchozí ``mock``).
+    Provider podle ``provider_name`` nebo env ``AI_PROVIDER`` (výchozí ``nvidia``).
 
     Provider bez klíče (``GEMINI_API_KEY``, ``NVIDIA_API_KEY``, ``GROQ_API_KEY``) spadne na mock s varováním;
     výsledek má pak ``provider == "mock"`` a ``is_mock == True``, takže záměna je vidět.

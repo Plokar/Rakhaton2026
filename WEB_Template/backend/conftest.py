@@ -18,6 +18,8 @@ def no_live_iris_sql(request, monkeypatch):
     from services.fhir import client
     from services.iris import db
 
+    monkeypatch.setenv('AI_PROVIDER', 'mock')      # ani s klíči v .env (výchozí NVIDIA) nic neodchází ven (AGENTS.md)
+
     def offline(*args, **kwargs):
         raise ConnectionError('IRIS v unit testech není (CI); použij fixture fake_iris / fake_fhir nebo -m integration')
     monkeypatch.setattr(db, 'connect', offline)

@@ -51,3 +51,33 @@ def test_brief_cites_modra_kniha(fake_iris, chunks):
     Brief.model_validate(brief)
     assert [g['evidence_id'] for g in brief['national_guidelines']] == [p.evidence_id for p in sorted(passages, key=lambda p: p.sort_key)]
     assert brief['national_guidelines'][0]['url'].startswith('https://www.linkos.cz/')
+
+
+def test_rule_mapping_quotes_are_verbatim_and_cover_all_rules():
+    """T-340: každé pravidlo semaforu má záznam; každá citace doslova stojí v textu oddílu Modré knihy."""
+    import json
+    from services.rules.compatibility import load_catalog
+    from services.rules.national_rules import mapping
+    from services.rules.onko_kb import kb_dir
+
+    mk = {}
+    for line in (kb_dir() / 'modra_kniha' / 'pasaze.jsonl').read_text(encoding='utf-8').splitlines():
+        row = json.loads(line)
+        mk[row['evidence_id']] = ' '.join(row['text'].split())
+    known = mapping()
+    assert set(load_catalog()['rules']) <= set(known)
+    for rule, item in known.items():
+        assert item['status'] in ('prah', 'tema', 'neuvadi')
+        assert (item['status'] == 'neuvadi') == (not item['refs'])
+        for ref in item['refs']:
+            assert ' '.join(ref['quote'].split()) in mk[ref['evidence_id']], (rule, ref['evidence_id'])
+    assert known['VS-PLI-11']['refs'][0]['quote'] == 'kreatininová clearance <60 ml/min.'
+
+
+def test_compatibility_carries_modra_kniha():
+    from services.rules.compatibility import evaluate_compatibility
+
+    options = evaluate_compatibility(load_patient('P04'))
+    rules = {r['rule_id']: r for o in options for r in o['compatibility']['rules']}
+    assert rules['VS-PLI-07']['national_status'] == 'prah' and rules['VS-PLI-07']['national'][0]['evidence_id'] == 'EXT-MK-8.1.3.2-2'
+    assert rules['VS-PLI-01']['national_status'] == 'neuvadi' and rules['VS-PLI-01']['national'] == []

@@ -311,6 +311,14 @@ class DerivedValue(BaseModel):
     inputs: list[EvidenceId]
 
 
+class NationalRuleRef(BaseModel):
+    """Oddíl Modré knihy ČOS k pravidlu semaforu (T-340, D-026), citace ověřená testem proti textu knihy."""
+    evidence_id: EvidenceId = Field(description='"EXT-MK-8.1.4.2-10"')
+    match: Literal["prah", "tema"] = Field(description="prah = parametr a hodnota / kritérium, tema = bez čísla")
+    quote: str = Field(description="Doslovná citace z oddílu")
+    note: str | None = None
+
+
 class CompatibilityRuleResult(BaseModel):
     rule_id: str = Field(description='"VS-PLI-01" (katalog docs/POZADAVKY_LEKARE.md §5.3)')
     status: Light
@@ -318,6 +326,9 @@ class CompatibilityRuleResult(BaseModel):
     patient_citations: list[EvidenceId]
     rule_citation: EvidenceId = Field(description='"PLI-3.1" | "RKT-06/Z4" | "EXT-…"')
     derived: DerivedValue | None = Field(default=None, description="Např. Cockcroft-Gault")
+    national_status: Literal["prah", "tema", "neuvadi"] | None = Field(
+        default=None, description="Opora pravidla v Modré knize ČOS (T-340); None = pravidlo mimo mapování")
+    national: list[NationalRuleRef] = Field(default_factory=list)
 
 
 class TreatmentCompatibility(BaseModel):

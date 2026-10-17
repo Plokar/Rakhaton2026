@@ -1,0 +1,53 @@
+pravidlo	oddil	shoda	citat	poznamka
+VS-OBC-01	EXT-MK-8.1.4.2	prah	dostupnost imunoterapie je obvykle omezena na ECOG PS 0-1	plíce: ECOG PS 0–2 léčba, 3–4 symptomaticky
+VS-OBC-01	EXT-MK-4.5.2-2	prah	v dobrém výkonnostním stavu ECOG PS 0–1	kolorektum: studie s ECOG 0–1
+VS-OBC-02	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-OBC-03	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-OBC-04	EXT-MK-31.3-2	prah	Nechtěná ztráta hmotnosti > 5 % za posledních 6 měs.	GLIM, fenotypické kritérium malnutrice
+VS-OBC-04	EXT-MK-31.2.1	prah	Ztráta hmotnosti > 5 % za 3–6 měsíců	dotazník nutričního rizika PSNPO
+VS-OBC-05	EXT-MK-24.7-3	tema	při kortikoterapii glykémie a kalémie	kontrola glykémie při kortikoidech (mozkové nádory)
+VS-OBC-06	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-OBC-07	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-OBC-09	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-OBC-10	EXT-MK-12.3-3	tema	Je doporučeno histologické ověření takové léze biopsií.	
+VS-OBC-11	EXT-MK-42.0-11	tema	třezalka tečkovaná	interakce cílené léčby, induktory P-gp/CYP
+VS-OBC-11	EXT-MK-42.0-9	tema	Typické induktory enzymů cytochromu P450	
+VS-CHIR-01	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-CHIR-02	EXT-MK-8.7	tema	je velmi důležité doporučit abstinenci od kouření	
+VS-CHIR-02	EXT-MK-47.0	tema	pokračování v kouření velký vliv na dobu přežití	
+VS-CHIR-03	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-KRC-01	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-KRC-02	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-KRC-03	EXT-MK-4.6.3-6	tema	Maximálně účinný režim chemoterapie s cílenou léčbou	hraničně resekabilní metastázy
+VS-KRC-03	EXT-MK-4.6.3-5	tema	Chirurgická léčba s možností následné „adjuvantní“ chemoterapie	resekabilní metastázy
+VS-KRC-05	EXT-MK-4.4-2	tema	zejména potenciálně ireverzibilní neuropatii	
+VS-KRC-06	EXT-MK-4.6.1-2	prah	lze podat pouze v případě nemutovaného stavu onkogenů RAS (wild type)	kritérium: RAS wild-type
+VS-KRC-07	EXT-MK-4.6.2.1	prah	Pembrolizumab je registrován v monoterapii v první linii k léčbě metastazujícího kolorektálního karcinomu dMMR/MSI-	kritérium: dMMR/MSI-high
+VS-KRC-07	EXT-MK-4.0	tema	Doporučujeme vyšetřit stav MSI/MMR u všech nemocných s pokročilým či metastatickým onemocněním	
+VS-KRC-08	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-KRC-09	EXT-MK-4.0	prah	Doporučujeme vyšetření DPYD/DPD před nasazením fluoropyrimidinů	kritérium: DPD před fluoropyrimidiny
+VS-KRC-10	EXT-MK-4.6.3-8	tema	lze zahájit 2–3 měsíci systémové chemoterapie	délka předoperační chemoterapie
+VS-PLI-01	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PLI-02	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PLI-03	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PLI-04	EXT-MK-8.1.4.2	tema	U oligometastatických pacientů je na zvážení MDT doplnění systémové léčby o lokoregionální terapii.	
+VS-PLI-05	EXT-MK-8.2.1	tema	Za předpokladu vyloučení vzdálených metastáz (MR mozku, PET/CT)	malobuněčný karcinom, chirurgie
+VS-PLI-06	EXT-MK-8.1.4.2-9	prah	bez senzibilizujících mutací EGFR nebo přítomnosti mutací ALK	kritérium: bez EGFR/ALK před chemo-imunoterapií
+VS-PLI-06	EXT-MK-8.1.4.2-2	prah	bez aberací EGFR, ALK nebo ROS1	
+VS-PLI-07	EXT-MK-8.1.3.2-2	prah	s expresí PD-L1 ≥1 % nádorových buněk	durvalumab po chemoradioterapii
+VS-PLI-09	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PLI-10	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PLI-11	EXT-MK-8.1.4.2-10	prah	kreatininová clearance <60 ml/min.	kontraindikace cisplatiny
+VS-PRS-01	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-02	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-03	EXT-MK-12.3.2-4	prah	U pacientek s HR+/HER2-low karcinomem (IHC 1+ nebo 2+ bez amplifikace HER2 genu dle ISH/FISH)	kritérium: HER2-low pro T-DXd
+VS-PRS-04	EXT-MK-12.3.2-2	prah	U pacientek s viscerální krizí je lékem volby paliativní CHT	
+VS-PRS-05	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-07	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-08	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-09	EXT-MK-42.0-9	tema	Typické induktory enzymů cytochromu P450	
+VS-PRS-10	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-11	-	neuvadi	-	Modrá kniha 32. aktualizace práh ani téma pravidla neuvádí
+VS-PRS-12	EXT-MK-30.4.1.2	prah	Redukce dávky a rychlosti podání BP při renální dysfunkci	dávka zoledronátu podle clearance kreatininu
+VS-PRS-12	EXT-MK-30.4.1.1	tema	U zoledronátu a pamidronátu se doporučuje kontrola renálních funkcí před zahájením léčby a před každou aplikací.	
+VS-PRS-13	EXT-MK-30.5-2	prah	Před zahájením terapie BMA je vhodná stomatologická kontrola	

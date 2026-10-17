@@ -928,4 +928,5 @@ def evaluate_compatibility(resources: Iterable[dict], *, skipped_fields: Iterabl
                 "patient_preferences": _preferences(facts, procedure.get("preference_keywords", []), procedure["id"]),
             },
         })
-    return out
+    from services.rules.national_rules import attach
+    return attach(out)                                    # Modrá kniha u pravidel (T-340), barvu nemění

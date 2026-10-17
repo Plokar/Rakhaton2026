@@ -64,6 +64,8 @@ class MdtCase(models.Model):
     imaging_recent_checked = models.BooleanField(default=False)
     skipped_fields = models.JSONField(default=list, blank=True)          # [IntakeField.id]
     acknowledged_warnings = models.JSONField(default=list, blank=True)   # [{id, by, at}]
+    # Pořadí na projektoru (T-332): {sections: [anamnesis|facts|template|treatments], facts: [KeyFact.id]}; {} = výchozí.
+    projector_layout = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

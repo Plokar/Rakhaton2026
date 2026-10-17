@@ -1,8 +1,9 @@
 /**
  * API podkladu pro komisi (ARCHITEKTURA §6.3): podklad, generování přes job a zdroje citací.
  */
-import { apiFetch } from '@/lib/api';
+import { apiFetch, apiUrl } from '@/lib/api';
 import type {
+  BoardRecord,
   ImportProposal,
   Brief,
   BriefConfig,
@@ -74,6 +75,10 @@ export const mdtApi = {
   /** Boardy (zasedání) s pacienty v pořadí agendy. */
   getSessions: () => apiFetch<MdtSessionListItem[]>('/api/mdt/sessions/'),
 
+  /** Záznam boardů (T-333, jen předseda): uzavřené boardy s přítomnými a výstupy pacientů. */
+  getRecords: () => apiFetch<BoardRecord[]>('/api/mdt/records/'),
+  getSessionRecord: (sessionId: number) => apiFetch<BoardRecord>(`/api/mdt/sessions/${sessionId}/record/`),
+
   /** Board + agenda: případy s hlavičkou pacienta z IRIS. */
   getSession: (sessionId: string) =>
     apiFetch<MdtSessionDetail>(`/api/mdt/sessions/${encodeURIComponent(sessionId)}/`),
@@ -97,7 +102,7 @@ export const mdtApi = {
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
 
   /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
-  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
+  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
@@ -204,4 +209,12 @@ export const mdtApi = {
     apiFetch<ObservationSeries[]>(
       `/api/patients/${encodeURIComponent(patientId)}/observations/${codes?.length ? `?code=${encodeURIComponent(codes.join(','))}` : ''}`,
     ),
+};
+
+/** Odkazy ke stažení výstupů (cookie relace jde s požadavkem, server vrátí přílohu). */
+export const exportUrl = {
+  pdf: (caseId: number | string) => apiUrl(`/api/mdt/cases/${encodeURIComponent(String(caseId))}/export.pdf`),
+  fhir: (caseId: number | string) => apiUrl(`/api/mdt/cases/${encodeURIComponent(String(caseId))}/export.fhir.json`),
+  /** Všechna PDF a FHIR boardu v jednom ZIP (T-333, jen předseda). */
+  zip: (sessionId: number) => apiUrl(`/api/mdt/sessions/${sessionId}/export.zip`),
 };

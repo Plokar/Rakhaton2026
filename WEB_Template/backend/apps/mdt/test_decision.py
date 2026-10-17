@@ -176,3 +176,32 @@ def test_guideline_deviation_rule():
     assert 'A' in guideline_deviation({'options_considered': [{'id': 'a', 'title': 'A', 'light': 'red', 'chosen': True}]})
     assert guideline_deviation({'guideline_compliance': {'compliant': False, 'reason': ''}})
     assert guideline_deviation({'guideline_compliance': {'compliant': True, 'reason': ''}}) is None
+
+
+def test_board_record_and_zip(case, decision):
+    """T-333: po ukončení boardu záznam s přítomnými a pacienty, ZIP s PDF a FHIR; jen předseda."""
+    import io
+    import zipfile
+    sid = case.session_id
+    assert as_user('onkolog').get(f'/api/mdt/sessions/{sid}/record/').status_code == 403
+    assert as_user('predseda').get(f'/api/mdt/sessions/{sid}/export.zip').status_code == 409   # bez závěru
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json')
+    as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
+    assert as_user('predseda').get('/api/mdt/records/').json() == []                         # board ještě běží
+    assert as_user('predseda').patch(f'/api/mdt/sessions/{sid}/', {'status': 'closed'}, format='json').status_code == 200
+
+    [record] = as_user('predseda').get('/api/mdt/records/').json()
+    assert record['id'] == sid and record['status'] == 'closed'
+    assert record['counts']['confirmed'] == 1 and record['counts']['patients'] == len(record['cases'])
+    assert {a['id'] for a in record['attendees']} >= {'LEK-P03-06', 'LEK-P03-01'}
+    p03 = next(c for c in record['cases'] if c['patient_id'] == 'P03')
+    assert p03['name'] == 'Pacient P03 (fiktivní)' and p03['rc'] is None
+    assert p03['decision']['record_id'] == 'P03-mdt02' and p03['exports'] == {'pdf': True, 'fhir': True}
+    assert all(c['exports'] == {'pdf': False, 'fhir': False} for c in record['cases'] if c['patient_id'] != 'P03')
+    assert as_user('onkolog').get('/api/mdt/records/').status_code == 403
+
+    r = as_user('predseda').get(f'/api/mdt/sessions/{sid}/export.zip')
+    assert r['Content-Type'] == 'application/zip'
+    names = zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+    assert names == ['P03/P03-mdt02.pdf', 'P03/P03-mdt02.fhir.json']
+    assert client.read('DocumentReference', 'P03-mdt02-pdf')                               # PDF uložené do IRIS

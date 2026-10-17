@@ -1090,7 +1090,7 @@ Nové závislosti v `requirements.txt`:
 | Model | Pole (hlavní) |
 |---|---|
 | `MdtSession` (= board) | `date`, `title` (zaměření komise), `chair` (User), `status` (planned/in_progress/closed), `config` → `BriefConfig` (výchozí podklad nastavený předsedou); zakládá a mění jen `mdt_admin` |
-| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `collaborators` M2M (přizvaní ke spolupráci, T-326), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`) |
+| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `collaborators` M2M (přizvaní ke spolupráci, T-326), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`), `projector_layout` JSON (pořadí na projektoru, T-332) |
 | `BriefConfig` | `name`, `owner`, `is_preset`, `sections` JSON (`[{id, enabled, order, detail}]`), `roles_present` JSON, `detail_level` (brief/standard/detailed), `language`, `hide_unverified` |
 | `Brief` | `case` FK, `config_snapshot` JSON, `content` JSON (schéma [§8.2](#82-brief-podklad)), `model`, `created_at` |
 | `GenerationJob` | `case` FK, `kind` (brief/scribe/patient_summary), `status` (queued/running/done/error), `progress` (0–100), `result_id`, `error` |
@@ -1129,6 +1129,9 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/evidence/?id={EvidenceId}` | zdroj citace (text + zvýraznění / hodnota / pasáž guidelines / kritérium studie) |
 | GET, POST | `/api/mdt/sessions/` | zasedání; GET `?from=&to=` (YYYY-MM-DD včetně) omezí rozsah, `?expand=cases` přidá `cases: MdtCaseSummary[]` pro kalendář (§8.6, T-518): hlavička z IRIS jedním seznamem pacientů, připravenost jednou na pacienta |
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
+| GET | `/api/mdt/sessions/{sid}/record/` | záznam boardu (T-333, jen `mdt_admin`): `BoardRecord` §8.6 — přítomní lékaři ze `Decision.attendees`, pacienti se jménem a maskovaným RČ z IRIS (jen tady, ne v hlavičkách, D-018), stav závěru a co jde stáhnout |
+| GET | `/api/mdt/sessions/{sid}/export.zip` | všechny výstupy boardu (T-333, jen `mdt_admin`): `Pxx/Pxx-mdtNN.pdf` u každého závěru (i návrhu) a `Pxx/Pxx-mdtNN.fhir.json` u potvrzeného; bez závěru 409. Potvrzené PDF se uloží do IRIS jako u `export.pdf` |
+| GET | `/api/mdt/records/` | záznam boardů (T-333, jen `mdt_admin`): uzavřené boardy (`status: closed`) od nejnovějšího → `BoardRecord[]`. Board ukončí předseda `PATCH /api/mdt/sessions/{sid}/ {status: "closed"}` (znovu otevřít `in_progress`) |
 | PUT | `/api/mdt/sessions/{sid}/order/` | pořadí pacientů v agendě (T-324), jen `mdt_admin`: `{cases: [cid, …]}` = všechny případy boardu v novém pořadí (jinak 400) → agenda; přesun případu na jiný board ho zařadí na konec |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného |
@@ -1144,7 +1147,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem. Nic se nezapisuje (předseda, lékař) |
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
 | POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1). Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
-| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); zápis do IRIS stejně jako u POST |
+| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); `projector_layout` (pořadí bloků a klíčových údajů na projektoru, T-332) mění kdo smí případ upravovat, `{}` = výchozí pořadí, jiný tvar → 400; zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
@@ -1181,11 +1184,12 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
 | `/dashboard/cases/[caseId]` | **detail pacienta** ([NAVRH_UI §8](docs/NAVRH_UI.md#8-detail-pacienta)): přilepená hlavička (D-018, PS lékař / pacient, C/P, varování, předchozí / další pacient boardu), navigace po sekcích; rychlý přehled a varovné signály otevřené, souhrn a časová osa (AI / události z IRIS), anamnéza, odbornosti, léčba a studie, hlas pacienta a otázky sbalené |
 | `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
-| `/projector` | **úzký panel pro projektor** vedle snímku z PACS (T-512, 320–420 px, bez navigace, chráněno v `proxy.ts`): hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P, anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z jednání komise (`/dashboard/mdt/[sessionId]`) |
+| `/projector` | **úzký panel pro projektor** vedle snímku z PACS (T-512, 320–420 px, bez navigace, chráněno v `proxy.ts`): hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P, anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z jednání komise (`/dashboard/mdt/[sessionId]`). Pořadí bloků a klíčových údajů podle `MdtCase.projector_layout` (T-332, dialog „Pořadí na projektoru“ v jednání, rychlém přehledu a detailu); po uložení se okno obnoví přes BroadcastChannel |
 | `…/cases/demo`, `/brief/demo` | podklad P03 z fixtures (`data/fixtures/brief_P03.json` + zdroje citací `evidence_P03.json`), funguje bez backendu; obě stránky skládá `CaseBriefScreen` |
 | `/dashboard/cases/[caseId]/record` | **zápis závěru**: editor (sekce jako záznam MDT), úkoly, potvrzení, export |
 | `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |
 | `/dashboard/tasks` | úkoly po zasedání |
+| `/dashboard/zaznamy` | **záznam boardů** (T-333, jen předseda): ukončené boardy jako velké karty (název, datum, počet pacientů a potvrzených závěrů, rozbalovací přítomní lékaři), pacienti s ID, jménem nebo maskovaným RČ a stažením PDF / FHIR, ZIP celého boardu, hledání. Board ukončí předseda v jednání („Ukončit board“) a hned vyskočí nabídka stažení výstupů |
 | `/dashboard/tym` | **tým komise** (T-319, jen předseda): členové, role a odbornost (`/api/mdt/users/`), odkaz na registraci; `/register` vyžaduje odbornost |
 
 Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**, **Úkoly** (počet po termínu) + nejbližší zasedání jedním klikem + okno projektoru; horní lišta s drobečky, hledáním Ctrl K (pacienti, zasedání, akce) a avatarem (Nastavení, Klávesové zkratky, Odhlásit). Sdílená cache dat je TanStack Query (`src/lib/queries.ts`, providery v `app/providers.tsx`). Template stránky `projects`, `storage`, `realtime` a `ai` jsou z navigace skryté (kód zůstává). Dev služby (Swagger, Mailhog, Traefik) v aplikaci nejsou, jen v README a `dev.ps1`.
@@ -1556,9 +1560,15 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   order?: number;                               // pořadí v agendě (jen čtení)
   question?: string;                            // otázka pro MDT z nominace (jen čtení)
   patient?: PatientListItem | null;             // jen v detailu boardu (hlavička z IRIS, §8.2)
+  projector_layout?: ProjectorLayout;           // pořadí na projektoru (T-332); {} = výchozí
 }
 
-// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[] }.
+interface ProjectorLayout {                     // jen prezentace, do IRIS se nezapisuje
+  sections?: ("anamnesis" | "facts" | "template" | "treatments")[];   // bloky úzkého panelu; chybějící za nimi výchozím pořadím
+  facts?: string[];                             // KeyFact.id v pořadí (≤ 100); ostatní údaje za nimi výchozím pořadím (závažné nahoře)
+}
+
+// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[], projector_layout?: ProjectorLayout }.
 // `acknowledge` = ID varování; server přidá { id, by, at } do acknowledged_warnings, nikdy neodebírá (D-019).
 // Změna `session` zapíše datum nového boardu do Task.restriction.period.start v IRIS (FR-P1).
 
@@ -1670,6 +1680,21 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
   status: "planned" | "in_progress" | "closed";
   chair: { user_id: number; name: string } | null;
   config_id: number | null;                     // výchozí BriefConfig boardu
+}
+
+interface BoardRecord extends MdtSession {      // GET /api/mdt/records/, /api/mdt/sessions/{sid}/record/ (T-333, jen mdt_admin)
+  attendees: { id: string | null; name: string; role: RoleId | "chair" | null; patients: string[] }[];  // z Decision.attendees
+  cases: {
+    id: number; order: number; patient_id: string; status: MdtCase["status"];
+    display_name: string;                       // "P03 · muž · 67 let"
+    name: string | null;                        // Patient.name z IRIS (dataset: "Pacient P03 (fiktivní)")
+    rc: string | null;                          // maskované RČ "******/1234" (T-323), jinak null
+    diagnosis: { icd10: string; text: string } | null;
+    decision: { status: "draft" | "confirmed"; record_id: string | null; confirmed_at: string | null;
+                confirmed_by: { user_id: number; name: string } | null } | null;
+    exports: { pdf: boolean; fhir: boolean };   // PDF u každého závěru, FHIR jen u potvrzeného
+  }[];
+  counts: { patients: number; confirmed: number };
 }
 ```
 

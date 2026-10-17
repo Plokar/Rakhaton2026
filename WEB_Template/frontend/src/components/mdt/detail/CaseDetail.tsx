@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, FileUp, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, FileUp, ListOrdered, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -22,6 +22,7 @@ import { GenerateBrief, useBriefJob } from '../GenerateBrief';
 import { ImportReportSheet } from '../ImportReportSheet';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutDialog';
 import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
 import { RedFlagList } from '../RedFlagList';
 import { ROLE_META } from '../roles';
@@ -475,6 +476,7 @@ function StickyCaseHeader({
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
   const [importing, setImporting] = React.useState(false);
+  const [arranging, setArranging] = React.useState(false);
   const patientId = item?.patient_id ?? brief?.patient_id ?? sources.patientId;
   const flags = brief?.red_flags.length ?? 0;
 
@@ -564,9 +566,15 @@ function StickyCaseHeader({
                     <FileUp aria-hidden /> Vložit zprávu (AI vytěží hodnoty)
                   </DropdownMenuItem>
                 )}
+                {canGenerate && session && item?.id != null && (
+                  <DropdownMenuItem onClick={() => setArranging(true)}>
+                    <ListOrdered aria-hidden /> Pořadí na projektoru
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             {canGenerate && <ImportReportSheet patientId={patientId} open={importing} onClose={() => setImporting(false)} />}
+            {arranging && item && <ProjectorLayoutDialog item={item} sources={sources} open onOpenChange={setArranging} />}
           </div>
         </div>
         {job.progress}

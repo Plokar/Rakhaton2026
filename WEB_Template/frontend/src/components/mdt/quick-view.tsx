@@ -16,6 +16,8 @@ import {
 } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type {
+  ProjectorLayout,
+  ProjectorSection,
   CaseTemplate,
   IntakePrefill,
   IntakeWarning,
@@ -487,11 +489,35 @@ function packFacts(group: KeyFact[]): KeyFact[] {
  * barvy, datum a plný název jsou v bublině po najetí nebo fokusu; klik otevře zdroj (dohledatelnost, zadání §3.3).
  * Pořadí: závažné, mimo normu, chybějící, zaznamenané, v normě; poslední buňka řádku se roztáhne (žádné díry).
  */
+/**
+ * Pořadí údajů na projektoru (T-332): připnuté v pořadí z `projector_layout.facts`, ostatní za nimi
+ * výchozím pořadím (závažné, mimo normu, chybějící, zaznamenané, v normě; balené do řádků).
+ */
+export function projectorFactOrder(facts: KeyFact[], layout: ProjectorLayout | null | undefined): KeyFact[] {
+  const byId = new Map(facts.map((f) => [f.id, f]));
+  const pinned = (layout?.facts ?? []).map((id) => byId.get(id)).filter((f): f is KeyFact => Boolean(f));
+  const pinnedIds = new Set(pinned.map((f) => f.id));
+  const groups = orderFacts(facts.filter((f) => !pinnedIds.has(f.id)));
+  return [...pinned, ...[groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap(packFacts)];
+}
+
+export const PROJECTOR_BLOCKS: Record<ProjectorSection, string> = {
+  anamnesis: 'Anamnéza',
+  facts: 'Klíčové údaje',
+  template: 'Šablona (úplnost podle diagnózy)',
+  treatments: 'Léčebné postupy',
+};
+const DEFAULT_BLOCKS: ProjectorSection[] = ['anamnesis', 'facts', 'template', 'treatments'];
+
+/** Bloky úzkého panelu v pořadí z `projector_layout.sections`, chybějící bloky výchozím pořadím za nimi. */
+export const projectorBlockOrder = (layout: ProjectorLayout | null | undefined): ProjectorSection[] => [
+  ...new Set([...(layout?.sections ?? []), ...DEFAULT_BLOCKS]),
+];
+
 export function KeyFactsGrid() {
-  const { facts, sources } = useQuickView();
+  const { facts, sources, item } = useQuickView();
   const open = useCitationOpen();
-  const groups = orderFacts(facts);
-  const ordered = [groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap(packFacts);
+  const ordered = projectorFactOrder(facts, item?.projector_layout);
   const loading = sources.intake.loading || sources.observations.loading;
 
   return (
@@ -888,16 +914,31 @@ export function CaseQuickViewNarrow({
         </header>
         <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3.5 px-3 py-3">
-            <AnamnesisPanel compact />
-            <KeyFactsGrid />
-            <TemplateSummary />
-            <TreatmentList compact />
+            <NarrowBlocks />
           </div>
         </div>
         <QuestionStrip className="shrink-0 border-t-2 border-t-primary/40 px-3 py-2" clampLines={2} />
         {footer}
       </article>
     </QuickViewRoot>
+  );
+}
+
+/** Bloky úzkého panelu v pořadí, které nastavil zadávající lékař nebo předseda (T-332). */
+function NarrowBlocks() {
+  const { item } = useQuickView();
+  const blocks: Record<ProjectorSection, React.ReactNode> = {
+    anamnesis: <AnamnesisPanel compact />,
+    facts: <KeyFactsGrid />,
+    template: <TemplateSummary />,
+    treatments: <TreatmentList compact />,
+  };
+  return (
+    <>
+      {projectorBlockOrder(item?.projector_layout).map((id) => (
+        <React.Fragment key={id}>{blocks[id]}</React.Fragment>
+      ))}
+    </>
   );
 }
 

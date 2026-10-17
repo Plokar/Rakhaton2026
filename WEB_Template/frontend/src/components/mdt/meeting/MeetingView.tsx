@@ -6,16 +6,20 @@ import { useRouter } from 'next/navigation';
 import { parseAsInteger, useQueryState } from 'nuqs';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
+  CheckCheck,
   ChevronDown,
   ChevronUp,
   CircleCheck,
+  FileDown,
   FileText,
+  ListOrdered,
   MonitorUp,
   MoreHorizontal,
   NotebookPen,
   Pencil,
   Play,
   Plus,
+  RotateCcw,
   SlidersHorizontal,
   Trash2,
   Undo2,
@@ -39,17 +43,19 @@ import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { mdtApi } from '@/lib/mdt-api';
-import { agendaOrder, apiErrorMessage, useCaseStatus, useSaveSession, useSessionQuery } from '@/lib/queries';
+import { agendaOrder, apiErrorMessage, useCaseStatus, useSaveSession, useSessionQuery, useSessionStatus } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
 import { AddPatientSheet } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
+import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
 import { dayLabel, timeLabel } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { isDiscussed, shortPatient, spokenPatient } from '../patient';
 import { openProjectorWindow, publishSelection } from '../projector';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutDialog';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { formatDuration, useCaseTimer } from './use-case-timer';
@@ -83,6 +89,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
   const [collaborating, setCollaborating] = React.useState(false);
+  const [arranging, setArranging] = React.useState(false);
   useFocusLayout();
 
   React.useEffect(() => {
@@ -167,10 +174,12 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
             onToggleDiscussed={toggleDiscussed}
             busy={status.isPending}
             onCollaborate={can.inviteToCase(me, current) ? () => setCollaborating(true) : undefined}
+            onArrange={can.editCase(me, current) ? () => setArranging(true) : undefined}
           />
         }
       />
       {collaborating && <CollaboratorsDialog key={`collab-${current.id}`} item={current} open onOpenChange={setCollaborating} />}
+      {arranging && <ProjectorLayoutDialog key={`layout-${current.id}`} item={current} sources={sources} open onOpenChange={setArranging} />}
     </div>
   ) : (
     <div className="flex flex-1 items-center justify-center p-6">
@@ -258,8 +267,11 @@ function MeetingHeader({
   const router = useRouter();
   const me = useMe();
   const save = useSaveSession();
+  const sessionStatus = useSessionStatus();
   const [editing, setEditing] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [closing, setClosing] = React.useState(false);
+  const [outputs, setOutputs] = React.useState<'closed' | 'view' | null>(null);
   const chair = can.manageBoards(me);
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
 
@@ -284,6 +296,16 @@ function MeetingHeader({
         <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
           <MonitorUp aria-hidden /> Projektor
         </Button>
+        {chair && board.status !== 'closed' && count > 0 && (
+          <Button variant="outline" size="lg" onClick={() => setClosing(true)} title="Ukončit board a stáhnout výstupy">
+            <CheckCheck aria-hidden /> Ukončit board
+          </Button>
+        )}
+        {chair && board.status === 'closed' && (
+          <Button variant="outline" size="lg" onClick={() => setOutputs('view')}>
+            <FileDown aria-hidden /> Výstupy
+          </Button>
+        )}
         {can.generateBrief(me) && board.status !== 'closed' && (
           <Button size="lg" onClick={onAdd}>
             <Plus aria-hidden /> Zařadit
@@ -302,6 +324,21 @@ function MeetingHeader({
                 <DropdownMenuItem onClick={() => setEditing(true)}>
                   <Pencil aria-hidden /> Upravit board
                 </DropdownMenuItem>
+                {board.status === 'closed' && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      sessionStatus.mutate(
+                        { id: board.id, status: 'in_progress' },
+                        {
+                          onSuccess: () => toast('Board je znovu otevřený'),
+                          onError: (err) => toast.error(apiErrorMessage(err, 'Board se nepodařilo otevřít.')),
+                        },
+                      )
+                    }
+                  >
+                    <RotateCcw aria-hidden /> Znovu otevřít board
+                  </DropdownMenuItem>
+                )}
                 {count === 0 && (
                   <>
                     <DropdownMenuSeparator />
@@ -327,6 +364,10 @@ function MeetingHeader({
         />
       )}
       <DeleteBoardDialog board={deleting ? board : null} onClose={() => setDeleting(false)} />
+      {closing && <CloseBoardDialog board={board} open onOpenChange={setClosing} onClosed={() => setOutputs('closed')} />}
+      {outputs && (
+        <BoardOutputsDialog sessionId={board.id} open justClosed={outputs === 'closed'} onOpenChange={(next) => !next && setOutputs(null)} />
+      )}
     </div>
   );
 }
@@ -469,6 +510,7 @@ function CaseToolbar({
   onToggleDiscussed,
   busy,
   onCollaborate,
+  onArrange,
 }: {
   item: Case;
   index: number;
@@ -480,6 +522,8 @@ function CaseToolbar({
   busy: boolean;
   /** Přizvat ke spolupráci (T-326): jen předseda nebo zadávající lékař. */
   onCollaborate?: () => void;
+  /** Pořadí údajů na projektoru (T-332): zadávající, přizvaný nebo předseda. */
+  onArrange?: () => void;
 }) {
   const done = isDiscussed(item);
   return (
@@ -512,6 +556,12 @@ function CaseToolbar({
             {/* popisek až na široké ploše, jinak se lišta zalomí (1440 px s agendou) */}
             <span className="hidden @5xl:inline">Spolupráce</span>
             {item.collaborators?.length ? <span className="tabular-nums">{item.collaborators.length}</span> : null}
+          </Button>
+        )}
+        {onArrange && (
+          <Button variant="outline" size="lg" onClick={onArrange} aria-label="Pořadí na projektoru" title="Pořadí informací na projektoru">
+            <ListOrdered aria-hidden />
+            <span className="hidden @5xl:inline">Pořadí</span>
           </Button>
         )}
       </span>

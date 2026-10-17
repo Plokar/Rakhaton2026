@@ -1,7 +1,9 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
 import base64
+import io
 import json
 import re
+import zipfile
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -74,7 +76,7 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
             'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
-            'patient': patient}
+            'projector_layout': c.projector_layout, 'patient': patient}
 
 
 def _datetime(value) -> timezone.datetime:
@@ -308,6 +310,23 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
         _require(request, roles.ADMIN)
         if data['status'] not in dict(MdtCase.STATUS):
             raise ValidationError({'status': f'Jen {", ".join(dict(MdtCase.STATUS))}.'})
+    if 'projector_layout' in data:
+        _validate_layout(data['projector_layout'])
+
+
+PROJECTOR_SECTIONS = ('anamnesis', 'facts', 'template', 'treatments')
+
+
+def _validate_layout(layout) -> None:
+    """Pořadí na projektoru (T-332): jen známé bloky a ID klíčových údajů, bez opakování; `{}` = výchozí."""
+    if not isinstance(layout, dict) or set(layout) - {'sections', 'facts'}:
+        raise ValidationError({'projector_layout': 'Objekt {sections, facts}.'})
+    sections, facts = layout.get('sections', []), layout.get('facts', [])
+    if not (isinstance(sections, list) and all(s in PROJECTOR_SECTIONS for s in sections) and len(set(sections)) == len(sections)):
+        raise ValidationError({'projector_layout': f'sections jen z {", ".join(PROJECTOR_SECTIONS)}, bez opakování.'})
+    if not (isinstance(facts, list) and len(facts) <= 100 and len(set(facts)) == len(facts)
+            and all(isinstance(f, str) and 0 < len(f) <= 160 for f in facts)):
+        raise ValidationError({'projector_layout': 'facts = seznam ID údajů (nejvýš 100), bez opakování.'})
 
 
 def _validate_collaborators(request, data, case: MdtCase | None) -> None:
@@ -333,7 +352,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
         writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
         case.session = target
         case.order = _next_order(target)               # T-324: na konec agendy nového boardu
-    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status'):
+    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status', 'projector_layout'):
         if field in data:
             setattr(case, field, data[field])
     known = {w['id'] for w in case.acknowledged_warnings}
@@ -705,8 +724,15 @@ def case_export_fhir(request, cid):
 def case_export_pdf(request, cid):
     """PDF závěru; potvrzený závěr se poprvé uloží i jako `DocumentReference/Pxx-mdtNN-pdf` do IRIS."""
     decision = get_object_or_404(Decision.objects.select_related('case__session'), case_id=cid)
+    pdf, name = _decision_pdf(decision)
+    return _attachment(pdf, 'application/pdf', f'{name}.pdf')
+
+
+def _decision_pdf(decision: Decision, patient_list: list[dict] | None = None) -> tuple[bytes, str]:
+    """PDF závěru a název souboru; potvrzené PDF se poprvé uloží jako `DocumentReference` do IRIS."""
     case = decision.case
-    patient = next((p for p in patients.list_patients() if p['id'] == case.patient_fhir_id), None)
+    patient = next((p for p in (patient_list if patient_list is not None else patients.list_patients())
+                    if p['id'] == case.patient_fhir_id), None)
     pdf = export.decision_pdf(decision.content, title=case.session.title,
                               mdt_date=timezone.localtime(case.session.date), patient=patient)
     if decision.status == 'confirmed' and not decision.fhir_ids.get('document_reference_pdf'):
@@ -714,8 +740,86 @@ def case_export_pdf(request, cid):
         decision.fhir_ids = {**decision.fhir_ids, 'document_reference_pdf': rid}
         decision.content = {**decision.content, 'fhir_ids': decision.fhir_ids}
         decision.save(update_fields=['fhir_ids', 'content', 'updated_at'])
-    name = decision.fhir_ids.get('composition') or f'{case.patient_fhir_id}-navrh'
-    return _attachment(pdf, 'application/pdf', f'{name}.pdf')
+    return pdf, decision.fhir_ids.get('composition') or f'{case.patient_fhir_id}-navrh'
+
+
+def _record(s: MdtSession, by_id: dict[str, dict], ids: dict[str, dict]) -> dict:
+    """Záznam boardu (T-333): přítomní lékaři ze závěrů, pacienti se jménem / maskovaným RČ a stavem závěru."""
+    cases = list(s.cases.all())
+    decisions = {d.case_id: d for d in Decision.objects.filter(case__session=s).select_related('confirmed_by')}
+    attendees: dict[str, dict] = {}
+    rows = []
+    for c in cases:
+        d = decisions.get(c.pk)
+        for a in (d.content.get('attendees') or []) if d else []:
+            key = a.get('user_id') or a.get('name')
+            item = attendees.setdefault(key, {'id': a.get('user_id'), 'name': a.get('name'), 'role': a.get('role'),
+                                              'patients': []})
+            item['patients'].append(c.patient_fhir_id)
+        p = by_id.get(c.patient_fhir_id) or {}
+        dg = p.get('diagnosis')
+        rows.append({
+            'id': c.pk, 'order': c.order, 'patient_id': c.patient_fhir_id, 'status': c.status,
+            'display_name': p.get('display_name') or c.patient_fhir_id,
+            **(ids.get(c.patient_fhir_id) or {'name': None, 'rc': None}),
+            'diagnosis': {'icd10': dg['icd10'], 'text': dg['text']} if dg else None,
+            'decision': d and {
+                'status': d.status, 'record_id': d.fhir_ids.get('composition'),
+                'confirmed_at': d.confirmed_at and timezone.localtime(d.confirmed_at).isoformat(),
+                'confirmed_by': _user(d.confirmed_by)},
+            'exports': {'pdf': bool(d), 'fhir': bool(d and d.status == 'confirmed')},
+        })
+    confirmed = sum(1 for r in rows if r['decision'] and r['decision']['status'] == 'confirmed')
+    return {**_session(s), 'attendees': list(attendees.values()), 'cases': rows,
+            'counts': {'patients': len(rows), 'confirmed': confirmed}}
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def board_records(request):
+    """Záznam boardů (T-333, jen předseda): uzavřené boardy od nejnovějšího s přítomnými a pacienty."""
+    _require(request, roles.ADMIN)
+    sessions = list(MdtSession.objects.filter(status='closed').select_related('chair').prefetch_related('cases')
+                    .order_by('-date'))
+    if not sessions:
+        return Response([])
+    by_id, ids = {p['id']: p for p in patients.list_patients()}, patients.identities()
+    return Response([_record(s, by_id, ids) for s in sessions])
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def session_record(request, sid):
+    """Záznam jednoho boardu (T-333, jen předseda), i neuzavřeného: nabídka stažení po ukončení boardu."""
+    _require(request, roles.ADMIN)
+    s = get_object_or_404(MdtSession.objects.select_related('chair'), pk=sid)
+    return Response(_record(s, {p['id']: p for p in patients.list_patients()}, patients.identities()))
+
+
+@extend_schema(responses={(200, 'application/zip'): OpenApiTypes.BINARY}, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def session_export_zip(request, sid):
+    """Všechny výstupy boardu jedním souborem (T-333, jen předseda): PDF každého závěru a FHIR document
+    Bundle potvrzených (`Pxx/Pxx-mdtNN.pdf`, `Pxx/Pxx-mdtNN.fhir.json`)."""
+    _require(request, roles.ADMIN)
+    s = get_object_or_404(MdtSession, pk=sid)
+    decisions = list(Decision.objects.filter(case__session=s).select_related('case__session').order_by('case__order'))
+    if not decisions:
+        return Response({'detail': 'Žádný pacient boardu zatím nemá závěr.'}, status=409)
+    patient_list = patients.list_patients()
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for d in decisions:
+            pdf, name = _decision_pdf(d, patient_list)
+            zf.writestr(f'{d.case.patient_fhir_id}/{name}.pdf', pdf)
+            if d.status == 'confirmed':
+                bundle = export.document_bundle(d.fhir_ids, timezone.localtime())
+                zf.writestr(f'{d.case.patient_fhir_id}/{name}.fhir.json', json.dumps(bundle, ensure_ascii=False, indent=1))
+    day = timezone.localtime(s.date).strftime('%Y-%m-%d')
+    return _attachment(buffer.getvalue(), 'application/zip', f'board-{s.pk}-{day}.zip')
 
 
 def _with_case(items: list[dict]) -> list[dict]:

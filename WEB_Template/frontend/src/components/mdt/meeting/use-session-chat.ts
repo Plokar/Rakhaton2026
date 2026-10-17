@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { refreshSession } from '@/lib/api';
 import { mdtApi } from '@/lib/mdt-api';
 import type { Me, SessionMessage } from '@/types/mdt';
 
@@ -37,7 +38,7 @@ function merge(prev: SessionMessage[] | undefined, incoming: SessionMessage[]): 
 /**
  * Chat lékařů u zasedání (T-334). Bez websocketů a bez pollingu: historie jedním GET, nové zprávy přes
  * Server-Sent Events. Po výpadku sítě se `EventSource` připojí sám a server doplní zmeškané podle
- * `Last-Event-ID`; když server spojení odmítne (např. vypršelé přihlášení), zkusí se to znovu s prodlevou.
+ * `Last-Event-ID`; když server spojení odmítne (vypršelé přihlášení), obnoví se přihlášení a připojí znovu (T-336).
  */
 export function useSessionChat(sessionId: number, me: Me | null) {
   const client = useQueryClient();
@@ -57,6 +58,7 @@ export function useSessionChat(sessionId: number, me: Me | null) {
     let source: EventSource | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempt = 0;
+    let stopped = false;
     const connect = () => {
       const after = client.getQueryData<SessionMessage[]>(k)?.at(-1)?.id ?? 0;
       source = new EventSource(mdtApi.sessionStreamUrl(sessionId, after), { withCredentials: true });
@@ -73,13 +75,21 @@ export function useSessionChat(sessionId: number, me: Me | null) {
           setConnection('connecting');            // výpadek sítě: EventSource se připojí sám
           return;
         }
+        // Server spojení odmítl, nejčastěji vypršelé přihlášení (401): obnovit a připojit se znovu (T-336)
         source.close();
         setConnection('offline');
-        timer = setTimeout(connect, Math.min(30_000, 3_000 * 2 ** attempt++));
+        const delay = attempt === 0 ? 0 : Math.min(30_000, 3_000 * 2 ** (attempt - 1));
+        attempt += 1;
+        timer = setTimeout(() => {
+          void refreshSession().then(() => {
+            if (!stopped) connect();
+          });
+        }, delay);
       };
     };
     connect();
     return () => {
+      stopped = true;
       clearTimeout(timer);
       source?.close();
     };

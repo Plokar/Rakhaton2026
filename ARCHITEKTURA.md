@@ -1135,7 +1135,7 @@ Demo uživatelé (1-click přihlášení jako v templatu):
 
 ### 6.3 REST API
 
-Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/api/docs/`).
+Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/api/docs/`). Access cookie platí 15 min, refresh cookie 7 dní (rotace + blacklist). Frontend při 401 zavolá `POST /api/auth/token/refresh/` (refresh z httpOnly cookie, odpověď nastaví nové cookies), požadavek zopakuje a přihlášení obnovuje i průběžně každých 10 min; `proxy.ts` pustí na chráněnou stránku i jen s refresh cookie (T-336).
 
 | Metoda | Endpoint | Popis |
 |---|---|---|

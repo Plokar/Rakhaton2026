@@ -132,23 +132,17 @@ class CustomTokenRefreshView(TokenRefreshView):
     Refresh access tokenu – přijme refresh z body nebo cookie.
     """
     def post(self, request, *args, **kwargs):
-        # Pokud není refresh v body, zkusit cookie
-        refresh_token = request.COOKIES.get(
-            settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token')
-        )
-        if refresh_token and 'refresh' not in request.data:
-            request.data._mutable = True if hasattr(request.data, '_mutable') else None
-            data = request.data.copy()
-            data['refresh'] = refresh_token
-            request._data = data
-
-        response = super().post(request, *args, **kwargs)
-
-        if response.status_code == 200:
-            refresh = RefreshToken(response.data.get('refresh', refresh_token))
-            set_jwt_cookies(response, refresh)
-
-        return response
+        # Refresh z body, jinak z httpOnly cookie (frontend ho nevidí, T-336). Dřív se request.data
+        # přepisovalo přes `_mutable`, což u JSON (dict) i prázdného těla padalo na 500.
+        cookie = request.COOKIES.get(settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'))
+        serializer = self.get_serializer(data={'refresh': request.data.get('refresh') or cookie})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0]) from e
+        # ROTATE_REFRESH_TOKENS: validated_data nese nový refresh, starý je na blacklistu
+        refresh = RefreshToken(serializer.validated_data.get('refresh') or serializer.initial_data['refresh'])
+        return set_jwt_cookies(Response(serializer.validated_data, status=status.HTTP_200_OK), refresh)
 
 
 class LogoutView(APIView):

@@ -6,10 +6,11 @@ a fakta z FHIR resources pacienta (za běhu z IRIS), ne z bundlu datasetu. Bez b
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Iterable
 
-from services.rules.onko_kb import q
+from services.rules.onko_kb import GUIDELINE_ID, ext_ids, q
 
 # Údaje báze, které už hlídá formulář zařazení (`intake.py`: pole) nebo red flags (`red_flags.py`).
 # Povinný údaj báze (`P`) se v tom případě znovu nehlásí, jinak by lékař viděl dvě varování o tomtéž.
@@ -31,9 +32,18 @@ RED_FLAG_ITEMS = {"obc.medikace", "obc.paliativni", "obc.kortikoidy", "obc.rodin
                   "obc.mozek", "obc.predchozi_vykony", "pli.lozisko"}
 
 
+TRIAL_ID = re.compile(r"^RKT-\d\d(/[ZV]\d+)?$")
+
+
+def _citable(source: str, patient_ids: set[str] = frozenset()) -> bool:
+    """Jen Evidence ID, které resolver umí ukázat (§5.2): fakt pacienta, guidelines datasetu, studie RKT
+    a `EXT-…` z katalogu externích zdrojů. Nové `EXT-…` báze zatím nikdo neověřil (data/onko/README)."""
+    return source in patient_ids or bool(GUIDELINE_ID.match(source) or TRIAL_ID.match(source)) or source in ext_ids()
+
+
 def _ids(column: str) -> list[str]:
-    """Sloupec `zdroj` báze → Evidence ID (`PLI-2.1`, `RKT-04`, `EXT-…`)."""
-    return [s for s in column.split(",") if s and s != "-"]
+    """Sloupec `zdroj` báze → ověřitelná Evidence ID (`PLI-2.1`, `RKT-04`, `EXT-…` z katalogu)."""
+    return [s for s in column.split(",") if _citable(s)]
 
 
 @dataclass
@@ -63,7 +73,18 @@ class PatientKb:
         return cls(docs, kb.codes(str(facts.pop("dg", ""))), facts, mdt)
 
     def items(self) -> list[dict]:
-        return q().recommend(self.dg_codes, self.facts, self.docs, self.mdt)
+        """Údaje katalogu se stavem v podkladech; varování jen s ověřitelnými citacemi, jinak se nehlásí."""
+        patient_ids = {d["id"] for d in self.docs}
+        out = []
+        for item in q().recommend(self.dg_codes, self.facts, self.docs, self.mdt):
+            if "warning" in item:
+                citations = [c for c in item["warning"]["citations"] if _citable(c, patient_ids)]
+                if citations:
+                    item["warning"] = {**item["warning"], "citations": citations}
+                else:
+                    del item["warning"]
+            out.append(item)
+        return out
 
 
 def template_presets() -> list[dict]:

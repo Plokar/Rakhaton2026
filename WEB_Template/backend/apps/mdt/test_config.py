@@ -15,7 +15,8 @@ def seeded(fake_fhir_dataset):
 
 def test_presets_seeded_in_default_order(seeded):
     presets = as_user('chirurg').get('/api/mdt/configs/').json()
-    assert [p['name'] for p in presets] == ['Standardní podklad', 'Stručně (30 s)']
+    assert [p['name'] for p in presets[:2]] == ['Standardní podklad', 'Stručně (30 s)']
+    assert all(p['is_preset'] and p['name'].startswith('Šablona: ') for p in presets[2:])     # T-318
     assert [s['id'] for s in presets[0]['sections']] == list(SECTION_ORDER)
     brief = presets[1]
     assert brief['detail_level'] == 'brief' and [s['id'] for s in brief['sections'] if s['enabled']] == \

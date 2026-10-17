@@ -3,6 +3,7 @@ import pytest
 
 from services.ai.context_builder import context_from_resources
 from services.rules.intake import intake_prefill
+from services.rules.onko_kb import ext_ids
 from services.tests.dataset import load_patient, load_studies
 
 PATIENTS = ["P01", "P02", "P03", "P04", "P05", "P06"]
@@ -98,7 +99,7 @@ def test_contract_and_citations(patient_id, prefills):
     ctx = context_from_resources(patient_id, load_patient(patient_id), studies=load_studies())
     allowed = ctx.allowed_ids | {f"{s}-{n}" for s in ("KRC", "PRS", "PLI", "OBC") for n in
                                  ("1.1", "1.2", "1.3", "1.4", "2.1", "2.2", "2.3", "2.4", "2.5",
-                                  "3.1", "3.2", "3.3", "3.4", "4.1", "4.2")}
+                                  "3.1", "3.2", "3.3", "3.4", "4.1", "4.2")} | ext_ids()   # EXT jen z katalogu (T-504)
     assert prefill["patient_id"] == patient_id
     ids = [f["id"] for f in prefill["fields"]]
     assert len(ids) == len(set(ids))

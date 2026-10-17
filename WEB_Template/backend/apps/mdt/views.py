@@ -478,7 +478,8 @@ def config_list(request):
         s = BriefConfigSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         return Response(BriefConfigSerializer(s.save(owner=request.user)).data, status=201)
-    return Response(BriefConfigSerializer(BriefConfig.objects.order_by('-is_preset', 'name'), many=True).data)
+    # presety v pořadí založení: obecné, pak šablony projektoru (T-318); vlastní konfigurace za nimi
+    return Response(BriefConfigSerializer(BriefConfig.objects.order_by('-is_preset', 'pk'), many=True).data)
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])

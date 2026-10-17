@@ -1,9 +1,17 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 /* Tmavý režim přepíná aplikace třídou .dark na <html> (ThemeContext), ne nastavení systému. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Tokeny (docs/NAVRH_UI.md §3). Názvy jsou shadcn, hodnoty naše: tři plochy (background, card, muted),
+ * tyrkysová jen pro primární akci, výběr a focus. AI má vlastní fialovou (Q1), aby se nepletla s akcí ani
+ * se semaforem; barvy semaforu, normality a odborností jsou v komponentách (D-017).
+ */
 :root {
+  color-scheme: light;
   --background: #f4f6f8;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -20,13 +28,33 @@
   --accent-foreground: #0f172a;
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
-  --border: #cbd5e1;
+  --border: #d5dde6;
   --input: #cbd5e1;
   --ring: #0f766e;
   --radius: 0.625rem;
+
+  --ai: #7c3aed;
+  --ai-foreground: #ffffff;
+  --ai-soft: #f5f3ff;
+
+  --chart-1: #0f766e;
+  --chart-2: #2563eb;
+  --chart-3: #d97706;
+  --chart-4: #7c3aed;
+  --chart-5: #64748b;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0f766e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #edf1f5;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0f766e;
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0b1118;
   --foreground: #f1f5f9;
   --card: #111a24;
@@ -46,6 +74,25 @@
   --border: #263547;
   --input: #263547;
   --ring: #2dd4bf;
+
+  --ai: #a78bfa;
+  --ai-foreground: #1e1b4b;
+  --ai-soft: rgb(139 92 246 / 0.14);
+
+  --chart-1: #2dd4bf;
+  --chart-2: #60a5fa;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #94a3b8;
+
+  --sidebar: #0e1620;
+  --sidebar-foreground: #f1f5f9;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #042f2e;
+  --sidebar-accent: #172230;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1f2c3b;
+  --sidebar-ring: #2dd4bf;
 }
 
 @theme inline {
@@ -68,24 +115,60 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-ai: var(--ai);
+  --color-ai-foreground: var(--ai-foreground);
+  --color-ai-soft: var(--ai-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Inter z next/font (layout.tsx, proměnná --font-inter); dřív se načítal, ale nepoužíval. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 /* V base vrstvě, aby barvy okrajů z utilit měly přednost. */
 @layer base {
   * {
-    border-color: var(--border);
+    @apply border-border outline-ring/50;
   }
   html {
     scroll-behavior: smooth;
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 22%, transparent);
   }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.5;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Custom scrollbars */
@@ -103,4 +186,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
-

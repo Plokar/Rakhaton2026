@@ -77,6 +77,10 @@ if [ "${DJANGO_DEBUG}" = "True" ]; then
   echo "🌱 Seeding demo data for Hackathon OS..."
   python manage.py seed_demo_data || echo "   (seed data skipped or already present)"
   python manage.py seed_mdt || echo "   (seed_mdt přeskočen: IRIS bez dat? spusť ingest_dataset)"
+elif [ "${MDT_SEED}" = "True" ]; then
+  # produkce (T-005): demo účty, boardy a presety z nominací v IRIS; idempotentní, nic nepřepisuje
+  echo "🌱 seed_mdt (demo účty, boardy, presety)..."
+  python manage.py seed_mdt || echo "   (seed_mdt přeskočen: IRIS bez dat? spusť ingest_dataset)"
 fi
 
 

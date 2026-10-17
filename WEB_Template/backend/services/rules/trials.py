@@ -123,6 +123,104 @@ def _response_after_cycles(f: Facts) -> CriterionResult:
     return CriterionResult("unknown", [cycles[-1]["id"]], "Hodnocení odpovědi chybí")
 
 
+# ── předchozí léčba (T-302): nominace „Předchozí onkologická léčba:“ je seznam „- [druh] N. linie: léky (od – do)“
+HISTORY_HEAD = re.compile(r"^Předchozí onkologická léčba", re.I)
+HISTORY_LINE = re.compile(r"^-\s*\[(?P<kind>[^\]]+)\]\s*(?P<text>.*)$", re.M)
+LINE_NO = re.compile(r"\b(\d+)\.\s*linie", re.I)
+AI_DRUGS = re.compile(r"letrozol|anastrozol|exemestan", re.I)
+CDK46_DRUGS = re.compile(r"ribocikl|palbocikl|abemacikl", re.I)
+TRASTUZUMAB = re.compile(r"trastuzumab(?! deruxtekan)", re.I)
+TAXANES = re.compile(r"paklitaxel|docetaxel", re.I)
+# `\bzvětš` nechytí „nezvětšené“; „bez progrese / nových ložisek“ odfiltruje `_affirmed`
+PROGRESSION = re.compile(r"progres|\bnov[ěáéýí]\w*\b|\broste\b|\bzvětš\w*", re.I)
+
+
+@dataclass
+class TreatmentLine:
+    kind: str                       # „chemoterapie“, „hormonální léčba“…
+    text: str
+    number: int | None              # „2. linie“ → 2 (léčba metastatického onemocnění); adjuvance bez čísla
+
+
+def _treatment_history(f: Facts) -> tuple[str | None, list[TreatmentLine]]:
+    """Odstavec nominace s předchozí onkologickou léčbou (citace) a jeho řádky."""
+    request_id = f.request.get("id")
+    evidence = f.paragraph_with(request_id, HISTORY_HEAD) if request_id else None
+    if evidence is None:
+        return None, []
+    lines = [TreatmentLine(m["kind"].strip().lower(), m["text"].strip(),
+                           int(n[1]) if (n := LINE_NO.search(m["text"])) else None)
+             for m in HISTORY_LINE.finditer(f.paragraph_text(evidence))]
+    return evidence, lines
+
+
+def _affirmed(text: str, pattern: re.Pattern) -> bool:
+    """Věta se vzorem, která ho nepopírá („bez nových ložisek“ ne)."""
+    return any(pattern.search(s) and not NEGATION.search(s) for s in re.split(r"(?<=[.;])\s+", text))
+
+
+def _drug_history(pattern: str, atc: tuple[str, ...] = ()) -> Callable[[Facts], CriterionResult]:
+    """Předchozí léčba lékem: podání / předpis, nebo řádek historie léčby v nominaci. Lék, který v historii není,
+    = `not_met` s citací historie (seznam linií je povinná část nominace, OBC-1.1); bez historie `unknown`."""
+    rx = re.compile(pattern, re.I)
+
+    def check(f: Facts) -> CriterionResult:
+        items = [m for m in f.by_type.get("MedicationAdministration", []) + f.by_type.get("MedicationRequest", [])
+                 if rx.search(cc_text(m.get("medicationCodeableConcept")))
+                 or (atc and fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(atc))]
+        if items:
+            return CriterionResult("met", [items[-1]["id"]])
+        evidence, lines = _treatment_history(f)
+        if evidence is None:
+            return CriterionResult("unknown", missing="Předchozí onkologická léčba v nominaci není")
+        return CriterionResult("met" if any(rx.search(line.text) for line in lines) else "not_met", [evidence])
+    return check
+
+
+def _progression_after(first: re.Pattern, second: re.Pattern, what: str) -> Callable[[Facts], CriterionResult]:
+    """Progrese během nebo po léčbě kombinací `first` + `second` (řádek historie nebo podání).
+
+    Progrese = další linie po této kombinaci v historii, nebo popis zobrazení (případně otázka nominace) s progresí
+    či novými ložisky po jejím zahájení. Bez kombinace v historii `not_met`, bez doložené progrese `unknown`.
+    """
+    def check(f: Facts) -> CriterionResult:
+        evidence, lines = _treatment_history(f)
+        combo = next((line for line in lines if first.search(line.text) and second.search(line.text)), None)
+        doses = sorted((m for m in f.by_type.get("MedicationAdministration", [])
+                        if first.search(cc_text(m.get("medicationCodeableConcept")))),
+                       key=lambda m: m.get("effectiveDateTime", ""))
+        if combo is None and not doses:
+            if evidence is None:
+                return CriterionResult("unknown", missing="Předchozí onkologická léčba v nominaci není")
+            return CriterionResult("not_met", [evidence])
+        basis = [evidence] if combo else [doses[-1]["id"]]
+        if combo and combo.number and any(line.number and line.number > combo.number for line in lines):
+            return CriterionResult("met", basis)        # po kombinaci následovala další linie
+        start = doses[0].get("effectiveDateTime", "")[:10] if doses else ""
+        new_sites = [c["id"] for c in f.oncologic if re.match(r"C7[789]", fhir_code(c.get("code"), "icd-10"))
+                     and start and (c.get("onsetDateTime") or "")[:10] > start]
+        if new_sites:                                   # nové metastatické ložisko (diagnóza) až po zahájení léčby
+            return CriterionResult("met", basis + new_sites[-1:])
+        progression = [pid for r in f.radiology() if r.get("effectiveDateTime", "")[:10] >= start
+                       for pid in f.find_paragraphs(PROGRESSION, ("DiagnosticReport",))
+                       if pid.startswith(r["id"] + "#") and _affirmed(f.paragraph_text(pid), PROGRESSION)]
+        if progression:
+            return CriterionResult("met", basis + progression[-1:])
+        return CriterionResult("unknown", basis, f"Progrese po {what} není v podkladech doložená")
+    return check
+
+
+def _chemo_lines_m1(maximum: int) -> Callable[[Facts], CriterionResult]:
+    """Počet linií chemoterapie v metastatickém stadiu (číslované linie historie s druhem „chemoterapie“)."""
+    def check(f: Facts) -> CriterionResult:
+        evidence, lines = _treatment_history(f)
+        if evidence is None:
+            return CriterionResult("unknown", missing="Předchozí onkologická léčba v nominaci není")
+        count = sum(1 for line in lines if "chemoterap" in line.kind and line.number)
+        return CriterionResult("met" if count <= maximum else "not_met", [evidence])
+    return check
+
+
 def _mdt_decision(_: Facts) -> CriterionResult:
     return CriterionResult("unknown", missing="Rozhodne tato MDT")
 
@@ -188,7 +286,7 @@ def _prior_systemic_line(f: Facts) -> CriterionResult:
 def _prior_parpi(f: Facts) -> CriterionResult:
     doses = f.administrations(PARPI_ATC)
     if not doses:
-        return CriterionResult("not_met")
+        return _drug_history(r"olaparib|niraparib|rukaparib|talazoparib|PARP", PARPI_ATC)(f)
     in_study = any("RKT-06" in n.get("text", "") for d in doses for n in d.get("note", []))
     if in_study:      # PARPi je léčba v této studii, ne předchozí léčba (pacientka je zařazená)
         return CriterionResult("not_met", [doses[-1]["id"]])
@@ -208,11 +306,22 @@ def _brain_mets(f: Facts) -> list[dict]:
     return f.conditions_icd(("C79.3",))
 
 
+BRAIN_TREATMENT = re.compile(r"stereotak|\bSRS\b|radiochirurg|\bWBRT\b|celomozkov|ozáření mozku|kraniotom|"
+                             r"resekce (mozkové )?metast", re.I)
+
+
 def _untreated_brain_mets(f: Facts) -> CriterionResult:
     brain = _brain_mets(f)
-    if brain:
+    if not brain:
+        return CriterionResult("not_met", [c["id"] for c in f.oncologic])
+    evidence, lines = _treatment_history(f)
+    procedures = [p for p in f.by_type.get("Procedure", []) if BRAIN_TREATMENT.search(cc_text(p.get("code")))]
+    if procedures or any(BRAIN_TREATMENT.search(line.text) for line in lines):
+        return CriterionResult("not_met", [c["id"] for c in brain] + ([procedures[-1]["id"]] if procedures else [evidence]))
+    if evidence is None:
         return CriterionResult("unknown", [c["id"] for c in brain], "Ověřit, zda jsou mozkové metastázy léčené")
-    return CriterionResult("not_met", [c["id"] for c in f.oncologic])
+    # mozkové metastázy jsou a v historii léčby ani ve výkonech není jejich léčba (RT, SRS, operace)
+    return CriterionResult("met", [c["id"] for c in brain] + [evidence])
 
 
 def _brain_mets_allowed(f: Facts) -> CriterionResult:
@@ -271,19 +380,14 @@ def _esr1_ctdna(f: Facts) -> CriterionResult:
     return CriterionResult("met" if _mutation_state(str(obs.value)) == "positive" else "not_met", [obs.id])
 
 
-def _drug_history(pattern: str) -> Callable[[Facts], CriterionResult]:
-    def check(f: Facts) -> CriterionResult:
-        items = [m for m in f.by_type.get("MedicationAdministration", []) + f.by_type.get("MedicationRequest", [])
-                 if re.search(pattern, cc_text(m.get("medicationCodeableConcept")), re.I)]
-        return CriterionResult("met", [items[-1]["id"]]) if items else CriterionResult("not_met")
-    return check
-
-
 def _ild(f: Facts) -> CriterionResult:
     from services.rules.compatibility import ild_history
     result = ild_history(f, {})
     if result.status == "orange":
         return CriterionResult("met", result.patient_citations)
+    negative = f.find_paragraphs(re.compile(r"bez (známek )?(pneumonitid|intersticiáln|ILD)", re.I), ("DiagnosticReport",))
+    if negative:                    # CT plic výslovně bez pneumonitidy / intersticiálního postižení
+        return CriterionResult("not_met", negative[-1:])
     return CriterionResult("not_met") if result.status == "green" else \
         CriterionResult("unknown", missing="ILD v dokumentaci není, lékař potvrdí úplnost anamnézy")
 
@@ -367,8 +471,11 @@ def _visceral_crisis(f: Facts) -> CriterionResult:
 CRITERIA: dict[str, Callable[[Facts], CriterionResult]] = {
     "RKT-01/Z1": _er10_her2_negative, "RKT-01/Z2": _esr1_ctdna, "RKT-01/Z5": _ecog(1),
     "RKT-01/V1": _visceral_crisis, "RKT-01/V2": _untreated_brain_mets, "RKT-01/V3": _bilirubin_high,
-    "RKT-01/V4": _drug_history(r"fulvestrant|SERD"),
-    "RKT-02/Z1": _her2_positive, "RKT-02/Z3": _brain_mets_allowed, "RKT-02/Z4": _ecog(1), "RKT-02/Z5": _lvef_50,
+    "RKT-01/Z3": _progression_after(AI_DRUGS, CDK46_DRUGS, "inhibitoru aromatázy + CDK4/6"),
+    "RKT-01/Z4": _chemo_lines_m1(1),
+    "RKT-01/V4": _drug_history(r"fulvestrant|elacestrant|camizestrant|\bSERD\b"),
+    "RKT-02/Z1": _her2_positive, "RKT-02/Z2": _progression_after(TRASTUZUMAB, TAXANES, "trastuzumabu a taxanu"),
+    "RKT-02/Z3": _brain_mets_allowed, "RKT-02/Z4": _ecog(1), "RKT-02/Z5": _lvef_50,
     "RKT-02/V1": _ild, "RKT-02/V2": _drug_history(r"deruxtekan"), "RKT-02/V3": _leptomeningeal,
     "RKT-03/Z1": _liver_only, "RKT-03/Z2": _response_after_cycles, "RKT-03/Z3": _ecog(1),
     "RKT-03/Z4": _mdt_decision, "RKT-03/V1": _extrahepatic, "RKT-03/V2": _mmr_high, "RKT-03/V3": _neuropathy_ge2,

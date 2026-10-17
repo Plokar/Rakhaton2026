@@ -69,11 +69,13 @@ def score(gt: PatientGroundTruth, brief: dict, prefill: dict, context=None) -> d
 
     fields = {f["id"]: f["status"] for f in prefill.get("fields", [])}
     missing_claims = [c for c in _claims(brief) if c["kind"] == "missing"]
+    # kontrola úplnosti = pole formuláře i varování CHYBÍ (§5.10); „Doporučeno“ (DOP:*) není chybějící povinný údaj
+    missing_warnings = [w for w in prefill.get("warnings", []) if w["kind"] == "missing" and not w["id"].startswith("DOP:")]
 
     def found_missing(m) -> bool:
         if m.field and fields.get(m.field) in ("missing", "pending", "skipped"):
             return True
-        return any(same_source(m.citations, c["citations"]) for c in missing_claims if c["citations"])
+        return any(same_source(m.citations, c["citations"]) for c in missing_claims + missing_warnings if c["citations"])
 
     missing_ok = [m for m in gt.missing_data if found_missing(m)]
     misses["missing_data"] = [f"{m.id}: {m.item}" for m in gt.missing_data if m not in missing_ok]

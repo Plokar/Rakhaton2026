@@ -63,6 +63,20 @@ def test_move_case_updates_task_in_iris(seeded):
     assert task['restriction']['period']['start'] == '2026-10-14T14:00:00+02:00'
 
 
+def test_closed_board_rejects_move_and_intake(seeded):
+    """Na uzavřený board nejde pacienta přesunout ani zařadit (409, T-518); úpravy v něm ano."""
+    closed = MdtSession.objects.get(title='Mamární komise (urgentní)')
+    closed.status = 'closed'
+    closed.save()
+    case = MdtCase.objects.get(patient_fhir_id='P01')
+    assert as_user('onkolog').patch(f'/api/mdt/cases/{case.pk}/', {'session': closed.pk}, format='json').status_code == 409
+    body = {'session': closed.pk, 'patient_id': 'P01', 'ecog': 1, 'intent': 'C', 'skipped_fields': []}
+    assert as_user('onkolog').post('/api/mdt/cases/', body, format='json').status_code == 409
+    p02 = MdtCase.objects.get(patient_fhir_id='P02')        # už na uzavřeném boardu
+    assert as_user('predseda').patch(f'/api/mdt/cases/{p02.pk}/', {'session': closed.pk, 'ecog': 1},
+                                     format='json').status_code == 200
+
+
 def test_case_edit_permissions(seeded):
     p04 = MdtCase.objects.get(patient_fhir_id='P04')       # zadal pneumolog
     assert as_user('onkolog').patch(f'/api/mdt/cases/{p04.pk}/', {'ecog': 1}, format='json').status_code == 403

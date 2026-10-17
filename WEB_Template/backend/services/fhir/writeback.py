@@ -6,6 +6,7 @@ from datetime import datetime
 
 from services.fhir import client as fhir
 from services.fhir.ids import resource_type_for_id
+from services.fhir.ingest import prune
 from services.fhir.values import ref_id
 
 logger = logging.getLogger(__name__)
@@ -217,11 +218,16 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
         ],
         **({'entity': [{'role': 'source', 'what': ref} for ref in cited]} if cited else {}),
     })
-    bundle = {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
-        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': r,
+    bundle = _transaction(resources)
+    return bundle, ids
+
+
+def _transaction(resources: list[dict]) -> dict:
+    """Transaction Bundle s `PUT`; `prune`, protože IRIS odmítne prázdné pole (např. závěr bez kroků → `CarePlan.activity: []`)."""
+    return {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
+        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': prune(r),
          'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources
     ]}
-    return bundle, ids
 
 
 def _participant(code: str, display: str) -> dict:
@@ -301,10 +307,7 @@ def build_intake_bundle(*, patient_id: str, case_no: int, service_request: dict,
             'activity': {'text': 'Ruční zadání při zařazení pacienta do MDT'},
             'agent': [{'type': _participant('author', 'Author'), 'who': author}],
         })
-    bundle = {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
-        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': r,
-         'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources
-    ]}
+    bundle = _transaction(resources)
     return bundle, [f"{r['resourceType']}/{r['id']}" for r in resources]
 
 

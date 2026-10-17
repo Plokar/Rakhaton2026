@@ -75,6 +75,15 @@ def test_confirm_writes_mdt02_to_iris(case, decision):
     assert as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json').status_code == 409
 
 
+def test_confirm_minimal_decision_without_empty_arrays(case, decision):
+    """Závěr bez doporučených kroků, re-MDT a úkolů (např. draft zapisovatele): IRIS odmítá `activity: []`."""
+    s = {k: v for k, v in decision['sections'].items() if k not in ('re_mdt', 'trial', 'extra_diagnostics')}
+    minimal = {**decision, 'sections': {**s, 'recommendation': []}, 'tasks': [], 'red_flags_acknowledged': []}
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', minimal, format='json')
+    assert as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/').status_code == 200
+    assert 'activity' not in client.read('CarePlan', 'P03-mdt02-careplan')
+
+
 def test_next_number_after_existing(case, decision):
     """P05 má mdt01 a mdt02 → další je mdt03."""
     from services.fhir.writeback import next_mdt_id

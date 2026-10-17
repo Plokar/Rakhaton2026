@@ -125,7 +125,9 @@ def propose(patient_id: str, doc_id: str, text: str, provider: BaseAIProvider,
     for value in data.get("values") or []:
         reasons = _check(value, paragraphs)
         target = rejected if reasons else accepted
-        target.append({**value, "citation": f"{doc_id}#{value['paragraph']}", **({"reasons": reasons} if reasons else {})})
+        # `source` = znění odstavce, ať ho lékař vidí před potvrzením (dokument ještě v IRIS není)
+        target.append({**value, "citation": f"{doc_id}#{value['paragraph']}", "source": paragraphs.get(value["paragraph"]),
+                       **({"reasons": reasons} if reasons else {})})
     return {"patient_id": patient_id, "document_id": doc_id, "title": data.get("title") or "Importovaná zpráva",
             "date": data.get("date"), "text": text, "values": accepted, "rejected": rejected}
 

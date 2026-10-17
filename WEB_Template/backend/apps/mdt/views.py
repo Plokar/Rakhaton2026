@@ -170,6 +170,9 @@ def session_detail(request, sid):
     return Response({**_session(s), 'cases': [_case(c, by_id.get(c.patient_fhir_id)) for c in cases]})
 
 
+CLOSED_BOARD = {'detail': 'Board je uzavřený, pacienta na něj nejde zařadit ani přesunout.'}
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -179,6 +182,9 @@ def case_detail(request, cid):
     case = get_object_or_404(MdtCase.objects.select_related('session', 'created_by'), pk=cid)
     _require_case_edit(request, case)
     _validate_case_input(request, request.data)
+    if request.data.get('session', case.session_id) != case.session_id and \
+            MdtSession.objects.filter(pk=request.data['session'], status='closed').exists():
+        return Response(CLOSED_BOARD, status=409)
     with transaction.atomic():
         written = _apply_case_input(request, case, request.data)
     return Response({**_case(case), 'fhir_written': written})
@@ -322,6 +328,8 @@ def case_create(request):
     data = request.data
     _validate_case_input(request, data)
     session = get_object_or_404(MdtSession, pk=data.get('session'))
+    if session.status == 'closed':
+        return Response(CLOSED_BOARD, status=409)
     pid = data.get('patient_id')
     prefill = intake.intake_prefill(_patient_resources(pid), data.get('skipped_fields', []))
     question = next((f for f in prefill['fields'] if f['id'] == 'mdt.question'), {})

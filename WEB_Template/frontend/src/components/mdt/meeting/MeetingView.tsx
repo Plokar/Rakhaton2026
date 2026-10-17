@@ -356,9 +356,9 @@ function MeetingHeader({
           <span className="font-medium text-foreground">{discussed} / {count}</span> projednáno · {formatDuration(total)}
         </p>
       )}
-      <div className="ml-auto flex items-center gap-2">
-        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} title="Chat lékařů zasedání (C)">
-          <MessagesSquare aria-hidden /> Chat
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} aria-label="Chat" title="Chat lékařů zasedání (C)">
+          <MessagesSquare aria-hidden /> <span className="hidden sm:inline">Chat</span>
           {unread > 0 && (
             <>
               <span aria-hidden className="min-w-5 rounded-full bg-primary px-1.5 text-xs leading-5 tabular-nums text-primary-foreground">
@@ -368,12 +368,12 @@ function MeetingHeader({
             </>
           )}
         </Button>
-        <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
-          <MonitorUp aria-hidden /> Projektor
+        <Button variant="outline" size="lg" onClick={onProjector} aria-label="Projektor" title="Okno pro projektor (P)">
+          <MonitorUp aria-hidden /> <span className="hidden sm:inline">Projektor</span>
         </Button>
         {chair && board.status !== 'closed' && count > 0 && (
-          <Button variant="outline" size="lg" onClick={() => setClosing(true)} title="Ukončit board a stáhnout výstupy">
-            <CheckCheck aria-hidden /> Ukončit board
+          <Button variant="outline" size="lg" onClick={() => setClosing(true)} aria-label="Ukončit board" title="Ukončit board a stáhnout výstupy">
+            <CheckCheck aria-hidden /> <span className="hidden sm:inline">Ukončit board</span>
           </Button>
         )}
         {chair && board.status === 'closed' && (

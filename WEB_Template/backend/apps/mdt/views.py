@@ -499,10 +499,30 @@ def case_brief(request, cid):
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
         return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
-    job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
-                                       created_by=request.user)
+    params = {'config': _config(request.data, case)}
+    if feedback := _brief_feedback(request):
+        params['feedback'] = feedback
+    job = GenerationJob.objects.create(case=case, kind='brief', params=params, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+def _brief_feedback(request) -> dict | None:
+    """`{feedback: {text, sections?}}` při přegenerování: co AI udělala špatně a na co se zaměřit (T-323).
+    Text jde do LLM, proto pseudonymizace (lékař může omylem napsat jméno nebo RČ) a délkový limit."""
+    raw = request.data.get('feedback')
+    if not raw:
+        return None
+    from services.ai.pseudonymize import pseudonymize_text
+
+    text = pseudonymize_text(str(raw.get('text', '') if isinstance(raw, dict) else '').strip())
+    sections = raw.get('sections') or [] if isinstance(raw, dict) else None
+    if not isinstance(raw, dict) or not 3 <= len(text) <= 1000:
+        raise ValidationError({'feedback': 'Zpětná vazba: text 3–1000 znaků.'})
+    if not isinstance(sections, list) or any(s not in cfg.SECTION_ORDER for s in sections):
+        raise ValidationError({'feedback': 'Neplatná sekce (SectionId §8.1).'})
+    return {'text': text, 'sections': list(dict.fromkeys(sections)),
+            'by': request.user.get_full_name() or request.user.username, 'at': timezone.localtime().isoformat()}
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])

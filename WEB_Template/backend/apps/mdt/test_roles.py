@@ -80,6 +80,25 @@ def test_sessions_expand_cases_for_calendar(seeded):
     assert client.get('/api/mdt/sessions/?from=21.10.').status_code == 400
 
 
+def test_regenerate_brief_with_doctor_feedback(seeded, monkeypatch):
+    """T-323: přegenerování se zpětnou vazbou: validace, pseudonymizace, uložení v parametrech jobu."""
+    from apps.copilot import jobs
+    from apps.copilot.models import GenerationJob
+
+    monkeypatch.setattr(jobs, 'start', lambda job: None)                 # job se jen založí
+    case = MdtCase.objects.get(patient_fhir_id='P03')
+    url = f'/api/mdt/cases/{case.pk}/brief/'
+    client = as_user('onkolog')
+    assert client.post(url, {'feedback': {'text': 'x'}}, format='json').status_code == 400
+    assert client.post(url, {'feedback': {'text': 'Chybí CT', 'sections': ['nic']}}, format='json').status_code == 400
+    r = client.post(url, {'feedback': {'text': 'Pan Novák, RČ 670315/1234: souhrn vynechal CT hrudníku',
+                                       'sections': ['summary', 'summary']}}, format='json')
+    assert r.status_code == 202
+    feedback = GenerationJob.objects.get(pk=r.json()['job_id']).params['feedback']
+    assert feedback['sections'] == ['summary'] and feedback['by'] and '670315' not in feedback['text']
+    assert 'feedback' not in GenerationJob.objects.get(pk=client.post(url, {}, format='json').json()['job_id']).params
+
+
 def test_closed_board_rejects_move_and_intake(seeded):
     """Na uzavřený board nejde pacienta přesunout ani zařadit (409, T-518); úpravy v něm ano."""
     closed = MdtSession.objects.get(title='Mamární komise (urgentní)')

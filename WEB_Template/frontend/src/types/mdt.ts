@@ -113,6 +113,16 @@ export interface Brief {
   decision_support?: DecisionSupport;
   /** Ze všech Claim v podkladu (hlavička, sekce i B2). */
   stats: { claims_total: number; claims_unverified: number; missing_total: number };
+  /** Přegenerováno podle zpětné vazby lékaře k předchozí verzi (T-323). */
+  feedback?: BriefFeedback;
+}
+
+/** Co lékař vytkl předchozí verzi podkladu a na co se má AI zaměřit; `sections` prázdné = celý podklad. */
+export interface BriefFeedback {
+  text: string;
+  sections: SectionId[];
+  by: string;
+  at: string;
 }
 
 /**

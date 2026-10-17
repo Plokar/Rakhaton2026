@@ -6,9 +6,10 @@ dokumentem (`derivedFrom` + extension `derived-from`, Q15), pasáž guidelines n
 """
 from services.ai.text import resource_paragraphs, resource_text
 from services.fhir import client as fhir
-from services.fhir.ids import derived_from, parse_evidence_id
+from services.fhir.ids import derived_from_ids, parse_evidence_id
+from services.fhir.values import fhir_code, ref_id
 from services.iris import vector_store as vs
-from services.patients import _category_text, _code, _date, _ref_id, _text
+from services.patients import _category_text, _date, _text
 
 _AUTHOR_FIELDS = ('author', 'performer', 'resultsInterpreter', 'requester', 'asserter', 'recorder')
 
@@ -97,7 +98,7 @@ def _author(r: dict) -> dict | None:
     for field in _AUTHOR_FIELDS:
         refs = r.get(field) or []
         refs = refs if isinstance(refs, list) else [refs]
-        rid = next((_ref_id(x) for x in refs if (x.get('reference') or '').startswith('Practitioner/')), None)
+        rid = next((ref_id(x) for x in refs if (x.get('reference') or '').startswith('Practitioner/')), None)
         if rid:
             try:
                 p = fhir.read('Practitioner', rid)
@@ -116,12 +117,12 @@ def _value(o: dict) -> dict:
     return {
         'text': text, 'value': value, 'unit': q.get('unit'),
         'ref_low': rng.get('low', {}).get('value'), 'ref_high': rng.get('high', {}).get('value'),
-        'interpretation': _code((o.get('interpretation') or [{}])[0], 'ObservationInterpretation') or None,
+        'interpretation': fhir_code((o.get('interpretation') or [{}])[0], 'ObservationInterpretation') or None,
     }
 
 
 def _derived_ids(o: dict) -> list[str]:
-    return list(dict.fromkeys(_ref_id(x) for x in derived_from(o) if x.get('reference')))
+    return derived_from_ids(o)
 
 
 def _proms_text(r: dict) -> str | None:

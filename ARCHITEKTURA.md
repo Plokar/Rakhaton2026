@@ -355,7 +355,12 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 #### Backend — VPS
 
 - VPS **min. 4 vCPU / 8 GB RAM** (IRIS si vezme 2–3 GB), Ubuntu + Docker, DNS `A api.<doména>`.
-- Použít `WEB_Template/docker-compose.yml` (Traefik, backend, db, redis) a **přidat službu `iris`**:
+- **Postup (T-005, ověřeno lokálně jako projekt `rkprod`):**
+  1. `git clone` repa na VPS, `cd WEB_Template`, `cp .env.prod.example .env` a vyplnit: `API_DOMAIN`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` (URL Vercelu), `DJANGO_SECRET_KEY`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD` (2×), **`IRIS_PASSWORD`**, `MDT_DEMO_PASSWORD`, `GEMINI_API_KEY` (nebo `AI_PROVIDER=mock` a `MDT_DEMO_OFFLINE=True`);
+  2. e-mail pro Let's Encrypt v `traefik/traefik.yml` (`certificatesResolvers.letsencrypt.acme.email`);
+  3. `docker compose up -d --build` (frontend se nestaví, je v profilu `frontend`). První start backendu trvá ~3 min: `iris_init` změní výchozí heslo IRIS `SYS` na `IRIS_PASSWORD` (SuperUser, Admin, _SYSTEM), `ingest_dataset --if-empty` nahraje 1 091 resources + vektory, `collectstatic`, `seed_mdt` (demo účty, boardy, presety);
+  4. kontrola: `curl https://api.<doména>/api/health/` → 200; zvenku nesmí odpovídat 1972 ani 52773 (portál jen `ssh -L 52773:127.0.0.1:52773 <vps>`).
+- `WEB_Template/docker-compose.yml` už službu `iris` má (od T-005, níže pro přehled):
 
   ```yaml
   iris:
@@ -370,7 +375,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
       - "127.0.0.1:52773:52773"   # Management Portal / FHIR jen přes SSH tunel
     # 1972 nepublikovat; backend se připojuje interně na iris:1972
   ```
-- **Dataset** se do backend kontejneru dostane přes volume. Repo na VPS, `DATASET_DIR=/data/dataset`, mount `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro`.
+- **Dataset a data aplikace** se do backend kontejneru dostanou přes volume z checkoutu repa na VPS: dataset (`/data/dataset:ro`), báze `data/onko` (`/data/onko:ro`, T-318), `data/audio` (zapisovatel) a `data/demo_cache` (offline demo). `demo save` do `data/demo_cache` zapisuje jako `appuser`, na VPS tedy `chmod o+w data/demo_cache`, nebo cache uložit lokálně a commitnout.
 - **Bezpečnost serveru:**
   - **změnit výchozí heslo IRIS `SYS`**;
   - IRIS ani Postgres nepublikovat ven;
@@ -790,6 +795,8 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   - **OBC vždy**.
 
   Sada se pošle celá (≤ 23 pasáží). IRIS Vector Search ji seřadí podle relevance k otázce komise.
+
+  **Co je onkologická diagnóza** (T-320): kategorie „onkologická diagnóza“, nebo kód novotvaru (C00–C97, D00–D09, D37–D48) u `Condition` bez kategorie komorbidita / nežádoucí účinek léčby (data z jiného systému). Jediné pravidlo `services/rules/guideline_sets.py:is_oncologic` platí pro výběr guidelines, kontext AI, hlavičku, seznam pacientů, semafor i mCODE export. Diagnóza bez sady (např. C61, C21) dostane jen OBC. Hrany ověřují testovací pacienti P07–P12 v `data/dataset_test` (`run_checks.py`).
 - **Možnosti léčby:**
   1. LLM vrátí **2–4 možnosti**, každou s citací pasáže (`PRS-3.3`) a s vazbou na fakta pacienta (citace);
   2. u každé možnosti uvede, co pro ni chybí (např. „EGFR neznámý, viz PLI-1.3“);
@@ -930,7 +937,7 @@ Požadavek lékaře (FR-D4, D-015). Barva **není doporučení**. Říká, jestl
 - **Znalostní báze `data/onko/` (T-315):** nadmnožina katalogu pro další diagnózy a modality (postupy, pravidla se strojovými podmínkami, fakta, studie, normy). Stejná ID `VS-*` a stejné zdroje jako YAML hlídá `services/eval/test_onko_kb.py`. Napojení do aplikace je T-316, do té doby platí YAML.
 - **Napojení báze (T-316):** `services/rules/onko_kb.py:kb_for_patient(resources)` přidá do B2, bloku „Léčebné metody a odborníci“ a do `GET /cases/{cid}/compatibility/` **další postupy pro diagnózu pacienta**, které katalog nemá. Katalog a jeho kontrolní funkce zůstávají zdrojem pravdy (barvy P03 / P04 beze změny, pohledy rolí stojí jen na katalogu).
   - Fakta z FHIR s citacemi (`patient_facts`): MKN-10, věk, pohlaví, ECOG lékař / pacient a rozdíl, laboratoř podle LOINC z `fakta.tsv`, CrCl, ×ULN, LVEF a pokles, komorbidity podle MKN-10, léky podle ATC, IM / stent ve dnech, biomarkery (RAS, BRAF, MMR, EGFR, ALK, ROS1, PD-L1, HER2, HR, BRCA; poslední **známá** hodnota). Textová fakta (např. předchozí RT) zatím nejsou → ⚪.
-  - Výběr postupů: diagnóza, stadium (M1 vs. ne, římská stadia v kontextu), histologie SCLC / NSCLC, fenotyp (TNBC, HER2+/−, HR+, RAS wt), marker postupu; obecné postupy (`dg = *`) jen při indikaci OBC-2.x (paliativní péče, nutrice, G8 ≥ 70 let, genetika při RF-GENETIC, biopsie při RF-LESION). Studie se hodnotí ve screeningu RKT, ne tady.
+  - Výběr postupů: diagnóza, stadium (M1 vs. ne, římská stadia v kontextu, `mHSPC` / `mCRPC` = M1), histologie SCLC / NSCLC (`compatibility.lung_histology`: morfologie ICD-O-3 8041–8045, bez ní výslovná zmínka v textu; postupy PLI v katalogu mají `requires: nsclc`), u prostaty HSPC vs. CRPC podle výslovné zmínky (T-320). **Neuvedená histologie nebo kastrační status nic nevyřadí** (zadání: nehádat), fenotyp (TNBC, HER2+/−, HR+, RAS wt), marker postupu; obecné postupy (`dg = *`) jen při indikaci OBC-2.x (paliativní péče, nutrice, G8 ≥ 70 let, genetika při RF-GENETIC, biopsie při RF-LESION). Studie se hodnotí ve screeningu RKT, ne tady.
   - Barvu počítá `data/onko/q.py` (D-015). **Červená jen u pravidla z dodaných guidelines (`ov = D`) s faktem pacienta;** prahy báze mimo dataset sestavil AI agent a nikdo je zatím neověřil → max. oranžová a text „práh k ověření“. ⚪ pravidla jsou shrnutá v jednom řádku („N pravidel nelze posoudit; chybí údaj: …“), celková barva je dál nejhorší ze všech.
   - Nové zdroje `zdroje.tsv` (93) jsou v `external_sources.json` s `verified: ⚠ neověřeno`, resolver citací je vrátí. Báze se do backendu mountuje (`ONKO_KB_DIR`, dev compose `../data/onko:/data/onko:ro`); bez ní běží jen katalog.
 
@@ -953,7 +960,13 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 5. Lékař varování může odkliknout (stačí klik, bez důvodu). Komise v podkladu dál vidí problém, ale ne to, kdo ho odklikl (D-019). Odkliknutí jde do auditu (`DetectedIssue.mitigation`).
 6. Lékař zadá nebo potvrdí ECOG (velká číslice) a záměr **C/P** a zaškrtne připomínku „Snímek mladší než 3 měsíce“. Záměr se předvyplní z poslední MDT; když minulá MDT rozhodnutí odložila, nepředvyplní se.
 
-**Doporučené údaje a šablony (T-317 → T-318):** `data/onko/udaje.tsv` doplňuje povinná pole o doporučené údaje podle diagnózy. Chybějící se hlásí jako `IntakeWarning` s `kind: "missing"`, `severity: "low"`, id `DOP:<údaj>`, titulkem „Doporučeno: …“ a citací zmínky v podkladech. Do readiness se nepočítají. `data/onko/sablony.tsv` dává doporučený `BriefConfig` pro projektor podle diagnózy.
+**Doporučené údaje a šablony (T-317 → T-318):** `services/rules/templates.py` nad bází `data/onko` (referenční logika `q.py`), dokumenty a fakta bere z FHIR resources pacienta (za běhu z IRIS).
+
+- `data/onko/udaje.tsv` doplňuje povinná pole o doporučené údaje podle diagnózy. Chybějící se hlásí jako `IntakeWarning` s `kind: "missing"`, `severity: "low"`, id `DOP:<údaj>`, titulkem „Doporučeno: …“ a citací zmínky v podkladech.
+- Povinný údaj báze (`CHYBI:<údaj>`, `severity: "moderate"`) se hlásí jen tam, kde ho nehlídá pole formuláře (`INTAKE_FIELDS`) ani red flag (`RED_FLAG_ITEMS`), aby lékař neviděl dvě varování o tomtéž (P04: „Chybí: Osmolalita séra a moči“).
+- Přeskočit jde i údaj báze (`skipped_fields: ["pli.radioterapeut"]`). Do readiness se tato varování nepočítají.
+- `data/onko/sablony.tsv` dává doporučený `BriefConfig` pro projektor podle diagnózy a situace (`GET /api/mdt/cases/{cid}/template/`, `CaseTemplate` §8.6). Všech 31 šablon zakládá `seed_mdt` jako presety „Šablona: …“.
+- `data/onko/odbornosti.tsv` řadí podklad „pro mě“ podle odbornosti přihlášeného (`GET /api/mdt/cases/{cid}/for-me/`, `SpecialtyView` §8.6, T-319). Hlavička a souhrn zůstávají první (§7.3).
 
 **Zkratky (T-509, FR-R5):** `services/ai/abbreviations.py` a pravidla jako data v `services/ai/data/abbreviations.yaml` (docs/POZADAVKY_LEKARE.md §7.2).
 
@@ -1105,6 +1118,9 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
+| POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
+| GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), jen `mdt_admin` (T-319) |
+| PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319) |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem. Nic se nezapisuje (předseda, lékař) |
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
@@ -1112,6 +1128,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
+| GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
+| GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
@@ -1526,6 +1544,38 @@ interface Me {                                  // GET /api/mdt/me/
   name: string;
   role: "mdt_admin" | "mdt_doctor" | "mdt_viewer";   // superuser = mdt_admin, bez skupiny = mdt_viewer
   specialty: RoleId | null;
+}
+
+type KbItemStatus = "present" | "mention" | "stale" | "missing" | "not_applicable";   // mention = jen zmínka („doporučeno“, „probíhá“)
+
+interface KbItem {                              // údaj z katalogu data/onko/udaje.tsv u pacienta
+  id: string;                                   // "pli.vo2max" (ID báze; jde i do skipped_fields)
+  label: string;                                // "Zátěžový test (spiroergometrie VO2max, schodový test)"
+  status: KbItemStatus;
+  citations: EvidenceId[];                      // kde je údaj (nebo zmínka) v podkladech
+  age_days?: number;                            // u "stale": stáří posledního výsledku
+  warning?: IntakeWarning;                      // jen ve SpecialtyView: "Chybí: …" / "Doporučeno: …"
+}
+
+interface CaseTemplate {                        // GET /api/mdt/cases/{cid}/template/ (T-318)
+  template_id: string;                          // "sab-pli-radikalni"
+  name: string;                                 // "NSCLC I–III: operabilita vs. chemoradioterapie"
+  specialties: string;                          // kdo má být u stolu (text pro konfigurátor)
+  sources: EvidenceId[];                        // "PLI-2.1", "PLI-1.1", "PLI-3.1"
+  config: BriefConfig;                          // name "Šablona: …", is_preset
+  config_id: string | null;                     // preset se stejným názvem (seed_mdt), pro POST …/brief/ {config_id}
+  projector: KbItem[];                          // klíčové údaje velkým písmem na projektor (T-310)
+  trials: EvidenceId[];                         // "RKT-04"
+  warnings: IntakeWarning[];                    // všechna varování katalogu údajů (CHYBI:* i DOP:*)
+}
+
+interface SpecialtyView {                       // GET /api/mdt/cases/{cid}/for-me/ (T-319)
+  role: RoleId;
+  template_id: string;
+  sections: SectionId[];                        // "summary" první, pak sekce odbornosti, pak ostatní ze šablony
+  items: KbItem[];                              // údaje odbornosti v pořadí podle odbornosti, s varováním
+  procedures: { id: string; title: string; sources: EvidenceId[] }[];   // postupy modalit, o kterých odbornost rozhoduje
+  interests: { specialty: string; what: string; why: string; sources: EvidenceId[] }[];
 }
 
 interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTask[] (FR-P3)

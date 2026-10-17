@@ -1,0 +1,985 @@
+{
+  "resourceType": "Bundle",
+  "id": "P08-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P08",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P08",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P08"
+          }
+        ],
+        "name": [
+          {
+            "text": "Pacient P08 (fiktivní)"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1954",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 72
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P08-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P08-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P08-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P08-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P08-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P08-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P08-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P08-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P08-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P08-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P08-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P08-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P08-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P08-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C61",
+              "display": "Zhoubný novotvar předstojné žlázy (prostaty)"
+            }
+          ],
+          "text": "Zhoubný novotvar předstojné žlázy (prostaty)"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "onsetDateTime": "2026-09-10",
+        "bodySite": [
+          {
+            "text": "oba laloky prostaty"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8140/3",
+                  "display": "Adenokarcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C61"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT3a cN1 cM1b, stadium IVB (TNM 8. vyd.), Gleason 4+4 = 8 (ISUP 4)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P08-dg2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P08-dg2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C79.5",
+              "display": "Sekundární zhoubný novotvar kosti a kostní dřeně"
+            }
+          ],
+          "text": "Sekundární zhoubný novotvar kosti a kostní dřeně"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "onsetDateTime": "2026-09-24",
+        "bodySite": [
+          {
+            "text": "páteř L2–L4, pánev"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P08-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P08-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Esenciální hypertenze"
+            }
+          ],
+          "text": "Esenciální hypertenze"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "onsetDateTime": "2012-01"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P08-kom2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P08-kom2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I48.0",
+              "display": "Paroxysmální fibrilace síní"
+            }
+          ],
+          "text": "Paroxysmální fibrilace síní"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "onsetDateTime": "2020-06"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P08-med01",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P08-med01",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "C09AA05",
+              "display": "ramipril"
+            }
+          ],
+          "text": "ramipril"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "5 mg p.o. 1× denně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P08-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P08-med02",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P08-med02",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "B01AF02",
+              "display": "apixaban"
+            }
+          ],
+          "text": "apixaban"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "5 mg p.o. 2× denně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P08-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P08-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P08-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-09-10",
+        "issued": "2026-09-10T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P08-03"
+          }
+        ],
+        "conclusion": "Biopsie prostaty (12 vzorků): acinární adenokarcinom, Gleason 4+4 = 8 (ISUP 4) v 9 z 12 vzorků..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QmlvcHNpZSBwcm9zdGF0eSAoMTIgdnpvcmvFryk6IGFjaW7DoXJuw60gYWRlbm9rYXJjaW5vbSwgR2xlYXNvbiA0KzQgPSA4IChJU1VQIDQpIHYgOSB6IDEyIHZ6b3Jrxa8u",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-09-10"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P08-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P08-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "issued": "2026-10-12T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P08-02"
+          }
+        ],
+        "conclusion": "PSMA PET/CT: primární tumor prostaty, pánevní uzliny vpravo, osteoblastická ložiska L2–L4 a v pánvi (celkem 5 ložisek).",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UFNNQSBQRVQvQ1Q6IHByaW3DoXJuw60gdHVtb3IgcHJvc3RhdHksIHDDoW5ldm7DrSB1emxpbnkgdnByYXZvLCBvc3Rlb2JsYXN0aWNrw6EgbG/Fvmlza2EgTDLigJNMNCBhIHYgcMOhbnZpIChjZWxrZW0gNSBsb8W+aXNlaykuIFZpc2NlcsOhbG7DrSBtZXRhc3TDoXp5IG5lanNvdS4=",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-12"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P08-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P08-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "date": "2026-10-14T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P08-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA3MiBsZXQsIGh5cGVydG9uaWsgcyBwYXJveHlzbcOhbG7DrSBmaWJyaWxhY8OtIHPDrW7DrSBuYSBhcGl4YWJhbnUuIEJvbGVzdGkgemFkIFZBUyAzLiBQU0EgMTQ4IMK1Zy9sLiBOb3bEmyB6amnFoXTEm27DqSwgaG9ybW9uw6FsbsSbIHNlbnppdGl2bsOtIG9uZW1vY27Em27DrSwgZG9zdWQgYmV6IGFuZHJvZ2VubsOtIGRlcHJpdmFjZS4gRUNPRyAxLiBDaGNlIHrFr3N0YXQgYWt0aXZuw60sIGplemTDrSBuYSBrb2xlLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-14"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P08-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT3a cN1 cM1b, stadium IVB (TNM 8. vyd.), Gleason 4+4 = 8 (ISUP 4)",
+        "focus": [
+          {
+            "reference": "Condition/P08-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P08-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P08-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 84,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-09-10",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P08-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "PSA"
+        },
+        "valueString": "148 µg/l"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 131,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 3.8,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 221,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 96,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P08-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P08-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 9,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P08-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P08-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P08-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Urologie – prostata"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P08"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P08-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Metastatický hormonálně senzitivní karcinom prostaty s kostními metastázami: ADT + ARPI, nebo trojkombinace ADT + docetaxel + darolutamid?"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P08-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P08-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P08-zad01"
+        },
+        "for": {
+          "reference": "Patient/P08"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P08-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-10-28T14:00:00+02:00"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -25,8 +25,9 @@ from typing import Callable, Iterable
 
 import yaml
 
+from services.fhir.values import cc_text, fhir_code
 from services.rules import red_flags as rf
-from services.rules.red_flags import PatientData, _cc_text, _code, _date, _num
+from services.rules.red_flags import PatientData, _date, _num
 
 LIGHT_ORDER = {"red": 0, "orange": 1, "grey": 2, "skipped": 3, "green": 4}
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -84,11 +85,11 @@ class Facts(PatientData):
 
     def administrations(self, atc_prefixes: tuple[str, ...]) -> list[dict]:
         items = [m for m in self.by_type.get("MedicationAdministration", [])
-                 if _code(m.get("medicationCodeableConcept"), "atc").startswith(atc_prefixes)]
+                 if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(atc_prefixes)]
         return sorted(items, key=lambda m: m.get("effectiveDateTime", ""))
 
     def conditions_icd(self, prefixes: tuple[str, ...]) -> list[dict]:
-        return [c for c in self.conditions if _code(c.get("code"), "icd-10").startswith(prefixes)]
+        return [c for c in self.conditions if fhir_code(c.get("code"), "icd-10").startswith(prefixes)]
 
     def weight(self) -> tuple[float, str] | None:
         series = self.by_loinc("weight")
@@ -253,11 +254,11 @@ def cardiac_events(f: Facts, rule: dict) -> Result:
         onset = c.get("onsetDateTime", "")
         events.append(("IM", _date(onset if len(onset) >= 10 else f"{onset[:7]}-01" if onset else None), c["id"]))
     for p in f.by_type.get("Procedure", []):
-        if "stent" in _cc_text(p.get("code")).lower():
+        if "stent" in cc_text(p.get("code")).lower():
             events.append(("stent", _date(p.get("performedDateTime")), p["id"]))
     antiplatelet = [m for m in f.active_medications()
-                    if _code(m.get("medicationCodeableConcept"), "atc").startswith(ANTIPLATELET_ATC)]
-    info = (f"; užívá {_cc_text(antiplatelet[0].get('medicationCodeableConcept'))} → info pro operatéra"
+                    if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(ANTIPLATELET_ATC)]
+    info = (f"; užívá {cc_text(antiplatelet[0].get('medicationCodeableConcept'))} → info pro operatéra"
             if antiplatelet else "")
     citations = [e[2] for e in events] + [m["id"] for m in antiplatelet]
     if not events:
@@ -333,8 +334,8 @@ def flr(f: Facts, rule: dict) -> Result:
 
 def liver_restaging(f: Facts, rule: dict) -> Result:
     reports = f.radiology()
-    parts = {"CT hrudníku": [r for r in reports if "hrudník" in _cc_text(r.get("code")).lower()],
-             "MR jater": [r for r in reports if "mr jater" in _cc_text(r.get("code")).lower()]}
+    parts = {"CT hrudníku": [r for r in reports if "hrudník" in cc_text(r.get("code")).lower()],
+             "MR jater": [r for r in reports if "mr jater" in cc_text(r.get("code")).lower()]}
     missing, citations, present = [], [], []
     for label, items in parts.items():
         if not items:
@@ -363,7 +364,7 @@ LIVER_FEATURES = (
 
 
 def liver_extent(f: Facts, rule: dict) -> Result:
-    liver = [r for r in f.radiology() if re.search(r"jater|játr", _cc_text(r.get("code")), re.IGNORECASE)]
+    liver = [r for r in f.radiology() if re.search(r"jater|játr", cc_text(r.get("code")), re.IGNORECASE)]
     if not liver:
         return Result("grey", "Zobrazení jater v podkladech není")
     last = liver[-1]
@@ -430,10 +431,10 @@ def bevacizumab_safety(f: Facts, rule: dict) -> Result:
     if uncontrolled:
         return Result("red", "Nekontrolovaná hypertenze → bevacizumab nezahajovat", uncontrolled[-1:])
     events = f.conditions_icd(ARTERIAL_EVENT_ICD)
-    stents = [p for p in f.by_type.get("Procedure", []) if "stent" in _cc_text(p.get("code")).lower()]
+    stents = [p for p in f.by_type.get("Procedure", []) if "stent" in cc_text(p.get("code")).lower()]
     controlled = f.find_paragraphs(re.compile(r"hypertenz\w*\s+kompenzovan", re.IGNORECASE))
     if events or stents:
-        described = ", ".join(_cc_text(c.get("code")) for c in events) or "koronární stent"
+        described = ", ".join(cc_text(c.get("code")) for c in events) or "koronární stent"
         return Result("orange", f"Arteriální tromboembolie v anamnéze ({described}) → opatrnost",
                       [c["id"] for c in events] + [p["id"] for p in stents] + controlled[-1:])
     if controlled:
@@ -536,7 +537,7 @@ def dyspnea_walking(f: Facts, rule: dict) -> Result:
 
 
 def lung_staging(f: Facts, rule: dict) -> Result:
-    brain = [r for r in f.radiology() if "mr mozku" in _cc_text(r.get("code")).lower()]
+    brain = [r for r in f.radiology() if "mr mozku" in cc_text(r.get("code")).lower()]
     ebus = f.find_paragraphs(re.compile(r"EBUS", re.IGNORECASE), ("DiagnosticReport", "DocumentReference"))
     missing = (["MR mozku"] if not brain else []) + (["invazivní staging mediastina"] if not ebus else [])
     citations = ([brain[-1]["id"]] if brain else []) + ebus[-1:]
@@ -607,10 +608,10 @@ def cisplatin_fitness(f: Facts, rule: dict) -> Result:
 
 def steroid_glucose(f: Facts, rule: dict) -> Result | None:
     steroids = [m for m in f.active_medications()
-                if _code(m.get("medicationCodeableConcept"), "atc").startswith(rf.STEROID_ATC)]
+                if fhir_code(m.get("medicationCodeableConcept"), "atc").startswith(rf.STEROID_ATC)]
     if not steroids:
         return None                                   # bez systémového kortikoidu pravidlo neplatí
-    name = _cc_text(steroids[0].get("medicationCodeableConcept"))
+    name = cc_text(steroids[0].get("medicationCodeableConcept"))
     glucose = f.latest("glu")
     if glucose is None:
         return Result("grey", f"{name}: glykémie v podkladech není", [steroids[0]["id"]])
@@ -823,7 +824,28 @@ def _er_positive(f: Facts) -> bool:
                if re.match(r"(ER\b|Estrogen)", o.text))
 
 
+SCLC_MORPHOLOGY = re.compile(r"^804[1-5]/")                 # ICD-O-3 malobuněčný karcinom a jeho varianty
+SCLC_TEXT = re.compile(r"(?<!ne)malobuněčn", re.IGNORECASE)
+NSCLC_TEXT = re.compile(r"nemalobuněčn|\bNSCLC\b", re.IGNORECASE)
+
+
+def lung_histology(f: rf.PatientData) -> str | None:
+    """„SCLC“ / „NSCLC“ u C34: morfologie ICD-O-3 (8041–8045 = SCLC), bez ní výslovná zmínka v textech.
+    Neuvedená histologie = `None`: nic se nevyřadí, nehádá se (zadání, pravidlo 3; T-320)."""
+    lung = [c for c in f.oncologic if fhir_code(c.get("code"), "icd-10").startswith("C34")]
+    morphologies = [x.get("code", "") for c in lung for e in c.get("extension", [])
+                    if e.get("url", "").endswith("/icd-o-3-morfologie")
+                    for x in (e.get("valueCodeableConcept") or {}).get("coding", [])]
+    if morphologies:
+        return "SCLC" if any(SCLC_MORPHOLOGY.match(m) for m in morphologies) else "NSCLC"
+    texts = list(f.texts.values())
+    if any(SCLC_TEXT.search(t) for t in texts):
+        return "SCLC"
+    return "NSCLC" if any(NSCLC_TEXT.search(t) for t in texts) else None
+
+
 REQUIRES: dict[str, Callable[[Facts], bool]] = {
+    "nsclc": lambda f: lung_histology(f) != "SCLC",
     "her2_positive": lambda f: any(state == "positive" for _, state in _her2_samples(f)),
     "her2_tested": lambda f: bool(_her2_samples(f)),
     "hr_positive_her2_not_positive": lambda f: _er_positive(f)
@@ -859,7 +881,7 @@ def _applies(procedure: dict, f: Facts) -> bool:
     if procedure.get("requires") and not REQUIRES[procedure["requires"]](f):
         return False
     required = procedure.get("requires_icd")
-    codes = [_code(c.get("code"), "icd-10") for c in f.oncologic]
+    codes = [fhir_code(c.get("code"), "icd-10") for c in f.oncologic]
     return not required or any(code.startswith(tuple(required)) for code in codes)
 
 

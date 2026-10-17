@@ -1,0 +1,975 @@
+{
+  "resourceType": "Bundle",
+  "id": "P12-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P12",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P12",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P12"
+          }
+        ],
+        "name": [
+          {
+            "text": "Pacient P12 (fiktivní)"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1958",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 68
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P12-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P12-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P12-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P12-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P12-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P12-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P12-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P12-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P12-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P12-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P12-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P12-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P12-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P12-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "hlavní diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C18.7",
+              "display": "Zhoubný novotvar esovité kličky tlustého střeva (sigmatu)"
+            }
+          ],
+          "text": "Zhoubný novotvar esovité kličky tlustého střeva (sigmatu)"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "onsetDateTime": "2026-04-02",
+        "bodySite": [
+          {
+            "text": "colon sigmoideum"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8140/3",
+                  "display": "Adenokarcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C18.7"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT3 cN1 cM1a, stadium IVA (TNM 8. vyd.)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P12-dg2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P12-dg2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "hlavní diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C78.7",
+              "display": "Sekundární zhoubný novotvar jater a intrahepatálních žlučovodů"
+            }
+          ],
+          "text": "Sekundární zhoubný novotvar jater a intrahepatálních žlučovodů"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "onsetDateTime": "2026-04-10",
+        "bodySite": [
+          {
+            "text": "játra, 3 ložiska v pravém laloku"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P12-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P12-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Esenciální hypertenze"
+            }
+          ],
+          "text": "Esenciální hypertenze"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "onsetDateTime": "2016-09"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P12-med01",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P12-med01",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "C08CA01",
+              "display": "amlodipin"
+            }
+          ],
+          "text": "amlodipin"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "5 mg p.o. 1× denně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P12-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P12-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P12-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-04-02",
+        "issued": "2026-04-02T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P12-03"
+          }
+        ],
+        "conclusion": "Biopsie sigmatu: adenokarcinom G2, pMMR, KRAS G12V..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QmlvcHNpZSBzaWdtYXR1OiBhZGVub2thcmNpbm9tIEcyLCBwTU1SLCBLUkFTIEcxMlYu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-04-02"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P12-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P12-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "issued": "2026-10-12T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P12-02"
+          }
+        ],
+        "conclusion": "CT břicha po 6 cyklech FOLFOX: jaterní metastázy v pravém laloku zmenšené o 35 %, nová ložiska nejsou.",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1QgYsWZaWNoYSBwbyA2IGN5a2xlY2ggRk9MRk9YOiBqYXRlcm7DrSBtZXRhc3TDoXp5IHYgcHJhdsOpbSBsYWxva3Ugem1lbsWhZW7DqSBvIDM1ICUsIG5vdsOhIGxvxb5pc2thIG5lanNvdS4gT2RoYWRvdmFuw70gRkxSIHBvIHByYXZvc3RyYW5uw6kgaGVwYXRla3RvbWlpIDM0ICUu",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-12"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P12-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P12-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "date": "2026-10-14T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P12-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA2OCBsZXQgcG8gNiBjeWtsZWNoIEZPTEZPWC4gTmV1cm9wYXRpZSBHMS4gRUNPRyAxLiBadmHFvm92w6FuYSByZXNla2NlIGphdGVyLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-14"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P12-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT3 cN1 cM1a, stadium IVA (TNM 8. vyd.)",
+        "focus": [
+          {
+            "reference": "Condition/P12-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P12-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P12-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 82,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-04-02",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P12-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "KRAS"
+        },
+        "valueString": "mutace G12V"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-04-02",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P12-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "BRAF V600E"
+        },
+        "valueString": "neprokázána (wild-type)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-bm03",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-bm03",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-04-02",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P12-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "MMR (IHC)"
+        },
+        "valueString": "zachovalá exprese (pMMR)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 119,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 2.4,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 176,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 90,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P12-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P12-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 13,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P12-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P12-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P12-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: GIT – kolorektum"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P12"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P12-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Karcinom sigmatu s jaterními metastázami po 6 cyklech FOLFOX: resekabilita jater?"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P12-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P12-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P12-zad01"
+        },
+        "for": {
+          "reference": "Patient/P12"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P12-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-10-28T14:00:00+02:00"
+          }
+        }
+      }
+    }
+  ]
+}

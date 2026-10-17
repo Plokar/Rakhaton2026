@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from services.rules.red_flags import PatientData, _cc_text, allergies, prior_procedures
+from services.fhir.values import cc_text
+from services.rules.red_flags import PatientData, allergies, prior_procedures
 
 LABELS = {"implant": "Implantát", "surgery": "Předchozí operace", "radiotherapy": "Předchozí radioterapie"}
 
@@ -30,7 +31,7 @@ def header_alerts(resources: Iterable[dict]) -> list[dict]:
         for p in procedures:
             when = (p.get("performedDateTime") or p.get("performedPeriod", {}).get("start") or "")[:10]
             reports = [r.get("reference", "").rsplit("/", 1)[-1] for r in p.get("report", [])]
-            alerts.append(_claim(len(alerts) + 1, f"{LABELS[kind]}: {_cc_text(p.get('code'))}"
+            alerts.append(_claim(len(alerts) + 1, f"{LABELS[kind]}: {cc_text(p.get('code'))}"
                                  + (f" ({when})" if when else ""), [p["id"], *filter(None, reports)]))
     return alerts
 

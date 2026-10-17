@@ -17,14 +17,7 @@ services:
       - traefik_certs:/acme.json
     networks:
       - app-network
-    labels:
-      - "traefik.enable=true"
-      # Dashboard route (chráněn basicAuth)
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.yourdomain.com`)"
-      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
-      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefik-dashboard.service=api@internal"
-      # - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth@file"
+    # Dashboard Traefiku se ven nepublikuje (bez basicAuth by byl veřejný); MDT Copilot: ARCH §3.4
     healthcheck:
       test: ["CMD", "traefik", "healthcheck"]
       interval: 30s
@@ -92,6 +85,23 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings_prod
       DJANGO_DEBUG: "False"
+      # MDT Copilot (ARCH §3.4, §9): IRIS jen interně, dataset a báze read-only z checkoutu repa na VPS
+      IRIS_HOST: iris
+      IRIS_PORT: "1972"
+      IRIS_NAMESPACE: FHIRSERVER
+      IRIS_USER: SuperUser
+      IRIS_PASSWORD: ${IRIS_PASSWORD:?IRIS_PASSWORD v .env (ne výchozí SYS)}
+      FHIR_BASE_URL: http://iris:52773/fhir/r4
+      DATASET_DIR: /data/dataset
+      ONKO_KB_DIR: /data/onko
+      ONKO_DATASET_DIR: /data/dataset
+      ONKO_GUIDELINES_DIR: /data/dataset/guidelines
+      ONKO_EXT_CATALOG: /code/services/iris/data/external_sources.json
+      ONKO_APP_RULES: /code/services/rules/data/compatibility_rules.yaml
+      AUDIO_DIR: /data/audio
+      MDT_DEMO_CACHE_DIR: /data/demo_cache
+      MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
+      MDT_SEED: ${MDT_SEED:-True}
     expose:
       - "8000"
     depends_on:
@@ -99,21 +109,25 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      iris:
+        condition: service_started
     networks:
       - app-network
     volumes:
       - backend_static:/code/staticfiles
       - backend_media:/code/media
+      - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
+      - ../data/onko:/data/onko:ro
+      - ../data/audio:/data/audio:ro
+      - ../data/demo_cache:/data/demo_cache
     labels:
       - "traefik.enable=true"
-      # API routes
-      - "traefik.http.routers.backend.rule=Host(`yourdomain.com`) && PathPrefix(`/api`, `/admin`, `/ws`)"
+      # API na vlastní doméně (api.<doména>); frontend běží na Vercelu a volá /api přes rewrites (D-003)
+      - "traefik.http.routers.backend.rule=Host(`${API_DOMAIN:?API_DOMAIN v .env, např. api.example.cz}`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/ws`) || PathPrefix(`/static`))"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
       - "traefik.http.routers.backend.middlewares=security-headers@file,rate-limit-api@file"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      # WebSocket podpora
-      - "traefik.http.routers.backend.rule=Host(`yourdomain.com`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/ws`))"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/"]
       interval: 30s
@@ -122,9 +136,29 @@ services:
       start_period: 60s
 
   # ===========================================================================
+  # IRIS for Health – FHIR R4 + Vector Search (ARCH §3.4, §4.2)
+  # Ven nic: backend se připojuje interně na iris:1972 a iris:52773.
+  # Management Portal jen přes SSH tunel: ssh -L 52773:127.0.0.1:52773 <vps>
+  # Výchozí heslo SYS změní `iris_init` při startu backendu na IRIS_PASSWORD.
+  # ===========================================================================
+  iris:
+    build: ./iris
+    restart: unless-stopped
+    environment:
+      ISC_DATA_DIRECTORY: /durable
+    volumes:
+      - iris_data:/durable
+    ports:
+      - "127.0.0.1:52773:52773"
+    networks:
+      - app-network
+
+  # ===========================================================================
   # FRONTEND – Next.js (production build)
+  # MDT Copilot nasazuje frontend na Vercel (D-001), tady jen volitelně: --profile frontend
   # ===========================================================================
   frontend:
+    profiles: ["frontend"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -264,6 +298,8 @@ services:
   #     - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
 volumes:
+  iris_data:
+    driver: local
   postgres_data:
     driver: local
   redis_data:
@@ -281,7 +317,4 @@ volumes:
 
 networks:
   app-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    driver: bridge   # bez pevného subnetu: 172.20.0.0/16 se na sdíleném stroji kryl s jinou sítí

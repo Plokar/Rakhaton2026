@@ -3,9 +3,12 @@ JWT Authentication – Serializers
 """
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.db import transaction
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from apps.mdt import roles
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -51,10 +54,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         label='Potvrzení hesla'
     )
+    # MDT (T-319): odbornost je povinná, řadí podklad „pro mě“; roli (prohlížející) může předseda změnit
+    specialty = serializers.ChoiceField(choices=roles.SPECIALTIES, write_only=True, label='Odbornost')
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2', 'first_name', 'last_name']
+        fields = ['username', 'email', 'password', 'password2', 'first_name', 'last_name', 'specialty']
         extra_kwargs = {
             'first_name': {'required': False},
             'last_name': {'required': False},
@@ -67,7 +72,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password2')
-        user = User.objects.create_user(**validated_data)
+        specialty = validated_data.pop('specialty')
+        with transaction.atomic():
+            user = User.objects.create_user(**validated_data)
+            roles.assign(user, role=roles.VIEWER, specialty=specialty)
         return user
 
 

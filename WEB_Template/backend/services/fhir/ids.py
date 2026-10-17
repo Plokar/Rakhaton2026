@@ -10,6 +10,8 @@
 import re
 from dataclasses import dataclass
 
+from services.fhir.values import ref_id
+
 _INVALID_ID_CHARS = re.compile(r'[^A-Za-z0-9.\-]')
 _REFERENCE = re.compile(r'^(?P<head>(?:.*/)?[A-Z][A-Za-z]+/)(?P<id>[^/]+)(?P<history>/_history/.+)?$')
 
@@ -98,6 +100,11 @@ def derived_from(resource: dict) -> list[dict]:
         if e.get('url') == DERIVED_FROM_EXTENSION and e.get('valueReference')
     ]
     return refs
+
+
+def derived_from_ids(resource: dict) -> list[str]:
+    """ID zdrojových dokumentů hodnoty (bez duplicit), pro citace: ``P01-bm01`` → ``['P01-pat01']``."""
+    return [i for i in dict.fromkeys(ref_id(r) for r in derived_from(resource)) if i]
 
 
 def patient_id_for(rid: str) -> str | None:

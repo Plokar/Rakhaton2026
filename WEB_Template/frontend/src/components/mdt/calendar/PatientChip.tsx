@@ -72,6 +72,7 @@ export const PatientChip = React.memo(function PatientChip({
   item,
   session,
   draggable,
+  mine = false,
   dimmed,
   layoutId,
   actions,
@@ -80,6 +81,8 @@ export const PatientChip = React.memo(function PatientChip({
   session: MdtSessionListItem;
   /** Smí ho přetáhnout (role, otevřený board, široká obrazovka). */
   draggable: boolean;
+  /** Můj pacient (zařadil jsem ho) a smím s ním hýbat: lehce zvýrazněný. */
+  mine?: boolean;
   /** Zdrojová pozice během tažení (zástupný řádek). */
   dimmed: boolean;
   /** Sdílený layoutId: čip po přesunu „dojede“ do nového zasedání (NAVRH_UI §3.3). */
@@ -106,7 +109,12 @@ export const PatientChip = React.memo(function PatientChip({
           <m.li
             layout="position"
             layoutId={layoutId}
-            className="group/chip relative rounded-md transition-colors hover:bg-muted/70 has-[:focus-visible]:bg-muted/70"
+            className={cn(
+              'group/chip relative rounded-md transition-colors',
+              mine
+                ? 'bg-primary/8 ring-1 ring-inset ring-primary/20 hover:bg-primary/14 has-[:focus-visible]:bg-primary/14'
+                : 'hover:bg-muted/70 has-[:focus-visible]:bg-muted/70',
+            )}
           />
         }
       >
@@ -114,7 +122,8 @@ export const PatientChip = React.memo(function PatientChip({
           ref={setNodeRef}
           {...attributes}
           {...listeners}
-          aria-label={`${label}${item.patient?.diagnosis ? `, ${item.patient.diagnosis.icd10}` : ''}`}
+          title={mine ? 'Váš pacient, můžete ho přesunout' : undefined}
+          aria-label={`${label}${item.patient?.diagnosis ? `, ${item.patient.diagnosis.icd10}` : ''}${mine ? ', váš pacient' : ''}`}
           onClick={actions.onOpen}
           onKeyDown={(e) => {
             listeners?.onKeyDown?.(e);

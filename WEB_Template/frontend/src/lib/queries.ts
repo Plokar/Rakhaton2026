@@ -4,7 +4,7 @@ import * as React from 'react';
 import { QueryClient, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api';
 import { mdtApi, type SessionInput, type StoredBrief } from '@/lib/mdt-api';
-import type { Me, MdtCase, MdtRole, MdtSessionDetail, MdtSessionListItem, RoleId } from '@/types/mdt';
+import type { Me, MdtCase, MdtRole, MdtSessionDetail, MdtSessionListItem, ProjectorLayout, RoleId } from '@/types/mdt';
 
 /**
  * Serverová data pro UI v2 (docs/NAVRH_UI.md §10.3): jedna cache pro sidebar, kalendář, jednání,
@@ -258,6 +258,29 @@ export function useMoveCase() {
   });
 }
 
+/** Pořadí pacientů v agendě (T-324, jen předseda): optimisticky v cache boardu, při chybě návrat. */
+export function useAgendaOrder(sessionId: number) {
+  const client = useQueryClient();
+  const key = queryKeys.session(sessionId);
+  return useMutation({
+    mutationFn: (caseIds: number[]) => mdtApi.setAgendaOrder(sessionId, caseIds),
+    onMutate: async (caseIds) => {
+      await client.cancelQueries({ queryKey: key });
+      const prev = client.getQueryData<MdtSessionDetail>(key);
+      if (prev) {
+        const position = new Map(caseIds.map((id, i) => [id, i]));
+        client.setQueryData(key, { ...prev, cases: prev.cases.map((c) => ({ ...c, order: position.get(c.id ?? -1) ?? c.order })) });
+      }
+      return { prev };
+    },
+    onError: (_error, _ids, context) => {
+      if (context?.prev) client.setQueryData(key, context.prev);
+    },
+    onSuccess: (agenda) => client.setQueryData(key, agenda),
+    onSettled: () => void client.invalidateQueries({ queryKey: queryKeys.sessions }),
+  });
+}
+
 /** Stav případu v agendě (jen předseda): projednáno / zpět na řadu. Optimisticky v cache boardu. */
 export function useCaseStatus(sessionId: number | null | undefined) {
   const client = useQueryClient();
@@ -269,6 +292,45 @@ export function useCaseStatus(sessionId: number | null | undefined) {
       await client.cancelQueries({ queryKey: key });
       const prev = client.getQueryData<MdtSessionDetail>(key);
       if (prev) client.setQueryData(key, { ...prev, cases: prev.cases.map((c) => (c.id === caseId ? { ...c, status } : c)) });
+      return { prev };
+    },
+    onError: (_error, _vars, context) => {
+      if (sessionId && context?.prev) client.setQueryData(queryKeys.session(sessionId), context.prev);
+    },
+    onSettled: () => {
+      if (sessionId) void client.invalidateQueries({ queryKey: queryKeys.session(sessionId) });
+    },
+  });
+}
+
+/** Záznam boardů (T-333): uzavřené boardy, jen předseda. */
+export function useRecordsQuery(enabled = true) {
+  return useQuery({ queryKey: ['records'], queryFn: () => mdtApi.getRecords(), enabled });
+}
+
+/** Záznam jednoho boardu (nabídka stažení po ukončení, T-333). */
+export function useSessionRecordQuery(sessionId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ['session', String(sessionId), 'record'],
+    queryFn: () => mdtApi.getSessionRecord(sessionId as number),
+    enabled: enabled && sessionId != null,
+  });
+}
+
+/** Pořadí údajů na projektoru (T-332): optimisticky v agendě boardu, po uložení se obnoví. */
+export function useProjectorLayout(sessionId: number | null | undefined) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ caseId, layout }: { caseId: number; layout: ProjectorLayout }) =>
+      mdtApi.updateCase(caseId, { projector_layout: layout }),
+    onMutate: async ({ caseId, layout }) => {
+      if (!sessionId) return {};
+      const key = queryKeys.session(sessionId);
+      await client.cancelQueries({ queryKey: key });
+      const prev = client.getQueryData<MdtSessionDetail>(key);
+      if (prev) {
+        client.setQueryData(key, { ...prev, cases: prev.cases.map((c) => (c.id === caseId ? { ...c, projector_layout: layout } : c)) });
+      }
       return { prev };
     },
     onError: (_error, _vars, context) => {
@@ -299,6 +361,20 @@ export function useSaveSession() {
     mutationFn: ({ id, input }: { id?: number; input: SessionInput }) =>
       id ? mdtApi.updateSession(id, input) : mdtApi.createSession(input),
     onSuccess: (saved) => {
+      void client.invalidateQueries({ queryKey: ['records'] });
+      void client.invalidateQueries({ queryKey: queryKeys.sessions });
+      void client.invalidateQueries({ queryKey: queryKeys.session(saved.id) });
+    },
+  });
+}
+
+/** Ukončení a znovuotevření boardu (T-333, jen předseda): jen stav, datum se neposílá (nezapisuje IRIS). */
+export function useSessionStatus() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: MdtSessionListItem['status'] }) => mdtApi.updateSession(id, { status }),
+    onSuccess: (saved) => {
+      void client.invalidateQueries({ queryKey: ['records'] });
       void client.invalidateQueries({ queryKey: queryKeys.sessions });
       void client.invalidateQueries({ queryKey: queryKeys.session(saved.id) });
     },

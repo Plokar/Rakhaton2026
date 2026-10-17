@@ -15,7 +15,7 @@ import { agendaOrder, apiErrorMessage, useBriefQuery, useCaseLocation, useForMeQ
 import { cn } from '@/lib/utils';
 import type { Brief, BriefSection, MdtCase, MdtSessionDetail, SectionId, TimelineEvent } from '@/types/mdt';
 import { AiBlock } from '../AiBlock';
-import { Citations } from '../citations';
+import { CitationProvider, Citations, collectCitations } from '../citations';
 import { ClaimItem, ClaimList, SectionClaims } from '../ClaimList';
 import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-source';
 import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
@@ -25,15 +25,18 @@ import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSo
 import { RedFlagList } from '../RedFlagList';
 import { ROLE_META } from '../roles';
 import { RoleSection } from '../RoleSection';
+import { SourceDrawer } from '../SourceDrawer';
 import { Timeline } from '../Timeline';
 import { TreatmentOptions } from '../TreatmentOptions';
 import { TrialScreening } from '../TrialScreening';
 import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './DetailSection';
 import { ForMePanel } from './ForMePanel';
 import { MyTasks } from '../MyTasks';
+import { NationalGuidelines } from '../NationalGuidelines';
 import { CaseAsk } from '../CaseAsk';
 import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { SimilarCases } from '../SimilarCases';
+import { VerifierPanel } from '../VerifierPanel';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -149,6 +152,11 @@ function DetailLayout({
 }) {
   const me = useMe();
   const isDemo = caseKey === DEMO_CASE;
+  // Citace v sekcích pod rychlým přehledem (souhrn, léčba, varování, odbornosti…) otevírají zdroj ve stejném
+  // panelu jako přehled; rychlý přehled má vlastní (QuickViewRoot). Dřív v detailu klik na citaci nic neudělal.
+  const [sourceId, setSourceId] = React.useState<string | null>(null);
+  const citationOrder = React.useMemo(() => collectCitations([brief, timeline ?? []]), [brief, timeline]);
+  const closeSource = React.useCallback(() => setSourceId(null), []);
   // T-326: podklad generuje zadávající lékař, přizvaný lékař nebo předseda
   const canGenerate = !isDemo && (item ? can.editCase(me, item) : can.manageBoards(me));
   const hideUnverified = brief?.config.hide_unverified ?? false;
@@ -294,7 +302,7 @@ function DetailLayout({
           }
         : null,
     lecba:
-      brief && (ds || sectionsOf(brief, 'modalities').length)
+      brief && (ds || sectionsOf(brief, 'modalities').length || brief.national_guidelines?.length)
         ? {
             def: { id: 'lecba', label: 'Léčba a studie' },
             node: (
@@ -316,6 +324,7 @@ function DetailLayout({
                       </AiBlock>
                     </>
                   )}
+                  <NationalGuidelines items={brief.national_guidelines} />
                 </div>
               </DetailSection>
             ),
@@ -385,6 +394,7 @@ function DetailLayout({
   const sections = shown.map((b) => b.def);
 
   return (
+    <CitationProvider order={citationOrder} activeId={sourceId} onOpen={setSourceId}>
     <SectionsProvider initialOpen={['prehled', 'pro-me', 'varovani']}>
       <PageCrumbs
         items={[
@@ -427,6 +437,7 @@ function DetailLayout({
           ))}
 
           {brief?.feedback && <FeedbackNote feedback={brief.feedback} />}
+          {brief && <VerifierPanel verifier={brief.verifier} />}
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">
               Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
@@ -437,6 +448,8 @@ function DetailLayout({
         </div>
       </div>
     </SectionsProvider>
+    <SourceDrawer evidenceId={sourceId} loadSource={sources.loadSource} onClose={closeSource} />
+    </CitationProvider>
   );
 }
 

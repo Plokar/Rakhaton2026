@@ -102,10 +102,30 @@ export interface BriefHeader {
   alerts: Claim[];
 }
 
+export interface BriefVerifier {
+  status: "ok" | "partial" | "error" | "off";
+  model: string;
+  checked: number;
+  rejected: number;
+  unchecked: number;
+  issues: { claim_id: string; verdict: "unsupported" | "uncertain" | "unchecked"; issue: string }[];
+}
+
+/** Pasáž Modré knihy ČOS, kterou měl podklad k dispozici (národní doporučené postupy). */
+export interface NationalGuideline {
+  /** "EXT-MK-4.6.3" = oddíl 4.6.3 Modré knihy, další části "-2" */
+  evidence_id: EvidenceId;
+  title: string;
+  /** Odkaz na stránku PDF Modré knihy */
+  url: string | null;
+  excerpt: string;
+}
+
 export interface Brief {
   case_id: string;
   /** "P03" */
   patient_id: string;
+  verifier?: BriefVerifier | null;
   /** ISO 8601 */
   generated_at: string;
   /** "gemini-3.8-flash" */
@@ -122,6 +142,8 @@ export interface Brief {
   stats: { claims_total: number; claims_unverified: number; missing_total: number };
   /** Přegenerováno podle zpětné vazby lékaře k předchozí verzi (T-323). */
   feedback?: BriefFeedback;
+  /** Modrá kniha ČOS k diagnóze pacienta (citovatelné pasáže EXT-MK-…). */
+  national_guidelines?: NationalGuideline[];
 }
 
 /** Co lékař vytkl předchozí verzi podkladu a na co se má AI zaměřit; `sections` prázdné = celý podklad. */
@@ -645,6 +667,44 @@ export interface MdtSession {
   chair: { user_id: number; name: string } | null;
   /** Výchozí BriefConfig boardu. */
   config_id: number | null;
+}
+
+/** Přítomný lékař v záznamu boardu (z `Decision.attendees` všech závěrů boardu, T-333). */
+export interface BoardRecordAttendee {
+  /** Lékař v IRIS „LEK-…“, jinak volný kód. */
+  id: string | null;
+  name: string;
+  role: RoleId | 'chair' | null;
+  /** U kterých pacientů byl uvedený v závěru. */
+  patients: string[];
+}
+
+/** Pacient v záznamu boardu: jméno a maskované RČ z IRIS jen tady (předseda), ne v hlavičkách (D-018). */
+export interface BoardRecordCase {
+  id: number;
+  order: number;
+  patient_id: string;
+  status: MdtCase['status'];
+  display_name: string;
+  name: string | null;
+  /** Maskované RČ, vidět jen poslední 4 číslice (T-323); u pacientů z datasetu null. */
+  rc: string | null;
+  diagnosis: { icd10: string; text: string } | null;
+  decision: {
+    status: 'draft' | 'confirmed';
+    record_id: string | null;
+    confirmed_at: string | null;
+    confirmed_by: { user_id: number; name: string } | null;
+  } | null;
+  /** PDF jde u každého závěru (i návrhu), FHIR document Bundle jen u potvrzeného. */
+  exports: { pdf: boolean; fhir: boolean };
+}
+
+/** GET /api/mdt/records/ (uzavřené boardy) a /api/mdt/sessions/{sid}/record/ (T-333, jen předseda). */
+export interface BoardRecord extends MdtSession {
+  attendees: BoardRecordAttendee[];
+  cases: BoardRecordCase[];
+  counts: { patients: number; confirmed: number };
 }
 
 /**

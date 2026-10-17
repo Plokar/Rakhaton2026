@@ -371,6 +371,29 @@ class BriefStats(BaseModel):
     missing_total: int
 
 
+class VerifierIssue(BaseModel):
+    claim_id: str
+    verdict: Literal["unsupported", "uncertain", "unchecked"]
+    issue: str
+
+
+class BriefVerifier(BaseModel):
+    status: Literal["ok", "partial", "error", "off"]
+    model: str
+    checked: int = Field(ge=0)
+    rejected: int = Field(ge=0)
+    unchecked: int = Field(ge=0)
+    issues: list[VerifierIssue]
+
+
+class NationalGuideline(BaseModel):
+    """Pasáž Modré knihy ČOS, kterou měl podklad k dispozici (národní doporučené postupy, citovatelná)."""
+    evidence_id: str = Field(description='"EXT-MK-4.6.3" (oddíl Modré knihy, další části "-2")')
+    title: str
+    url: str | None = Field(default=None, description="Odkaz na stránku PDF Modré knihy")
+    excerpt: str = Field(description="Začátek pasáže (do 280 znaků)")
+
+
 class BriefFeedback(BaseModel):
     """Zpětná vazba lékaře k předchozí verzi, podle které podklad vznikl (T-323)."""
     text: str = Field(description="Co bylo špatně / na co se zaměřit (pseudonymizováno)")
@@ -390,8 +413,11 @@ class Brief(BaseModel):
     sections: list[BriefSection] = Field(description="V pořadí podle config")
     red_flags: list[RedFlag]
     decision_support: DecisionSupport | None = None
+    verifier: BriefVerifier | None = None
     stats: BriefStats
     feedback: BriefFeedback | None = Field(default=None, description="Přegenerováno podle zpětné vazby lékaře")
+    national_guidelines: list[NationalGuideline] | None = Field(
+        default=None, description="Modrá kniha ČOS k diagnóze pacienta (sada MK, Evidence ID EXT-MK-…)")
 
 
 # ── §8.4 Decision (závěr komise) ──────────────────────────────────────────────
@@ -645,6 +671,12 @@ class AcknowledgedWarning(BaseModel):
     at: str
 
 
+class ProjectorLayout(BaseModel):
+    """Pořadí na projektoru (T-332); prázdné = výchozí pořadí."""
+    sections: list[Literal["anamnesis", "facts", "template", "treatments"]] = Field(default_factory=list)
+    facts: list[str] = Field(default_factory=list, description="KeyFact.id v pořadí, zbytek za nimi výchozím pořadím")
+
+
 class MdtCase(BaseModel):
     """POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/"""
     id: int | None = None
@@ -660,6 +692,7 @@ class MdtCase(BaseModel):
     status: Literal["nominated", "ready", "in_discussion", "decided", "confirmed", "returned"]
     order: int | None = Field(default=None, description="Pořadí v agendě (jen čtení)")
     question: str | None = Field(default=None, description="Otázka pro MDT z nominace (jen čtení)")
+    projector_layout: ProjectorLayout | None = Field(default=None, description="Pořadí na projektoru (T-332), mění kdo smí upravit případ")
     patient: PatientListItem | None = Field(default=None, description="Jen v detailu boardu (hlavička z IRIS)")
 
 

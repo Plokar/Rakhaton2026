@@ -144,7 +144,7 @@ export function PatientSummaryPanel({ caseId, canGenerate }: { caseId: string; c
       {job.jobId !== null ? (
         <JobProgress jobId={job.jobId} onDone={job.done} onError={job.failed} runningLabel="Píšu shrnutí pro pacienta…" />
       ) : (
-        <Button variant="outline" onClick={() => void job.run('summary', () => mdtApi.generatePatientSummary(caseId))} isLoading={job.starting !== null}>
+        <Button variant="outline" className="h-auto min-h-9 max-w-full whitespace-normal py-1.5 text-left" onClick={() => void job.run('summary', () => mdtApi.generatePatientSummary(caseId))} isLoading={job.starting !== null}>
           <HeartHandshake aria-hidden /> Připravit shrnutí pro pacienta a zprávu pro PL
         </Button>
       )}

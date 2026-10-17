@@ -3,6 +3,7 @@
  */
 import { apiFetch, apiUrl } from '@/lib/api';
 import type {
+  BoardRecord,
   Brief,
   BriefConfig,
   CaseAnswer,
@@ -105,7 +106,24 @@ export interface PatientDraft {
   values?: ImportValue[];
   rejected?: ImportValue[];
   ai?: { used: boolean; reason: string | null };
-  patient?: { rc_masked: string; sex: 'male' | 'female'; birth_year: number; age: number };
+  /** Import z FHIR JSON (T-335): soubor, přečíslování, počty resources podle typu, lékaři z bundlu. */
+  import?: {
+    file: string;
+    total: number;
+    renamed_from: string | null;
+    counts: Record<string, number>;
+    practitioners: string[];
+    synthetic: boolean;
+    /** Přepis `.md` nahraný k bundlu a nesoulady přepisu proti bundlu (prázdné = sedí). */
+    transcript?: string | null;
+    validation?: string[];
+  } | null;
+  /** Náhledy bez LLM nad návrhem (T-323): celý podklad, úzký pás pro projektor, šablona a kontrola úplnosti. */
+  preview?: { detail: Brief; narrow: Brief; template: CaseTemplate | null; intake: IntakePrefill };
+  /** Jen v odpovědi na založení ze souboru s víc pacienty: návrh pro každého (T-335). */
+  batch?: { id: number; patient_id: string; file: string; renamed_from: string | null }[];
+  /** `rc_masked` je null u importu z FHIR JSON bez RČ (dataset RČ nemá). */
+  patient?: { rc_masked: string | null; sex: 'male' | 'female'; birth_year: number; age: number };
   missing_for_confirm?: string[];
 }
 
@@ -152,6 +170,10 @@ export const mdtApi = {
   /** Boardy (zasedání) s pacienty v pořadí agendy, s agendami a připraveností (`expand=cases`, T-518). */
   getSessions: () => apiFetch<MdtSessionListItem[]>('/api/mdt/sessions/'),
 
+  /** Záznam boardů (T-333, jen předseda): uzavřené boardy s přítomnými a výstupy pacientů. */
+  getRecords: () => apiFetch<BoardRecord[]>('/api/mdt/records/'),
+  getSessionRecord: (sessionId: number) => apiFetch<BoardRecord>(`/api/mdt/sessions/${sessionId}/record/`),
+
   /** Board + agenda: případy s hlavičkou pacienta z IRIS. */
   getSession: (sessionId: string) =>
     apiFetch<MdtSessionDetail>(`/api/mdt/sessions/${encodeURIComponent(sessionId)}/`),
@@ -167,6 +189,10 @@ export const mdtApi = {
 
   updateConfig: (configId: string, config: BriefConfig) =>
     apiFetch<BriefConfig>(`/api/mdt/configs/${encodeURIComponent(configId)}/`, { method: 'PUT', body: JSON.stringify(config) }),
+
+  /** Pořadí pacientů v agendě (T-324, jen předseda): ID všech případů boardu v novém pořadí → agenda. */
+  setAgendaOrder: (sessionId: number, caseIds: number[]) =>
+    apiFetch<MdtSessionDetail>(`/api/mdt/sessions/${sessionId}/order/`, { method: 'PUT', body: JSON.stringify({ cases: caseIds }) }),
 
   updateSession: (sessionId: number, input: Partial<SessionInput> & { config_id?: number | null }) =>
     apiFetch<MdtSession>(`/api/mdt/sessions/${sessionId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
@@ -273,7 +299,7 @@ export const mdtApi = {
   getPatientDrafts: () =>
     apiFetch<{ id: number; patient_id: string; documents: number; created_at: string; updated_at: string }[]>('/api/mdt/patient-drafts/'),
   getPatientDraft: (id: number) => apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/`),
-  /** `rc`, `text?`, `files[]?` (PDF, TXT), `synthetic?`, `session?`; 409 = RČ už v IRIS (`patient_id`) nebo v návrhu (`draft_id`). */
+  /** `rc` (u FHIR JSON nepovinné), `text?`, `files[]?` (PDF, TXT, jeden FHIR JSON), `synthetic?`, `session?`; 409 = RČ už v IRIS (`patient_id`) nebo v návrhu (`draft_id`). */
   createPatientDraft: (body: FormData) => apiFetch<PatientDraft>('/api/mdt/patient-drafts/', { method: 'POST', body }),
   addPatientDraftDocuments: (id: number, body: FormData) =>
     apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/documents/`, { method: 'POST', body }),
@@ -294,7 +320,10 @@ export const mdtApi = {
     apiFetch<IntakePrefill>(`/api/mdt/patients/${encodeURIComponent(patientId)}/intake/`),
 
   /** Zařazení pacienta do boardu (FR-P4); ruční ECOG a záměr se zapíší do IRIS s Provenance. */
-  createCase: (body: MdtCase & { acknowledge?: string[] }) =>
+  createCase: (
+    body: Pick<MdtCase, 'session' | 'patient_id' | 'service_request_id' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields'>
+      & { acknowledge?: string[] },
+  ) =>
     apiFetch<MdtCase>('/api/mdt/cases/', { method: 'POST', body: JSON.stringify(body) }),
 
   /** Kontrola připravenosti případu (BON-1): skóre úplnosti, nevyřešené údaje, zastaralý staging. */
@@ -325,4 +354,12 @@ export const mdtApi = {
     apiFetch<ObservationSeries[]>(
       `/api/patients/${encodeURIComponent(patientId)}/observations/${codes?.length ? `?code=${encodeURIComponent(codes.join(','))}` : ''}`,
     ),
+};
+
+/** Odkazy ke stažení výstupů (cookie relace jde s požadavkem, server vrátí přílohu). */
+export const exportUrl = {
+  pdf: (caseId: number | string) => apiUrl(`/api/mdt/cases/${encodeURIComponent(String(caseId))}/export.pdf`),
+  fhir: (caseId: number | string) => apiUrl(`/api/mdt/cases/${encodeURIComponent(String(caseId))}/export.fhir.json`),
+  /** Všechna PDF a FHIR boardu v jednom ZIP (T-333, jen předseda). */
+  zip: (sessionId: number) => apiUrl(`/api/mdt/sessions/${sessionId}/export.zip`),
 };

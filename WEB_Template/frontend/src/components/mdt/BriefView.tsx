@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import type { Brief, EvidenceId, SectionId } from '@/types/mdt';
 import { AiBlock } from './AiBlock';
+import { NationalGuidelines } from './NationalGuidelines';
 import { CaseHeader } from './CaseHeader';
 import { CitationProvider, Citations, collectCitations } from './citations';
 import { SectionClaims } from './ClaimList';
@@ -18,6 +19,7 @@ import { SourceDrawer } from './SourceDrawer';
 import { Timeline } from './Timeline';
 import { TreatmentOptions } from './TreatmentOptions';
 import { TrialScreening } from './TrialScreening';
+import { VerifierPanel } from './VerifierPanel';
 
 const TEXT_SECTION_TITLE: Partial<Record<SectionId, string>> = {
   summary: 'Souhrn případu',
@@ -123,6 +125,9 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
         return ds ? (
           <AiBlock key={`${id}-${allExpanded}`} id={id} title="Možnosti léčby a soulad se stavem pacienta" status={brief.status} defaultOpen={allExpanded}>
             <TreatmentOptions options={ds.treatment_options} />
+            <div className="mt-3">
+              <NationalGuidelines items={brief.national_guidelines} />
+            </div>
           </AiBlock>
         ) : null;
       case 'trials':
@@ -200,6 +205,8 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
           {!ds && blocks.includes('decision_support') && (
             <p className="text-sm text-muted-foreground">Možnosti léčby, studie a otázky k diskusi v tomto podkladu zatím nejsou.</p>
           )}
+
+          <VerifierPanel verifier={brief.verifier} />
 
           {brief.feedback && <FeedbackNote feedback={brief.feedback} />}
           <p className="border-t border-border pt-4 text-xs text-muted-foreground">

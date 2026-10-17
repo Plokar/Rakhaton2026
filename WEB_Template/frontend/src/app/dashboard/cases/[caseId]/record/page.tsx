@@ -12,7 +12,7 @@ import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
 import { GpReportPanel, PatientSummaryPanel, ScribePanel } from '@/components/mdt/DecisionAi';
-import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
+import { decisionChecklist, DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
@@ -42,20 +42,21 @@ const fetchOptions = (cid: string): Promise<ProcedureCompatibility[]> =>
 
 const nowLabel = () => new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
 
-/** Výchozí draft, když závěr ještě není: otázka z nominace, záměr, přítomní podle rolí podkladu. */
-function initialDraft(caseId: string, brief: Brief | null, me: Me | null): Decision {
+/** Výchozí draft, když závěr ještě není: otázka z nominace, záměr, přítomní podle rolí podkladu
+ * (předseda jako lékař v IRIS, u ostatních rolí se lékař vybere v popupu, T-328/T-329). */
+function initialDraft(caseId: string, brief: Brief | null, me: Me | null, nominationQuestion?: string | null): Decision {
   const roles = (brief?.config.roles_present ?? []).filter((r) => r !== 'patient');
   return {
     case_id: caseId,
     status: 'draft',
     mdt_type: 'primarni',
     attendees: [
-      ...(me ? [{ user_id: String(me.user_id), name: me.name, role: 'chair' as const }] : []),
+      ...(me ? [{ user_id: me.practitioner_id ?? String(me.user_id), name: me.name, role: 'chair' as const }] : []),
       ...roles.map((r) => ({ user_id: '', name: ROLE_META[r].label, role: r })),
     ],
     patient_present: false,
     sections: {
-      question: { text: brief?.header.mdt_question.text ?? '', source: 'human' },
+      question: { text: brief?.header.mdt_question.text || nominationQuestion || '', source: 'human' },
       assessment: { text: '', source: 'human', citations: [] },
       intent: brief?.header.intent?.code ?? 'odlozeno',
       recommendation: [],
@@ -95,10 +96,11 @@ function DecisionContent({ caseId }: { caseId: string }) {
 
   const loading = decisionData.loading || briefData.loading;
   const brief = briefData.data ?? null;
-  const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me));
+  const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me, location.item?.question));
   const confirmed = current?.status === 'confirmed';
   // T-326: upravuje zadávající lékař, přizvaný lékař nebo předseda (backend to ověří znovu)
-  const canEdit = !confirmed && (isDemo || (location.item ? can.editCase(me, location.item) : can.manageBoards(me)));
+  const mayEditCase = location.item ? can.editCase(me, location.item) : can.manageBoards(me);
+  const canEdit = !confirmed && (isDemo || mayEditCase);
   const canConfirm = !isDemo && !confirmed && can.manageBoards(me);
   const dirty = draft !== null && savedAt === null;
   const order = React.useMemo(() => collectCitations([current ?? {}, brief?.red_flags ?? []]), [current, brief]);
@@ -250,6 +252,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
           )}
           {!isDemo && (
             <div className="mt-3 flex flex-wrap gap-2">
+              {/* Export PDF obsahuje i shrnutí pro pacienta, když už vzniklo. */}
               {can.manageBoards(me) && !revising && (
                 <Button variant="outline" size="lg" onClick={() => setRevising(true)}>
                   <History aria-hidden /> Upravit (nová verze)
@@ -323,7 +326,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
 
       {current && (
         <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
-          {confirmed && !isDemo && <PatientSummaryPanel caseId={caseId} canGenerate={can.generateBrief(me)} />}
+          {confirmed && !isDemo && <PatientSummaryPanel caseId={caseId} canGenerate={mayEditCase} />}
           {confirmed && !isDemo && <GpReportPanel caseId={caseId} />}
           <section className="rounded-xl border border-border bg-card p-5">
             <DecisionEditor
@@ -348,6 +351,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
           decision={current}
           patientId={brief?.patient_id ?? 'Pxx'}
           confirmer={me?.name ?? 'předseda'}
+          remaining={decisionChecklist(current, (brief?.red_flags ?? []).map((f) => f.id))}
           onClose={() => setConfirming(false)}
           onConfirm={confirm}
         />

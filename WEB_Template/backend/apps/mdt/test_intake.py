@@ -4,7 +4,7 @@ from django.core.management import call_command
 
 from apps.copilot import schemas
 from apps.mdt.models import MdtCase, MdtSession
-from apps.mdt.test_roles import as_user
+from apps.mdt.test_roles import as_user, resolved_intake
 from services.fhir import client
 
 pytestmark = pytest.mark.django_db
@@ -22,6 +22,23 @@ def _body(pid='P03', **extra):
             'skipped_fields': ['bm.mmr'], 'acknowledge': ['RF-TOX:P03-neuro01'], **extra}
 
 
+def _complete(pid='P03', **extra):
+    """Úplné zařazení (server vyžaduje vyřešit vše)."""
+    return _body(pid, **resolved_intake(pid), **extra)
+
+
+def test_incomplete_intake_is_rejected(seeded):
+    """Nic nesmí zůstat nevyřešené: bez ECOG, C/P, kontroly snímku, přeskočení údajů a odkliknutí varování je 400."""
+    c = as_user('onkolog')
+    r = c.post('/api/mdt/cases/', _body(), format='json')
+    assert r.status_code == 400 and 'varování' in r.json()['intake'] and 'CT hrudníku' in r.json()['intake']
+    full = _complete()
+    for field, bad in (('ecog', None), ('intent', None), ('imaging_recent_checked', False)):
+        assert c.post('/api/mdt/cases/', {**full, field: bad}, format='json').status_code == 400, field
+    assert c.post('/api/mdt/cases/', {**full, 'acknowledge': full['acknowledge'][1:]}, format='json').status_code == 400
+    assert c.post('/api/mdt/cases/', full, format='json').status_code == 200
+
+
 def test_intake_prefill(seeded):
     d = as_user('onkolog').get('/api/mdt/patients/P03/intake/').json()
     fields = {f['id']: f['status'] for f in d['fields']}
@@ -34,13 +51,13 @@ def test_intake_prefill(seeded):
 
 def test_enroll_p03_writes_manual_data_to_iris(seeded):
     """DoD: P03 jde zařadit; přeskočený údaj je jen „skipped“; ruční ECOG je v IRIS s Provenance."""
-    r = as_user('onkolog').post('/api/mdt/cases/', _body(), format='json')
+    r = as_user('onkolog').post('/api/mdt/cases/', _complete(), format='json')
     assert r.status_code == 200, r.json()          # nominace už má případ ze seed_mdt → doplněn
     case = r.json()
     n = f"{case['id']:02d}"
-    assert case['status'] == 'ready' and case['ecog'] == 0 and case['intent'] == 'C' and case['skipped_fields'] == ['bm.mmr']
-    assert case['fhir_written'] == [f'Observation/P03-ecog-case{n}', 'ServiceRequest/P03-zad01',
-                                    f'DetectedIssue/P03-case{n}-w01', f'Provenance/P03-case{n}-prov']
+    assert case['status'] == 'ready' and case['ecog'] == 0 and case['intent'] == 'C' and 'bm.mmr' in case['skipped_fields']
+    assert case['fhir_written'][:2] == [f'Observation/P03-ecog-case{n}', 'ServiceRequest/P03-zad01']
+    assert f'DetectedIssue/P03-case{n}-w01' in case['fhir_written'] and case['fhir_written'][-1] == f'Provenance/P03-case{n}-prov'
     ecog = client.read('Observation', f'P03-ecog-case{n}')
     assert ecog['valueInteger'] == 0 and ecog['code']['coding'][0]['code'] == '89247-1'
     assert ecog['performer'] == [{'reference': 'Practitioner/LEK-P03-01'}]
@@ -51,9 +68,9 @@ def test_enroll_p03_writes_manual_data_to_iris(seeded):
     prov = client.read('Provenance', f'P03-case{n}-prov')
     assert {'reference': f'Observation/P03-ecog-case{n}'} in prov['target']
 
-    again = as_user('onkolog').patch(f"/api/mdt/cases/{case['id']}/", {'acknowledge': ['RF-TOX:P03-neuro01', 'RF-ECOG:P03-ecog03']},
+    again = as_user('onkolog').patch(f"/api/mdt/cases/{case['id']}/", {'acknowledge': ['RF-TOX:P03-neuro01']},
                                      format='json').json()
-    assert again['fhir_written'] == [f'DetectedIssue/P03-case{n}-w02', f'Provenance/P03-case{n}-prov']   # jen nové
+    assert again['fhir_written'] == []          # odkliknutí se jen přidává, už odkliknuté se nezapisuje znovu
 
 
 def test_question_cannot_be_skipped_and_roles(seeded):
@@ -65,7 +82,7 @@ def test_question_cannot_be_skipped_and_roles(seeded):
 
 def test_new_case_and_return_for_completion(seeded):
     MdtCase.objects.filter(patient_fhir_id='P05').delete()
-    r = as_user('onkolog').post('/api/mdt/cases/', _body('P05', acknowledge=[], skipped_fields=[]), format='json')
+    r = as_user('onkolog').post('/api/mdt/cases/', _complete('P05'), format='json')
     assert r.status_code == 201 and r.json()['created_by']['name'] == 'Klinický onkolog'
     cid = r.json()['id']
     assert as_user('onkolog').patch(f'/api/mdt/cases/{cid}/', {'status': 'returned'}, format='json').status_code == 403

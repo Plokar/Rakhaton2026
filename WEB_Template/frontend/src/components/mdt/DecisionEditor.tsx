@@ -12,7 +12,7 @@ import { PractitionerPicker } from './PractitionerPicker';
 import { ROLE_META } from './roles';
 
 /** Koho vybírá popup lékařů (T-328): nového přítomného, nebo vlastníka úkolu. */
-type PickerTarget = { kind: 'attendee' } | { kind: 'task'; index: number };
+type PickerTarget = { kind: 'attendee'; index?: number } | { kind: 'task'; index: number };
 
 type Sections = Decision['sections'];
 type Sourced = { text: string; source: Source };
@@ -162,6 +162,32 @@ export function guidelineDeviation(s: Sections): string | null {
   return risky.length
     ? `Zvolený postup má v semaforu „pozor“ nebo „vylučuje“ (${risky.join('; ')}). Uveďte soulad s doporučenými postupy a krátké zdůvodnění.`
     : 'Závěr se odchyluje od doporučených postupů. Doplňte krátké zdůvodnění odchylky.';
+}
+
+/**
+ * Co před potvrzením závěru zbývá (stejný princip jako formulář zařazení): nic se nesmí zapomenout.
+ * Prázdný seznam = jde potvrdit. Odchylka od guidelines sama neblokuje, jen chce zdůvodnění (B2).
+ */
+export function decisionChecklist(decision: Decision, redFlagIds: string[]): string[] {
+  const s = decision.sections;
+  const todo: string[] = [];
+  if (!s.question.text.trim()) todo.push('Projednaná otázka');
+  if (!s.assessment.text.trim()) todo.push('Klinické zhodnocení');
+  const chosen = (s.options_considered ?? []).some((o) => o.chosen);
+  if (!chosen && !s.recommendation.some((r) => r.text.trim())) todo.push('Zvolený postup (zvažované možnosti) nebo krok doporučeného postupu');
+  if (!s.guideline_compliance) todo.push('V souladu s guidelines? Ano / Ne');
+  const deviation = guidelineDeviation(s);
+  if (deviation) todo.push('Zdůvodnění souladu s guidelines (zvolený postup „pozor“ / „vylučuje“ nebo odchylka)');
+  if (!s.conclusion.text.trim()) todo.push('Závěr MDT');
+  const unnamed = decision.attendees.filter((a) => !a.user_id && a.role !== 'chair');
+  if (unnamed.length) todo.push(`Přítomní: vybrat lékaře (${unnamed.map((a) => a.name || 'bez role').join(', ')})`);
+  decision.tasks.forEach((t, i) => {
+    const gaps = [!t.description.trim() && 'popis', !t.owner && 'komu', !t.due_date && 'termín'].filter(Boolean);
+    if (gaps.length) todo.push(`Úkol ${i + 1}: ${gaps.join(', ')}`);
+  });
+  const open = redFlagIds.filter((id) => !decision.red_flags_acknowledged.includes(id)).length;
+  if (open) todo.push(`Varovné signály vzít na vědomí: ${open}`);
+  return todo;
 }
 
 type OptionRow = { id: string; title: string; light: Light | null; citations: EvidenceId[]; considered: boolean; chosen: boolean };
@@ -403,8 +429,13 @@ export function DecisionEditor({
         onOpenChange={(open) => !open && setPicker(null)}
         title={picker?.kind === 'task' ? 'Komu úkol přidělit' : 'Přidat přítomného'}
         excludeIds={picker?.kind === 'attendee' ? decision.attendees.map((a) => a.user_id) : []}
+        preferRole={picker?.kind === 'attendee' && picker.index !== undefined ? decision.attendees[picker.index]?.role : null}
         onSelect={(p) => {
-          if (picker?.kind === 'attendee') {
+          if (picker?.kind === 'attendee' && picker.index !== undefined) {
+            // řádek role z nastavení podkladu („Chirurg“) dostane konkrétního lékaře, role zůstává
+            const i = picker.index;
+            setTop({ attendees: decision.attendees.map((x, j) => (j === i ? { ...x, user_id: p.id, name: p.name } : x)) });
+          } else if (picker?.kind === 'attendee') {
             setTop({ attendees: [...decision.attendees, { user_id: p.id, name: p.name, role: p.role ?? 'oncologist' }] });
           } else if (picker?.kind === 'task') {
             const i = picker.index;
@@ -620,9 +651,20 @@ export function DecisionEditor({
         <ul className="space-y-1.5">
           {decision.attendees.map((a, i) => (
             <li key={i} className="flex flex-wrap items-center gap-2">
-              <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
-                {a.name || a.user_id || 'Bez jména'}
-              </span>
+              {a.user_id || readOnly ? (
+                <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
+                  {a.name || a.user_id || 'Bez jména'}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPicker({ kind: 'attendee', index: i })}
+                  className="inline-flex min-w-0 flex-1 items-center gap-1.5 truncate text-left text-sm text-primary hover:underline"
+                >
+                  <UserRoundSearch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">{a.name ? `${a.name}: vybrat lékaře…` : 'Vybrat lékaře…'}</span>
+                </button>
+              )}
               <select
                 className={fieldClass}
                 value={a.role}

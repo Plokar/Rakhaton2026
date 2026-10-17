@@ -21,6 +21,16 @@ def as_user(username):
     return client
 
 
+def resolved_intake(pid, username='onkolog'):
+    """Vše vyřešené jako ve formuláři zařazení (server jinak vrátí 400): přeskočit chybějící údaje kromě otázky,
+    odkliknout všechna varování. Vrací `{skipped_fields, acknowledge}`."""
+    c = as_user(username)
+    fields = c.get(f'/api/mdt/patients/{pid}/intake/').json()['fields']
+    skipped = [f['id'] for f in fields if f['status'] in ('missing', 'pending') and f['id'] != 'mdt.question']
+    warnings = c.get(f'/api/mdt/patients/{pid}/intake/?skipped={",".join(skipped)}').json()['warnings']
+    return {'skipped_fields': skipped, 'acknowledge': [w['id'] for w in warnings]}
+
+
 def test_demo_users_roles_and_me(seeded):
     me = as_user('predseda').get('/api/mdt/me/').json()
     assert (me['role'], me['specialty']) == ('mdt_admin', 'oncologist')
@@ -68,7 +78,7 @@ def test_intake_ignores_status_from_client(seeded):
     """Lékař zařadí svého pacienta i s tělem z UI (`status` posílá formulář, mění ho jen předseda; dřív 403)."""
     board = MdtSession.objects.get(title='Hrudní – karcinom plic')
     body = {'session': board.pk, 'patient_id': 'P04', 'ecog': 1, 'intent': 'C', 'imaging_recent_checked': True,
-            'skipped_fields': [], 'acknowledge': [], 'status': 'nominated'}
+            **resolved_intake('P04', 'pneumolog'), 'status': 'nominated'}
     r = as_user('pneumolog').post('/api/mdt/cases/', body, format='json')
     assert r.status_code in (200, 201), r.json()
     assert r.json()['status'] == 'ready'

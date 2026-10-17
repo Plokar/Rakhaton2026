@@ -60,7 +60,7 @@ Demo účty: `predseda`, `onkolog`, `pneumolog`, `chirurg`, `radiolog`, `patolog
 |---|---|---|
 | Editace a zápis rozhodnutí, termín re-evaluace | ✅ | `/record`: sekce záznamu MDT, Plánované re-MDT |
 | Strukturovaný záznam: kvórum, zvolený postup, zdůvodnění, soulad s guidelines, odlišná stanoviska | ✅ | Přítomní, Zvažované možnosti a soulad, Odlišná stanoviska členů |
-| Export PDF / HL7 FHIR | ✅ | Po potvrzení: Export PDF, FHIR document Bundle |
+| Export PDF / HL7 FHIR | ✅ | Po potvrzení: Export PDF, FHIR document Bundle; po ukončení boardu stažení výstupů po pacientech nebo ZIP a záznam boardů pro předsedu (T-333b) |
 | BONUS FHIR R4 / mCODE | ✅ | Bundle s `meta.profile` mCODE, Composition, CarePlan, Task, DetectedIssue, Provenance |
 | BONUS Ambient Scribe | ✅ | Jednání → Nahrát diskusi, nebo `/record` → AI zapisovatel (audio nebo přepis) → draft odlišený od potvrzeného textu |
 | BONUS akční plán s úkoly a termíny | ✅ | Úkoly v závěru → `Task` v IRIS → `/dashboard/tasks` (stav, vlastník, termín) |

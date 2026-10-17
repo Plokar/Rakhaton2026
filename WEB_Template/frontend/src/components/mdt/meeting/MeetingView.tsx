@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 import { parseAsInteger, useQueryState } from 'nuqs';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
+  CheckCheck,
   ChevronDown,
   ChevronUp,
   CircleCheck,
+  FileDown,
   FileText,
+  GripVertical,
   LayoutList,
   MessagesSquare,
   MonitorUp,
@@ -18,6 +21,7 @@ import {
   Pencil,
   Play,
   Plus,
+  RotateCcw,
   SlidersHorizontal,
   Trash2,
   Undo2,
@@ -42,11 +46,12 @@ import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { mdtApi } from '@/lib/mdt-api';
-import { agendaOrder, apiErrorMessage, useCaseStatus, useSaveSession, useSessionQuery } from '@/lib/queries';
+import { agendaOrder, apiErrorMessage, useAgendaOrder, useCaseStatus, useSaveSession, useSessionQuery, useSessionStatus } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
 import { AddPatientSheet } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
+import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
 import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { dayLabel, timeLabel } from '../dates';
@@ -92,6 +97,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const [collaborating, setCollaborating] = React.useState(false);
   const [editingProjector, setEditingProjector] = React.useState(false);
   const chat = useSessionChat(sessionId, me);
+  const reorder = useAgendaOrder(sessionId);
+  const [moved, setMoved] = React.useState('');
   useFocusLayout();
 
   React.useEffect(() => {
@@ -114,6 +121,19 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       },
     );
   };
+  /** T-324: předseda přeskládá agendu (přetažení nebo Alt+↑/↓); pořadí uloží server, při chybě se vrátí. */
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= cases.length || from === to) return;
+    const ids = cases.map((c) => c.id);
+    const [id] = ids.splice(from, 1);
+    ids.splice(to, 0, id);
+    const item = cases[from];
+    reorder.mutate(ids, {
+      onSuccess: () => setMoved(`${item.patient_id} je na ${to + 1}. místě agendy.`),
+      onError: (err) => toast.error(apiErrorMessage(err, 'Pořadí agendy se nepodařilo uložit.')),
+    });
+  };
+  const canReorder = chair && session.data?.status !== 'closed' && cases.length > 1;
   const projector = () => {
     if (current) openProjectorWindow({ board: sessionId, caseId: current.id, patient: current.patient_id });
     else openProjectorWindow(null);
@@ -227,7 +247,15 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
           <ResizablePanel id="agenda" defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
-            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} recorder={<DiscussionRecorder cases={cases} current={current} />} />
+            <MeetingRail
+              cases={cases}
+              current={current}
+              elapsed={elapsed}
+              onSelect={select}
+              onMove={canReorder ? move : undefined}
+              announcement={moved}
+              recorder={<DiscussionRecorder cases={cases} current={current} />}
+            />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Šířka agendy" />
           <ResizablePanel id="prehled" className="min-h-0">
@@ -303,8 +331,11 @@ function MeetingHeader({
   const router = useRouter();
   const me = useMe();
   const save = useSaveSession();
+  const sessionStatus = useSessionStatus();
   const [editing, setEditing] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [closing, setClosing] = React.useState(false);
+  const [outputs, setOutputs] = React.useState<'closed' | 'view' | null>(null);
   const chair = can.manageBoards(me);
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
 
@@ -325,9 +356,9 @@ function MeetingHeader({
           <span className="font-medium text-foreground">{discussed} / {count}</span> projednáno · {formatDuration(total)}
         </p>
       )}
-      <div className="ml-auto flex items-center gap-2">
-        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} title="Chat lékařů zasedání (C)">
-          <MessagesSquare aria-hidden /> Chat
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} aria-label="Chat" title="Chat lékařů zasedání (C)">
+          <MessagesSquare aria-hidden /> <span className="hidden sm:inline">Chat</span>
           {unread > 0 && (
             <>
               <span aria-hidden className="min-w-5 rounded-full bg-primary px-1.5 text-xs leading-5 tabular-nums text-primary-foreground">
@@ -337,9 +368,19 @@ function MeetingHeader({
             </>
           )}
         </Button>
-        <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
-          <MonitorUp aria-hidden /> Projektor
+        <Button variant="outline" size="lg" onClick={onProjector} aria-label="Projektor" title="Okno pro projektor (P)">
+          <MonitorUp aria-hidden /> <span className="hidden sm:inline">Projektor</span>
         </Button>
+        {chair && board.status !== 'closed' && count > 0 && (
+          <Button variant="outline" size="lg" onClick={() => setClosing(true)} aria-label="Ukončit board" title="Ukončit board a stáhnout výstupy">
+            <CheckCheck aria-hidden /> <span className="hidden sm:inline">Ukončit board</span>
+          </Button>
+        )}
+        {chair && board.status === 'closed' && (
+          <Button variant="outline" size="lg" onClick={() => setOutputs('view')}>
+            <FileDown aria-hidden /> Výstupy
+          </Button>
+        )}
         {can.generateBrief(me) && board.status !== 'closed' && (
           <Button size="lg" onClick={onAdd}>
             <Plus aria-hidden /> Zařadit
@@ -358,6 +399,21 @@ function MeetingHeader({
                 <DropdownMenuItem onClick={() => setEditing(true)}>
                   <Pencil aria-hidden /> Upravit board
                 </DropdownMenuItem>
+                {board.status === 'closed' && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      sessionStatus.mutate(
+                        { id: board.id, status: 'in_progress' },
+                        {
+                          onSuccess: () => toast('Board je znovu otevřený'),
+                          onError: (err) => toast.error(apiErrorMessage(err, 'Board se nepodařilo otevřít.')),
+                        },
+                      )
+                    }
+                  >
+                    <RotateCcw aria-hidden /> Znovu otevřít board
+                  </DropdownMenuItem>
+                )}
                 {count === 0 && (
                   <>
                     <DropdownMenuSeparator />
@@ -383,6 +439,10 @@ function MeetingHeader({
         />
       )}
       <DeleteBoardDialog board={deleting ? board : null} onClose={() => setDeleting(false)} />
+      {closing && <CloseBoardDialog board={board} open onOpenChange={setClosing} onClosed={() => setOutputs('closed')} />}
+      {outputs && (
+        <BoardOutputsDialog sessionId={board.id} open justClosed={outputs === 'closed'} onOpenChange={(next) => !next && setOutputs(null)} />
+      )}
     </div>
   );
 }
@@ -426,15 +486,22 @@ function MeetingRail({
   current,
   elapsed,
   onSelect,
+  onMove,
+  announcement = '',
   recorder,
 }: {
   cases: Case[];
   current: Case | null;
   elapsed: Record<string, number>;
   onSelect: (item: Case) => void;
+  /** Jen předseda (T-324): přetažení nebo Alt+↑/↓ změní pořadí agendy. */
+  onMove?: (from: number, to: number) => void;
+  announcement?: string;
   /** Nahrávání diskuse (BON-3) v boku pod agendou. */
   recorder: React.ReactNode;
 }) {
+  const [drag, setDrag] = React.useState<number | null>(null);
+  const [over, setOver] = React.useState<number | null>(null);
   return (
     <nav aria-label="Agenda zasedání" className="flex h-full min-h-0 flex-col bg-card">
       <ol className="relative min-h-0 flex-1 overflow-y-auto p-2">
@@ -443,9 +510,44 @@ function MeetingRail({
           const done = isDiscussed(item);
           const seconds = elapsed[item.id] ?? 0;
           return (
-            <li key={item.id}>
+            <li
+              key={item.id}
+              draggable={Boolean(onMove)}
+              onDragStart={(e) => {
+                setDrag(i);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragOver={(e) => {
+                if (drag === null) return;
+                e.preventDefault();
+                setOver(i);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (drag !== null && drag !== i) onMove?.(drag, i);
+                setDrag(null);
+                setOver(null);
+              }}
+              onDragEnd={() => {
+                setDrag(null);
+                setOver(null);
+              }}
+              className={cn(
+                'group/agenda relative rounded-lg',
+                onMove && 'cursor-grab active:cursor-grabbing',
+                drag === i && 'opacity-50',
+                over === i && drag !== null && drag !== i && (drag < i ? 'shadow-[inset_0_-2px_0_var(--color-primary)]' : 'shadow-[inset_0_2px_0_var(--color-primary)]'),
+              )}
+            >
               <button
                 type="button"
+                onKeyDown={(e) => {
+                  if (!onMove || !e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onMove(i, e.key === 'ArrowUp' ? i - 1 : i + 1);
+                }}
+                aria-keyshortcuts={onMove ? 'Alt+ArrowUp Alt+ArrowDown' : undefined}
                 onClick={() => onSelect(item)}
                 aria-current={active ? 'true' : undefined}
                 aria-label={`${i + 1}. ${spokenPatient(item)}${done ? ', projednáno' : ''}${active ? ', na řadě' : ''}`}
@@ -455,7 +557,12 @@ function MeetingRail({
                   done && !active && 'text-muted-foreground',
                 )}
               >
-                <span className="pt-px text-right text-[13px] tabular-nums text-muted-foreground">{i + 1}</span>
+                <span className="relative pt-px text-right text-[13px] tabular-nums text-muted-foreground">
+                  <span className={cn(onMove && 'group-hover/agenda:invisible')}>{i + 1}</span>
+                  {onMove && (
+                    <GripVertical className="absolute top-0.5 right-0 hidden size-4 group-hover/agenda:block" aria-hidden />
+                  )}
+                </span>
                 <span className="min-w-0">
                   <span translate="no" className={cn('block truncate text-sm font-medium', done && !active && 'font-normal')}>
                     {shortPatient(item)}
@@ -489,7 +596,9 @@ function MeetingRail({
       {recorder}
       <p className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
         <Kbd>↑</Kbd> <Kbd>↓</Kbd> pacient · <Kbd>?</Kbd> zkratky
+        {onMove && <span className="mt-1 block">Pořadí: přetáhněte, nebo <Kbd>Alt</Kbd>+<Kbd>↑</Kbd>/<Kbd>↓</Kbd></span>}
       </p>
+      <p className="sr-only" aria-live="polite">{announcement}</p>
     </nav>
   );
 }

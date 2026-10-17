@@ -1,0 +1,163 @@
+{
+ "resourceType": "Bundle",
+ "type": "collection",
+ "meta": {
+  "tag": [
+   {
+    "system": "https://rakathon.example.org/fhir/tag",
+    "code": "fiktivni-data",
+    "display": "Fiktivní data – Rakathon 2026"
+   }
+  ]
+ },
+ "entry": [
+  {
+   "fullUrl": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000001",
+   "resource": {
+    "resourceType": "Patient",
+    "id": "5f0c1e2a-0000-4000-8000-000000000001",
+    "name": [
+     {
+      "text": "Testovací pacientka (fiktivní)"
+     }
+    ],
+    "gender": "female",
+    "birthDate": "1958-05-14"
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000002",
+   "resource": {
+    "resourceType": "Condition",
+    "id": "5f0c1e2a-0000-4000-8000-000000000002",
+    "category": [
+     {
+      "text": "onkologická diagnóza"
+     }
+    ],
+    "code": {
+     "coding": [
+      {
+       "system": "http://hl7.org/fhir/sid/icd-10",
+       "code": "C56",
+       "display": "Zhoubný novotvar vaječníku"
+      }
+     ],
+     "text": "High-grade serózní karcinom ovaria"
+    },
+    "onsetDateTime": "2026-08-20",
+    "subject": {
+     "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000001"
+    }
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000003",
+   "resource": {
+    "resourceType": "Observation",
+    "id": "5f0c1e2a-0000-4000-8000-000000000003",
+    "status": "final",
+    "code": {
+     "text": "TNM (klinické)"
+    },
+    "valueString": "cT3c cN1 cM0, FIGO IIIC",
+    "effectiveDateTime": "2026-09-02",
+    "subject": {
+     "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000001"
+    },
+    "focus": [
+     {
+      "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000002"
+     }
+    ]
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000004",
+   "resource": {
+    "resourceType": "Observation",
+    "id": "5f0c1e2a-0000-4000-8000-000000000004",
+    "status": "final",
+    "category": [
+     {
+      "coding": [
+       {
+        "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+        "code": "survey"
+       }
+      ]
+     }
+    ],
+    "code": {
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "89247-1",
+       "display": "ECOG Performance Status score"
+      }
+     ],
+     "text": "ECOG – hodnoceno lékařem"
+    },
+    "valueInteger": 1,
+    "effectiveDateTime": "2026-09-30",
+    "subject": {
+     "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000001"
+    }
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000005",
+   "resource": {
+    "resourceType": "Observation",
+    "id": "5f0c1e2a-0000-4000-8000-000000000005",
+    "status": "final",
+    "code": {
+     "coding": [
+      {
+       "system": "http://loinc.org",
+       "code": "10334-1",
+       "display": "CA 125"
+      }
+     ],
+     "text": "CA 125"
+    },
+    "valueQuantity": {
+     "value": 812,
+     "unit": "kU/l"
+    },
+    "effectiveDateTime": "2026-09-30",
+    "subject": {
+     "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000001"
+    }
+   }
+  },
+  {
+   "fullUrl": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000006",
+   "resource": {
+    "resourceType": "ServiceRequest",
+    "id": "5f0c1e2a-0000-4000-8000-000000000006",
+    "status": "active",
+    "intent": "order",
+    "subject": {
+     "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000001"
+    },
+    "reasonReference": [
+     {
+      "reference": "urn:uuid:5f0c1e2a-0000-4000-8000-000000000002"
+     }
+    ],
+    "authoredOn": "2026-10-01T09:00:00+02:00",
+    "reasonCode": [
+     {
+      "text": "Primární cytoredukce, nebo neoadjuvantní chemoterapie a intervalová cytoredukce?"
+     }
+    ],
+    "note": [
+     {
+      "text": "Histologie a grade: high-grade serózní karcinom (biopsie 2. 9. 2026), BRCA vyšetření probíhá."
+     }
+    ]
+   }
+  }
+ ]
+}

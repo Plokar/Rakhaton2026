@@ -112,11 +112,10 @@ def _sanitize_options(raw_options: list[dict], available: dict[str, dict], conte
                 continue
             rationale.append({"id": f"{pid}-why-{index}", "kind": "claim", "text": claim["text"].strip(),
                               "citations": citations})
-        rationale = [{k: v for k, v in claim.items() if not k.startswith("_")}
-                     for claim in verify_claims(rationale, context)]
+        rationale = verify_claims(rationale, context)
         p = procedure["compatibility"]
         guidelines = list(dict.fromkeys(c for c in raw.get("guideline_citations", [])
-                                         if c in context.allowed_ids and c.startswith(("KRC-", "PRS-", "PLI-", "OBC-"))))
+                                         if c in context.allowed_ids and c.startswith(("KRC-", "PRS-", "PLI-", "OBC-", "EXT-MK-"))))
         if not guidelines:
             guidelines = [c for c in procedure.get("guideline_citations", []) if c in context.allowed_ids]
         options.append({
@@ -144,8 +143,7 @@ def _fallback_options(compatibility: list[dict], context: PatientContext) -> lis
         if cited:
             rationale = verify_claims([{"id": f"{pid}-why-1", "kind": "claim",
                                         "text": f"Soulad postupu se stavem pacienta: {LIGHT_TEXT.get(comp['overall'], comp['overall'])}.",
-                                        "citations": cited}], context)
-            rationale = [{k: v for k, v in claim.items() if not k.startswith("_")} for claim in rationale]
+                                        "citations": cited, "_computed": True}], context)
         options.append({
             "id": pid,
             "title": procedure["title"],

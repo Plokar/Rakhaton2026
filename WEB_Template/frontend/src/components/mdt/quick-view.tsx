@@ -111,6 +111,31 @@ export function fixtureQuickViewSources(loadSource: SourceLoader): QuickViewSour
   };
 }
 
+/**
+ * Zdroje přehledu z hotových dat bez dotazů na API: náhled návrhu nového pacienta (T-323), který ještě
+ * není v IRIS. Semafor bere z možností léčby podkladu (`options`), laboratorní řady nejsou.
+ */
+export function staticQuickViewSources(input: {
+  patientId: string;
+  brief: StoredBrief | null;
+  options: { id: string; title: string; guideline_citations: string[]; compatibility: ProcedureCompatibility['compatibility'] }[];
+  intake: IntakePrefill;
+  template: CaseTemplate | null;
+  loadSource: SourceLoader;
+}): QuickViewSources {
+  return {
+    patientId: input.patientId,
+    caseId: null,
+    session: done(null),
+    brief: done(input.brief),
+    compatibility: done(input.options.map((o) => ({ id: o.id, title: o.title, guideline_citations: o.guideline_citations, compatibility: o.compatibility }))),
+    intake: done(input.intake),
+    observations: done([]),
+    template: done(input.template),
+    loadSource: input.loadSource,
+  };
+}
+
 const INTENT_LABEL: Record<'C' | 'P', string> = { C: 'kurativní', P: 'paliativní' };
 
 /** Hlavička přehledu z agendy boardu, šablony údajů a podkladu (co je k dispozici dřív). */
@@ -205,7 +230,7 @@ function Metric({
   warn?: boolean;
 }) {
   return (
-    <div className="flex min-w-15 flex-col items-center rounded-lg bg-muted/70 px-2.5 py-1.5" title={title}>
+    <div className="flex min-w-15 flex-col items-center rounded-xl border border-border bg-background px-2.5 py-1.5" title={title}>
       <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
       <dd className="text-[1.75rem] font-semibold leading-8 tabular-nums">{value}</dd>
       {sub && (
@@ -897,7 +922,7 @@ export function CaseQuickViewNarrow({
             <TreatmentList compact />
           </div>
         </div>
-        <QuestionStrip className="shrink-0 px-3 py-2" clampLines={2} />
+        <QuestionStrip className="shrink-0 border-t-2 border-t-primary/40 px-3 py-2" clampLines={2} />
         {footer}
       </article>
     </QuickViewRoot>

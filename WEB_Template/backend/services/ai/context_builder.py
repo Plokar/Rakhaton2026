@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Sequence
 
-from services.ai.guidelines import GuidelinePassage, load_guidelines
+from services.ai.guidelines import NATIONAL_SET, GuidelinePassage, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
 from services.ai.text import resource_paragraphs
 from services.fhir.ids import derived_from_ids
@@ -230,7 +230,9 @@ def context_from_resources(patient_id: str, resources: Iterable[dict], *, studie
         patient_id=patient_id,
         evidence=[line for _, lines in blocks for line in lines],
         guideline_sets=sets,
-        guidelines=sorted((g for g in guidelines if g.guideline_set in sets), key=lambda g: g.sort_key),
+        # sada podle diagnózy + Modrá kniha ČOS (už vybraná k diagnóze pacienta, `guidelines.national_passages`)
+        guidelines=sorted((g for g in guidelines if g.guideline_set in sets or g.guideline_set == NATIONAL_SET),
+                          key=lambda g: g.sort_key),
         trials=_trials(studies, sets, _lung_histology(resources) if "PLI" in sets else None),
         facts=facts,
         rule_results=[f.render_line() for f in red_flags] + list(rule_results),

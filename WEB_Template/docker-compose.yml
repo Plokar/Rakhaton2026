@@ -85,13 +85,13 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings_prod
       DJANGO_DEBUG: "False"
-      # MDT Copilot (ARCH §3.4, §9): IRIS jen interně, dataset a báze read-only z checkoutu repa na VPS
-      IRIS_HOST: iris
-      IRIS_PORT: "1972"
-      IRIS_NAMESPACE: FHIRSERVER
-      IRIS_USER: SuperUser
+      # MDT Copilot (ARCH §3.4, §9): IRIS lokálně nebo v ACI podle env, dataset a báze read-only
+      IRIS_HOST: ${IRIS_HOST:-iris}
+      IRIS_PORT: "${IRIS_PORT:-1972}"
+      IRIS_NAMESPACE: ${IRIS_NAMESPACE:-FHIRSERVER}
+      IRIS_USER: ${IRIS_USER:-SuperUser}
       IRIS_PASSWORD: ${IRIS_PASSWORD:?IRIS_PASSWORD v .env (ne výchozí SYS)}
-      FHIR_BASE_URL: http://iris:52773/fhir/r4
+      FHIR_BASE_URL: ${FHIR_BASE_URL:-http://iris:52773/fhir/r4}
       DATASET_DIR: /data/dataset
       ONKO_KB_DIR: /data/onko
       ONKO_DATASET_DIR: /data/dataset

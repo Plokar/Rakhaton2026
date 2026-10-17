@@ -34,6 +34,7 @@ import { MyTasks } from '../MyTasks';
 import { CaseAsk } from '../CaseAsk';
 import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { SimilarCases } from '../SimilarCases';
+import { VerifierPanel } from '../VerifierPanel';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -427,6 +428,7 @@ function DetailLayout({
           ))}
 
           {brief?.feedback && <FeedbackNote feedback={brief.feedback} />}
+          {brief && <VerifierPanel verifier={brief.verifier} />}
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">
               Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}

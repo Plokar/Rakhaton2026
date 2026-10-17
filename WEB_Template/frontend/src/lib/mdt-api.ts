@@ -106,7 +106,10 @@ export interface PatientDraft {
   values?: ImportValue[];
   rejected?: ImportValue[];
   ai?: { used: boolean; reason: string | null };
-  patient?: { rc_masked: string; sex: 'male' | 'female'; birth_year: number; age: number };
+  /** Import z FHIR JSON (T-335): soubor, přečíslování, počty resources podle typu, lékaři z bundlu. */
+  import?: { file: string; total: number; renamed_from: string | null; counts: Record<string, number>; practitioners: string[]; synthetic: boolean } | null;
+  /** `rc_masked` je null u importu z FHIR JSON bez RČ (dataset RČ nemá). */
+  patient?: { rc_masked: string | null; sex: 'male' | 'female'; birth_year: number; age: number };
   missing_for_confirm?: string[];
 }
 
@@ -278,7 +281,7 @@ export const mdtApi = {
   getPatientDrafts: () =>
     apiFetch<{ id: number; patient_id: string; documents: number; created_at: string; updated_at: string }[]>('/api/mdt/patient-drafts/'),
   getPatientDraft: (id: number) => apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/`),
-  /** `rc`, `text?`, `files[]?` (PDF, TXT), `synthetic?`, `session?`; 409 = RČ už v IRIS (`patient_id`) nebo v návrhu (`draft_id`). */
+  /** `rc` (u FHIR JSON nepovinné), `text?`, `files[]?` (PDF, TXT, jeden FHIR JSON), `synthetic?`, `session?`; 409 = RČ už v IRIS (`patient_id`) nebo v návrhu (`draft_id`). */
   createPatientDraft: (body: FormData) => apiFetch<PatientDraft>('/api/mdt/patient-drafts/', { method: 'POST', body }),
   addPatientDraftDocuments: (id: number, body: FormData) =>
     apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/documents/`, { method: 'POST', body }),

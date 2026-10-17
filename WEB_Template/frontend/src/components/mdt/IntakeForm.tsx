@@ -4,16 +4,11 @@ import * as React from 'react';
 import { CircleCheck, CircleDashed, Info, RotateCcw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity, WarningKind } from '@/types/mdt';
+import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity } from '@/types/mdt';
 import { Citations } from './citations';
+import { warningLabel } from './key-facts';
 import { ProjectorLayoutEditor } from './ProjectorLayoutEditor';
 
-const KIND_LABEL: Record<WarningKind, string> = {
-  missing: 'Chybí',
-  out_of_range: 'Mimo normu',
-  conflict: 'Rozpor',
-  ai_uncertain: 'Nejistota AI',
-};
 /** Pruh vlevo = závažnost varování (D-017), vždy s textem typu. */
 const SEVERITY_CLASS: Record<Severity, string> = {
   high: 'border-l-red-600 dark:border-l-red-500',
@@ -172,8 +167,8 @@ export function IntakeForm({
               <div className="flex flex-wrap items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">
-                    <span className="mr-1.5 text-xs font-medium text-muted-foreground">{KIND_LABEL[w.kind]}</span>
-                    {w.title}
+                    <span className="mr-1.5 text-xs font-medium text-muted-foreground">{warningLabel(w).label}</span>
+                    {warningLabel(w).text}
                   </p>
                   <p className="mt-0.5 text-[13px] leading-snug">
                     {w.detail}
@@ -252,7 +247,7 @@ export function IntakeForm({
             ))}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            {prefill.intent_prefill ? 'Předvyplněno z poslední MDT.' : 'Minulá MDT rozhodnutí odložila, vyberte C nebo P.'}
+            {prefill.intent_prefill ? 'Předvyplněno z poslední MDT.' : 'Záměr z předchozí MDT není (nový pacient nebo odložené rozhodnutí), vyberte C nebo P.'}
           </p>
         </div>
       </section>

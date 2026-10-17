@@ -255,11 +255,12 @@ def test_brief_verifier_rejects_llm_rationale_without_changing_traffic_lights(gr
     resources = load_patient("P03")
     baseline = brief_module.build_brief("P03", resources, provider=MockAIProvider())
     option_id = baseline["decision_support"]["treatment_options"][0]["id"]
-    provider = DraftProvider(responses={"OptionsDraft": {"options": [{
+    # B2 ve dvou krocích (výběr postupů, pak podklad ke každému, T-331 NVIDIA)
+    provider = DraftProvider(responses={"OptionPick": {"procedure_ids": [option_id]}, "OptionDraft": {
         "procedure_id": option_id, "title": "Postup k diskusi",
         "rationale": [{"text": "ECOG 0 podle lékaře", "citations": ["P03-ecog03"]}],
         "guideline_citations": [], "considerations": [],
-    }]}})
+    }})
     def verdicts(prompt):
         return {"verdicts": [{"claim_id": c["claim_id"],
                                "verdict": "uncertain" if c["claim_id"] == f"{option_id}-why-1" else "supported",

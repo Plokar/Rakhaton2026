@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText } from 'lucide-react';
+import { FileJson, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,9 +19,12 @@ const fieldErrors = (err: unknown): Record<string, string> | null =>
     ? Object.fromEntries(Object.entries(err.data as Record<string, unknown>).map(([k, v]) => [k, Array.isArray(v) ? String(v[0]) : String(v)]))
     : null;
 
+const isJson = (f: File) => /\.json$/i.test(f.name) || f.type === 'application/json' || f.type === 'application/fhir+json';
+
 /**
  * Nový pacient z rodného čísla (T-323, `/api/mdt/patient-drafts/`): RČ + text nebo soubory (PDF, TXT) → návrh
  * s předvyplněnou nominací a citacemi → lékař doplní a potvrdí → jedna transakce do IRIS, případ na boardu.
+ * Nebo FHIR JSON (bundle jednoho pacienta, T-335): RČ nepovinné, nominace ze strukturovaných dat souboru.
  * V aplikaci je pacient jen pod pseudonymem Pxx (D-018); RČ server nevrací.
  */
 export function NewPatientForm({ sessionId, onCreated, onCancel }: { sessionId?: number; onCreated: (patientId: string) => void; onCancel: () => void }) {
@@ -34,8 +37,9 @@ export function NewPatientForm({ sessionId, onCreated, onCancel }: { sessionId?:
 }
 
 /** Text a soubory podkladů; sdílí založení návrhu i „Přidat podklad“. */
-function DocumentInputs({ text, onText, files, onFiles, error }: { text: string; onText: (v: string) => void; files: File[]; onFiles: (f: File[]) => void; error?: string }) {
+function DocumentInputs({ text, onText, files, onFiles, error, allowJson = false }: { text: string; onText: (v: string) => void; files: File[]; onFiles: (f: File[]) => void; error?: string; allowJson?: boolean }) {
   const fileRef = React.useRef<HTMLInputElement>(null);
+  const jsonRef = React.useRef<HTMLInputElement>(null);
   return (
     <div className="flex flex-col gap-2">
       <label className="flex flex-col gap-1.5 text-sm">
@@ -59,6 +63,26 @@ function DocumentInputs({ text, onText, files, onFiles, error }: { text: string;
         <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
           <FileText aria-hidden /> Přidat soubory (PDF, TXT)
         </Button>
+        {allowJson && (
+          <>
+            <input
+              ref={jsonRef}
+              type="file"
+              accept="application/json,application/fhir+json,.json"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden
+              onChange={(e) => {
+                const picked = e.target.files?.[0];
+                if (picked) onFiles([...files.filter((f) => !isJson(f)), picked]);
+                e.target.value = '';
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" onClick={() => jsonRef.current?.click()}>
+              <FileJson aria-hidden /> Nahrát FHIR JSON
+            </Button>
+          </>
+        )}
         {files.map((f, i) => (
           <span key={`${f.name}-${i}`} className="text-xs text-muted-foreground">
             {f.name}{' '}
@@ -82,6 +106,7 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
   const [existing, setExisting] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const drafts = useQuery({ queryKey: DRAFTS_KEY, queryFn: () => mdtApi.getPatientDrafts() });
+  const json = files.find(isJson);
 
   const open = async (id: number) => {
     try {
@@ -125,7 +150,8 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
       <p className="text-[13px] text-muted-foreground">
         Z rodného čísla se odvodí pohlaví a věk, ze zpráv diagnóza, TNM, ECOG a otázka pro MDT (každý údaj s citací).
-        V IRIS se nic nezapíše, dokud návrh nepotvrdíte. V aplikaci bude pacient jen pod pseudonymem Pxx.
+        Pacienta jde načíst i z FHIR JSON (bundle jednoho pacienta). V IRIS se nic nezapíše, dokud návrh nepotvrdíte.
+        V aplikaci bude pacient jen pod pseudonymem Pxx.
       </p>
       {(drafts.data ?? []).length > 0 && (
         <div className="flex flex-col gap-1 text-sm">
@@ -138,8 +164,10 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
         </div>
       )}
       <label className="flex flex-col gap-1.5 text-sm">
-        <span className="font-medium">Rodné číslo</span>
-        <Input value={rc} onChange={(e) => setRc(e.target.value)} placeholder="585123/1234" inputMode="numeric" autoComplete="off" error={errors.rc} required />
+        <span className="font-medium">
+          Rodné číslo{json && <span className="font-normal text-muted-foreground"> (nepovinné u FHIR JSON, ověří se proti pohlaví a roku narození)</span>}
+        </span>
+        <Input value={rc} onChange={(e) => setRc(e.target.value)} placeholder="585123/1234" inputMode="numeric" autoComplete="off" error={errors.rc} required={!json} />
       </label>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" className="mt-0.5 size-4 accent-ai" checked={synthetic} onChange={(e) => setSynthetic(e.target.checked)} />
@@ -148,7 +176,16 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
           <span className="block text-xs text-muted-foreground">Jen u fiktivních dat smí podklady číst AI (D-021). U skutečného pacienta předvyplní údaje jen pravidla.</span>
         </span>
       </label>
-      <DocumentInputs text={text} onText={setText} files={files} onFiles={setFiles} error={errors.files ?? errors.text} />
+      <DocumentInputs text={text} onText={setText} files={files} onFiles={setFiles} error={errors.files ?? errors.text} allowJson />
+      {json && (
+        <p className="flex items-start gap-1.5 rounded-lg bg-muted px-3 py-2 text-[13px]">
+          <FileJson className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            {json.name}: pacient se načte ze strukturovaných dat souboru (diagnózy, TNM, ECOG, nominace, lékaři). ID se
+            přečíslují na volné Pxx, reference a RČ se zkontrolují.
+          </span>
+        </p>
+      )}
       {existing && (
         <p role="alert" className="text-sm">
           Pacient s tímto rodným číslem už v IRIS je jako <span translate="no">{existing}</span>.{' '}
@@ -156,7 +193,7 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
         </p>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" isLoading={saving} disabled={!rc.trim()}>Vytvořit návrh</Button>
+        <Button type="submit" isLoading={saving} disabled={!rc.trim() && !json}>Vytvořit návrh</Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>Zpět</Button>
       </div>
     </form>
@@ -256,18 +293,39 @@ function DraftReview({
 
   const p = draft.patient;
   const values = draft.values?.length ?? 0;
+  const imported = draft.import ?? null;
   return (
     <div className="flex flex-col gap-4">
       <div>
         <p className="text-sm font-semibold">
           <span translate="no">{draft.patient_id}</span>
-          {p && ` · ${p.sex === 'female' ? 'žena' : 'muž'} · ${p.age} let · RČ ${p.rc_masked}`}
+          {p && ` · ${p.sex === 'female' ? 'žena' : 'muž'} · ${p.age} let${p.rc_masked ? ` · RČ ${p.rc_masked}` : ' · bez RČ'}`}
         </p>
         <p className="text-[13px] text-muted-foreground">
           {draft.synthetic ? 'Testovací pacient (fiktivní data)' : 'Skutečný pacient'}
           {draft.session && ` · po zápisu na ${draft.session.title}`}
         </p>
       </div>
+      {imported && (
+        <div className="rounded-lg border border-border bg-card px-3 py-2 text-[13px]">
+          <p className="flex items-center gap-1.5 font-medium">
+            <FileJson className="size-4" aria-hidden /> {imported.file}: {imported.total} záznamů FHIR
+            {imported.renamed_from && (
+              <span className="font-normal text-muted-foreground">
+                {' '}· přečíslováno <span translate="no">{imported.renamed_from}</span> → <span translate="no">{draft.patient_id}</span>
+              </span>
+            )}
+          </p>
+          <p className="mt-0.5 text-muted-foreground">
+            {Object.entries(imported.counts).sort((a, b) => b[1] - a[1]).map(([type, n]) => `${type} ${n}`).join(' · ')}
+          </p>
+          {imported.practitioners.length > 0 && (
+            <p className="mt-0.5 text-muted-foreground">
+              Lékaři do IRIS: <span translate="no">{imported.practitioners.join(', ')}</span>
+            </p>
+          )}
+        </div>
+      )}
       <ul className="flex flex-col gap-1 text-[13px]">
         {draft.documents.map((d) => (
           <li key={d.id}>
@@ -276,16 +334,40 @@ function DraftReview({
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground">
+      {(!imported || draft.documents.length > 0) && <p className="text-xs text-muted-foreground">
         {draft.ai?.used
           ? `AI vytěžila ${values} ${values === 1 ? 'hodnotu' : 'hodnot'} ověřených proti odstavci zprávy${draft.rejected?.length ? `, ${draft.rejected.length} neověřených odmítla` : ''}.`
           : draft.ai?.reason ?? 'Údaje předvyplnila pravidla z textu.'}
-      </p>
+      </p>}
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium">Otázka pro MDT</span>
         <Textarea value={form.question} onChange={set('question')} rows={3} />
         {f?.question?.citation && form.question === initial.question && <span translate="no" className="text-xs text-muted-foreground">zdroj {f.question.citation}</span>}
       </label>
+      {imported ? (
+        <dl className="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
+          <dt className="font-medium">Diagnózy</dt>
+          <dd>
+            {(f?.diagnoses ?? []).length === 0
+              ? <span className="text-destructive">v souboru není onkologická diagnóza s kódem MKN-10</span>
+              : f!.diagnoses.map((d) => (
+                <span key={d.code} className="block">
+                  {d.code} {d.text} {d.citation && <span translate="no" className="text-xs text-muted-foreground">({d.citation})</span>}
+                </span>
+              ))}
+          </dd>
+          <dt className="font-medium">TNM</dt>
+          <dd>
+            {f?.tnm ? <>{f.tnm.text} <span translate="no" className="text-xs text-muted-foreground">({f.tnm.citation})</span></> : <span className="text-muted-foreground">neuvedeno</span>}
+          </dd>
+          <dt className="font-medium">ECOG</dt>
+          <dd>
+            {f?.ecog ? <>{f.ecog.value} <span translate="no" className="text-xs text-muted-foreground">({f.ecog.citation})</span></> : <span className="text-muted-foreground">neuvedeno</span>}
+          </dd>
+          <dd className="col-span-2 text-xs text-muted-foreground">Údaje jsou ze souboru FHIR. Opravují se v souboru, tady jde upravit otázka pro MDT.</dd>
+        </dl>
+      ) : (
+      <>
       <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3">
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="font-medium">MKN-10</span>
@@ -312,6 +394,8 @@ function DraftReview({
           </select>
         </label>
       </div>
+      </>
+      )}
       {draft.missing_for_confirm && draft.missing_for_confirm.length > 0 && (
         <p role="alert" className="text-sm text-destructive">K zápisu chybí: {draft.missing_for_confirm.join(', ')}.</p>
       )}

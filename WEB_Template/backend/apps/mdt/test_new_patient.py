@@ -216,3 +216,111 @@ def test_real_patient_data_never_go_to_llm(monkeypatch):
     assert not ai_service.provider_for_patient(synthetic).is_mock
     monkeypatch.setenv('AI_REAL_PATIENT_DATA', 'True')
     assert not ai_service.provider_for_patient(real).is_mock
+
+
+# ── import z FHIR JSON (T-335) ────────────────────────────────────────────────
+def _json_file(data, name='pacient.json'):
+    f = io.BytesIO(json.dumps(data, ensure_ascii=False).encode('utf-8'))
+    f.name = name
+    return f
+
+
+def _dataset_bundle(pid='P07'):
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[4] / 'data' / 'dataset_test' / 'pacienti'
+    return json.loads((root / pid / f'{pid}_bundle.json').read_text(encoding='utf-8'))
+
+
+def test_json_bundle_prefills_nomination_and_confirms_into_iris(board):
+    """Bundle P07 z data/dataset_test bez RČ → návrh s nominací ze strukturovaných dat → zápis do IRIS + případ."""
+    r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'files': [_json_file(_dataset_bundle(), 'P07_bundle.json')],
+                                                             'session': board.pk}, format='multipart')
+    assert r.status_code == 201, r.json()
+    d = r.json()
+    assert d['patient_id'] == 'P07' and d['synthetic'] and d['import']['file'] == 'P07_bundle.json'
+    assert d['import']['counts']['Observation'] == 12 and d['import']['practitioners'] == ['LEK-P07-01', 'LEK-P07-02', 'LEK-P07-03']
+    assert d['patient'] == {'rc_masked': None, 'sex': 'female', 'birth_year': 1967, 'age': d['patient']['age']}
+    f = d['fields']
+    assert f['question']['citation'] == 'P07-zad01' and 'jaterními metastázami' in f['question']['text']
+    assert [x['code'] for x in f['diagnoses']][:1] == ['C20'] and f['diagnoses'][0]['citation'] == 'P07-dg1'
+    assert f['ecog']['citation'] == 'P07-ecog01' and f['tnm']['citation'] == 'P07-tnm01'
+    assert d['missing_for_confirm'] == [] and d['preview']['detail']['patient_id'] == 'P07'
+
+    locked = as_user('onkolog').patch(f"/api/mdt/patient-drafts/{d['id']}/", {'fields': {'ecog': 2}}, format='json')
+    assert locked.status_code == 400
+    edited = as_user('onkolog').patch(f"/api/mdt/patient-drafts/{d['id']}/",
+                                      {'fields': {'question': 'Pořadí léčby: nejdřív játra, nebo rektum?'}}, format='json')
+    assert edited.status_code == 200 and 'question' in edited.json()['edited']
+
+    done = as_user('onkolog').post(f"/api/mdt/patient-drafts/{d['id']}/confirm/")
+    assert done.status_code == 201, done.json()
+    assert 'Practitioner/LEK-P07-01' in done.json()['fhir_written'] and 'Provenance/P07-zad01-prov' in done.json()['fhir_written']
+    request = client.read('ServiceRequest', 'P07-zad01')
+    assert request['reasonCode'][0]['text'] == 'Pořadí léčby: nejdřív játra, nebo rektum?'
+    assert any(t['code'] == 'import-fhir-json' for t in client.read('Patient', 'P07')['meta']['tag'])
+    case = MdtCase.objects.get(patient_fhir_id='P07')
+    assert case.session == board and case.service_request_fhir_id == 'P07-zad01'
+    assert as_user('onkolog').get('/api/mdt/patients/P07/intake/').json()['service_request_id'] == 'P07-zad01'
+
+
+def test_json_generic_bundle_renumbers_ids_and_references(board):
+    """Export mimo konvenci datasetu (UUID, `urn:uuid` reference) → ID podle konvence a funkční reference."""
+    rc = make_rc(date(1961, 6, 1), female=True)
+    bundle = {'resourceType': 'Bundle', 'type': 'collection', 'entry': [
+        {'fullUrl': 'urn:uuid:aaa', 'resource': {'resourceType': 'Patient', 'id': 'aaa', 'gender': 'female', 'birthDate': '1961-06-01'}},
+        {'fullUrl': 'urn:uuid:bbb', 'resource': {
+            'resourceType': 'Condition', 'id': 'bbb', 'category': [{'text': 'onkologická diagnóza'}],
+            'code': {'coding': [{'system': 'http://hl7.org/fhir/sid/icd-10', 'code': 'C50.4', 'display': 'karcinom prsu'}]},
+            'subject': {'reference': 'urn:uuid:aaa'}}},
+        {'fullUrl': 'urn:uuid:ccc', 'resource': {
+            'resourceType': 'Observation', 'id': 'ccc', 'status': 'final',
+            'code': {'coding': [{'system': 'http://loinc.org', 'code': '89247-1'}], 'text': 'ECOG'},
+            'valueInteger': 1, 'subject': {'reference': 'Patient/aaa'}}},
+        {'resource': {'resourceType': 'ServiceRequest', 'id': 'ddd', 'status': 'active', 'intent': 'order',
+                      'subject': {'reference': 'Patient/aaa'}, 'reasonReference': [{'reference': 'urn:uuid:bbb'}],
+                      'reasonCode': [{'text': 'Adjuvantní léčba?'}]}},
+    ]}
+    r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'rc': rc, 'files': [_json_file(bundle)]}, format='multipart')
+    assert r.status_code == 201, r.json()
+    d = r.json()
+    _no_rc_value(r, rc)
+    assert d['import']['renamed_from'] == 'aaa' and d['patient']['rc_masked'].endswith(rc[-4:])
+    f = d['fields']
+    assert f['diagnoses'][0] == {'code': 'C50.4', 'text': 'karcinom prsu', 'citation': 'P07-dg1'}
+    assert f['ecog'] == {'value': 1, 'citation': 'P07-ecog01', 'date': None} and f['question']['citation'] == 'P07-zad01'
+    done = as_user('onkolog').post(f"/api/mdt/patient-drafts/{d['id']}/confirm/")
+    assert done.status_code == 201, done.json()
+    assert client.read('Condition', 'P07-dg1')['subject'] == {'reference': 'Patient/P07'}
+    assert client.read('ServiceRequest', 'P07-zad01')['reasonReference'] == [{'reference': 'Condition/P07-dg1'}]
+    patient = client.read('Patient', 'P07')
+    assert {'system': rc_module.SYSTEM, 'value': rc} in patient['identifier']
+
+
+def _no_rc_value(response, rc):
+    raw = json.dumps(response.json(), ensure_ascii=False)
+    assert rc not in raw and rc.replace('/', '') not in raw
+
+
+def test_json_upload_errors(board):
+    post = lambda data, **extra: as_user('onkolog').post(  # noqa: E731
+        '/api/mdt/patient-drafts/', {'files': [_json_file(data)], **extra}, format='multipart')
+    bundle = _dataset_bundle()
+    man = make_rc(date(1967, 1, 5))                                       # P07 je žena
+    assert 'pohlaví' in post(bundle, rc=man).json()['files']
+    woman_other_year = make_rc(date(1970, 1, 5), female=True)
+    assert 'Rok narození' in post(bundle, rc=woman_other_year).json()['files']
+    two = {'resourceType': 'Bundle', 'entry': [{'resource': {'resourceType': 'Patient', 'id': 'a', 'gender': 'male',
+                                                             'birthDate': '1950'}},
+                                               {'resource': {'resourceType': 'Patient', 'id': 'b', 'gender': 'male',
+                                                             'birthDate': '1950'}}]}
+    assert 'právě jednoho pacienta' in post(two).json()['files']
+    dangling = {'resourceType': 'Bundle', 'entry': [
+        {'resource': {'resourceType': 'Patient', 'id': 'a', 'gender': 'male', 'birthDate': '1950'}},
+        {'resource': {'resourceType': 'Condition', 'id': 'c', 'subject': {'reference': 'Patient/a'},
+                      'evidence': [{'detail': [{'reference': 'DiagnosticReport/neni'}]}]}}]}
+    assert 'nejsou v souboru ani v IRIS' in post(dangling).json()['files']
+    broken = io.BytesIO(b'{"resourceType": ')
+    broken.name = 'rozbity.json'
+    r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'files': [broken]}, format='multipart')
+    assert r.status_code == 400 and 'platný JSON' in r.json()['files']
+    assert as_user('onkolog').post('/api/mdt/patient-drafts/', {'text': 'Dg.: C50.4'}, format='multipart').status_code == 400  # bez JSON je RČ povinné

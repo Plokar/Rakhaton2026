@@ -52,6 +52,34 @@ def assign(user, *, role: str | None = None, specialty: str | None = None) -> No
         UserProfile.objects.update_or_create(user=user, defaults={'specialty': specialty})
 
 
+def practitioner_id(user) -> str | None:
+    """Lékař v IRIS, se kterým je účet propojený (T-328): podle něj se hledají „moje úkoly“."""
+    profile = UserProfile.objects.filter(user=user).first()
+    return profile.practitioner_fhir_id if profile and profile.practitioner_fhir_id else None
+
+
+def ensure_practitioner(user) -> str:
+    """Propojí účet s lékařem v IRIS; když propojený není, založí `Practitioner/LEK-APP-<účet>` (idempotentní PUT)."""
+    from services import practitioners
+    from services.fhir import client as fhir
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    pid = profile.practitioner_fhir_id or practitioners.app_practitioner_id(user.username)
+    if pid.startswith(practitioners.APP_PREFIX):        # lékaře účtu aplikace udržujeme (jméno, odbornost)
+        fhir.put(practitioners.app_practitioner(pid, user.get_full_name() or user.username, profile.specialty,
+                                                user.username))
+    if profile.practitioner_fhir_id != pid:
+        profile.practitioner_fhir_id = pid
+        profile.save(update_fields=['practitioner_fhir_id'])
+    return pid
+
+
+def users_by_practitioner() -> dict[str, dict]:
+    """Lékař v IRIS → účet aplikace (`{user_id, username}`) pro adresář lékařů."""
+    return {p.practitioner_fhir_id: {'user_id': p.user_id, 'username': p.user.username}
+            for p in UserProfile.objects.exclude(practitioner_fhir_id='').select_related('user')}
+
+
 def ensure_demo_users() -> dict:
     """Skupiny + demo účty (heslo `MDT_DEMO_PASSWORD`, výchozí jako demo účty templatu). Idempotentní."""
     groups = {name: Group.objects.get_or_create(name=name)[0] for name in ROLES}

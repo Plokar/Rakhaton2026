@@ -381,7 +381,7 @@ Source = Literal["ai", "human", "ai_edited"]
 
 
 class Attendee(BaseModel):
-    user_id: str
+    user_id: str = Field(description='Lékař v IRIS „LEK-…“ (výběr z /api/mdt/practitioners/, T-328), jinak volný kód')
     name: str
     role: RoleId | Literal["chair"]
 
@@ -468,7 +468,8 @@ class DecisionSections(BaseModel):
 class DecisionTask(BaseModel):
     id: str
     description: str
-    owner: str = Field(description="LEK-… / role")
+    owner: str = Field(description="Lékař v IRIS „LEK-…“ (výběr z /api/mdt/practitioners/, T-328), jinak role")
+    owner_name: str | None = Field(default=None, description="Jméno lékaře pro zobrazení a Task.owner.display")
     due_date: str = Field(description="YYYY-MM-DD")
     status: Literal["requested", "in-progress", "completed"]
     source: Source
@@ -588,7 +589,7 @@ class MdtTask(BaseModel):
     """GET /api/mdt/tasks/ → MdtTask[] (FR-P3, T-511)."""
     id: str = Field(description='"P03-mdt02-task01" (FHIR Task)')
     patient_id: str
-    mdt_record: str
+    mdt_record: str | None = Field(description='"P03-mdt02" (Composition); null u návrhu závěru')
     case_id: int | None = None
     description: str
     owner: TaskOwner
@@ -596,6 +597,7 @@ class MdtTask(BaseModel):
     status: Literal["requested", "in-progress", "completed"]
     authored_on: str | None = None
     re_mdt: TaskReMdt | None = None
+    draft: bool = Field(default=False, description="Úkol z nepotvrzeného závěru (`?drafts=1`, T-328); stav nejde měnit")
 
 
 class CaseAuthor(BaseModel):
@@ -637,6 +639,7 @@ class Me(BaseModel):
     name: str
     role: MdtRole = Field(description="Superuser = mdt_admin, bez skupiny = mdt_viewer")
     specialty: RoleId | None
+    practitioner_id: str | None = Field(default=None, description="Lékař v IRIS „LEK-…“, podle něj „moje úkoly“ (T-328)")
 
 
 class SessionChair(BaseModel):

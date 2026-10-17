@@ -1,14 +1,18 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Scale, Trash2 } from 'lucide-react';
+import { Plus, Scale, Trash2, UserRoundSearch } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Decision, EvidenceId, Light, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
 import { Citations } from './citations';
 import { CompatibilityLight } from './CompatibilityLight';
+import { PractitionerPicker } from './PractitionerPicker';
 import { ROLE_META } from './roles';
+
+/** Koho vybírá popup lékařů (T-328): nového přítomného, nebo vlastníka úkolu. */
+type PickerTarget = { kind: 'attendee' } | { kind: 'task'; index: number };
 
 type Sections = Decision['sections'];
 type Sourced = { text: string; source: Source };
@@ -389,9 +393,26 @@ export function DecisionEditor({
   const s = decision.sections;
   const set = (patch: Partial<Sections>) => onChange({ ...decision, sections: { ...s, ...patch } });
   const setTop = (patch: Partial<Decision>) => onChange({ ...decision, ...patch });
+  const [picker, setPicker] = React.useState<PickerTarget | null>(null);
 
   return (
     <div className="space-y-5">
+      <PractitionerPicker
+        open={picker !== null}
+        onOpenChange={(open) => !open && setPicker(null)}
+        title={picker?.kind === 'task' ? 'Komu úkol přidělit' : 'Přidat přítomného'}
+        excludeIds={picker?.kind === 'attendee' ? decision.attendees.map((a) => a.user_id) : []}
+        onSelect={(p) => {
+          if (picker?.kind === 'attendee') {
+            setTop({ attendees: [...decision.attendees, { user_id: p.id, name: p.name, role: p.role ?? 'oncologist' }] });
+          } else if (picker?.kind === 'task') {
+            const i = picker.index;
+            setTop({
+              tasks: decision.tasks.map((x, j) => (j === i ? { ...x, owner: p.id, owner_name: p.name, source: afterEdit(x.source) } : x)),
+            });
+          }
+        }}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Typ projednání">
           <select
@@ -598,13 +619,9 @@ export function DecisionEditor({
         <ul className="space-y-1.5">
           {decision.attendees.map((a, i) => (
             <li key={i} className="flex flex-wrap items-center gap-2">
-              <Input
-                className="min-w-0 flex-1"
-                value={a.name}
-                disabled={readOnly}
-                aria-label="Jméno nebo kód lékaře"
-                onChange={(e) => setTop({ attendees: decision.attendees.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) })}
-              />
+              <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
+                {a.name || a.user_id || 'Bez jména'}
+              </span>
               <select
                 className={fieldClass}
                 value={a.role}
@@ -634,7 +651,7 @@ export function DecisionEditor({
         {!readOnly && (
           <button
             type="button"
-            onClick={() => setTop({ attendees: [...decision.attendees, { user_id: '', name: '', role: 'oncologist' }] })}
+            onClick={() => setPicker({ kind: 'attendee' })}
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden /> Přidat přítomného
@@ -675,7 +692,17 @@ export function DecisionEditor({
                 </div>
                 <Input value={t.description} disabled={readOnly} aria-label="Úkol" placeholder="Co je potřeba udělat" onChange={(e) => update({ description: e.target.value })} />
                 <div className="grid gap-2 sm:grid-cols-3">
-                  <Input value={t.owner} disabled={readOnly} aria-label="Kdo" placeholder="Kdo (LEK-… / role)" onChange={(e) => update({ owner: e.target.value })} />
+                  <button
+                    type="button"
+                    disabled={readOnly}
+                    onClick={() => setPicker({ kind: 'task', index: i })}
+                    aria-label={`Komu: ${t.owner_name || t.owner || 'nevybráno'}. Vybrat lékaře`}
+                    title={t.owner || undefined}
+                    className={cn(fieldClass, 'flex min-w-0 items-center gap-1.5 text-left disabled:cursor-default', !t.owner && 'text-muted-foreground')}
+                  >
+                    <UserRoundSearch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <span className="truncate">{t.owner_name || t.owner || 'Vybrat lékaře…'}</span>
+                  </button>
                   <Input type="date" value={t.due_date} disabled={readOnly} aria-label="Termín" onChange={(e) => update({ due_date: e.target.value })} />
                   <select
                     className={fieldClass}

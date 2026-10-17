@@ -29,6 +29,8 @@ export const queryKeys = {
   sessions: ['sessions'] as const,
   session: (id: number | string) => ['session', String(id)] as const,
   tasks: ['tasks'] as const,
+  myTasks: (patientId?: string | null) => ['tasks', 'mine', patientId ?? 'all'] as const,
+  practitioners: ['practitioners'] as const,
   patients: ['patients'] as const,
   brief: (caseId: number | string) => ['case', String(caseId), 'brief'] as const,
   compatibility: (caseId: number | string) => ['case', String(caseId), 'compatibility'] as const,
@@ -69,6 +71,21 @@ export function useSessionQuery(id: number | string | null | undefined) {
 
 export function useTasksQuery() {
   return useQuery({ queryKey: queryKeys.tasks, queryFn: () => mdtApi.getTasks(), staleTime: 60_000 });
+}
+
+/** Úkoly přiřazené přihlášenému lékaři, i z nepotvrzených závěrů (T-328); volitelně jen u pacienta. */
+export function useMyTasksQuery(patientId?: string | null, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.myTasks(patientId),
+    queryFn: () => mdtApi.getTasks({ mine: true, drafts: true, patient: patientId ?? undefined }),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+/** Všichni lékaři nemocnice z IRIS (jeden dotaz, filtruje se v popupu). */
+export function usePractitionersQuery(enabled = true) {
+  return useQuery({ queryKey: queryKeys.practitioners, queryFn: () => mdtApi.getPractitioners(), enabled, staleTime: 5 * 60_000 });
 }
 
 export function usePatientsQuery(enabled = true) {

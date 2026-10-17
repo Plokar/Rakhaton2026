@@ -20,7 +20,9 @@ import {
   SidebarMenuSkeleton,
   SidebarRail,
 } from '@/components/shadcn/sidebar';
-import { useSessionsQuery, useTasksQuery } from '@/lib/queries';
+import { useMe } from '@/components/mdt/me';
+import { isOverdue } from '@/components/mdt/MyTasks';
+import { useMyTasksQuery, useSessionsQuery, useTasksQuery } from '@/lib/queries';
 
 const NAV = [
   { href: '/dashboard', label: 'Přehled', icon: LayoutGrid, exact: true },
@@ -35,7 +37,12 @@ export function AppSidebar() {
   const tasks = useTasksQuery();
   const today = todayPrague();
 
-  const overdue = (tasks.data ?? []).filter((t) => t.status !== 'completed' && t.due_date && t.due_date.slice(0, 10) < today).length;
+  const overdue = (tasks.data ?? []).filter((t) => isOverdue(t, today)).length;
+  // T-328: lékař vidí počet svých nedokončených úkolů (i z návrhu závěru), předseda dál úkoly po termínu
+  const me = useMe();
+  const mine = useMyTasksQuery(null, Boolean(me?.practitioner_id));
+  const myOpen = (mine.data ?? []).filter((t) => t.status !== 'completed');
+  const myLate = myOpen.filter((t) => isOverdue(t, today)).length;
   const upcoming = (sessions.data ?? [])
     .filter((s) => s.status !== 'closed' && pragueDay(s.date) >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -78,10 +85,19 @@ export function AppSidebar() {
                       <item.icon aria-hidden />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
-                    {item.href === '/dashboard/tasks' && overdue > 0 && (
-                      <SidebarMenuBadge aria-label={`${overdue} po termínu`} className="text-amber-700 dark:text-amber-400">
-                        {overdue}
+                    {item.href === '/dashboard/tasks' && myOpen.length > 0 ? (
+                      <SidebarMenuBadge
+                        aria-label={`Vašich úkolů: ${myOpen.length}${myLate ? `, po termínu ${myLate}` : ''}`}
+                        className={myLate ? 'text-amber-700 dark:text-amber-400' : 'text-primary'}
+                      >
+                        {myOpen.length}
                       </SidebarMenuBadge>
+                    ) : (
+                      item.href === '/dashboard/tasks' && overdue > 0 && (
+                        <SidebarMenuBadge aria-label={`${overdue} po termínu`} className="text-amber-700 dark:text-amber-400">
+                          {overdue}
+                        </SidebarMenuBadge>
+                      )
                     )}
                   </SidebarMenuItem>
                 );

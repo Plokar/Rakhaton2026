@@ -420,6 +420,28 @@ class ConditionalRecommendation(BaseModel):
     source: Source
 
 
+class ConsideredOption(BaseModel):
+    """Zvažovaná možnost z B2 (postup ze semaforu §8.3) a zda ji komise zvolila (zadání C, T-326)."""
+    id: str = Field(description="ProcedureCompatibility.id")
+    title: str
+    light: Light | None = Field(default=None, description="Semafor postupu v okamžiku zápisu (počítá kód, D-015)")
+    chosen: bool = False
+
+
+class GuidelineCompliance(BaseModel):
+    """Soulad závěru s doporučenými postupy (zadání B2 a C): ano / ne + důvod odchylky. Odchylka neblokuje, chce zdůvodnění."""
+    compliant: bool
+    reason: str = Field(default="", description="Krátké zdůvodnění odchylky; bez něj nejde závěr potvrdit, když compliant = false")
+    citations: list[EvidenceId] = Field(default_factory=list, description="Pasáže guidelines, kterých se soulad týká")
+
+
+class DissentingOpinion(BaseModel):
+    """Odlišné stanovisko člena komise (zadání C)."""
+    member: str = Field(description="Jméno nebo kód člena komise")
+    role: str = Field(description="RoleId nebo chair")
+    text: str
+
+
 class DecisionSections(BaseModel):
     """Sekce Composition „Záznam MDT“ v pořadí datasetu."""
     question: SourcedText = Field(description="Projednaná otázka")
@@ -436,6 +458,11 @@ class DecisionSections(BaseModel):
     tumor_priority: SourcedText | None = Field(
         default=None, description="Duplicita malignit: priorita a plán druhého nádoru (OBC-1.4)",
     )
+    options_considered: list[ConsideredOption] = Field(default_factory=list, description="Zvažované možnosti a zvolený postup (B2)")
+    guideline_compliance: GuidelineCompliance | None = Field(
+        default=None, description="Soulad s doporučenými postupy (ano / ne + důvod odchylky)",
+    )
+    dissent: list[DissentingOpinion] = Field(default_factory=list, description="Odlišná stanoviska členů komise")
 
 
 class DecisionTask(BaseModel):

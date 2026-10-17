@@ -57,6 +57,8 @@ class MdtCase(models.Model):
     status = models.CharField(max_length=14, choices=STATUS, default='nominated')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
                                    related_name='created_cases')
+    # Přizvaní ke spolupráci (T-326): smějí případ upravovat jako zadávající lékař; přizývá předseda nebo zadávající.
+    collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='mdt_collaborations')
     ecog = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MaxValueValidator(4)])
     intent = models.CharField(max_length=1, choices=INTENT, null=True, blank=True)
     imaging_recent_checked = models.BooleanField(default=False)

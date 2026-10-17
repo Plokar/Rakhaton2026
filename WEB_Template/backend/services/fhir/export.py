@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 
 from services.fhir import client as fhir
 from services.fhir.mcode import apply_profiles
-from services.fhir.writeback import BASE, INTENTS, MODALITIES, ROLES_CS
+from services.fhir.writeback import BASE, INTENTS, MODALITIES, ROLES_CS, record_extras
 
 TASK_STATUS = {'requested': 'zadáno', 'in-progress': 'probíhá', 'completed': 'hotovo'}
 SOURCE_LABEL = {'ai': ' [AI návrh]', 'ai_edited': ' [AI, upraveno lékařem]', 'human': ''}
@@ -112,6 +112,9 @@ def decision_pdf(decision: dict, *, title: str, mdt_date: datetime, patient: dic
                 s['conditional']['source'])
     if s.get('tumor_priority'):
         section('Priorita nádorů', s['tumor_priority']['text'], s['tumor_priority']['source'])
+    for name, text in record_extras(s):                      # zadání C: možnosti, soulad s guidelines, odlišná stanoviska
+        story.append(p(name, h2))
+        story.extend(p(line) for line in text.split('\n'))
     section('Závěr MDT', s['conclusion']['text'], s['conclusion']['source'])
     if decision.get('patient_summary'):                       # BON-4 (T-306)
         section('Shrnutí pro pacienta', ' '.join(i['text'] for i in decision['patient_summary']['items']), 'ai')

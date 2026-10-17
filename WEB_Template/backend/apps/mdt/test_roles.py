@@ -85,3 +85,33 @@ def test_acknowledged_warnings_are_only_appended(seeded):
 def test_viewer_cannot_generate_brief(seeded):
     case = MdtCase.objects.get(patient_fhir_id='P03')
     assert as_user('radiolog').post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').status_code == 403
+
+
+def test_collaborator_can_edit_invited_case(seeded):
+    """T-326: přizvaný lékař upravuje případ jako zadávající, přizývá jen zadávající lékař nebo předseda."""
+    from django.contrib.auth import get_user_model
+    users = get_user_model().objects
+    chirurg, onkolog = users.get(username='chirurg'), users.get(username='onkolog')
+    p04 = MdtCase.objects.get(patient_fhir_id='P04')       # zadal pneumolog
+    url = f'/api/mdt/cases/{p04.pk}/'
+    assert as_user('chirurg').patch(url, {'imaging_recent_checked': True}, format='json').status_code == 403
+    assert as_user('onkolog').patch(url, {'collaborators': [chirurg.pk]}, format='json').status_code == 403
+    r = as_user('pneumolog').patch(url, {'collaborators': [chirurg.pk]}, format='json')
+    assert r.status_code == 200
+    assert [u['user_id'] for u in r.json()['collaborators']] == [chirurg.pk]
+    assert as_user('chirurg').patch(url, {'imaging_recent_checked': True}, format='json').status_code == 200
+    assert as_user('chirurg').patch(url, {'collaborators': [chirurg.pk, onkolog.pk]}, format='json').status_code == 403
+    agenda = as_user('predseda').get(f'/api/mdt/sessions/{p04.session_id}/').json()
+    assert [u['user_id'] for c in agenda['cases'] if c['id'] == p04.pk for u in c['collaborators']] == [chirurg.pk]
+    assert as_user('predseda').patch(url, {'collaborators': []}, format='json').json()['collaborators'] == []
+    assert as_user('chirurg').patch(url, {'imaging_recent_checked': False}, format='json').status_code == 403
+
+
+def test_collaborators_validation(seeded):
+    p04 = MdtCase.objects.get(patient_fhir_id='P04')
+    url = f'/api/mdt/cases/{p04.pk}/'
+    assert as_user('pneumolog').patch(url, {'collaborators': 'chirurg'}, format='json').status_code == 400
+    assert as_user('pneumolog').patch(url, {'collaborators': [999999]}, format='json').status_code == 400
+    # zadávající lékař sám sebe nepřizývá (právo už má)
+    me = p04.created_by_id
+    assert as_user('pneumolog').patch(url, {'collaborators': [me]}, format='json').json()['collaborators'] == []

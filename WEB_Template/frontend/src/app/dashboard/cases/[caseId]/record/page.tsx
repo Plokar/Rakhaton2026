@@ -11,7 +11,7 @@ import { DEMO_CASE } from '@/components/mdt/detail/CaseDetail';
 import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
-import { DecisionEditor } from '@/components/mdt/DecisionEditor';
+import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
@@ -23,7 +23,7 @@ import { briefP03, decisionP03 } from '@/lib/fixtures';
 import { mdtApi } from '@/lib/mdt-api';
 import { useCaseLocation } from '@/lib/queries';
 import { useApiData } from '@/lib/use-api-data';
-import type { Brief, Decision, EvidenceId, Me } from '@/types/mdt';
+import type { Brief, Decision, EvidenceId, Me, ProcedureCompatibility } from '@/types/mdt';
 
 const orNull = <T,>(p: Promise<T>) =>
   p.catch((err: unknown) => {
@@ -34,6 +34,9 @@ const fetchDecision = (cid: string): Promise<Decision | null> =>
   cid === DEMO_CASE ? Promise.resolve(decisionP03) : orNull(mdtApi.getDecision(cid));
 const fetchBrief = (cid: string): Promise<Brief | null> =>
   cid === DEMO_CASE ? Promise.resolve(briefP03) : orNull(mdtApi.getBrief(cid));
+/** Postupy ze semaforu pro „zvažované možnosti“; bez nich editor ukáže jen uložený výběr. */
+const fetchOptions = (cid: string): Promise<ProcedureCompatibility[]> =>
+  cid === DEMO_CASE ? Promise.resolve([]) : mdtApi.getCompatibility(Number(cid)).catch(() => []);
 
 const nowLabel = () => new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
 
@@ -76,6 +79,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const me = useMe();
   const decisionData = useApiData(fetchDecision, caseId);
   const briefData = useApiData(fetchBrief, caseId);
+  const optionsData = useApiData(fetchOptions, caseId);
   const [draft, setDraft] = React.useState<Decision | null>(null);
   const [savedAt, setSavedAt] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
@@ -89,7 +93,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const brief = briefData.data ?? null;
   const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me));
   const confirmed = current?.status === 'confirmed';
-  const canEdit = !confirmed && (isDemo || can.generateBrief(me));
+  // T-326: upravuje zadávající lékař, přizvaný lékař nebo předseda (backend to ověří znovu)
+  const canEdit = !confirmed && (isDemo || (location.item ? can.editCase(me, location.item) : can.manageBoards(me)));
   const canConfirm = !isDemo && !confirmed && can.manageBoards(me);
   const dirty = draft !== null && savedAt === null;
   const order = React.useMemo(() => collectCitations([current ?? {}, brief?.red_flags ?? []]), [current, brief]);
@@ -125,6 +130,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
     if (!current?.sections.question.text.trim() || !current.sections.conclusion.text.trim()) {
       throw new Error('Před potvrzením vyplňte projednanou otázku a závěr MDT.');
     }
+    const deviation = guidelineDeviation(current.sections);
+    if (deviation) throw new Error(deviation);
     if (!(await save())) throw new Error('Draft se nepodařilo uložit.');
     const result = await mdtApi.confirmDecision(caseId);
     setDraft(result);
@@ -228,7 +235,13 @@ function DecisionContent({ caseId }: { caseId: string }) {
       {current && (
         <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
           <section className="rounded-xl border border-border bg-card p-5">
-            <DecisionEditor decision={current} onChange={edit} readOnly={!canEdit} redFlags={brief?.red_flags ?? []} />
+            <DecisionEditor
+              decision={current}
+              onChange={edit}
+              readOnly={!canEdit}
+              redFlags={brief?.red_flags ?? []}
+              options={optionsData.data ?? []}
+            />
           </section>
           <SourceDrawer
             evidenceId={openId}

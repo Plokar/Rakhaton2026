@@ -355,6 +355,12 @@ export interface Decision {
     conditional?: { text: string; missing: string[]; source: Source };
     /** Duplicita malignit: priorita a plán druhého nádoru (OBC-1.4). */
     tumor_priority?: { text: string; source: Source };
+    /** Zvažované možnosti z B2 a zvolený postup; `light` = semafor v okamžiku zápisu (zadání C, T-326). */
+    options_considered?: { id: string; title: string; light?: Light | null; chosen: boolean }[];
+    /** Soulad s doporučenými postupy: ano / ne + důvod odchylky (zadání B2, C). Odchylka neblokuje, chce zdůvodnění. */
+    guideline_compliance?: { compliant: boolean; reason: string; citations: EvidenceId[] } | null;
+    /** Odlišná stanoviska členů komise. */
+    dissent?: { member: string; role: RoleId | 'chair'; text: string }[];
   };
   /** → Task */
   tasks: {
@@ -451,6 +457,8 @@ export interface MdtCase {
   patient_id: string;
   service_request_id: string;
   created_by?: { user_id: number; name: string };
+  /** Přizvaní ke spolupráci (T-326): smějí případ upravovat; mění je předseda nebo zadávající lékař. */
+  collaborators?: { user_id: number; name: string }[];
   ecog: number | null;
   intent: 'C' | 'P' | null;
   /** „Snímek mladší než 3 měsíce“ */

@@ -190,6 +190,10 @@ export const mdtApi = {
   updateConfig: (configId: string, config: BriefConfig) =>
     apiFetch<BriefConfig>(`/api/mdt/configs/${encodeURIComponent(configId)}/`, { method: 'PUT', body: JSON.stringify(config) }),
 
+  /** Pořadí pacientů v agendě (T-324, jen předseda): ID všech případů boardu v novém pořadí → agenda. */
+  setAgendaOrder: (sessionId: number, caseIds: number[]) =>
+    apiFetch<MdtSessionDetail>(`/api/mdt/sessions/${sessionId}/order/`, { method: 'PUT', body: JSON.stringify({ cases: caseIds }) }),
+
   updateSession: (sessionId: number, input: Partial<SessionInput> & { config_id?: number | null }) =>
     apiFetch<MdtSession>(`/api/mdt/sessions/${sessionId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 

@@ -258,6 +258,29 @@ export function useMoveCase() {
   });
 }
 
+/** Pořadí pacientů v agendě (T-324, jen předseda): optimisticky v cache boardu, při chybě návrat. */
+export function useAgendaOrder(sessionId: number) {
+  const client = useQueryClient();
+  const key = queryKeys.session(sessionId);
+  return useMutation({
+    mutationFn: (caseIds: number[]) => mdtApi.setAgendaOrder(sessionId, caseIds),
+    onMutate: async (caseIds) => {
+      await client.cancelQueries({ queryKey: key });
+      const prev = client.getQueryData<MdtSessionDetail>(key);
+      if (prev) {
+        const position = new Map(caseIds.map((id, i) => [id, i]));
+        client.setQueryData(key, { ...prev, cases: prev.cases.map((c) => ({ ...c, order: position.get(c.id ?? -1) ?? c.order })) });
+      }
+      return { prev };
+    },
+    onError: (_error, _ids, context) => {
+      if (context?.prev) client.setQueryData(key, context.prev);
+    },
+    onSuccess: (agenda) => client.setQueryData(key, agenda),
+    onSettled: () => void client.invalidateQueries({ queryKey: queryKeys.sessions }),
+  });
+}
+
 /** Stav případu v agendě (jen předseda): projednáno / zpět na řadu. Optimisticky v cache boardu. */
 export function useCaseStatus(sessionId: number | null | undefined) {
   const client = useQueryClient();

@@ -12,6 +12,11 @@ import { authApi, refreshSession, type RegisterData, type User } from '@/lib/api
 /** Access cookie platí 15 min: obnovit dřív, ať nevyprší, dokud je aplikace otevřená (T-336). */
 const RENEW_EVERY_MS = 10 * 60_000;
 
+/** Na chráněnou stránku pustí proxy.ts jen s access nebo refresh cookie, jinde (přihlášení) obnova nemá smysl. */
+const PROTECTED_PATHS = ['/dashboard', '/brief', '/projector'];
+const onProtectedPage = () =>
+  typeof window !== 'undefined' && PROTECTED_PATHS.some((path) => window.location.pathname.startsWith(path));
+
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -40,7 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authApi
         .checkStatus()
         // access cookie mohla vypršet, refresh cookie ale platí 7 dní (T-336)
-        .then(async (status) => (status.authenticated || !(await refreshSession()) ? status : authApi.checkStatus()))
+        .then(async (status) =>
+          status.authenticated || !onProtectedPage() || !(await refreshSession()) ? status : authApi.checkStatus(),
+        )
         .then((status) =>
           setState({ user: status.user, isAuthenticated: status.authenticated, isLoading: false }),
         )

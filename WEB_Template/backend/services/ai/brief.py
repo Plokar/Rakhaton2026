@@ -279,6 +279,17 @@ def _missing_items(resources: list[dict], skipped_fields: Iterable[str]) -> list
         items.append({"id": f"miss-{field['id']}", "kind": "missing", "text": text,
                       "citations": [field["citation"]] if field.get("citation") else [],
                       "expected_source": f"povinné podle {field['required_by']}" if field.get("required_by") else None})
+    # T-318: povinné údaje znalostní báze, které formulář nehlídá (`CHYBI:*`), např. P04 osmolalita při Na 129
+    resource_ids = {r["id"] for r in resources}
+    for w in prefill["warnings"]:
+        if not w["id"].startswith("CHYBI:"):
+            continue
+        patient = [c for c in w["citations"] if c in resource_ids]
+        sources = [c for c in w["citations"] if c not in resource_ids]
+        items.append({"id": f"miss-{w['id']}", "kind": "missing",
+                      "text": f"{w['title'].removeprefix('Chybí: ')}: údaj chybí v podkladech ({w['detail'].rstrip('.')})",
+                      "citations": patient,
+                      "expected_source": f"povinné podle {', '.join(sources)}" if sources else None})
     return [{k: v for k, v in item.items() if v is not None} for item in items]
 
 

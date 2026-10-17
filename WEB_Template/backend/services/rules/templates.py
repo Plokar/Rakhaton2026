@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-from services.rules.onko_kb import GUIDELINE_ID, ext_ids, q
+from services.rules.onko_kb import GUIDELINE_ID, ext_ids, patient_facts, q
 
 # Údaje báze, které už hlídá formulář zařazení (`intake.py`: pole) nebo red flags (`red_flags.py`).
 # Povinný údaj báze (`P`) se v tom případě znovu nehlásí, jinak by lékař viděl dvě varování o tomtéž.
@@ -54,6 +54,8 @@ class PatientKb:
     dg_codes: list[str]
     facts: dict
     mdt: str | None
+    resource_ids: set[str]
+    fact_citations: dict[str, list[str]]       # fakt báze → zdroj v FHIR (`lab.na` → `P04-lab05-na`)
 
     @classmethod
     def from_resources(cls, resources: Iterable[dict]) -> PatientKb | None:
@@ -70,15 +72,24 @@ class PatientKb:
         raw = kb.bundle_facts(resources)
         mdt = raw.pop("_mdt", "") or None
         facts = {k: v if k == "dg" else kb.value(v) for k, v in raw.items()}
-        return cls(docs, kb.codes(str(facts.pop("dg", ""))), facts, mdt)
+        return cls(docs, kb.codes(str(facts.pop("dg", ""))), facts, mdt, {r["id"] for r in resources},
+                   patient_facts(resources)[1])
+
+    def _trigger_citations(self, udaj: str) -> list[str]:
+        """Proč údaj u pacienta platí: zdroje faktů z podmínky `kdy` (SIADH ← Na 129 `P04-lab05-na`)."""
+        kb = q()
+        row = next((u for u in kb.kb()["udaje"] if u["udaj"] == udaj), None)
+        if row is None or row["kdy"] == "-":
+            return []
+        return [c for fact in sorted(kb.facts_in(kb.parse(row["kdy"], None))) for c in self.fact_citations.get(fact, [])]
 
     def items(self) -> list[dict]:
         """Údaje katalogu se stavem v podkladech; varování jen s ověřitelnými citacemi, jinak se nehlásí."""
-        patient_ids = {d["id"] for d in self.docs}
         out = []
         for item in q().recommend(self.dg_codes, self.facts, self.docs, self.mdt):
             if "warning" in item:
-                citations = [c for c in item["warning"]["citations"] if _citable(c, patient_ids)]
+                citations = [c for c in dict.fromkeys(item["warning"]["citations"] + self._trigger_citations(item["udaj"]))
+                             if _citable(c, self.resource_ids)]
                 if citations:
                     item["warning"] = {**item["warning"], "citations": citations}
                 else:

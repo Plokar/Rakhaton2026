@@ -39,10 +39,11 @@ async function apiFetch<T>(
     options.method?.toUpperCase() ?? '',
   );
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
+  // FormData (nahrávka, PDF) si hlavičku s boundary nastaví prohlížeč sám.
+  const headers: HeadersInit =
+    options.body instanceof FormData
+      ? { ...options.headers }
+      : { 'Content-Type': 'application/json', ...options.headers };
 
   // Přidat CSRF token pro modifying requesty
   if (isModifying && typeof document !== 'undefined') {

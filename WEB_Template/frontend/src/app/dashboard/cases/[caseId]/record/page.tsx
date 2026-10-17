@@ -15,6 +15,8 @@ import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEdi
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
+import { PatientSummaryPanel } from '@/components/mdt/PatientSummaryPanel';
+import { ScribePanel } from '@/components/mdt/ScribePanel';
 import { SourceDrawer } from '@/components/mdt/SourceDrawer';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -94,7 +96,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me));
   const confirmed = current?.status === 'confirmed';
   // T-326: upravuje zadávající lékař, přizvaný lékař nebo předseda (backend to ověří znovu)
-  const canEdit = !confirmed && (isDemo || (location.item ? can.editCase(me, location.item) : can.manageBoards(me)));
+  const mayEditCase = location.item ? can.editCase(me, location.item) : can.manageBoards(me);
+  const canEdit = !confirmed && (isDemo || mayEditCase);
   const canConfirm = !isDemo && !confirmed && can.manageBoards(me);
   const dirty = draft !== null && savedAt === null;
   const order = React.useMemo(() => collectCitations([current ?? {}, brief?.red_flags ?? []]), [current, brief]);
@@ -215,6 +218,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
           )}
           {!isDemo && (
             <div className="mt-3 flex flex-wrap gap-2">
+              {/* Export PDF obsahuje i shrnutí pro pacienta, když už vzniklo. */}
               <a href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.pdf`)} className={buttonVariants({ size: 'lg' })}>
                 <FileDown aria-hidden /> Export PDF
               </a>
@@ -224,6 +228,20 @@ function DecisionContent({ caseId }: { caseId: string }) {
             </div>
           )}
         </div>
+      )}
+
+      {confirmed && current && !isDemo && (
+        <PatientSummaryPanel caseId={caseId} initial={current.patient_summary ?? null} canCreate={mayEditCase} />
+      )}
+      {current && canEdit && !isDemo && (
+        <ScribePanel
+          caseId={caseId}
+          dirty={dirty}
+          onDraft={(next) => {
+            setDraft(next);
+            setSavedAt(nowLabel());
+          }}
+        />
       )}
 
       {!current && (

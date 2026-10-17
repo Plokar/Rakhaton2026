@@ -3,6 +3,7 @@
  */
 import { apiFetch } from '@/lib/api';
 import type {
+  ImportProposal,
   Brief,
   BriefConfig,
   CaseTemplate,
@@ -108,6 +109,44 @@ export const mdtApi = {
     }),
 
   getJob: (jobId: number) => apiFetch<GenerationJob>(`/api/jobs/${jobId}/`),
+
+  /** AI zapisovatel (BON-3): nahrávka nebo přepis diskuse → job → návrh závěru do draftu (ne potvrzený). */
+  scribe: (caseId: string, input: { audio?: File; transcript?: string }) => {
+    if (input.audio) {
+      const form = new FormData();
+      form.append('audio', input.audio);
+      return apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/scribe/`, { method: 'POST', body: form });
+    }
+    return apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/scribe/`, {
+      method: 'POST',
+      body: JSON.stringify({ transcript: input.transcript ?? '' }),
+    });
+  },
+
+  /** Shrnutí pro pacienta z potvrzeného závěru (BON-4); 404, dokud není. */
+  getPatientSummary: (caseId: string) =>
+    apiFetch<NonNullable<Decision['patient_summary']>>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`),
+
+  generatePatientSummary: (caseId: string) =>
+    apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`, { method: 'POST' }),
+
+  /** Vložená zpráva nebo PDF → návrh hodnot s citací odstavce (BON-7); nic se nezapisuje. */
+  importReport: (patientId: string, input: { text?: string; pdf?: File }) => {
+    const url = `/api/mdt/patients/${encodeURIComponent(patientId)}/import/`;
+    if (input.pdf) {
+      const form = new FormData();
+      form.append('pdf', input.pdf);
+      return apiFetch<ImportProposal>(url, { method: 'POST', body: form });
+    }
+    return apiFetch<ImportProposal>(url, { method: 'POST', body: JSON.stringify({ text: input.text ?? '' }) });
+  },
+
+  /** Potvrzení lékařem: server návrh znovu ověří a zapíše do IRIS (DocumentReference + Observation + Provenance). */
+  confirmImport: (patientId: string, proposal: ImportProposal) =>
+    apiFetch<{ fhir_written: string[] }>(`/api/mdt/patients/${encodeURIComponent(patientId)}/import/confirm/`, {
+      method: 'POST',
+      body: JSON.stringify(proposal),
+    }),
 
   /** Draft nebo potvrzený závěr komise (404, dokud není). */
   getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`),

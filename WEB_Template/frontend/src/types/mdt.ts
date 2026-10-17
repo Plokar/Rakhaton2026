@@ -528,6 +528,32 @@ export interface SpecialtyView {
   interests: { specialty: string; what: string; why: string; sources: EvidenceId[] }[];
 }
 
+/** Hodnota vytěžená ze vložené zprávy (BON-7, `services/ai/report_import.py`); `citation` = odstavec zprávy. */
+export interface ImportValue {
+  kind: 'lab' | 'biomarker' | 'ecog' | 'tnm' | 'vital';
+  label: string;
+  value_text: string;
+  value_number: number | null;
+  unit: string | null;
+  date: string | null;
+  paragraph: number;
+  citation: EvidenceId;
+  /** Jen u odmítnutých: proč hodnota neprošla ověřením proti textu. */
+  reasons?: string[];
+}
+
+/** POST /api/mdt/patients/{pid}/import/ → návrh, nic se nezapisuje (BON-7). */
+export interface ImportProposal {
+  patient_id: string;
+  /** "P03-imp01" */
+  document_id: string;
+  title: string;
+  date: string | null;
+  text: string;
+  values: ImportValue[];
+  rejected: ImportValue[];
+}
+
 export type MdtRole = 'mdt_admin' | 'mdt_doctor' | 'mdt_viewer';
 
 /** GET /api/mdt/me/ */

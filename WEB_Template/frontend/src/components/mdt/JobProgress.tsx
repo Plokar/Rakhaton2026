@@ -15,8 +15,11 @@ export function JobProgress({
   jobId,
   onDone,
   onError,
+  label,
 }: {
   jobId: number;
+  /** Text během běhu (výchozí „Připravuji podklad…“). */
+  label?: string;
   onDone: (job: GenerationJob) => void;
   onError: (message: string) => void;
 }) {
@@ -48,7 +51,7 @@ export function JobProgress({
   return (
     <div className="flex w-full max-w-sm flex-col gap-1.5" role="status" aria-live="polite">
       <p className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="font-medium">{STATUS_LABEL[job?.status ?? 'queued']}</span>
+        <span className="font-medium">{label && job?.status !== 'queued' ? label : STATUS_LABEL[job?.status ?? 'queued']}</span>
         <span className="text-xs tabular-nums text-muted-foreground">{progress} %</span>
       </p>
       <div className="h-1.5 overflow-hidden rounded-full bg-muted">

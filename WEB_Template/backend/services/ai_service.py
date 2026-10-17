@@ -1,11 +1,19 @@
 """
 AI služba MDT Copilot: abstrakce providerů (ARCHITEKTURA §5.7, D-008).
 
-Providery:
-- ``GeminiProvider``: Google AI Studio (Gemini API, **jen placený tier**) přes SDK ``google-genai``.
-- ``MockAIProvider``: deterministický a bez sítě. Výchozí pro vývoj, testy a CI (``AI_PROVIDER=mock``).
+Providery (výběr v ``.env``):
+- ``GeminiProvider``: Google AI Studio (Gemini API) přes SDK ``google-genai``: LLM, embeddingy, audio i PDF.
+- ``NvidiaProvider``: NVIDIA API (OpenAI-kompatibilní, ``integrate.api.nvidia.com``): LLM se strukturovaným
+  výstupem (``response_format: json_schema``) a embeddingy (``nemotron-3-embed-1b`` @ 2048).
+- ``GroqProvider``: jen přepis audia (Whisper ``whisper-large-v3``); mluvčí doplní LLM (``scribe.label_speakers``).
+- ``MockAIProvider``: deterministický a bez sítě. Výchozí pro vývoj, testy a CI (``AI_PROVIDER=mock``);
+  ``mock`` vypne i embeddingy a přepis, takže testy nikdy nevolají skutečné API.
 
-Rozhraní je u obou providerů stejné:
+Kdo co dělá: ``AI_PROVIDER`` (LLM), ``EMBEDDING_PROVIDER`` (vektory v IRIS, výchozí = ``AI_PROVIDER``),
+``TRANSCRIBE_PROVIDER`` (audio, výchozí Groq, když je ``GROQ_API_KEY``). Viz ``embedding_provider()``
+a ``transcription_provider()``.
+
+Rozhraní je u všech providerů stejné:
 
 - ``generate(prompt, system_prompt=..., response_schema=PydanticModel) -> dict``
   vrátí ``{"status": "success", "response": text, "data": dict | None, "provider", "model",
@@ -15,8 +23,9 @@ Rozhraní je u obou providerů stejné:
 - ``embed(texts, task_type=...) -> list[list[float]]``: ``EMBEDDING_DIM`` čísel na text, L2 normalizované.
 - ``transcribe(audio, mime_type) -> dict``: jako ``generate``, ``data`` podle schématu ``Transcript``.
 
-Model ID jsou jen v env (``AI_MODEL``, ``AI_MODEL_STRONG``, ``EMBEDDING_MODEL``, ``EMBEDDING_DIM``,
-``TRANSCRIBE_MODEL``). Výchozí hodnoty níže odpovídají ARCHITEKTURA §9.
+Model ID jsou jen v env (Gemini: ``AI_MODEL``, ``AI_MODEL_STRONG``, ``EMBEDDING_MODEL``, ``EMBEDDING_DIM``,
+``TRANSCRIBE_MODEL``; NVIDIA: ``NVIDIA_MODEL``, ``NVIDIA_MODEL_STRONG``, ``NVIDIA_EMBEDDING_MODEL``,
+``NVIDIA_EMBEDDING_DIM``; Groq: ``GROQ_TRANSCRIBE_MODEL``). Výchozí hodnoty níže odpovídají ARCHITEKTURA §9.
 """
 from __future__ import annotations
 
@@ -71,28 +80,63 @@ TASK_RETRIEVAL_QUERY = "RETRIEVAL_QUERY"         # dotazy
 TASK_FACT_VERIFICATION = "FACT_VERIFICATION"     # ověření tvrzení (grounding)
 
 
+DEFAULT_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+DEFAULT_NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+DEFAULT_NVIDIA_EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b"
+DEFAULT_NVIDIA_EMBEDDING_DIM = 2048          # nemotron-3-embed-1b umí jen 2048
+DEFAULT_NVIDIA_MAX_TOKENS = 16384            # reasoning model: přemýšlení se počítá do max_tokens
+NVIDIA_EMBED_BATCH_SIZE = 50
+DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+DEFAULT_GROQ_TRANSCRIBE_MODEL = "whisper-large-v3"
+# Whisper `prompt` = slovník domény (max ~224 tokenů), zlepší pravopis léků a zkratek
+WHISPER_VOCABULARY = ("Onkologická komise MDT. FOLFOX, FOLFIRI, bevacizumab, oxaliplatina, pembrolizumab, durvalumab, "
+                      "trastuzumab, KRAS G12D, BRAF, HER2, MMR, MSI, PD-L1, RECIST, ECOG, FLR, CT, MR, PET-CT, TNM.")
+AUDIO_EXTENSIONS = {"audio/webm": "webm", "audio/ogg": "ogg", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/m4a": "m4a",
+                    "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav", "audio/flac": "flac", "video/webm": "webm"}
+
+
 def _env(name: str, default: str) -> str:
     return os.environ.get(name) or default
 
 
-def ai_model() -> str:
+def ai_provider_name() -> str:
+    return (os.environ.get("AI_PROVIDER") or "mock").lower()
+
+
+def embedding_provider_name() -> str:
+    """Kdo počítá vektory v IRIS. ``AI_PROVIDER=mock`` = vše offline (testy, CI)."""
+    llm = ai_provider_name()
+    return "mock" if llm == "mock" else (os.environ.get("EMBEDDING_PROVIDER") or llm).lower()
+
+
+def gemini_model() -> str:
     return _env("AI_MODEL", DEFAULT_MODEL)
 
 
+def ai_model() -> str:
+    """Model LLM zvoleného ``AI_PROVIDER`` (přepnutí provideru v .env přepne i model)."""
+    return _env("NVIDIA_MODEL", DEFAULT_NVIDIA_MODEL) if ai_provider_name() == "nvidia" else gemini_model()
+
+
 def ai_model_strong() -> str:
-    return _env("AI_MODEL_STRONG", ai_model())
+    return _env("NVIDIA_MODEL_STRONG" if ai_provider_name() == "nvidia" else "AI_MODEL_STRONG", ai_model())
 
 
 def embedding_model() -> str:
+    if embedding_provider_name() == "nvidia":
+        return _env("NVIDIA_EMBEDDING_MODEL", DEFAULT_NVIDIA_EMBEDDING_MODEL)
     return _env("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
 
 
 def embedding_dim() -> int:
+    """Dimenze vektorů v IRIS (sloupec `VECTOR(DOUBLE, n)`); jiná dimenze = tabulky se založí znovu (vector_store)."""
+    if embedding_provider_name() == "nvidia":
+        return int(_env("NVIDIA_EMBEDDING_DIM", str(DEFAULT_NVIDIA_EMBEDDING_DIM)))
     return int(_env("EMBEDDING_DIM", str(DEFAULT_EMBEDDING_DIM)))
 
 
 def transcribe_model() -> str:
-    return _env("TRANSCRIBE_MODEL", ai_model())
+    return _env("TRANSCRIBE_MODEL", gemini_model())
 
 
 class AIProviderError(RuntimeError):
@@ -386,7 +430,7 @@ class GeminiProvider(BaseAIProvider):
         if thinking_level:
             config["thinking_config"] = types.ThinkingConfig(thinking_level=thinking_level)
         return self._call(
-            model=model or ai_model(),
+            model=model or gemini_model(),
             contents=prompt,
             config=config,
             response_schema=response_schema,
@@ -397,7 +441,7 @@ class GeminiProvider(BaseAIProvider):
         from google.genai import errors, types
 
         texts = _check_texts(texts)
-        model_name = model or embedding_model()
+        model_name = model or _env("EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)
         dim = dim or embedding_dim()
         config = types.EmbedContentConfig(task_type=task_type, output_dimensionality=dim)
         vectors: list[list[float]] = []
@@ -490,6 +534,181 @@ class GeminiProvider(BaseAIProvider):
                              started=started, p_hash=p_hash)
 
 
+# ── OpenAI-kompatibilní HTTP API (NVIDIA, Groq) ───────────────────────────────
+_HTTP_CLIENT = None
+_HTTP_LOCK = threading.Lock()
+
+
+def _http():
+    """Jeden sdílený `httpx.Client` (thread-safe, podklad volá LLM paralelně, spojení se recyklují)."""
+    global _HTTP_CLIENT
+    with _HTTP_LOCK:
+        if _HTTP_CLIENT is None:
+            import httpx
+
+            _HTTP_CLIENT = httpx.Client(timeout=float(_env("AI_TIMEOUT_S", str(DEFAULT_TIMEOUT_S))))
+        return _HTTP_CLIENT
+
+
+def _post(url: str, api_key: str, **kwargs) -> dict[str, Any]:
+    """POST s opakováním 429 / 5xx / výpadku sítě (`Retry-After`, max 65 s); jinak `AIProviderError` s HTTP kódem."""
+    import httpx
+
+    for attempt in range(RATE_RETRIES + 1):
+        last = attempt == RATE_RETRIES
+        try:
+            resp = _http().post(url, headers={"Authorization": f"Bearer {api_key}"}, **kwargs)
+        except httpx.HTTPError as exc:
+            if last:
+                raise AIProviderError(f"{type(exc).__name__}: {_short(exc)}") from exc
+            time.sleep(2 ** attempt)
+            continue
+        if (resp.status_code == 429 or resp.status_code >= 500) and not last:
+            try:
+                wait = float(resp.headers.get("retry-after", ""))
+            except ValueError:
+                wait = 2 ** (attempt + 1)
+            logger.warning("%s HTTP %s, čekám %.0f s (pokus %d)", url, resp.status_code, min(wait, 65), attempt + 1)
+            time.sleep(min(wait, 65))
+            continue
+        if resp.status_code >= 400:
+            raise AIProviderError(f"HTTP {resp.status_code}: {_short(resp.text)}")
+        return resp.json()
+    raise AIProviderError("nedosažitelné")      # pragma: no cover
+
+
+def _json_text(text: str) -> Any:
+    """JSON z odpovědi modelu; snese obal ```json … ```."""
+    text = text.strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)
+    return json.loads(text)
+
+
+class NvidiaProvider(BaseAIProvider):
+    """NVIDIA API (``integrate.api.nvidia.com``, OpenAI-kompatibilní): chat se strukturovaným výstupem a embeddingy."""
+
+    def __init__(self, api_key: str | None = None):
+        self.api_key = api_key or os.environ.get("NVIDIA_API_KEY", "")
+        self.base_url = _env("NVIDIA_BASE_URL", DEFAULT_NVIDIA_BASE_URL).rstrip("/")
+
+    @property
+    def provider_name(self) -> str:
+        return "nvidia"
+
+    def generate(self, prompt, system_prompt="", model=None, temperature=None, max_tokens=None,
+                 response_schema=None):
+        started = time.monotonic()
+        model = model or ai_model()
+        p_hash = prompt_hash(prompt, system_prompt)
+        body: dict[str, Any] = {
+            "model": model,
+            "messages": [*([{"role": "system", "content": system_prompt}] if system_prompt else []),
+                         {"role": "user", "content": prompt}],
+            "temperature": DEFAULT_TEMPERATURE if temperature is None else temperature,
+            "max_tokens": max_tokens or int(_env("NVIDIA_MAX_TOKENS", str(DEFAULT_NVIDIA_MAX_TOKENS))),
+        }
+        if _env("NVIDIA_THINKING", "0").lower() not in ("1", "true", "on"):
+            # bez přemýšlení ~3× rychleji se stejným výstupem (NFR-1 < 20 s); přesnost hlídá grounding validátor
+            body["chat_template_kwargs"] = {"enable_thinking": False}
+        if response_schema is not None:
+            body["response_format"] = {"type": "json_schema", "json_schema": {
+                "name": response_schema.__name__, "schema": response_schema.model_json_schema()}}
+        try:
+            resp = _post(f"{self.base_url}/chat/completions", self.api_key, json=body)
+        except AIProviderError as exc:
+            logger.error("NVIDIA API error (model %s): %s", model, exc)
+            return self._error(f"NVIDIA {exc}", model=model, started=started, p_hash=p_hash)
+
+        choice = (resp.get("choices") or [{}])[0]
+        text = (choice.get("message") or {}).get("content") or ""
+        if choice.get("finish_reason") == "length":
+            return self._error("Výstup modelu byl uříznut (max_tokens)", model=model, started=started, p_hash=p_hash)
+        if not text.strip():
+            return self._error(f"NVIDIA nevrátil text (důvod: {choice.get('finish_reason')})", model=model,
+                               started=started, p_hash=p_hash)
+        data = None
+        if response_schema is not None:
+            try:
+                data = _validate(response_schema, _json_text(text))
+            except (json.JSONDecodeError, ValidationError) as exc:
+                return self._error(f"Výstup neodpovídá schématu {response_schema.__name__}: {_short(exc)}",
+                                   model=model, started=started, p_hash=p_hash)
+        usage = resp.get("usage") or {}
+        return self._success(text=text, data=data, model=resp.get("model") or model,
+                             tokens_in=usage.get("prompt_tokens") or 0, tokens_out=usage.get("completion_tokens") or 0,
+                             tokens_total=usage.get("total_tokens"), started=started, p_hash=p_hash)
+
+    def embed(self, texts, task_type=TASK_RETRIEVAL_DOCUMENT, model=None, dim=None):
+        texts = _check_texts(texts)
+        model_name = model or _env("NVIDIA_EMBEDDING_MODEL", DEFAULT_NVIDIA_EMBEDDING_MODEL)
+        dim = dim or embedding_dim()
+        # asymetrické vyhledávání: index = passage, dotaz i ověřované tvrzení = query
+        input_type = "passage" if task_type == TASK_RETRIEVAL_DOCUMENT else "query"
+        vectors: list[list[float]] = []
+        for i in range(0, len(texts), NVIDIA_EMBED_BATCH_SIZE):
+            batch = texts[i:i + NVIDIA_EMBED_BATCH_SIZE]
+            resp = _post(f"{self.base_url}/embeddings", self.api_key, json={
+                "model": model_name, "input": batch, "input_type": input_type, "encoding_format": "float",
+                "truncate": "END"})
+            data = sorted(resp.get("data") or [], key=lambda d: d.get("index", 0))
+            if len(data) != len(batch):
+                raise AIProviderError(f"NVIDIA vrátil {len(data)} embeddingů pro {len(batch)} textů")
+            for item in data:
+                if len(item["embedding"]) != dim:
+                    raise AIProviderError(f"Embedding má {len(item['embedding'])} dimenzí, čekáno {dim} (NVIDIA_EMBEDDING_DIM)")
+                vectors.append(l2_normalize(item["embedding"]))
+        return vectors
+
+    def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
+        return self._error("NVIDIA LLM audio nepřepisuje: nastav GROQ_API_KEY (TRANSCRIBE_PROVIDER=groq)",
+                           model=model or ai_model(), started=time.monotonic(), p_hash=hashlib.sha256(audio).hexdigest())
+
+
+class GroqProvider(BaseAIProvider):
+    """Groq: jen přepis audia Whisperem (``verbose_json`` s časy úseků). Mluvčí Whisper nerozlišuje: ``speaker`` je
+    prázdný a role doplní LLM v zapisovateli (``scribe.label_speakers``)."""
+
+    def __init__(self, api_key: str | None = None):
+        self.api_key = api_key or os.environ.get("GROQ_API_KEY", "")
+        self.base_url = _env("GROQ_BASE_URL", DEFAULT_GROQ_BASE_URL).rstrip("/")
+
+    @property
+    def provider_name(self) -> str:
+        return "groq"
+
+    def generate(self, prompt, system_prompt="", model=None, temperature=None, max_tokens=None,
+                 response_schema=None):
+        return self._error("Groq je jen pro přepis audia (TRANSCRIBE_PROVIDER), LLM nastav v AI_PROVIDER",
+                           model=model or "groq", started=time.monotonic(), p_hash=prompt_hash(prompt, system_prompt))
+
+    def embed(self, texts, task_type=TASK_RETRIEVAL_DOCUMENT, model=None, dim=None):
+        raise AIProviderError("Groq embeddingy nemá, nastav EMBEDDING_PROVIDER")
+
+    def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
+        started = time.monotonic()
+        model_name = model or _env("GROQ_TRANSCRIBE_MODEL", DEFAULT_GROQ_TRANSCRIBE_MODEL)
+        p_hash = hashlib.sha256(audio).hexdigest()
+        if response_schema is not Transcript:
+            return self._error("Groq přepisuje jen audio (PDF čte pypdf)", model=model_name, started=started, p_hash=p_hash)
+        mime = mime_type.split(";")[0].strip().lower()
+        try:
+            resp = _post(f"{self.base_url}/audio/transcriptions", self.api_key,
+                         files={"file": (f"audio.{AUDIO_EXTENSIONS.get(mime, 'webm')}", audio, mime)},
+                         data={"model": model_name, "temperature": "0", "response_format": "verbose_json",
+                               "language": _env("TRANSCRIBE_LANGUAGE", "cs"), "prompt": WHISPER_VOCABULARY})
+        except AIProviderError as exc:
+            logger.error("Groq API error (model %s): %s", model_name, exc)
+            return self._error(f"Groq {exc}", model=model_name, started=started, p_hash=p_hash)
+        # úsek s vysokou pravděpodobností ticha = typická halucinace Whisperu („Titulky vytvořil…“)
+        segments = [{"speaker": "", "start": f"{int(s['start']) // 60:02d}:{int(s['start']) % 60:02d}",
+                     "text": s["text"].strip()}
+                    for s in resp.get("segments") or [] if s.get("text", "").strip() and s.get("no_speech_prob", 0) < 0.8]
+        data = _validate(Transcript, {"segments": segments})
+        return self._success(text=resp.get("text", ""), data=data, model=model_name, tokens_in=0, tokens_out=0,
+                             tokens_total=0, started=started, p_hash=p_hash)
+
+
 # ── Mock: generování dat podle schématu a hashované embeddingy ────────────────
 def mock_instance(schema: type[BaseModel]) -> Any:
     """Minimální data, která projdou validací schématu (jen povinná pole)."""
@@ -568,26 +787,52 @@ def hashed_embedding(text: str, dim: int) -> list[float]:
 
 
 # ── Factory ───────────────────────────────────────────────────────────────────
-SUPPORTED_PROVIDERS = ("mock", "gemini")
+PROVIDERS: dict[str, tuple[str, type[BaseAIProvider]]] = {
+    "gemini": ("GEMINI_API_KEY", GeminiProvider),
+    "nvidia": ("NVIDIA_API_KEY", NvidiaProvider),
+    "groq": ("GROQ_API_KEY", GroqProvider),
+}
+SUPPORTED_PROVIDERS = ("mock", *PROVIDERS)
 
 
 def get_ai_provider(provider_name: str | None = None) -> BaseAIProvider:
     """
     Provider podle ``provider_name`` nebo env ``AI_PROVIDER`` (výchozí ``mock``).
 
-    ``gemini`` bez ``GEMINI_API_KEY`` spadne na mock s varováním; výsledek má pak
-    ``provider == "mock"`` a ``is_mock == True``, takže záměna je vidět.
-    Data pacientů se smí posílat jen s placeným tierem (ARCHITEKTURA §5.7, Q9).
+    Provider bez klíče (``GEMINI_API_KEY``, ``NVIDIA_API_KEY``, ``GROQ_API_KEY``) spadne na mock s varováním;
+    výsledek má pak ``provider == "mock"`` a ``is_mock == True``, takže záměna je vidět.
+    Skutečná data pacientů jen s placeným tierem a DPA (ARCHITEKTURA §5.7, D-021); hackathon = syntetická data.
     """
-    chosen = (provider_name or os.environ.get("AI_PROVIDER") or "mock").lower()
+    chosen = (provider_name or ai_provider_name()).lower()
     if chosen == "mock":
         return MockAIProvider()
-    if chosen == "gemini":
-        if not os.environ.get("GEMINI_API_KEY"):
-            logger.warning("AI_PROVIDER=gemini, ale GEMINI_API_KEY není nastaven: používám MockAIProvider")
-            return MockAIProvider()
-        return GeminiProvider()
-    raise ValueError(f"Neznámý AI provider {chosen!r}, podporované: {', '.join(SUPPORTED_PROVIDERS)}")
+    if chosen not in PROVIDERS:
+        raise ValueError(f"Neznámý AI provider {chosen!r}, podporované: {', '.join(SUPPORTED_PROVIDERS)}")
+    key_env, cls = PROVIDERS[chosen]
+    if not os.environ.get(key_env):
+        logger.warning("Provider %s bez %s: používám MockAIProvider", chosen, key_env)
+        return MockAIProvider()
+    return cls()
+
+
+def embedding_provider(provider: BaseAIProvider | None = None) -> BaseAIProvider:
+    """Provider pro vektory v IRIS (RAG, grounding): ``EMBEDDING_PROVIDER``, jinak stejný jako LLM.
+
+    Index musí mít vektory jednoho modelu a dimenze, proto nezávisí na tom, kdo zrovna generuje text.
+    Mock provider (testy) zůstává mockem, nic se neposílá ven.
+    """
+    provider = provider or get_ai_provider()
+    name = embedding_provider_name()
+    return provider if provider.is_mock or provider.provider_name == name else get_ai_provider(name)
+
+
+def transcription_provider(provider: BaseAIProvider | None = None) -> BaseAIProvider:
+    """Přepis audia: ``TRANSCRIBE_PROVIDER``, jinak Groq Whisper (je-li ``GROQ_API_KEY``), jinak LLM provider."""
+    provider = provider or get_ai_provider()
+    if provider.is_mock:
+        return provider
+    name = os.environ.get("TRANSCRIBE_PROVIDER") or ("groq" if os.environ.get("GROQ_API_KEY") else provider.provider_name)
+    return provider if provider.provider_name == name.lower() else get_ai_provider(name)
 
 
 # ── D-021: data skutečných pacientů jen s placeným tierem ─────────────────────

@@ -41,6 +41,14 @@ def test_ensure_schema_is_idempotent(fake_iris):
     assert fake_iris.open_connections == 0
 
 
+def test_other_dimension_recreates_tables(indexed, monkeypatch):
+    """Přechod embeddingů (Gemini @1536 → NVIDIA @2048): stará dimenze se do sloupce nevejde, tabulky vzniknou znovu."""
+    monkeypatch.setenv('EMBEDDING_DIM', '8')
+    assert vs.ensure_schema() == ['MDT.EvidenceChunk', 'MDT.GuidelineChunk', 'MDT.TrialCriterion']
+    assert indexed.rows('MDT.EvidenceChunk') == [] and indexed.tables['MDT.EvidenceChunk']['dim'] == 8
+    assert vs.ensure_schema() == []
+
+
 def test_search_evidence_only_for_patient(indexed):
     """DoD T-102: dotaz vrací jen odstavce daného pacienta se skóre, seřazené."""
     rows = vs.search_evidence('P03', 'CT hrudník nebyl požadován', top_k=5)
@@ -90,7 +98,7 @@ def test_ensure_schema_adds_missing_columns(fake_iris):
     """Tabulka ze starší verze (bez Url) se doplní ALTER TABLE, data zůstanou."""
     old_ddl = vs._ddl('GuidelineChunk', 1536).replace(', Url VARCHAR(500)', '')
     fake_iris.execute(old_ddl, [])
-    fake_iris.rows('MDT.GuidelineChunk').append({'EvidenceId': 'KRC-1.1'})
+    fake_iris.rows('MDT.GuidelineChunk').append({'EvidenceId': 'KRC-1.1', 'EmbeddingModel': 'mock:hashed@1536'})
     changes = vs.ensure_schema()
     assert 'MDT.GuidelineChunk.Url' in changes and 'MDT.EvidenceChunk' in changes
     assert 'Url' in fake_iris.tables['MDT.GuidelineChunk']['columns'] and len(fake_iris.rows('MDT.GuidelineChunk')) == 1
@@ -146,7 +154,7 @@ def test_ingest_command_builds_vectors_from_iris(fake_fhir, fake_iris, dataset_r
     text = out.getvalue()
     from_files = len(indexing.evidence_chunks('P03', ingest.load_patient(dataset_root, 'P03')))
     assert from_files == 85 and f'MDT.EvidenceChunk P03: {from_files} odstavců' in text    # čteno z FHIR = soubory
-    assert "'KRC': 9" in text and "'EXT': 106" in text and 'MDT.TrialCriterion:' in text and 'AI_PROVIDER=mock' in text
+    assert "'KRC': 9" in text and "'EXT': 106" in text and 'MDT.TrialCriterion:' in text and 'Embeddingy mock' in text
     assert {r['PatientId'] for r in fake_iris.rows('MDT.EvidenceChunk')} == {'P03'}
     assert len(fake_iris.rows('MDT.GuidelineChunk')) == 42 + 106 and fake_iris.open_connections == 0
 

@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from apps.copilot.schemas import Decision as DecisionSchema
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
-from services.ai_service import BaseAIProvider, provider_for_patient_id
+from services.ai_service import BaseAIProvider, provider_for_patient_id, transcription_provider
 
 log = logging.getLogger(__name__)
 
@@ -92,6 +92,29 @@ def parse_transcript(text: str) -> list[dict]:
         else:
             segments.append({"speaker": "neuvedeno", "start": "", "text": raw.strip()})
     return segments
+
+
+class SpeakerLabels(BaseModel):
+    speakers: list[str] = Field(description="Role mluvčího každého úseku ve stejném pořadí a počtu jako úseky")
+
+
+SPEAKER_PROMPT = """Přepis diskuse onkologické komise je bez mluvčích. Každému úseku [n] přiřaď roli mluvčího podle obsahu
+a návaznosti: předseda, onkolog, chirurg, radiolog, patolog, radiační onkolog, pneumolog, kardiolog, pacient.
+Předseda uvádí pacienta, řídí diskusi a shrnuje závěr. Když roli nejde poznat, napiš „neuvedeno“; nic nedomýšlej.
+Vrať seznam rolí ve stejném pořadí a počtu jako úseky."""
+
+
+def label_speakers(segments: list[dict], provider: BaseAIProvider, log_call: Callable[[str, dict], Any]) -> list[dict]:
+    """Role mluvčích k úsekům bez mluvčího (Whisper) z obsahu přes LLM; když se nepovede, „neuvedeno“."""
+    labels: list[str] = []
+    if not provider.is_mock or "SpeakerLabels" in getattr(provider, "responses", {}):
+        result = provider.generate("\n".join(f"[{i}] {s['start']} {s['text']}" for i, s in enumerate(segments, 1)),
+                                   system_prompt=SPEAKER_PROMPT, response_schema=SpeakerLabels, temperature=0.0)
+        log_call("scribe.speakers", result)
+        labels = (result.get("data") or {}).get("speakers") or [] if result.get("status") == "success" else []
+    if len(labels) != len(segments):
+        labels = [""] * len(segments)
+    return [{**s, "speaker": label.strip().lower() or "neuvedeno"} for s, label in zip(segments, labels)]
 
 
 def transcript_text(segments: list[dict]) -> str:
@@ -205,13 +228,17 @@ def generate_scribe(case, params: dict, progress: Callable[[int], None], *, prov
     progress(5)
     segments = params.get("segments") or parse_transcript(params.get("transcript", ""))
     if params.get("audio_b64"):
-        result = provider.transcribe(base64.b64decode(params["audio_b64"]), params.get("mime_type") or "audio/mp4")
+        result = transcription_provider(provider).transcribe(base64.b64decode(params["audio_b64"]),
+                                                              params.get("mime_type") or "audio/mp4")
         log_call("scribe.transcribe", result)
         if result.get("status") != "success":
             raise RuntimeError(f"Přepis nahrávky selhal: {result.get('error')}")
         segments = (result.get("data") or {}).get("segments") or []
     if not segments:
         raise ValueError("Přepis je prázdný.")
+    progress(30)
+    if not any(s["speaker"].strip() for s in segments):            # Whisper (Groq) mluvčí nerozlišuje
+        segments = label_speakers(segments, provider, log_call)
     progress(40)
     pid = case.patient_fhir_id
     mdt_id = writeback.next_mdt_id(pid)

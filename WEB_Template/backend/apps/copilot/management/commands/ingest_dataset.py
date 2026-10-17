@@ -103,7 +103,7 @@ class Command(BaseCommand):
             )
             return
 
-        provider = ai_service.get_ai_provider()
+        provider = ai_service.embedding_provider()
         model = vs.embedding_model_id(provider)
         if self.if_empty:
             have = {table: by_model.get(model, 0) for table, by_model in vs.counts().items()}
@@ -112,8 +112,8 @@ class Command(BaseCommand):
                 return
         if provider.is_mock:
             self.stdout.write(self.style.WARNING(
-                '⚠ AI_PROVIDER=mock: vektory jsou hashované (jen lexikální podobnost). Pro Gemini nastav '
-                'AI_PROVIDER=gemini + GEMINI_API_KEY (placený tier, Q9) a spusť znovu s --skip-fhir.'
+                '⚠ Embeddingy mock: vektory jsou hashované (jen lexikální podobnost). Pro skutečný model nastav '
+                'EMBEDDING_PROVIDER (nvidia / gemini) s klíčem a spusť znovu s --skip-fhir.'
             ))
         changes = vs.ensure_schema(recreate)
         if changes:

@@ -1,6 +1,6 @@
 """Vstup PDF nebo vloženého textu → FHIR (BON-7, T-510).
 
-1. **Návrh** (`propose`): text zprávy (vložený, nebo z PDF přes Gemini) → `DocumentReference/Pxx-impNN`
+1. **Návrh** (`propose`): text zprávy (vložený, nebo z PDF parserem `pypdf`; sken přes Gemini) → `DocumentReference/Pxx-impNN`
    s odstavci → LLM vytáhne hodnoty (laboratoř, biomarkery, ECOG, TNM, hmotnost) s číslem odstavce →
    každá hodnota se ověří proti svému odstavci (číslo i datum musí být ve zdroji). Nic se nezapisuje.
 2. **Potvrzení lékařem** (`confirm`): klient pošle návrh zpět (případně jen vybrané hodnoty); server ho znovu
@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import base64
+import io
 import re
 from datetime import datetime, timezone
 from typing import Any, Callable, Literal
@@ -18,7 +19,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.grounding import _numbers
 from services.ai.text import split_paragraphs
-from services.ai_service import BaseAIProvider
+from services.ai_service import BaseAIProvider, get_ai_provider
 
 AI_TAG = {"system": "https://rakathon.example.org/fhir/CodeSystem/ai-generated", "code": "ai"}
 CATEGORY = {"lab": "laboratory", "biomarker": "laboratory", "ecog": "survey", "tnm": "exam", "vital": "vital-signs"}
@@ -52,12 +53,36 @@ class DocumentText(BaseModel):
     text: str
 
 
+def pdf_text_layer(pdf: bytes) -> str:
+    """Textová vrstva PDF parserem (`pypdf`), bez AI: stránka = odstavce oddělené prázdným řádkem."""
+    from pypdf import PdfReader
+    from pypdf.errors import PdfReadError
+
+    try:
+        reader = PdfReader(io.BytesIO(pdf))
+        if reader.is_encrypted and not reader.decrypt(""):
+            raise ValueError("PDF je zaheslované.")
+        pages = [page.extract_text(extraction_mode="layout") or "" for page in reader.pages]
+    except (PdfReadError, OSError) as exc:
+        raise ValueError(f"Soubor nejde přečíst jako PDF: {exc}") from None
+    # řádky vyrovnané na šířku stránky → bez koncových mezer; víc prázdných řádků = jeden předěl odstavce
+    text = "\n\n".join(re.sub(r"\n{3,}", "\n\n", "\n".join(line.rstrip() for line in page.splitlines())).strip()
+                       for page in pages)
+    return text.strip()
+
+
 def pdf_text(pdf: bytes, provider: BaseAIProvider, log_call: Callable[[str, dict], Any]) -> str:
-    """Text PDF přes Gemini (nativní čtení PDF, stejná cesta jako přepis audia)."""
-    result = provider.transcribe(pdf, "application/pdf", prompt=TEXT_PROMPT, response_schema=DocumentText)
+    """Text PDF: parser (textová vrstva), u skenu bez textu čtení PDF přes Gemini, jinak srozumitelná chyba."""
+    text = pdf_text_layer(pdf)
+    if len(re.sub(r"\s", "", text)) >= 20:
+        return text
+    reader = provider if provider.is_mock or provider.provider_name == "gemini" else get_ai_provider("gemini")
+    if reader.provider_name != "gemini":
+        raise ValueError("PDF nemá textovou vrstvu (sken). Vložte text zprávy, nebo nastavte GEMINI_API_KEY pro čtení skenů.")
+    result = reader.transcribe(pdf, "application/pdf", prompt=TEXT_PROMPT, response_schema=DocumentText)
     log_call("import.pdf_text", result)
     if result.get("status") != "success":
-        raise ValueError(f"Text z PDF se nepodařilo získat: {result.get('error')}")
+        raise ValueError(f"Text ze skenu PDF se nepodařilo získat: {result.get('error')}")
     return (result.get("data") or {}).get("text", "")
 
 

@@ -283,6 +283,55 @@ def _colorectal_fields(data: PatientData) -> list[IntakeField]:
     return fields
 
 
+PROSTATE_SOURCE = "EXT-EAU-PROSTATE-2025"     # guidelines pro prostatu a ledvinu dataset nemá (D-016, T-513)
+KIDNEY_SOURCE = "EXT-EAU-RCC-2025"
+CRPC_TEXT = re.compile(r"kastračn\w* rezistent|\bn?m?CRPC\b", re.IGNORECASE)
+
+
+def _metastatic(data: PatientData) -> bool:
+    """Vzdálené metastázy: diagnóza C78–C79, nebo TNM s M1 / stadiem IV."""
+    if any(code[:3] in ("C78", "C79") for code in data.icd10):
+        return True
+    return any(re.search(r"\b[cpy]*M1|stadium IV", str(o.value or "")) for o in data.by_category("Staging"))
+
+
+def _prostate_fields(data: PatientData) -> list[IntakeField]:
+    """Karcinom prostaty (C61), docs/POZADAVKY_LEKARE.md §4.5."""
+    fields = [
+        _obs_field(data, "lab.psa", "PSA (a kinetika PSA-DT)", r"\bPSA\b", PROSTATE_SOURCE, category=None),
+        _text_field(data, "dx.isup", "Gleason / ISUP grade group", re.compile(r"Gleason|ISUP", re.I), PROSTATE_SOURCE,
+                    ("DiagnosticReport", "DocumentReference", "ServiceRequest")),
+    ]
+    if not _metastatic(data):
+        fields.append(_radiology_field(data, "staging.prostate_mr", "Multiparametrická MR prostaty",
+                                       r"MR\w*\s+prostat|mpMR", PROSTATE_SOURCE))
+        return fields
+    fields.append(_obs_field(data, "lab.testosterone", "Testosteron (kastrační hladina < 50 ng/dl)", r"testosteron",
+                             PROSTATE_SOURCE, category=None))
+    if any(CRPC_TEXT.search(t) for t in data.texts.values()):     # mCRPC: somatické / germinální testování
+        fields += [_obs_field(data, "bm.hrr", "HRR / BRCA2 (NGS)", r"BRCA|HRR", PROSTATE_SOURCE),
+                   _obs_field(data, "bm.mmr", "MMR / MSI", r"MMR|MSI", PROSTATE_SOURCE)]
+    return fields
+
+
+def _kidney_fields(data: PatientData) -> list[IntakeField]:
+    """Nádor ledviny (C64, D41.0 = nejisté chování), docs/POZADAVKY_LEKARE.md §4.6."""
+    kidney = [c for c in data.oncologic if fhir_code(c.get("code"), "icd-10").startswith(("C64", "D41.0"))]
+    confirmed = [c for c in kidney if fhir_code(c.get("code"), "icd-10").startswith("C64")
+                 and fhir_code(c.get("verificationStatus"), "condition-ver-status") == "confirmed"]
+    histology = (IntakeField("dx.renal_histology", "Histologie nádoru ledviny (jádrová biopsie, podtyp, grade)",
+                             "present", cc_text(confirmed[-1].get("code")), confirmed[-1]["id"], KIDNEY_SOURCE)
+                 if confirmed else
+                 IntakeField("dx.renal_histology", "Histologie nádoru ledviny (jádrová biopsie, podtyp, grade)",
+                             "missing", cc_text(kidney[-1].get("code")) if kidney else None,
+                             kidney[-1]["id"] if kidney else None, KIDNEY_SOURCE))
+    return [
+        histology,
+        _obs_field(data, "lab.egfr", "Funkce ledvin (eGFR, kreatinin)", r"eGFR|kreatinin", KIDNEY_SOURCE, category=None),
+        _radiology_field(data, "staging.renal_ct", "CT hrudníku a břicha s k. l.", r"\bCT\b.*břich", KIDNEY_SOURCE),
+    ]
+
+
 # ── Varování ──────────────────────────────────────────────────────────────────
 def _range_warnings(data: PatientData) -> list[IntakeWarning]:
     """NEJISTOTA AI: rozmezí ECOG v textu („ECOG 0–1“) se nepřevádí na jedno číslo (FR-R5)."""
@@ -357,6 +406,10 @@ def intake_prefill(resources: Iterable[dict], skipped_fields: Iterable[str] = ()
         fields += _breast_fields(data)
     if "KRC" in data.sets:
         fields += _colorectal_fields(data)
+    if any(code.startswith("C61") for code in data.icd10):        # T-513: bez sady guidelines, zdroj EXT-…
+        fields += _prostate_fields(data)
+    if any(code.startswith(("C64", "D41.0")) for code in data.icd10):
+        fields += _kidney_fields(data)
     for f in fields:
         if f.id in skipped:
             f.status = "skipped"

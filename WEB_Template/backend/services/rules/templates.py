@@ -25,6 +25,8 @@ INTAKE_FIELDS = {
     "prs.receptory": "bm.her2", "prs.esr1": "bm.esr1", "prs.pik3ca": "bm.pik3ca", "prs.gbrca": "bm.gbrca",
     "krc.ras": "bm.ras", "krc.braf": "bm.braf", "krc.mmr": "bm.mmr", "krc.restaging": "staging.chest_ct",
     "krc.mr_jater": "staging.liver_mr", "krc.flr": "liver.flr", "krc.neuropatie": "tox.neuropathy",
+    "pro.psa": "lab.psa", "pro.isup": "dx.isup", "pro.mri": "staging.prostate_mr", "pro.testosteron": "lab.testosterone",
+    "ren.funkce": "lab.egfr", "ren.ct": "staging.renal_ct",
 }
 # hlídá je pravidlo red flags, které běží u každého pacienta (`RF-MED`, `RF-PALIATIVE`, `RF-STEROID`, `RF-GENETIC`,
 # `RF-LESION`, `RF-PRIOR-PROC`)

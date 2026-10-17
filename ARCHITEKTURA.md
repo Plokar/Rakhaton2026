@@ -990,7 +990,7 @@ RČ se nevrací v žádné odpovědi API (jen `******/1234`), context builder id
 
 **Implementace (T-502):** `services/rules/intake.py`, `intake_prefill(resources, skipped_fields=[])` vrátí `IntakePrefill` (§8.6).
 
-- **Pole:** obecná (OBC-1.1: otázka, histologie a grade, TNM, zobrazení ≤ 6 týdnů, ECOG lékař i pacient, komorbidity, léčba, preference, alergie, hmotnost, G8 od 70 let) a podle diagnózy (plíce, prs, kolorektum, docs/POZADAVKY_LEKARE.md §4). Každé pole má citaci a `required_by`.
+- **Pole:** obecná (OBC-1.1: otázka, histologie a grade, TNM, zobrazení ≤ 6 týdnů, ECOG lékař i pacient, komorbidity, léčba, preference, alergie, hmotnost, G8 od 70 let) a podle diagnózy (plíce, prs, kolorektum; prostata C61 a ledvina C64 / D41.0 se zdrojem `EXT-EAU-…`, T-513; docs/POZADAVKY_LEKARE.md §4). Každé pole má citaci a `required_by`.
 - **Varování:** red flags mají stejné `id` jako flag (`RF-TOX:P03-neuro01`), takže odkliknutí jde spárovat s podkladem (D-019). K nim se přidá:
   - CHYBÍ pro pole, které žádný flag nehlásí;
   - MIMO NORMU pro poslední laboratorní hodnotu s příznakem H/L;

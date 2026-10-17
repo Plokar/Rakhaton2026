@@ -3,7 +3,8 @@
  * Automaticky posílá CSRF token a JWT httpOnly cookies.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Bez NEXT_PUBLIC_API_URL (Vercel) same-origin: /api/* přepošle next.config.ts rewrites na BACKEND_URL (D-003)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 class ApiError extends Error {
   constructor(

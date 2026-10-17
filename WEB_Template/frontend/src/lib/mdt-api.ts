@@ -26,6 +26,7 @@ import type {
   MdtSessionDetail,
   MdtSessionListItem,
   ObservationSeries,
+  SessionMessage,
   TimelineEvent,
 } from '@/types/mdt';
 
@@ -134,6 +135,16 @@ export const mdtApi = {
 
   /** Jen prázdný board (409, když má pacienty). */
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
+
+  /** Chat lékařů u zasedání (T-334): posledních 200 zpráv od nejstarší. */
+  getSessionMessages: (sessionId: number) => apiFetch<SessionMessage[]>(`/api/mdt/sessions/${sessionId}/messages/`),
+
+  /** Píše každý člen komise; `case_id` = štítek pacienta z agendy boardu. Uzavřený board 409. */
+  postSessionMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
+    apiFetch<SessionMessage>(`/api/mdt/sessions/${sessionId}/messages/`, { method: 'POST', body: JSON.stringify(input) }),
+
+  /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
+  sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
 
   /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
   updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>

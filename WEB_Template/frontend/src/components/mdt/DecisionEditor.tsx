@@ -12,7 +12,7 @@ import { PractitionerPicker } from './PractitionerPicker';
 import { ROLE_META } from './roles';
 
 /** Koho vybírá popup lékařů (T-328): nového přítomného, nebo vlastníka úkolu. */
-type PickerTarget = { kind: 'attendee' } | { kind: 'task'; index: number };
+type PickerTarget = { kind: 'attendee'; index?: number } | { kind: 'task'; index: number };
 
 type Sections = Decision['sections'];
 type Sourced = { text: string; source: Source };
@@ -403,7 +403,11 @@ export function DecisionEditor({
         title={picker?.kind === 'task' ? 'Komu úkol přidělit' : 'Přidat přítomného'}
         excludeIds={picker?.kind === 'attendee' ? decision.attendees.map((a) => a.user_id) : []}
         onSelect={(p) => {
-          if (picker?.kind === 'attendee') {
+          if (picker?.kind === 'attendee' && picker.index !== undefined) {
+            // řádek role z nastavení podkladu („Chirurg“) dostane konkrétního lékaře, role zůstává
+            const i = picker.index;
+            setTop({ attendees: decision.attendees.map((x, j) => (j === i ? { ...x, user_id: p.id, name: p.name } : x)) });
+          } else if (picker?.kind === 'attendee') {
             setTop({ attendees: [...decision.attendees, { user_id: p.id, name: p.name, role: p.role ?? 'oncologist' }] });
           } else if (picker?.kind === 'task') {
             const i = picker.index;
@@ -619,9 +623,20 @@ export function DecisionEditor({
         <ul className="space-y-1.5">
           {decision.attendees.map((a, i) => (
             <li key={i} className="flex flex-wrap items-center gap-2">
-              <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
-                {a.name || a.user_id || 'Bez jména'}
-              </span>
+              {a.user_id || readOnly ? (
+                <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
+                  {a.name || a.user_id || 'Bez jména'}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPicker({ kind: 'attendee', index: i })}
+                  className="inline-flex min-w-0 flex-1 items-center gap-1.5 truncate text-left text-sm text-primary hover:underline"
+                >
+                  <UserRoundSearch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">{a.name ? `${a.name}: vybrat lékaře…` : 'Vybrat lékaře…'}</span>
+                </button>
+              )}
               <select
                 className={fieldClass}
                 value={a.role}

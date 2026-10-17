@@ -58,7 +58,17 @@ export function IntakeForm({
   const done = prefill.warnings.filter((w) => acknowledged.has(w.id) || silenced(w));
   const question = fields.find((f) => f.id === 'mdt.question');
   const missingQuestion = !question || question.status !== 'present';
-  const canSubmit = !missingQuestion && ecog !== null && intent !== null;
+  // Zařazení projde až po vyřešení všeho: každý chybějící údaj doplněn nebo vědomě přeskočen,
+  // každé varování vzato na vědomí, ECOG, záměr C/P a kontrola stáří snímku.
+  const unresolvedFields = fields.filter((f) => (f.status === 'missing' || f.status === 'pending') && !skipped.has(f.id));
+  const remaining: string[] = [
+    ...unresolvedFields.map((f) => `Údaj „${f.label}“: doplnit nebo přeskočit`),
+    ...(active.length > 0 ? [`Varování k potvrzení: ${active.length}`] : []),
+    ...(ecog === null ? ['ECOG'] : []),
+    ...(intent === null ? ['Záměr C/P'] : []),
+    ...(imaging ? [] : ['Kontrola stáří snímku']),
+  ];
+  const canSubmit = !missingQuestion && remaining.length === 0;
 
   const toggleSkip = (f: IntakeField) =>
     setSkipped((prev) => {
@@ -242,7 +252,7 @@ export function IntakeForm({
       <label className="flex items-start gap-2.5 text-sm">
         <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={imaging} onChange={(e) => setImaging(e.target.checked)} />
         <span>
-          Snímek mladší než 3 měsíce
+          Zkontroloval(a) jsem stáří snímku (doporučeno do 3 měsíců)
           <span className="mt-0.5 block text-xs text-muted-foreground">
             Připomínka. Pro radikální léčbu a změnu linie musí být staging ≤ 6 týdnů (OBC-1.2), před resekcí jater ≤ 4–6 týdnů
             (KRC-2.4); kontrola stagingu běží automaticky.
@@ -251,7 +261,16 @@ export function IntakeForm({
       </label>
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
-        {!canSubmit && !missingQuestion && <span className="text-xs text-muted-foreground">Zadejte ECOG a záměr C/P.</span>}
+        {!canSubmit && !missingQuestion && (
+          <div className="mr-auto text-xs text-muted-foreground" aria-live="polite">
+            <p className="font-medium">Před zařazením zbývá:</p>
+            <ul className="list-disc pl-4">
+              {remaining.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <Button type="submit" disabled={!canSubmit} isLoading={submitting}>
           Zařadit do boardu
         </Button>

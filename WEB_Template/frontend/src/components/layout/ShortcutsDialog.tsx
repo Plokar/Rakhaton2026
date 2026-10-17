@@ -21,6 +21,7 @@ const SHORTCUTS: { group: string; items: { keys: string[]; label: string }[] }[]
       { keys: ['Z'], label: 'Závěr komise' },
       { keys: ['P'], label: 'Okno pro projektor' },
       { keys: ['H'], label: 'Označit jako projednané (předseda)' },
+      { keys: ['C'], label: 'Chat lékařů zasedání' },
     ],
   },
   {

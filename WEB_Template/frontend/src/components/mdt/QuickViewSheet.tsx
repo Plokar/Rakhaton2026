@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ListOrdered, MonitorUp } from 'lucide-react';
+import { LayoutList, MonitorUp } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from '@/components/shadcn/sheet';
 import { Skeleton } from '@/components/shadcn/skeleton';
@@ -10,7 +10,7 @@ import { useCaseLocation } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import { can, useMe } from './me';
 import { openProjectorWindow } from './projector';
-import { ProjectorLayoutDialog } from './ProjectorLayoutDialog';
+import { ProjectorLayoutDialog } from './ProjectorLayoutEditor';
 import { CaseQuickViewNarrow, useQuickViewSources } from './quick-view';
 
 /**
@@ -63,14 +63,14 @@ export function QuickViewSheet({ caseId, onClose }: { caseId: number | null; onC
                   <Button
                     variant="ghost"
                     size="icon-lg"
-                    aria-label="Pořadí na projektoru"
-                    title="Pořadí na projektoru"
+                    aria-label="Upravit okno pro projektor"
+                    title="Upravit okno pro projektor: skrýt nebo přeskládat údaje"
                     onClick={() => setArranging(true)}
                   >
-                    <ListOrdered aria-hidden />
+                    <LayoutList aria-hidden />
                   </Button>
                 )}
-                {arranging && <ProjectorLayoutDialog item={item} sources={sources} open onOpenChange={setArranging} />}
+                {arranging && <ProjectorLayoutDialog item={item} open onOpenChange={setArranging} />}
                 <SheetClose render={<Button variant="ghost" size="lg" className="ml-auto" />}>Zavřít</SheetClose>
               </div>
             }

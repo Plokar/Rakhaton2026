@@ -6,9 +6,13 @@ import type {
   BoardRecord,
   Brief,
   BriefConfig,
+  CaseAnswer,
   CaseTemplate,
+  RuleInfo,
+  SimilarCases,
   MdtRole,
   RoleId,
+  SectionId,
   SpecialtyView,
   Decision,
   EvidenceSource,
@@ -26,6 +30,7 @@ import type {
   MdtSessionDetail,
   MdtSessionListItem,
   ObservationSeries,
+  SessionMessage,
   TimelineEvent,
 } from '@/types/mdt';
 
@@ -74,6 +79,45 @@ export interface ImportProposal {
   rejected: ImportValue[];
 }
 
+/** Údaj nominace v návrhu nového pacienta s citací odstavce podkladu (`null` = upravil lékař). */
+export type DraftText = { text: string; citation: string | null };
+
+/** Návrh nového pacienta (`/api/mdt/patient-drafts/`, T-323, ARCH §8.6); RČ se nevrací nikdy. */
+export interface PatientDraft {
+  id: number;
+  status: 'draft' | 'confirmed';
+  patient_id: string;
+  synthetic: boolean;
+  session: { id: number; title: string; date: string } | null;
+  case_id: number | null;
+  documents: { id: string; title: string; date: string | null; text?: string; source?: string }[];
+  fields?: {
+    nomination_type: 'primarni' | 'restaging' | 'progrese';
+    question?: DraftText | null;
+    histology?: DraftText | null;
+    history?: DraftText | null;
+    comorbidities?: DraftText | null;
+    preferences?: DraftText | null;
+    diagnoses: (DraftText & { code: string })[];
+    tnm?: (DraftText & { date?: string | null }) | null;
+    ecog?: { value: number; citation: string | null; date?: string | null } | null;
+  };
+  edited?: string[];
+  values?: ImportValue[];
+  rejected?: ImportValue[];
+  ai?: { used: boolean; reason: string | null };
+  patient?: { rc_masked: string; sex: 'male' | 'female'; birth_year: number; age: number };
+  missing_for_confirm?: string[];
+}
+
+/** PATCH návrhu: pole nominace upravená lékařem (text `''` = smazat). */
+export type PatientDraftEdits = {
+  question?: string;
+  tnm?: string;
+  ecog?: number | null;
+  diagnoses?: { code: string; text?: string }[];
+};
+
 const fileBody = (name: string, file: Blob) => {
   const data = new FormData();
   data.append(name, file);
@@ -106,7 +150,7 @@ export const mdtApi = {
   getForMe: (caseId: number, specialty?: RoleId) =>
     apiFetch<SpecialtyView>(`/api/mdt/cases/${caseId}/for-me/${specialty ? `?specialty=${specialty}` : ''}`),
 
-  /** Boardy (zasedání) s pacienty v pořadí agendy. */
+  /** Boardy (zasedání) s pacienty v pořadí agendy, s agendami a připraveností (`expand=cases`, T-518). */
   getSessions: () => apiFetch<MdtSessionListItem[]>('/api/mdt/sessions/'),
 
   /** Záznam boardů (T-333, jen předseda): uzavřené boardy s přítomnými a výstupy pacientů. */
@@ -135,13 +179,24 @@ export const mdtApi = {
   /** Jen prázdný board (409, když má pacienty). */
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
 
+  /** Chat lékařů u zasedání (T-334): posledních 200 zpráv od nejstarší. */
+  getSessionMessages: (sessionId: number) => apiFetch<SessionMessage[]>(`/api/mdt/sessions/${sessionId}/messages/`),
+
+  /** Píše každý člen komise; `case_id` = štítek pacienta z agendy boardu. Uzavřený board 409. */
+  postSessionMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
+    apiFetch<SessionMessage>(`/api/mdt/sessions/${sessionId}/messages/`, { method: 'POST', body: JSON.stringify(input) }),
+
+  /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
+  sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
+
   /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
   updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
 
-  generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig } = {}) =>
+  /** Nový podklad; `feedback` = co bylo v předchozí verzi špatně (jde do promptů vybraných částí, T-323). */
+  generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig; feedback?: { text: string; sections?: SectionId[] } } = {}) =>
     apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`, {
       method: 'POST',
       body: JSON.stringify(body),
@@ -174,6 +229,27 @@ export const mdtApi = {
   getPatientSummary: (caseId: string) =>
     apiFetch<PatientSummary>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`),
 
+  /** Zpráva pro praktického lékaře (T-332); 404, dokud nevznikne se shrnutím pro pacienta. */
+  getGpReport: (caseId: string) =>
+    apiFetch<PatientSummary>(`/api/mdt/cases/${encodeURIComponent(caseId)}/gp-report/`),
+
+  /** Nová verze potvrzeného závěru s důvodem změny (T-332, předseda). */
+  reviseDecision: (caseId: string, reason: string) =>
+    apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/revise/`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+
+  /** Otázka nad případem: odpověď jen z dat pacienta v IRIS, s citacemi (T-332). */
+  askCase: (caseId: number, question: string) =>
+    apiFetch<CaseAnswer>(`/api/mdt/cases/${caseId}/ask/`, { method: 'POST', body: JSON.stringify({ question }) }),
+
+  /** Podobné případy: předchozí závěry MDT jiných pacientů s obdobnou diagnózou (T-332). */
+  getSimilarCases: (caseId: number) => apiFetch<SimilarCases>(`/api/mdt/cases/${caseId}/similar/`),
+
+  /** Katalog pravidel varovných signálů pro nastavení podkladu (T-332). */
+  getRules: () => apiFetch<RuleInfo[]>('/api/mdt/rules/'),
+
   /** Spustí shrnutí z potvrzeného závěru (409 bez potvrzení) → job. */
   generatePatientSummary: (caseId: string) =>
     apiFetch<{ job_id: number }>(`/api/mdt/cases/${encodeURIComponent(caseId)}/patient-summary/`, { method: 'POST' }),
@@ -197,6 +273,23 @@ export const mdtApi = {
 
   /** Pacienti z IRIS (hlavička bez jména a RČ). */
   getPatients: () => apiFetch<PatientListItem[]>('/api/patients/'),
+
+  /** Nový pacient z RČ (T-323): rozpracované návrhy, založení z textu / souborů, úpravy, zápis do IRIS. */
+  getPatientDrafts: () =>
+    apiFetch<{ id: number; patient_id: string; documents: number; created_at: string; updated_at: string }[]>('/api/mdt/patient-drafts/'),
+  getPatientDraft: (id: number) => apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/`),
+  /** `rc`, `text?`, `files[]?` (PDF, TXT), `synthetic?`, `session?`; 409 = RČ už v IRIS (`patient_id`) nebo v návrhu (`draft_id`). */
+  createPatientDraft: (body: FormData) => apiFetch<PatientDraft>('/api/mdt/patient-drafts/', { method: 'POST', body }),
+  addPatientDraftDocuments: (id: number, body: FormData) =>
+    apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/documents/`, { method: 'POST', body }),
+  updatePatientDraft: (id: number, fields: PatientDraftEdits) =>
+    apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/`, { method: 'PATCH', body: JSON.stringify({ fields }) }),
+  deletePatientDraft: (id: number) => apiFetch<void>(`/api/mdt/patient-drafts/${id}/`, { method: 'DELETE' }),
+  confirmPatientDraft: (id: number) =>
+    apiFetch<{ patient_id: string; case_id: number | null; synthetic: boolean; fhir_written: string[] }>(
+      `/api/mdt/patient-drafts/${id}/confirm/`,
+      { method: 'POST' },
+    ),
 
   /** Detail pacienta: diagnózy, komorbidity, TNM v čase, ECOG lékař i pacient. */
   getPatient: (patientId: string) => apiFetch<PatientDetail>(`/api/patients/${encodeURIComponent(patientId)}/`),

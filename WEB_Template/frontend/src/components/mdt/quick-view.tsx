@@ -16,8 +16,6 @@ import {
 } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type {
-  ProjectorLayout,
-  ProjectorSection,
   CaseTemplate,
   IntakePrefill,
   IntakeWarning,
@@ -26,6 +24,8 @@ import type {
   MdtSessionDetail,
   ObservationSeries,
   ProcedureCompatibility,
+  ProjectorBlock,
+  ProjectorLayout,
 } from '@/types/mdt';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip';
 import { AiBlock } from './AiBlock';
@@ -486,47 +486,15 @@ function packFacts(group: KeyFact[], unitsOf: (fact: KeyFact) => CellUnits = (fa
 }
 
 /**
- * Pořadí údajů na projektoru (T-332): připnuté v pořadí z `projector_layout.facts`, ostatní za nimi
- * výchozím pořadím (závažné, mimo normu, chybějící, zaznamenané, v normě; balené do řádků).
- */
-export function projectorFactOrder(facts: KeyFact[], layout: ProjectorLayout | null | undefined): KeyFact[] {
-  const byId = new Map(facts.map((f) => [f.id, f]));
-  const pinned = (layout?.facts ?? []).map((id) => byId.get(id)).filter((f): f is KeyFact => Boolean(f));
-  const pinnedIds = new Set(pinned.map((f) => f.id));
-  const groups = orderFacts(facts.filter((f) => !pinnedIds.has(f.id)));
-  return [...pinned, ...[groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap((group) => packFacts(group))];
-}
-
-export const PROJECTOR_BLOCKS: Record<ProjectorSection, string> = {
-  anamnesis: 'Anamnéza',
-  facts: 'Klíčové údaje',
-  template: 'Šablona (úplnost podle diagnózy)',
-  treatments: 'Léčebné postupy',
-};
-const DEFAULT_BLOCKS: ProjectorSection[] = ['anamnesis', 'facts', 'template', 'treatments'];
-
-/** Bloky v okně projektoru (T-330: šablona je jen v rychlém přehledu, na projektoru ne). */
-export const PROJECTOR_WINDOW_BLOCKS: ProjectorSection[] = ['anamnesis', 'facts', 'treatments'];
-
-/**
- * Bloky v pořadí z `projector_layout.sections`, chybějící výchozím pořadím za nimi. Šablona, kterou okno
- * projektoru nemá (a dialog ji proto neřadí), zůstává v rychlém přehledu hned za klíčovými údaji.
- */
-export function projectorBlockOrder(layout: ProjectorLayout | null | undefined): ProjectorSection[] {
-  const order = [...new Set([...(layout?.sections ?? []), ...DEFAULT_BLOCKS.filter((b) => b !== 'template')])];
-  if (!order.includes('template')) order.splice(order.indexOf('facts') + 1, 0, 'template');
-  return order;
-}
-
-/**
  * Hustá mřížka pro projektor (T-326, T-327): buňka = jeden řádek se zkratkou, hodnotou a ikonou stavu. Důvod
  * barvy, datum a plný název jsou v bublině po najetí nebo fokusu; klik otevře zdroj (dohledatelnost, zadání §3.3).
  * Pořadí: závažné, mimo normu, chybějící, zaznamenané, v normě; poslední buňka řádku se roztáhne (žádné díry).
  */
 export function KeyFactsGrid() {
-  const { facts, sources, item } = useQuickView();
+  const { facts, sources } = useQuickView();
   const open = useCitationOpen();
-  const ordered = projectorFactOrder(facts, item?.projector_layout);
+  const groups = orderFacts(facts);
+  const ordered = [groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap((group) => packFacts(group));
   const loading = sources.intake.loading || sources.observations.loading;
 
   return (
@@ -923,31 +891,16 @@ export function CaseQuickViewNarrow({
         </header>
         <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="flex flex-col gap-3.5 px-3 py-3">
-            <NarrowBlocks />
+            <AnamnesisPanel compact />
+            <KeyFactsGrid />
+            <TemplateSummary />
+            <TreatmentList compact />
           </div>
         </div>
         <QuestionStrip className="shrink-0 border-t-2 border-t-primary/40 px-3 py-2" clampLines={2} />
         {footer}
       </article>
     </QuickViewRoot>
-  );
-}
-
-/** Bloky úzkého panelu v pořadí, které nastavil zadávající lékař nebo předseda (T-332). */
-function NarrowBlocks() {
-  const { item } = useQuickView();
-  const blocks: Record<ProjectorSection, React.ReactNode> = {
-    anamnesis: <AnamnesisPanel compact />,
-    facts: <KeyFactsGrid />,
-    template: <TemplateSummary />,
-    treatments: <TreatmentList compact />,
-  };
-  return (
-    <>
-      {projectorBlockOrder(item?.projector_layout).map((id) => (
-        <React.Fragment key={id}>{blocks[id]}</React.Fragment>
-      ))}
-    </>
   );
 }
 
@@ -1051,6 +1004,43 @@ const PJ_PILL: Record<Light, string> = {
   grey: 'bg-muted text-slate-700 dark:text-slate-300',
   skipped: 'text-muted-foreground ring-1 ring-inset ring-border',
 };
+
+// ── Rozložení okna pro projektor (T-333): zadávající lékař skryje nebo přeskládá karty a údaje ─────────
+
+export const PROJECTOR_BLOCKS: { id: ProjectorBlock; label: string }[] = [
+  { id: 'anamnesis', label: 'Anamnéza' },
+  { id: 'facts', label: 'Klíčové údaje' },
+  { id: 'treatments', label: 'Léčebné postupy' },
+];
+
+/** Karty v pořadí lékaře (neznámé vynechá, chybějící doplní na konec) včetně skrytých. */
+export function orderedBlocks(layout?: ProjectorLayout | null): { id: ProjectorBlock; label: string; hidden: boolean }[] {
+  const ids = PROJECTOR_BLOCKS.map((b) => b.id);
+  const order = [...new Set([...(layout?.blocks?.order ?? []).filter((id) => ids.includes(id)), ...ids])];
+  const hidden = new Set(layout?.blocks?.hidden ?? []);
+  return order.map((id) => ({ ...PROJECTOR_BLOCKS.find((b) => b.id === id)!, hidden: hidden.has(id) }));
+}
+
+/** Výchozí pořadí údajů okna pro projektor: závažné, mimo normu, chybějící, zaznamenané, v normě. */
+export function defaultFactOrder(facts: KeyFact[]): KeyFact[] {
+  const groups = orderFacts(facts);
+  return [...groups.attention, ...groups.unresolved, ...groups.recorded, ...groups.normal];
+}
+
+/** Údaje v pořadí lékaře (bez pořadí výchozí) včetně skrytých; nové údaje, které lékař neviděl, jdou na konec. */
+export function orderedFacts(facts: KeyFact[], layout?: ProjectorLayout | null): { fact: KeyFact; hidden: boolean }[] {
+  const base = defaultFactOrder(facts);
+  const order = layout?.facts?.order ?? [];
+  const rank = new Map(order.map((id, i) => [id, i]));
+  const sorted = order.length
+    ? base.map((fact, i) => ({ fact, key: rank.get(fact.id) ?? order.length + i })).sort((a, b) => a.key - b.key).map((x) => x.fact)
+    : base;
+  const hidden = new Set(layout?.facts?.hidden ?? []);
+  return sorted.map((fact) => ({ fact, hidden: hidden.has(fact.id) }));
+}
+
+/** Rozložení pro okno projektoru: z případu, nebo náhled rozpracovaného v editoru. */
+const ProjectorLayoutContext = React.createContext<ProjectorLayout | null>(null);
 
 const PJ_GROUPS = [
   { key: 'attention', title: 'Pozornost' },
@@ -1167,12 +1157,13 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
 }
 
 function ProjectorFacts() {
-  const { facts, sources, item } = useQuickView();
-  // T-332: údaje v pořadí lékaře jsou nahoře jako vlastní skupina, ostatní ve výchozích skupinách
-  const byId = new Map(facts.map((f) => [f.id, f]));
-  const pinned = (item?.projector_layout?.facts ?? []).map((id) => byId.get(id)).filter((f): f is KeyFact => Boolean(f));
-  const pinnedIds = new Set(pinned.map((f) => f.id));
-  const groups = { pinned, ...orderFacts(facts.filter((f) => !pinnedIds.has(f.id))) };
+  const { facts, sources } = useQuickView();
+  const layout = React.useContext(ProjectorLayoutContext);
+  const rows = orderedFacts(facts, layout);
+  const visible = rows.filter((r) => !r.hidden).map((r) => r.fact);
+  const hiddenCount = rows.length - visible.length;
+  const custom = Boolean(layout?.facts?.order?.length);
+  const groups = orderFacts(visible);
   const loading = sources.intake.loading || sources.observations.loading;
   return (
     <section aria-labelledby="pj-facts" className={cn(PJ_CARD, '@container flex flex-col gap-2')}>
@@ -1183,8 +1174,19 @@ function ProjectorFacts() {
         <p role="alert" className="text-sm text-destructive">Údaje pacienta se nepodařilo načíst. Obnovte okno (F5).</p>
       ) : facts.length === 0 ? (
         <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
+      ) : custom ? (
+        // pořadí zadávajícího lékaře platí přesně, bez skupin a bez dobalování řádků
+        <div>
+          <h3 className="mx-0.5 mb-1.5 flex justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span>Pořadí zadávajícího lékaře</span>
+            <span className="tabular-nums">{visible.length}</span>
+          </h3>
+          <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
+            {visible.map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
+          </ul>
+        </div>
       ) : (
-        [{ key: 'pinned' as const, title: 'Pořadí lékaře' }, ...PJ_GROUPS].map(({ key, title }) =>
+        PJ_GROUPS.map(({ key, title }) =>
           groups[key].length ? (
             <div key={key}>
               <h3 className="mx-0.5 mb-1.5 flex justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1192,11 +1194,14 @@ function ProjectorFacts() {
                 <span className="tabular-nums">{groups[key].length}</span>
               </h3>
               <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
-                {(key === 'pinned' ? groups.pinned : packFacts(groups[key], pjUnits)).map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
+                {packFacts(groups[key], pjUnits).map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
               </ul>
             </div>
           ) : null,
         )
+      )}
+      {hiddenCount > 0 && (
+        <p className="mx-0.5 text-[11px] text-muted-foreground">Skryto zadávajícím lékařem: {hiddenCount} (v podkladu zůstávají).</p>
       )}
     </section>
   );
@@ -1326,23 +1331,6 @@ function ProjectorAnamnesis() {
   );
 }
 
-/** Bloky okna projektoru v pořadí, které nastavil zadávající lékař nebo předseda (T-332). */
-function ProjectorBlocks() {
-  const { item } = useQuickView();
-  const blocks: Partial<Record<ProjectorSection, React.ReactNode>> = {
-    anamnesis: <ProjectorAnamnesis />,
-    facts: <ProjectorFacts />,
-    treatments: <ProjectorTreatments />,
-  };
-  return (
-    <div className="flex flex-col gap-3">
-      {projectorBlockOrder(item?.projector_layout).map((id) => (
-        <React.Fragment key={id}>{blocks[id]}</React.Fragment>
-      ))}
-    </div>
-  );
-}
-
 /**
  * Okno pro projektor (T-330, podle schváleného náhledu): šedé pozadí s bílými kartami, hlavička a otázka
  * pro MDT vždy vidět, mezi nimi anamnéza (když je), klíčové údaje ve skupinách a postupy se semaforem.
@@ -1353,21 +1341,44 @@ export function CaseQuickViewProjector({
   caseId,
   titleAs = 'h1',
   className,
+  layout,
 }: {
   sources: QuickViewSources;
   caseId: number | null;
   titleAs?: 'h1' | 'h2';
   className?: string;
+  /** Náhled rozpracovaného rozložení (editor, T-333); jinak platí rozložení uložené u případu. */
+  layout?: ProjectorLayout | null;
 }) {
   return (
     <QuickViewRoot sources={sources} caseId={caseId}>
+      <ProjectorBody titleAs={titleAs} className={className} layout={layout} />
+    </QuickViewRoot>
+  );
+}
+
+const PJ_BLOCK: Record<ProjectorBlock, () => React.ReactNode> = {
+  anamnesis: () => <ProjectorAnamnesis />,
+  facts: () => <ProjectorFacts />,
+  treatments: () => <ProjectorTreatments />,
+};
+
+function ProjectorBody({ titleAs, className, layout }: { titleAs: 'h1' | 'h2'; className?: string; layout?: ProjectorLayout | null }) {
+  const { item } = useQuickView();
+  const effective = layout ?? item?.projector_layout ?? null;
+  return (
+    <ProjectorLayoutContext.Provider value={effective}>
       <article className={cn('flex h-full min-h-0 flex-col gap-3 bg-muted p-3', className)} aria-label="Přehled případu pro projektor">
         <ProjectorHeader as={titleAs} />
         <div className="relative -mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
-          <ProjectorBlocks />
+          <div className="flex flex-col gap-3">
+            {orderedBlocks(effective).filter((b) => !b.hidden).map((b) => (
+              <React.Fragment key={b.id}>{PJ_BLOCK[b.id]()}</React.Fragment>
+            ))}
+          </div>
         </div>
         <ProjectorQuestion />
       </article>
-    </QuickViewRoot>
+    </ProjectorLayoutContext.Provider>
   );
 }

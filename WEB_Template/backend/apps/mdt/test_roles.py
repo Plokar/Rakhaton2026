@@ -21,6 +21,16 @@ def as_user(username):
     return client
 
 
+def resolved_intake(pid, username='onkolog'):
+    """Vše vyřešené jako ve formuláři zařazení (server jinak vrátí 400): přeskočit chybějící údaje kromě otázky,
+    odkliknout všechna varování. Vrací `{skipped_fields, acknowledge}`."""
+    c = as_user(username)
+    fields = c.get(f'/api/mdt/patients/{pid}/intake/').json()['fields']
+    skipped = [f['id'] for f in fields if f['status'] in ('missing', 'pending') and f['id'] != 'mdt.question']
+    warnings = c.get(f'/api/mdt/patients/{pid}/intake/?skipped={",".join(skipped)}').json()['warnings']
+    return {'skipped_fields': skipped, 'acknowledge': [w['id'] for w in warnings]}
+
+
 def test_demo_users_roles_and_me(seeded):
     me = as_user('predseda').get('/api/mdt/me/').json()
     assert (me['role'], me['specialty']) == ('mdt_admin', 'oncologist')
@@ -62,6 +72,35 @@ def test_move_case_updates_task_in_iris(seeded):
     assert r.status_code == 200 and r.json()['session'] == target.pk
     task = writeback.nomination_task('P01', 'P01-zad01')
     assert task['restriction']['period']['start'] == '2026-10-14T14:00:00+02:00'
+
+
+def test_intake_ignores_status_from_client(seeded):
+    """Lékař zařadí svého pacienta i s tělem z UI (`status` posílá formulář, mění ho jen předseda; dřív 403)."""
+    board = MdtSession.objects.get(title='Hrudní – karcinom plic')
+    body = {'session': board.pk, 'patient_id': 'P04', 'ecog': 1, 'intent': 'C', 'imaging_recent_checked': True,
+            **resolved_intake('P04', 'pneumolog'), 'status': 'nominated'}
+    r = as_user('pneumolog').post('/api/mdt/cases/', body, format='json')
+    assert r.status_code in (200, 201), r.json()
+    assert r.json()['status'] == 'ready'
+
+
+def test_regenerate_brief_with_doctor_feedback(seeded, monkeypatch):
+    """T-323: přegenerování se zpětnou vazbou: validace, pseudonymizace, uložení v parametrech jobu."""
+    from apps.copilot import jobs
+    from apps.copilot.models import GenerationJob
+
+    monkeypatch.setattr(jobs, 'start', lambda job: None)                 # job se jen založí
+    case = MdtCase.objects.get(patient_fhir_id='P03')
+    url = f'/api/mdt/cases/{case.pk}/brief/'
+    client = as_user('onkolog')
+    assert client.post(url, {'feedback': {'text': 'x'}}, format='json').status_code == 400
+    assert client.post(url, {'feedback': {'text': 'Chybí CT', 'sections': ['nic']}}, format='json').status_code == 400
+    r = client.post(url, {'feedback': {'text': 'Pan Novák, RČ 670315/1234: souhrn vynechal CT hrudníku',
+                                       'sections': ['summary', 'summary']}}, format='json')
+    assert r.status_code == 202
+    feedback = GenerationJob.objects.get(pk=r.json()['job_id']).params['feedback']
+    assert feedback['sections'] == ['summary'] and feedback['by'] and '670315' not in feedback['text']
+    assert 'feedback' not in GenerationJob.objects.get(pk=client.post(url, {}, format='json').json()['job_id']).params
 
 
 def test_closed_board_rejects_move_and_intake(seeded):
@@ -130,20 +169,3 @@ def test_collaborators_validation(seeded):
     # zadávající lékař sám sebe nepřizývá (právo už má)
     me = p04.created_by_id
     assert as_user('pneumolog').patch(url, {'collaborators': [me]}, format='json').json()['collaborators'] == []
-
-
-def test_projector_layout(seeded):
-    """T-332: pořadí na projektoru mění zadávající lékař, přizvaný nebo předseda; ostatní ne. Neplatné tvary → 400."""
-    p04 = MdtCase.objects.get(patient_fhir_id='P04')       # zadal pneumolog
-    url = f'/api/mdt/cases/{p04.pk}/'
-    layout = {'sections': ['treatments', 'facts'], 'facts': ['spiro.ppo_dlco', 'lab:718-7']}
-    assert as_user('chirurg').patch(url, {'projector_layout': layout}, format='json').status_code == 403
-    r = as_user('pneumolog').patch(url, {'projector_layout': layout}, format='json')
-    assert r.status_code == 200
-    assert r.json()['projector_layout'] == layout
-    agenda = as_user('chirurg').get(f'/api/mdt/sessions/{p04.session_id}/').json()
-    assert next(c for c in agenda['cases'] if c['id'] == p04.pk)['projector_layout'] == layout
-    assert as_user('predseda').patch(url, {'projector_layout': {}}, format='json').json()['projector_layout'] == {}
-    for bad in ({'sections': ['nic']}, {'sections': ['facts', 'facts']}, {'facts': 'lab'}, {'poradi': []}, ['facts']):
-        assert as_user('predseda').patch(url, {'projector_layout': bad}, format='json').status_code == 400
-

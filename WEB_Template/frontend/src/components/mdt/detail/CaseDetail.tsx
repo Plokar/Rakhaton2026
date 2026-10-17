@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, ListOrdered, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, LayoutList, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -16,12 +16,11 @@ import { cn } from '@/lib/utils';
 import type { Brief, BriefSection, MdtCase, MdtSessionDetail, SectionId, TimelineEvent } from '@/types/mdt';
 import { AiBlock } from '../AiBlock';
 import { Citations } from '../citations';
-import { ClaimItem, ClaimList } from '../ClaimList';
+import { ClaimItem, ClaimList, SectionClaims } from '../ClaimList';
 import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-source';
-import { GenerateBrief, useBriefJob } from '../GenerateBrief';
+import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
-import { ProjectorLayoutDialog } from '../ProjectorLayoutDialog';
 import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
 import { RedFlagList } from '../RedFlagList';
 import { ROLE_META } from '../roles';
@@ -32,6 +31,9 @@ import { TrialScreening } from '../TrialScreening';
 import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './DetailSection';
 import { ForMePanel } from './ForMePanel';
 import { MyTasks } from '../MyTasks';
+import { CaseAsk } from '../CaseAsk';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
+import { SimilarCases } from '../SimilarCases';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -110,7 +112,7 @@ const DETAIL_SECTION: Partial<Record<SectionId, string>> = {
   trials: 'lecba',
   questions: 'otazky',
 };
-const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'pacient', 'otazky'];
+const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'podobne', 'pacient', 'otazky', 'dotaz'];
 
 /** Rychlý přehled zůstává první (ARCH §7.3), pak podle `sections` (předseda nebo odbornost), pak zbytek. */
 function detailOrder(sections: SectionId[], forMe: boolean): string[] {
@@ -209,6 +211,11 @@ function DetailLayout({
           {brief ? (
             <div className="flex flex-col gap-5">
               <RedFlagList flags={redFlags} />
+              {(brief.config.disabled_rules?.length ?? 0) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Pravidla vypnutá v nastavení boardu: <span translate="no">{brief.config.disabled_rules?.join(', ')}</span>.
+                </p>
+              )}
               {alerts.length > 0 && (
                 <AiBlock title="Alergie, implantáty a předchozí výkony" status={brief.status} headingLevel="h3">
                   <ul className="flex flex-col gap-1.5">
@@ -242,7 +249,7 @@ function DetailLayout({
                 <div className="flex flex-col gap-5">
                   {sectionsOf(brief, 'anamnesis').map((s) => (
                     <AiBlock key={s.title} title={s.title || 'Anamnéza'} status={brief?.status} headingLevel="h3">
-                      <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+                      <SectionClaims section={s} hideUnverified={hideUnverified} />
                     </AiBlock>
                   ))}
                   {brief && brief.header.comorbidities.length > 0 && (
@@ -348,6 +355,28 @@ function DetailLayout({
             ),
           }
         : null,
+    podobne:
+      !isDemo && item?.id
+        ? {
+            def: { id: 'podobne', label: 'Podobné případy' },
+            node: (
+              <DetailSection id="podobne" title="Podobné případy">
+                <SimilarCases caseId={item.id} />
+              </DetailSection>
+            ),
+          }
+        : null,
+    dotaz:
+      !isDemo && item?.id
+        ? {
+            def: { id: 'dotaz', label: 'Zeptat se na případ' },
+            node: (
+              <DetailSection id="dotaz" title="Zeptat se na případ">
+                <CaseAsk caseId={item.id} />
+              </DetailSection>
+            ),
+          }
+        : null,
   };
 
   const chairSections = (brief?.config.sections ?? []).filter((s) => s.enabled).toSorted((a, b) => a.order - b.order).map((s) => s.id);
@@ -397,6 +426,7 @@ function DetailLayout({
             <React.Fragment key={b.def.id}>{b.node}</React.Fragment>
           ))}
 
+          {brief?.feedback && <FeedbackNote feedback={brief.feedback} />}
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">
               Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
@@ -477,7 +507,8 @@ function StickyCaseHeader({
   const isDemo = caseKey === DEMO_CASE;
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
-  const [arranging, setArranging] = React.useState(false);
+  const [regenerating, setRegenerating] = React.useState(false);
+  const [editingProjector, setEditingProjector] = React.useState(false);
   const flags = brief?.red_flags.length ?? 0;
 
   return (
@@ -562,21 +593,22 @@ function StickyCaseHeader({
                   </DropdownMenuItem>
                 )}
                 {canGenerate && brief && (
-                  <DropdownMenuItem onClick={() => void job.start()} disabled={job.running || job.starting}>
-                    <RefreshCw aria-hidden /> Přegenerovat podklad
+                  <DropdownMenuItem onClick={() => setRegenerating(true)} disabled={job.running || job.starting}>
+                    <RefreshCw aria-hidden /> Přegenerovat s připomínkou…
                   </DropdownMenuItem>
                 )}
-                {canGenerate && session && item?.id != null && (
-                  <DropdownMenuItem onClick={() => setArranging(true)}>
-                    <ListOrdered aria-hidden /> Pořadí na projektoru
+                {canGenerate && item && (
+                  <DropdownMenuItem onClick={() => setEditingProjector(true)}>
+                    <LayoutList aria-hidden /> Upravit okno pro projektor…
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            {arranging && item && <ProjectorLayoutDialog item={item} sources={sources} open onOpenChange={setArranging} />}
           </div>
         </div>
         {job.progress}
+        <RegenerateDialog open={regenerating} onClose={() => setRegenerating(false)} onSubmit={(feedback) => void job.start(feedback)} />
+        {editingProjector && item && <ProjectorLayoutDialog item={item} open onOpenChange={setEditingProjector} />}
         <div className="xl:hidden">
           <SectionNav sections={sections} variant="tabs" />
         </div>

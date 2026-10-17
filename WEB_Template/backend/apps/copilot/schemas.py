@@ -25,6 +25,7 @@ Light = Literal["green", "orange", "red", "grey", "skipped"]
 RoleId = Literal[
     "surgeon", "oncologist", "radiation_oncologist", "radiologist", "pathologist",
     "pulmonologist", "cardiologist", "patient",
+    "nuclear_medicine", "palliative_care", "geriatrician", "geneticist", "coordinator",
 ]
 SectionId = Literal[
     "summary", "timeline", "role_views", "red_flags", "decision_support", "trials",
@@ -43,6 +44,11 @@ class Claim(BaseModel):
         description="Nastavuje grounding validátor, ne LLM",
     )
     expected_source: str | None = Field(default=None, description='U "missing": kde by měl údaj být')
+    confidence: float | None = Field(
+        default=None, ge=0, le=1,
+        description="Míra jistoty: sémantická shoda tvrzení s citovaným textem (grounding v2, T-332); "
+                    "None = ověřeno jen čísly a daty (strukturovaná data, výpočet kódem)",
+    )
 
 
 class Criterion(BaseModel):
@@ -77,6 +83,7 @@ class BriefConfig(BaseModel):
     detail_level: DetailLevel
     language: Literal["cs", "sk", "en"]
     hide_unverified: bool
+    disabled_rules: list[str] = Field(default_factory=list, description="Pravidla varovných signálů vypnutá pro board (T-332)")
 
 
 # ── §8.2 Brief (podklad) ──────────────────────────────────────────────────────
@@ -162,6 +169,8 @@ class BriefSection(BaseModel):
     ai_generated: Literal[True] = True
     items: list[Claim]
     assessment: RoleAssessment | None = Field(default=None, description="Jen u role_views (FR-B7)")
+    verbatim: list[Claim] | None = Field(
+        default=None, description="Jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5)")
 
 
 class RedFlag(BaseModel):
@@ -377,6 +386,14 @@ class BriefVerifier(BaseModel):
     issues: list[VerifierIssue]
 
 
+class BriefFeedback(BaseModel):
+    """Zpětná vazba lékaře k předchozí verzi, podle které podklad vznikl (T-323)."""
+    text: str = Field(description="Co bylo špatně / na co se zaměřit (pseudonymizováno)")
+    sections: list[SectionId] = Field(default_factory=list, description="Kterých částí se týká; prázdné = všech")
+    by: str
+    at: str = Field(description="ISO 8601")
+
+
 class Brief(BaseModel):
     case_id: str
     patient_id: str = Field(description='"P03"')
@@ -390,6 +407,7 @@ class Brief(BaseModel):
     decision_support: DecisionSupport | None = None
     verifier: BriefVerifier | None = None
     stats: BriefStats
+    feedback: BriefFeedback | None = Field(default=None, description="Přegenerováno podle zpětné vazby lékaře")
 
 
 # ── §8.4 Decision (závěr komise) ──────────────────────────────────────────────
@@ -506,6 +524,7 @@ class FhirIds(BaseModel):
     provenance: str
     document_reference_pdf: str | None = None
     document_reference_patient: str | None = Field(default=None, description='"P03-mdt02-pacient" (BON-4)')
+    document_reference_gp: str | None = Field(default=None, description='"P03-mdt02-pl": zpráva pro praktického lékaře (T-332)')
 
 
 class PatientSummary(BaseModel):
@@ -513,6 +532,17 @@ class PatientSummary(BaseModel):
     items: list[Claim]
     generated_at: str
     document_reference: str = Field(description='"P03-mdt02-pacient" v IRIS')
+
+
+class DecisionVersion(BaseModel):
+    """Dřívější potvrzená verze závěru v auditní stopě (BONUS C, T-332): kdo ji potvrdil, kdo a proč ji změnil."""
+    version: int
+    composition: str | None = Field(default=None, description="Composition v IRIS; nová verze má stejné ID a IRIS drží historii")
+    confirmed_by: ConfirmedBy | None = None
+    confirmed_at: str | None = None
+    revised_by: ConfirmedBy
+    revised_at: str
+    reason: str = Field(description="Proč komise potvrzený závěr měnila")
 
 
 class Decision(BaseModel):
@@ -529,6 +559,10 @@ class Decision(BaseModel):
     confirmed_at: str | None = None
     fhir_ids: FhirIds | None = Field(default=None, description="Po potvrzení")
     patient_summary: PatientSummary | None = Field(default=None, description="Po potvrzení (BON-4)")
+    gp_report: PatientSummary | None = Field(default=None, description="Zpráva pro praktického lékaře, po potvrzení (T-332)")
+    version: int = Field(default=1, ge=1, description="Verze záznamu; potvrzený závěr je zamčený, změna = nová verze")
+    revision_of: str | None = Field(default=None, description="Composition, kterou nová verze nahradí (stejné ID v IRIS)")
+    history: list[DecisionVersion] = Field(default_factory=list, description="Dřívější verze (auditní stopa)")
 
 
 # ── §8.6 Zařazení pacienta (MdtCase, IntakeWarning) ───────────────────────────

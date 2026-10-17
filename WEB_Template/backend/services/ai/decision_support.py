@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Any
 
 from pydantic import BaseModel, Field
@@ -27,15 +28,18 @@ class OptionDraft(BaseModel):
     considerations: list[str]
 
 
-class OptionsDraft(BaseModel):
-    options: list[OptionDraft] = Field(description="2 až 4 alternativy, bez řazení a doporučení")
+class OptionPick(BaseModel):
+    procedure_ids: list[str] = Field(description="2 až 4 procedure_id z katalogu k diskusi, bez řazení")
 
 
-OPTIONS_PROMPT = """Připrav 2 až 4 možnosti postupu k diskusi MDT podle dodaných guidelines.
-Nevybírej ani neřaď preferovanou možnost, nepoužívej slovo doporučujeme. Každý bod rationale
-musí popisovat doložené fakta pacienta a mít jejich ID citace. guideline_citations smí obsahovat
-jen ID dodaných pasáží. Vyber procedure_id pouze z uvedeného katalogu. Co není v podkladech,
-neodhaduj. Jazyk čeština. """
+PICK_PROMPT = """Vyber 2 až 4 postupy z katalogu, o kterých má komise k otázce pro MDT a stavu pacienta
+diskutovat. Nevybírej ani neřaď preferovanou možnost, nepoužívej slovo doporučujeme. Vrať jen procedure_id
+z uvedeného katalogu."""
+
+OPTION_PROMPT = """Připrav podklad k jedné možnosti postupu k diskusi MDT podle dodaných guidelines:
+2 až 4 body rationale, každý popisuje doložená fakta pacienta a má jejich ID citace; guideline_citations
+jen ID dodaných pasáží; considerations nejvýš 3 krátké body. Nevybírej, nedoporučuj a nepoužívej slovo
+doporučujeme. Co není v podkladech, neodhaduj. Jazyk čeština."""
 
 
 LIGHT_TEXT = {"green": "zelená (stav postup nevylučuje)", "orange": "oranžová (dávat pozor)",
@@ -61,21 +65,36 @@ def _treatment_options(context: PatientContext, compatibility: list[dict], provi
     available = {p["id"]: p for p in compatibility}
     if not available:
         return []
-    draft = None
-    if not provider.is_mock:
-        # Menu z výsledků semaforu (katalog i báze data/onko, T-316), ne jen z katalogu
-        menu = [{"procedure_id": p["id"], "title": p["title"], "guidelines": p.get("guideline_citations", [])}
-                for p in compatibility]
-        prompt = context.render() + "\n## Možnosti v katalogu\n" + repr(menu)
-        system = f"{OPTIONS_PROMPT}\n\n{prompt_rules()}\n\n{prompt_settings(config, 'decision_support')}"
-        result = provider.generate(prompt, system_prompt=system, response_schema=OptionsDraft, temperature=0.1)
-        log_call("brief.decision_support", result)
-        if result.get("status") == "success":
-            draft = result.get("data")
-    options = _sanitize_options(draft.get("options") or [], available, context) if draft else []
+    drafts = _llm_options(context, compatibility, available, provider, log_call, config) if not provider.is_mock else []
+    options = _sanitize_options(drafts, available, context)
     # D-015: vždy všechny postupy ze sady guidelines, i červené; co LLM nezmínil, doplní katalog.
     covered = {o["id"] for o in options}
     return options + _fallback_options([p for p in compatibility if p["id"] not in covered], context)
+
+
+def _llm_options(context: PatientContext, compatibility: list[dict], available: dict[str, dict], provider: BaseAIProvider,
+                 log_call: Callable[[str, dict], Any], config: dict | None) -> list[dict]:
+    """Dva kroky kvůli NFR-1 (< 20 s): LLM vybere 2–4 postupy (krátký výstup), podklad ke každému pak vzniká
+    souběžně. Jedno volání se všemi možnostmi mělo ~1 800 tokenů výstupu a trvalo 35–45 s."""
+    # Menu z výsledků semaforu (katalog i báze data/onko, T-316), ne jen z katalogu
+    menu = [{"procedure_id": p["id"], "title": p["title"], "guidelines": p.get("guideline_citations", [])}
+            for p in compatibility]
+    base = context.render() + "\n## Možnosti v katalogu\n" + repr(menu)
+    rules = f"\n\n{prompt_rules()}\n\n{prompt_settings(config, 'decision_support')}"
+    pick = provider.generate(base, system_prompt=PICK_PROMPT + rules, response_schema=OptionPick, temperature=0.0)
+    log_call("brief.decision_support.pick", pick)
+    ids = [pid for pid in dict.fromkeys((pick.get("data") or {}).get("procedure_ids") or []) if pid in available][:4]
+
+    def draft(pid: str) -> dict | None:
+        result = provider.generate(f"{base}\n\n## Postup k rozpracování\nprocedure_id: {pid}",
+                                   system_prompt=OPTION_PROMPT + rules, response_schema=OptionDraft, temperature=0.1)
+        log_call("brief.decision_support", result)
+        return {**result["data"], "procedure_id": pid} if result.get("status") == "success" else None
+
+    if not ids:
+        return []
+    with ThreadPoolExecutor(max_workers=len(ids)) as pool:
+        return [d for d in pool.map(draft, ids) if d]
 
 
 def _sanitize_options(raw_options: list[dict], available: dict[str, dict], context: PatientContext) -> list[dict]:

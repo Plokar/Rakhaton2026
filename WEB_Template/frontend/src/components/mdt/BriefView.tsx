@@ -9,7 +9,8 @@ import type { Brief, EvidenceId, SectionId } from '@/types/mdt';
 import { AiBlock } from './AiBlock';
 import { CaseHeader } from './CaseHeader';
 import { CitationProvider, Citations, collectCitations } from './citations';
-import { ClaimList } from './ClaimList';
+import { SectionClaims } from './ClaimList';
+import { FeedbackNote } from './GenerateBrief';
 import { BriefDataProvider, type BriefDataSource } from './data-source';
 import { RedFlagList } from './RedFlagList';
 import { RoleSection } from './RoleSection';
@@ -74,7 +75,7 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
           status={brief.status}
           defaultOpen={id === 'summary' ? true : allExpanded}
         >
-          <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+          <SectionClaims section={s} hideUnverified={hideUnverified} />
         </AiBlock>
       ));
 
@@ -203,6 +204,7 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
 
           <VerifierPanel verifier={brief.verifier} />
 
+          {brief.feedback && <FeedbackNote feedback={brief.feedback} />}
           <p className="border-t border-border pt-4 text-xs text-muted-foreground">
             Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
             <span className="tabular-nums">{brief.stats.claims_total}</span>, neověřených <span className="tabular-nums">{brief.stats.claims_unverified}</span>,

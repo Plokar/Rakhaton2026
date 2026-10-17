@@ -35,7 +35,7 @@ def role(user) -> str | None:
 
 # odbornost lékaře = RoleId (ARCH §8.1) bez „hlasu pacienta“
 SPECIALTIES = ('oncologist', 'surgeon', 'radiation_oncologist', 'radiologist', 'pathologist', 'pulmonologist',
-               'cardiologist')
+               'cardiologist', 'nuclear_medicine', 'palliative_care', 'geriatrician', 'geneticist', 'coordinator')
 
 
 def specialty(user) -> str | None:

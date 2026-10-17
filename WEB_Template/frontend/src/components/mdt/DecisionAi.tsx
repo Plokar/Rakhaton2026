@@ -75,7 +75,7 @@ export function ScribePanel({ caseId, onDraft }: { caseId: string; onDraft: () =
               }}
             />
             <Button variant="outline" onClick={() => fileRef.current?.click()} isLoading={job.starting === 'audio'} disabled={job.starting !== null}>
-              <FileAudio aria-hidden /> Nahrát nahrávku diskuse
+              <FileAudio aria-hidden /> Importovat audio z diskuse
             </Button>
           </div>
           <label className="flex flex-col gap-1.5 text-sm">
@@ -119,7 +119,10 @@ export function PatientSummaryPanel({ caseId, canGenerate }: { caseId: string; c
   });
   const refresh = React.useCallback(() => {
     void client.invalidateQueries({ queryKey: ['case', caseId, 'patient-summary'] });
-    toast.success('Shrnutí pro pacienta je připravené', { description: 'AI návrh, před předáním ho zkontroluje lékař.' });
+    void client.invalidateQueries({ queryKey: ['case', caseId, 'gp-report'] });
+    toast.success('Shrnutí pro pacienta a zpráva pro praktického lékaře jsou připravené', {
+      description: 'AI návrh, před předáním je zkontroluje lékař.',
+    });
   }, [client, caseId]);
   const job = useJob(refresh, 'Shrnutí se nepodařilo spustit.');
 
@@ -142,10 +145,35 @@ export function PatientSummaryPanel({ caseId, canGenerate }: { caseId: string; c
         <JobProgress jobId={job.jobId} onDone={job.done} onError={job.failed} runningLabel="Píšu shrnutí pro pacienta…" />
       ) : (
         <Button variant="outline" onClick={() => void job.run('summary', () => mdtApi.generatePatientSummary(caseId))} isLoading={job.starting !== null}>
-          <HeartHandshake aria-hidden /> Připravit shrnutí pro pacienta
+          <HeartHandshake aria-hidden /> Připravit shrnutí pro pacienta a zprávu pro PL
         </Button>
       )}
       {summary.isError && <p role="alert" className="text-sm text-destructive">{apiErrorMessage(summary.error, 'Shrnutí se nepodařilo načíst.')}</p>}
     </div>
+  );
+}
+
+/**
+ * Zpráva pro praktického (odesílajícího) lékaře (T-332): odborné shrnutí ze stejného potvrzeného zápisu,
+ * vzniká spolu se shrnutím pro pacienta, každá věta s citací. Je v PDF i FHIR exportu (`DocumentReference/Pxx-mdtNN-pl`).
+ */
+export function GpReportPanel({ caseId }: { caseId: string }) {
+  const report = useQuery({
+    queryKey: ['case', caseId, 'gp-report'],
+    queryFn: () =>
+      mdtApi.getGpReport(caseId).catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 404) return null;
+        throw err;
+      }),
+  });
+  if (!report.data) return null;
+  return (
+    <AiBlock title="Zpráva pro praktického lékaře">
+      <ClaimList claims={report.data.items} />
+      <p className="mt-3 text-xs text-muted-foreground">
+        Odborné shrnutí ze schváleného závěru ({report.data.document_reference}). Před odesláním ho zkontroluje lékař. Je
+        v exportu PDF i FHIR.
+      </p>
+    </AiBlock>
   );
 }

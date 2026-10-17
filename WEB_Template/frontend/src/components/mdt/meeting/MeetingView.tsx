@@ -12,7 +12,8 @@ import {
   CircleCheck,
   FileDown,
   FileText,
-  ListOrdered,
+  LayoutList,
+  MessagesSquare,
   MonitorUp,
   MoreHorizontal,
   NotebookPen,
@@ -38,6 +39,7 @@ import {
 } from '@/components/shadcn/dropdown-menu';
 import { Kbd } from '@/components/shadcn/kbd';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/shadcn/resizable';
+import { Sheet, SheetContent, SheetTitle } from '@/components/shadcn/sheet';
 import { useSidebar } from '@/components/shadcn/sidebar';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -50,15 +52,18 @@ import { AddPatientSheet } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
 import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { dayLabel, timeLabel } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { isDiscussed, shortPatient, spokenPatient } from '../patient';
 import { openProjectorWindow, publishSelection } from '../projector';
-import { ProjectorLayoutDialog } from '../ProjectorLayoutDialog';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
+import { SessionChat } from './SessionChat';
 import { formatDuration, useCaseTimer } from './use-case-timer';
+import { DiscussionRecorder } from './DiscussionRecorder';
+import { useSessionChat } from './use-session-chat';
 
 type Case = MdtCase & { id: number };
 
@@ -89,7 +94,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
   const [collaborating, setCollaborating] = React.useState(false);
-  const [arranging, setArranging] = React.useState(false);
+  const [editingProjector, setEditingProjector] = React.useState(false);
+  const chat = useSessionChat(sessionId, me);
   useFocusLayout();
 
   React.useEffect(() => {
@@ -124,6 +130,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   useHotkeys('z', () => current && router.push(`/dashboard/cases/${current.id}/record`), hk, [current]);
   useHotkeys('p', projector, hk, [current]);
   useHotkeys('h', toggleDiscussed, hk, [current, chair]);
+  useHotkeys('c', () => chat.setOpen(!chat.open), hk, [chat.open, chat.setOpen]);
 
   if (session.isLoading) return <MeetingSkeleton />;
   if (session.isError || !session.data) {
@@ -139,6 +146,14 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
 
   const board = session.data;
   const discussed = cases.filter(isDiscussed).length;
+  // Chat vedle přehledu jen ve třísloupcovém jednání; jinak (úzký displej, prázdná agenda) jako boční panel.
+  const inlineChat = cases.length > 0 && wide;
+  const chatProps = {
+    chat,
+    current,
+    closed: board.status === 'closed',
+    onSelectCase: (caseId: number) => void setParam(caseId),
+  };
 
   const main = current ? (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 lg:px-8">
@@ -174,12 +189,12 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
             onToggleDiscussed={toggleDiscussed}
             busy={status.isPending}
             onCollaborate={can.inviteToCase(me, current) ? () => setCollaborating(true) : undefined}
-            onArrange={can.editCase(me, current) ? () => setArranging(true) : undefined}
+            onEditProjector={can.editCase(me, current) ? () => setEditingProjector(true) : undefined}
           />
         }
       />
       {collaborating && <CollaboratorsDialog key={`collab-${current.id}`} item={current} open onOpenChange={setCollaborating} />}
-      {arranging && <ProjectorLayoutDialog key={`layout-${current.id}`} item={current} sources={sources} open onOpenChange={setArranging} />}
+      {editingProjector && <ProjectorLayoutDialog key={`pjl-${current.id}`} item={current} open onOpenChange={setEditingProjector} />}
     </div>
   ) : (
     <div className="flex flex-1 items-center justify-center p-6">
@@ -209,22 +224,41 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         total={total}
         onProjector={projector}
         onAdd={() => setAdding(true)}
+        chatOpen={chat.open}
+        unread={chat.unread}
+        onChat={() => chat.setOpen(!chat.open)}
       />
-      {cases.length > 0 && wide ? (
+      {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
-          <ResizablePanel defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
-            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} />
+          <ResizablePanel id="agenda" defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} recorder={<DiscussionRecorder cases={cases} current={current} />} />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Šířka agendy" />
-          <ResizablePanel className="min-h-0">
+          <ResizablePanel id="prehled" className="min-h-0">
             <div className="relative h-full overflow-y-auto">{main}</div>
           </ResizablePanel>
+          {chat.open && (
+            <>
+              <ResizableHandle withHandle aria-label="Šířka chatu" />
+              <ResizablePanel id="chat" defaultSize={340} minSize={280} maxSize={480} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+              </ResizablePanel>
+            </>
+          )}
         </ResizablePanelGroup>
       ) : (
         <div className="relative min-h-0 flex-1 overflow-y-auto">
           {cases.length > 0 && <AgendaPicker cases={cases} current={current} onSelect={select} />}
+          {cases.length > 0 && <DiscussionRecorder cases={cases} current={current} className="border-b bg-card" />}
           {main}
         </div>
+      )}
+      {!inlineChat && (
+        <Sheet open={chat.open} onOpenChange={chat.setOpen}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+            <SessionChat {...chatProps} Title={SheetTitle} />
+          </SheetContent>
+        </Sheet>
       )}
       <AddPatientSheet session={adding ? board : null} onClose={() => setAdding(false)} />
     </div>
@@ -256,6 +290,9 @@ function MeetingHeader({
   total,
   onProjector,
   onAdd,
+  chatOpen,
+  unread,
+  onChat,
 }: {
   board: MdtSessionDetail;
   discussed: number;
@@ -263,6 +300,9 @@ function MeetingHeader({
   total: number;
   onProjector: () => void;
   onAdd: () => void;
+  chatOpen: boolean;
+  unread: number;
+  onChat: () => void;
 }) {
   const router = useRouter();
   const me = useMe();
@@ -293,6 +333,17 @@ function MeetingHeader({
         </p>
       )}
       <div className="ml-auto flex items-center gap-2">
+        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} title="Chat lékařů zasedání (C)">
+          <MessagesSquare aria-hidden /> Chat
+          {unread > 0 && (
+            <>
+              <span aria-hidden className="min-w-5 rounded-full bg-primary px-1.5 text-xs leading-5 tabular-nums text-primary-foreground">
+                {unread > 99 ? '99+' : unread}
+              </span>
+              <span className="sr-only">{unread} nepřečtených</span>
+            </>
+          )}
+        </Button>
         <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
           <MonitorUp aria-hidden /> Projektor
         </Button>
@@ -411,11 +462,14 @@ function MeetingRail({
   current,
   elapsed,
   onSelect,
+  recorder,
 }: {
   cases: Case[];
   current: Case | null;
   elapsed: Record<string, number>;
   onSelect: (item: Case) => void;
+  /** Nahrávání diskuse (BON-3) v boku pod agendou. */
+  recorder: React.ReactNode;
 }) {
   return (
     <nav aria-label="Agenda zasedání" className="flex h-full min-h-0 flex-col bg-card">
@@ -468,6 +522,7 @@ function MeetingRail({
           );
         })}
       </ol>
+      {recorder}
       <p className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
         <Kbd>↑</Kbd> <Kbd>↓</Kbd> pacient · <Kbd>?</Kbd> zkratky
       </p>
@@ -510,7 +565,7 @@ function CaseToolbar({
   onToggleDiscussed,
   busy,
   onCollaborate,
-  onArrange,
+  onEditProjector,
 }: {
   item: Case;
   index: number;
@@ -522,8 +577,8 @@ function CaseToolbar({
   busy: boolean;
   /** Přizvat ke spolupráci (T-326): jen předseda nebo zadávající lékař. */
   onCollaborate?: () => void;
-  /** Pořadí údajů na projektoru (T-332): zadávající, přizvaný nebo předseda. */
-  onArrange?: () => void;
+  /** Upravit okno pro projektor (T-333): zadávající, přizvaný lékař nebo předseda. */
+  onEditProjector?: () => void;
 }) {
   const done = isDiscussed(item);
   return (
@@ -558,10 +613,10 @@ function CaseToolbar({
             {item.collaborators?.length ? <span className="tabular-nums">{item.collaborators.length}</span> : null}
           </Button>
         )}
-        {onArrange && (
-          <Button variant="outline" size="lg" onClick={onArrange} aria-label="Pořadí na projektoru" title="Pořadí informací na projektoru">
-            <ListOrdered aria-hidden />
-            <span className="hidden @5xl:inline">Pořadí</span>
+        {onEditProjector && (
+          <Button variant="outline" size="lg" onClick={onEditProjector} aria-label="Upravit okno pro projektor" title="Upravit okno pro projektor: skrýt nebo přeskládat údaje">
+            <LayoutList aria-hidden />
+            <span className="hidden @5xl:inline">Okno projektoru</span>
           </Button>
         )}
       </span>

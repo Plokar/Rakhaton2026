@@ -17,7 +17,7 @@ from rest_framework.response import Response
 
 from services import new_patient as np
 from services import rc as rc_module
-from services.ai_service import is_synthetic_patient, provider_for_patient
+from services.ai_service import MockAIProvider, is_synthetic_patient, provider_for_patient
 from services.fhir import client as fhir
 
 from . import roles
@@ -70,16 +70,13 @@ def _read_inputs(request, start: int, patient_id: str, provider) -> list[dict]:
             raise ValidationError({'files': f'{f.name}: soubor je větší než 20 MB.'})
         data, name = f.read(), f.name or 'soubor'
         if name.lower().endswith('.pdf') or f.content_type == 'application/pdf':
+            # textová vrstva parserem bez LLM; sken přes OCR jen s povoleným LLM (D-021), jinak 400
+            from services.ai.brief import _llm_call_log
+            from services.ai.report_import import pdf_text
             try:
-                content = np.pdf_text_local(data)
-            except np.DraftError as e:
+                content = pdf_text(data, provider or MockAIProvider(), _llm_call_log)
+            except ValueError as e:
                 raise ValidationError({'files': f'{name}: {e}'}) from None
-            if not content and provider is not None:          # sken bez textové vrstvy → Gemini (jen podle D-021)
-                from services.ai.brief import _llm_call_log
-                from services.ai.report_import import pdf_text
-                content = pdf_text(data, provider, _llm_call_log)
-            if not content:
-                raise ValidationError({'files': f'{name}: PDF nemá textovou vrstvu (sken). Vložte text zprávy.'})
         elif name.lower().endswith(TEXT_SUFFIXES) or (f.content_type or '').startswith('text/'):
             try:
                 content = data.decode('utf-8')

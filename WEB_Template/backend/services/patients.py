@@ -159,7 +159,9 @@ def observations(rs: list[dict], codes: set[str] | None = None) -> list[dict]:
         value = q.get('value', o.get('valueInteger'))
         if value is None:
             continue
-        key = fhir_code(o.get('code'), 'loinc') or (m.group(1) if (m := _KIND.match(o['id'])) else o['id'])
+        kind = m.group(1) if (m := _KIND.match(o['id'])) else None
+        # hodnota ze vložené zprávy (`Pxx-impNN-…`) bez LOINC: řada podle názvu, ať se parametry nesmíchají
+        key = fhir_code(o.get('code'), 'loinc') or (f"text:{_text(o.get('code')).lower()}" if kind in (None, 'imp') else kind)
         s = series[key]
         s.setdefault('label', _text(o.get('code')))
         s.setdefault('unit', q.get('unit'))

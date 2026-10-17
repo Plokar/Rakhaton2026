@@ -22,6 +22,11 @@ export type RoleId =
   | 'pathologist'
   | 'pulmonologist'
   | 'cardiologist'
+  | 'nuclear_medicine'
+  | 'palliative_care'
+  | 'geriatrician'
+  | 'geneticist'
+  | 'coordinator'
   | 'patient';
 export type SectionId =
   | 'summary'
@@ -47,6 +52,8 @@ export interface Claim {
   verification: Verification;
   /** U "missing": kde by měl údaj být. */
   expected_source?: string;
+  /** Míra jistoty 0–1: sémantická shoda s citovaným textem (grounding v2, T-332); chybí u strukturovaných dat. */
+  confidence?: number | null;
 }
 
 /**
@@ -123,6 +130,16 @@ export interface Brief {
   decision_support?: DecisionSupport;
   /** Ze všech Claim v podkladu (hlavička, sekce i B2). */
   stats: { claims_total: number; claims_unverified: number; missing_total: number };
+  /** Přegenerováno podle zpětné vazby lékaře k předchozí verzi (T-323). */
+  feedback?: BriefFeedback;
+}
+
+/** Co lékař vytkl předchozí verzi podkladu a na co se má AI zaměřit; `sections` prázdné = celý podklad. */
+export interface BriefFeedback {
+  text: string;
+  sections: SectionId[];
+  by: string;
+  at: string;
 }
 
 /**
@@ -138,6 +155,8 @@ export interface BriefSection {
   items: Claim[];
   /** Jen u role_views (FR-B7). */
   assessment?: RoleAssessment;
+  /** Jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5, lékař přepne). */
+  verbatim?: Claim[];
 }
 
 export interface RoleAssessment {
@@ -403,9 +422,29 @@ export interface Decision {
     document_reference_pdf?: string;
     /** "P03-mdt02-pacient" (BON-4) */
     document_reference_patient?: string;
+    /** Zpráva pro praktického lékaře (T-332). */
+    document_reference_gp?: string;
   };
   /** Shrnutí pro pacienta (BON-4): z potvrzeného závěru, každá věta s citací. */
   patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };
+  /** Zpráva pro praktického lékaře (T-332): odborná, ze stejného potvrzeného zápisu. */
+  gp_report?: { items: Claim[]; generated_at: string; document_reference: string } | null;
+  /** Verze záznamu (T-332): potvrzený závěr je zamčený, změna = nová verze s auditní stopou. */
+  version?: number;
+  /** Composition, kterou nová verze nahradí (stejné ID v IRIS). */
+  revision_of?: string | null;
+  /** Dřívější potvrzené verze: kdo potvrdil, kdo a proč změnil. */
+  history?: DecisionVersion[];
+}
+
+export interface DecisionVersion {
+  version: number;
+  composition?: string | null;
+  confirmed_by?: { user_id: string; name: string } | null;
+  confirmed_at?: string | null;
+  revised_by: { user_id: string; name: string };
+  revised_at: string;
+  reason: string;
 }
 
 // ── §8.5 BriefConfig ──────────────────────────────────────────────────────────
@@ -421,6 +460,43 @@ export interface BriefConfig {
   detail_level: DetailLevel;
   language: 'cs' | 'sk' | 'en';
   hide_unverified: boolean;
+  /** Pravidla varovných signálů vypnutá pro board (T-332, GET /api/mdt/rules/). */
+  disabled_rules?: string[];
+}
+
+/** GET /api/mdt/rules/ → katalog pravidel varovných signálů (T-332). */
+export interface RuleInfo {
+  id: string;
+  title: string;
+  /** Pasáž guidelines, ze které pravidlo vychází. */
+  source: EvidenceId | null;
+}
+
+/** POST /api/mdt/cases/{cid}/ask/ → odpověď jen z dat pacienta, s citacemi (T-332). */
+export interface CaseAnswer {
+  question: string;
+  /** "ai" = LLM nad podklady; "search" = vyhledání v dokumentaci bez LLM. */
+  mode: 'ai' | 'search';
+  items: Claim[];
+  answered_at: string;
+}
+
+/** GET /api/mdt/cases/{cid}/similar/ → předchozí závěry MDT jiných pacientů (anonymizovaně, T-332). */
+export interface SimilarCases {
+  diagnosis: { icd10: string; text: string } | null;
+  cases: {
+    composition_id: string;
+    date: string;
+    match: 'code' | 'category';
+    diagnosis: { icd10: string; text: string };
+    /** Jen pohlaví a věková dekáda. */
+    patient: string;
+    question?: string;
+    intent?: string;
+    recommendation?: string;
+    conclusion?: string;
+    citations: EvidenceId[];
+  }[];
 }
 
 // ── §8.6 Zařazení pacienta (MdtCase, IntakeWarning) ───────────────────────────
@@ -461,16 +537,6 @@ export interface IntakePrefill {
   intent_prefill?: 'C' | 'P';
 }
 
-/** Blok úzkého panelu (okno projektoru, boční panel). */
-export type ProjectorSection = 'anamnesis' | 'facts' | 'template' | 'treatments';
-
-/** Pořadí na projektoru (T-332): bloky a ID klíčových údajů; prázdné = výchozí pořadí. */
-export interface ProjectorLayout {
-  sections?: ProjectorSection[];
-  /** KeyFact.id v pořadí; ostatní údaje za nimi výchozím pořadím. */
-  facts?: string[];
-}
-
 /** POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/ */
 export interface MdtCase {
   id?: number;
@@ -481,6 +547,8 @@ export interface MdtCase {
   created_by?: { user_id: number; name: string };
   /** Přizvaní ke spolupráci (T-326): smějí případ upravovat; mění je předseda nebo zadávající lékař. */
   collaborators?: { user_id: number; name: string }[];
+  /** Okno pro projektor upravené zadávajícím lékařem (T-333); skrývá jen v projektoru, podklad zůstává celý. */
+  projector_layout?: ProjectorLayout;
   ecog: number | null;
   intent: 'C' | 'P' | null;
   /** „Snímek mladší než 3 měsíce“ */
@@ -496,8 +564,6 @@ export interface MdtCase {
   question?: string;
   /** Jen v detailu boardu (hlavička z IRIS, §8.2). */
   patient?: PatientListItem | null;
-  /** Pořadí na projektoru (T-332); mění zadávající, přizvaný lékař nebo předseda. */
-  projector_layout?: ProjectorLayout;
 }
 
 /** Stav údaje z katalogu `data/onko/udaje.tsv`: mention = jen zmínka („doporučeno“, „probíhá“). */
@@ -629,11 +695,28 @@ export interface BoardRecord extends MdtSession {
   counts: { patients: number; confirmed: number };
 }
 
+/**
+ * Zpráva v chatu lékařů u zasedání (T-334): GET/POST /api/mdt/sessions/{sid}/messages/, nové zprávy
+ * živě přes Server-Sent Events /api/mdt/sessions/{sid}/stream/. Zpráva se neupravuje ani nemaže.
+ */
+export interface SessionMessage {
+  id: number;
+  session: number;
+  author: { user_id: number; name: string } | null;
+  specialty: RoleId | null;
+  /** Štítek pacienta, který byl při psaní na řadě; `null` = zpráva k celému zasedání. */
+  case: { id: number; patient_id: string } | null;
+  text: string;
+  /** Místní čas "2026-10-21T14:03:12+02:00". */
+  created_at: string;
+}
+
 /** GET /api/mdt/sessions/ */
 export type MdtSessionListItem = MdtSession & { patients: string[] };
 
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };
+
 
 /** GET /api/mdt/cases/{cid}/readiness/ (BON-1, OBC-1.1 / OBC-1.2) */
 export interface Readiness {
@@ -667,4 +750,13 @@ export interface MdtTask {
   re_mdt: { date: string | null; reason: string } | null;
   /** Úkol z nepotvrzeného závěru (`?drafts=1`, T-328): ještě není v IRIS, stav nejde měnit. */
   draft?: boolean;
+}
+
+// ── Okno pro projektor (T-333) ────────────────────────────────────────────────
+export type ProjectorBlock = 'anamnesis' | 'facts' | 'treatments';
+
+/** Rozložení okna pro projektor u případu: pořadí a skrytí karet a klíčových údajů (`KeyFact.id`). */
+export interface ProjectorLayout {
+  blocks?: { order: ProjectorBlock[]; hidden: ProjectorBlock[] };
+  facts?: { order: string[]; hidden: string[] };
 }

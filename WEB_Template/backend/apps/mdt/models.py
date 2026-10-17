@@ -16,11 +16,14 @@ class BriefConfig(models.Model):
     detail_level = models.CharField(max_length=10, choices=DETAIL_LEVELS, default='standard')
     language = models.CharField(max_length=2, default='cs')
     hide_unverified = models.BooleanField(default=False)
+    # Pravidla varovných signálů vypnutá pro board (T-332, `red_flags.RULE_CATALOG`); výchozí jsou zapnutá všechna.
+    disabled_rules = models.JSONField(default=list, blank=True)
 
     def snapshot(self) -> dict:
         return {
             'id': str(self.pk), 'name': self.name, 'sections': self.sections, 'roles_present': self.roles_present,
             'detail_level': self.detail_level, 'language': self.language, 'hide_unverified': self.hide_unverified,
+            'disabled_rules': self.disabled_rules,
         }
 
     def __str__(self):
@@ -59,13 +62,14 @@ class MdtCase(models.Model):
                                    related_name='created_cases')
     # Přizvaní ke spolupráci (T-326): smějí případ upravovat jako zadávající lékař; přizývá předseda nebo zadávající.
     collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='mdt_collaborations')
+    # Okno pro projektor upravené zadávajícím lékařem (T-333): {blocks: {order, hidden}, facts: {order, hidden}}.
+    # Skrývá jen v projektoru, podklad a detail zůstávají celé (D-019).
+    projector_layout = models.JSONField(default=dict, blank=True)
     ecog = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MaxValueValidator(4)])
     intent = models.CharField(max_length=1, choices=INTENT, null=True, blank=True)
     imaging_recent_checked = models.BooleanField(default=False)
     skipped_fields = models.JSONField(default=list, blank=True)          # [IntakeField.id]
     acknowledged_warnings = models.JSONField(default=list, blank=True)   # [{id, by, at}]
-    # Pořadí na projektoru (T-332): {sections: [anamnesis|facts|template|treatments], facts: [KeyFact.id]}; {} = výchozí.
-    projector_layout = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -74,6 +78,24 @@ class MdtCase(models.Model):
 
     def __str__(self):
         return f'{self.patient_fhir_id} @ {self.session}'
+
+
+class SessionMessage(models.Model):
+    """Zpráva v chatu lékařů u zasedání (T-334). Neupravuje se ani nemaže: je to diskuse ke klinickému rozhodnutí."""
+    MAX_LENGTH = 2000
+    session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='messages')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                               related_name='mdt_messages')
+    # štítek pacienta, který byl při psaní na řadě (null = zpráva k celému zasedání)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='messages')
+    text = models.TextField(max_length=MAX_LENGTH)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.author} @ {self.session}: {self.text[:40]}'
 
 
 class UserProfile(models.Model):

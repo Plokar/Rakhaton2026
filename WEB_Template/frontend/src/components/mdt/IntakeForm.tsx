@@ -4,8 +4,9 @@ import * as React from 'react';
 import { CircleCheck, CircleDashed, Info, RotateCcw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { IntakeField, IntakePrefill, IntakeWarning, Severity, WarningKind } from '@/types/mdt';
+import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity, WarningKind } from '@/types/mdt';
 import { Citations } from './citations';
+import { ProjectorLayoutEditor } from './ProjectorLayoutEditor';
 
 const KIND_LABEL: Record<WarningKind, string> = {
   missing: 'Chybí',
@@ -27,6 +28,8 @@ export type IntakeResult = {
   imaging_recent_checked: boolean;
   skipped_fields: string[];
   acknowledged: string[];
+  /** Okno pro projektor upravené při zařazení (T-333); bez úprav chybí. */
+  projector_layout?: ProjectorLayout;
 };
 
 /**
@@ -38,11 +41,15 @@ export function IntakeForm({
   prefill,
   submitting,
   onSubmit,
+  patientId,
 }: {
   prefill: IntakePrefill;
   submitting: boolean;
   onSubmit: (result: IntakeResult) => void;
+  /** Pacient pro úpravu okna pro projektor (T-333); bez něj se sekce nezobrazí. */
+  patientId?: string;
 }) {
+  const [layout, setLayout] = React.useState<ProjectorLayout>({});
   const [skipped, setSkipped] = React.useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = React.useState<Set<string>>(new Set());
   const [ecog, setEcog] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
@@ -90,6 +97,7 @@ export function IntakeForm({
           imaging_recent_checked: imaging,
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
+          ...(layout.blocks || layout.facts ? { projector_layout: layout } : {}),
         });
       }}
     >
@@ -259,6 +267,17 @@ export function IntakeForm({
           </span>
         </span>
       </label>
+
+      {patientId && (
+        <details className="rounded-lg border border-border bg-card px-3 py-2">
+          <summary className="cursor-pointer text-sm font-semibold">
+            Okno pro projektor <span className="font-normal text-muted-foreground">(volitelné: skrýt nebo přeskládat údaje)</span>
+          </summary>
+          <div className="mt-3">
+            <ProjectorLayoutEditor patientId={patientId} value={layout} onChange={setLayout} />
+          </div>
+        </details>
+      )}
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
         {!canSubmit && !missingQuestion && (

@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
-from services.ai.anamnesis import anamnesis_items
+from services.ai.anamnesis import anamnesis_items, anamnesis_verbatim
 from services.ai.decision_support import build_decision_support
 from services.ai.diagnosis_data import modality_items
 from services.ai.grounding import verify_claims
@@ -57,6 +57,7 @@ DEFAULT_CONFIG = {
     "detail_level": "standard",
     "language": "cs",
     "hide_unverified": False,
+    "disabled_rules": [],
 }
 TITLES = {"summary": "Souhrn případu", "timeline": "Časová osa", "anamnesis": "Anamnéza",
           "modalities": "Léčebné metody a odborníci"}
@@ -129,7 +130,8 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     notices = list(notices)
     config = _merge_config(config)
     provider = provider or provider_for_patient(resources)        # D-021
-    flags = rules.evaluate(resources, config.get("roles_present"))
+    disabled = set(config.get("disabled_rules") or [])                   # T-332: pravidla vypnutá předsedou
+    flags = rules.evaluate(resources, config.get("roles_present"), disabled=disabled)
     context = context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines, red_flags=flags,
                                      rule_results=[n["text"] for n in notices])
     data = PatientData(resources)
@@ -144,7 +146,8 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     kb = kb_for_patient(resources, context.allowed_ids) if needs_decision_support or "modalities" in enabled else []
     with ThreadPoolExecutor(max_workers=4 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
         summary_future = pool.submit(_summary_items, context, provider, log_call, config) if "summary" in enabled else None
-        llm_flags_future = pool.submit(_llm_flags, context, provider, log_call, config) if "red_flags" in enabled else None
+        llm_flags_future = (pool.submit(_llm_flags, context, provider, log_call, config)
+                            if "red_flags" in enabled and "RF-LLM" not in disabled else None)
         role_futures = [pool.submit(role_section, role, context, data, compatibility, provider, log_call, config)
                         for role in roles]
         anamnesis_future = (pool.submit(anamnesis_items, context, provider, log_call, config)
@@ -168,16 +171,19 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
             continue
         if section["id"] not in TITLES:
             continue
+        verbatim = []
         if section["id"] == "summary":
             items = summary_items + _missing_items(resources, skipped_fields) + notices
-        elif section["id"] == "anamnesis":            # FR-A5 (T-507)
+        elif section["id"] == "anamnesis":            # FR-A5 (T-507): shrnutí AI + doslovné znění k přepnutí
             items = anamnesis
+            verbatim = anamnesis_verbatim(context)
         elif section["id"] == "modalities":           # FR-D5 (T-506)
             items = modality_items(context, compatibility + kb, {r: c["title"] for r, c in load_roles().items()})
         else:
             items = _timeline_items(data, context)
         sections.append({"id": section["id"], "title": TITLES[section["id"]], "ai_generated": True,
-                         "items": verify_claims(items, context)})
+                         "items": verify_claims(items, context),
+                         **({"verbatim": [_public(c) for c in verify_claims(verbatim, context)]} if verbatim else {})})
     to_check = [c for s in sections if s["id"] in LLM_SECTIONS for c in s["items"]]
     if decision_support:
         to_check += [c for option in decision_support["treatment_options"] for c in option["rationale"]]
@@ -201,7 +207,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         "patient_id": patient_id,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "model": getattr(provider, "model_name", None) or _model_name(provider),
-        "config": config,
+        "config": {k: v for k, v in config.items() if not k.startswith("_")},     # `_feedback` mimo snapshot §8.5
         "status": "draft",
         "header": header,
         "sections": sections,
@@ -213,6 +219,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
             "claims_unverified": sum(1 for c in claims if c["kind"] == "claim" and c["verification"] == "unverified"),
             "missing_total": sum(1 for c in claims if c["kind"] == "missing"),
         },
+        **({"feedback": config["_feedback"]} if config.get("_feedback") else {}),
     }
     progress(100)
     return brief

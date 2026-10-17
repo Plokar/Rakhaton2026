@@ -4,7 +4,7 @@ from django.core.management import call_command
 
 from apps.copilot import schemas
 from apps.mdt.models import MdtCase, MdtSession
-from apps.mdt.test_roles import as_user
+from apps.mdt.test_roles import as_user, resolved_intake
 from services.fhir import client
 
 pytestmark = pytest.mark.django_db
@@ -23,12 +23,8 @@ def _body(pid='P03', **extra):
 
 
 def _complete(pid='P03', **extra):
-    """Úplné zařazení (server vyžaduje vyřešit vše): přeskočí všechny chybějící údaje kromě otázky a odklikne všechna varování."""
-    c = as_user('onkolog')
-    fields = c.get(f'/api/mdt/patients/{pid}/intake/').json()['fields']
-    skipped = [f['id'] for f in fields if f['status'] in ('missing', 'pending') and f['id'] != 'mdt.question']
-    warnings = c.get(f'/api/mdt/patients/{pid}/intake/?skipped={",".join(skipped)}').json()['warnings']
-    return _body(pid, skipped_fields=skipped, acknowledge=[w['id'] for w in warnings], **extra)
+    """Úplné zařazení (server vyžaduje vyřešit vše)."""
+    return _body(pid, **resolved_intake(pid), **extra)
 
 
 def test_incomplete_intake_is_rejected(seeded):

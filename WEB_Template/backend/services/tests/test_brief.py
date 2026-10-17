@@ -48,6 +48,22 @@ def section(brief, section_id):
     return next(s for s in brief["sections"] if s["id"] == section_id)
 
 
+def test_doctor_feedback_goes_only_to_chosen_part_and_is_kept_with_brief():
+    """T-323: připomínka lékaře při přegenerování jde jen do promptu vybrané části; podklad ji nese, snapshot ne."""
+    feedback = {"text": "Souhrn vynechal, že CT hrudníku chybí", "sections": ["summary"], "by": "Předseda",
+                "at": "2026-10-17T10:00:00+02:00"}
+    provider = PromptCaptureProvider(responses={"SummaryOutput": P03_SUMMARY})
+    brief = brief_for("P03", provider, config={"_feedback": feedback})
+    with_note = [p for p in provider.system_prompts if "Zpětná vazba lékaře" in p]
+    assert len(with_note) == 1 and with_note[0].startswith(brief_module.SUMMARY_PROMPT) and feedback["text"] in with_note[0]
+    assert brief["feedback"] == feedback and "_feedback" not in brief["config"]
+    schemas.Brief.model_validate(brief)
+    everywhere = PromptCaptureProvider(responses={"SummaryOutput": P03_SUMMARY})
+    brief_for("P03", everywhere, config={"_feedback": {**feedback, "sections": []}})          # bez výběru = všechny části
+    assert sum("Zpětná vazba lékaře" in p for p in everywhere.system_prompts) > 1
+    assert "feedback" not in brief_for("P03")
+
+
 # ── DoD: P03 ──────────────────────────────────────────────────────────────────
 def test_p03_brief_valid_and_grounded():
     brief = brief_for("P03", MockAIProvider(responses={"SummaryOutput": P03_SUMMARY}))
@@ -90,9 +106,9 @@ class LiveLikeProvider(MockAIProvider):
 def test_decision_support_keeps_every_option_even_when_llm_picks_two():
     """D-015: LLM vybere 2 možnosti, podklad i tak ukáže všechny postupy ze sady guidelines (i červené)."""
     all_ids = [o["id"] for o in brief_for("P03")["decision_support"]["treatment_options"]]
-    picked = {"options": [{"procedure_id": pid, "title": pid, "rationale": [], "guideline_citations": [],
-                           "considerations": []} for pid in all_ids[:2]]}
-    decision = brief_for("P03", LiveLikeProvider(responses={"OptionsDraft": picked}))["decision_support"]
+    draft = {"procedure_id": "x", "title": "Možnost", "rationale": [], "guideline_citations": [], "considerations": []}
+    llm = LiveLikeProvider(responses={"OptionPick": {"procedure_ids": all_ids[:2]}, "OptionDraft": draft})
+    decision = brief_for("P03", llm)["decision_support"]
     assert sorted(o["id"] for o in decision["treatment_options"]) == sorted(all_ids)
     assert any(o["compatibility"]["overall"] == "red" for o in decision["treatment_options"])
 
@@ -104,6 +120,15 @@ def test_p05_decision_support_includes_basket_trial():
     assert all(c["criterion_id"].startswith("RKT-06/") for c in rkt06["criteria"])
     assert any("dávkovací protokol" in question["text"] and "RKT-06" in question["citations"]
                for question in decision["discussion_questions"])
+
+
+def test_paragraph_of_resource_without_paragraphs_cites_whole_resource():
+    """Model cituje „odstavec“ dotazníku (P03-prom02#3), který odstavce nemá: citace se převede na celý zdroj."""
+    llm = {"items": [{"text": "Pacient hodnotí samostatnost jako ECOG 1.", "citations": ["P03-prom02#3"]},
+                     {"text": "Vymyšlený zdroj.", "citations": ["P03-xyz99#1"]}]}
+    items = section(brief_for("P03", MockAIProvider(responses={"SummaryOutput": llm})), "summary")["items"]
+    assert items[0]["citations"] == ["P03-prom02"] and items[0]["verification"] == "verified"
+    assert items[1]["citations"] == ["P03-xyz99#1"] and items[1]["verification"] == "unverified"
 
 
 def test_hallucinated_number_is_unverified():
@@ -305,14 +330,18 @@ def test_short_anamnesis_is_verbatim_with_citations():
     assert "Rodinná anamnéza: otec karcinom tlustého střeva v 72 letech." in texts
     assert "Alergie: neudává." in texts
     assert all(i["verification"] == "verified" and i["citations"][0].startswith("P03-doc02#") for i in items)
+    assert "verbatim" not in section(brief_for("P03"), "anamnesis")             # krátká = items už doslovně
 
 
 def test_long_anamnesis_is_ai_summary_with_citations(monkeypatch):
     monkeypatch.setenv("INTAKE_ANAMNESIS_MAX_CHARS", "300")          # P06 má ~570 znaků → shrnutí
     llm = {"items": [{"text": "Žije sama, chodí s holí, dříve dlouhodobě kouřila.", "citations": ["P06-doc05#3"]},
                      {"text": "Vymyšlený bod bez platné citace.", "citations": ["P06-doc99#1"]}]}
-    items = section(brief_for("P06", MockAIProvider(responses={"AnamnesisOutput": llm})), "anamnesis")["items"]
-    assert [i["text"] for i in items] == ["Žije sama, chodí s holí, dříve dlouhodobě kouřila."]
+    long = section(brief_for("P06", MockAIProvider(responses={"AnamnesisOutput": llm})), "anamnesis")
+    assert [i["text"] for i in long["items"]] == ["Žije sama, chodí s holí, dříve dlouhodobě kouřila."]
+    # FR-A5: lékař přepne na doslovné znění; to je celé, s citací odstavce a ověřené
+    assert long["verbatim"][0]["text"].startswith("Nynější onemocnění: Pravidelně chodila")
+    assert not long["verbatim"][0]["text"].endswith("…") and all(i["verification"] == "verified" for i in long["verbatim"])
     fallback = section(brief_for("P06"), "anamnesis")["items"]               # mock bez odpovědi: první věty
     assert fallback[0]["text"].startswith("Nynější onemocnění: Pravidelně chodila") and fallback[0]["text"].endswith("…")
     assert all(i["verification"] == "verified" for i in fallback)

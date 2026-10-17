@@ -186,7 +186,7 @@ export function prefetchQuickView(client: QueryClient, target: { sessionId: numb
 
 /**
  * Zasedání i s případy: seznam + detail každého boardu souběžně (bez waterfallu).
- * Až API umí `sessions?expand=cases` (NAVRH_UI §10.2, T-518), stačí jeden dotaz.
+ * `sessions?expand=cases` (T-518) vrací jen `MdtCaseSummary`; agenda potřebuje celé `MdtCase` (zadávající, spolupracovníci).
  */
 export function useSessionsWithCases(filter: (session: MdtSessionListItem) => boolean) {
   const sessions = useSessionsQuery();

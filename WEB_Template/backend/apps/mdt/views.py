@@ -2,6 +2,7 @@
 import base64
 import io
 import json
+import logging
 import re
 import zipfile
 
@@ -32,6 +33,8 @@ from . import config as cfg
 from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
 from .models import BriefConfig, Decision, MdtCase, MdtSession
+
+logger = logging.getLogger(__name__)
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
@@ -76,7 +79,7 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
             'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
-            'projector_layout': c.projector_layout, 'patient': patient}
+            'projector_layout': c.projector_layout or {}, 'patient': patient}
 
 
 def _datetime(value) -> timezone.datetime:
@@ -317,22 +320,27 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
         if data['status'] not in dict(MdtCase.STATUS):
             raise ValidationError({'status': f'Jen {", ".join(dict(MdtCase.STATUS))}.'})
     if 'projector_layout' in data:
-        _validate_layout(data['projector_layout'])
+        _validate_projector_layout(data['projector_layout'])
 
 
-PROJECTOR_SECTIONS = ('anamnesis', 'facts', 'template', 'treatments')
+PROJECTOR_BLOCKS = ('anamnesis', 'facts', 'treatments')
 
 
-def _validate_layout(layout) -> None:
-    """Pořadí na projektoru (T-332): jen známé bloky a ID klíčových údajů, bez opakování; `{}` = výchozí."""
-    if not isinstance(layout, dict) or set(layout) - {'sections', 'facts'}:
-        raise ValidationError({'projector_layout': 'Objekt {sections, facts}.'})
-    sections, facts = layout.get('sections', []), layout.get('facts', [])
-    if not (isinstance(sections, list) and all(s in PROJECTOR_SECTIONS for s in sections) and len(set(sections)) == len(sections)):
-        raise ValidationError({'projector_layout': f'sections jen z {", ".join(PROJECTOR_SECTIONS)}, bez opakování.'})
-    if not (isinstance(facts, list) and len(facts) <= 100 and len(set(facts)) == len(facts)
-            and all(isinstance(f, str) and 0 < len(f) <= 160 for f in facts)):
-        raise ValidationError({'projector_layout': 'facts = seznam ID údajů (nejvýš 100), bez opakování.'})
+def _validate_projector_layout(layout) -> None:
+    """Okno pro projektor (T-333): `{blocks?: {order, hidden}, facts?: {order, hidden}}`; ID údajů jsou `KeyFact.id`."""
+    def ids(value, allowed=None) -> bool:
+        return (isinstance(value, list) and len(value) <= 300
+                and all(isinstance(x, str) and 0 < len(x) <= 120 and (allowed is None or x in allowed) for x in value))
+    if not isinstance(layout, dict) or set(layout) - {'blocks', 'facts'}:
+        raise ValidationError({'projector_layout': 'Objekt s klíči blocks a facts.'})
+    for key, allowed in (('blocks', PROJECTOR_BLOCKS), ('facts', None)):
+        part = layout.get(key)
+        if part is None:
+            continue
+        if not isinstance(part, dict) or set(part) - {'order', 'hidden'} \
+                or not all(ids(part.get(k, []), allowed) for k in ('order', 'hidden')):
+            raise ValidationError({'projector_layout': f'{key}: {{order: [id], hidden: [id]}}'
+                                                       + (f', jen {", ".join(allowed)}' if allowed else '') + '.'})
 
 
 def _validate_collaborators(request, data, case: MdtCase | None) -> None:
@@ -534,10 +542,30 @@ def case_brief(request, cid):
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
         return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
-    job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
-                                       created_by=request.user)
+    params = {'config': _config(request.data, case)}
+    if feedback := _brief_feedback(request):
+        params['feedback'] = feedback
+    job = GenerationJob.objects.create(case=case, kind='brief', params=params, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+def _brief_feedback(request) -> dict | None:
+    """`{feedback: {text, sections?}}` při přegenerování: co AI udělala špatně a na co se zaměřit (T-323).
+    Text jde do LLM, proto pseudonymizace (lékař může omylem napsat jméno nebo RČ) a délkový limit."""
+    raw = request.data.get('feedback')
+    if not raw:
+        return None
+    from services.ai.pseudonymize import pseudonymize_text
+
+    text = pseudonymize_text(str(raw.get('text', '') if isinstance(raw, dict) else '').strip())
+    sections = raw.get('sections') or [] if isinstance(raw, dict) else None
+    if not isinstance(raw, dict) or not 3 <= len(text) <= 1000:
+        raise ValidationError({'feedback': 'Zpětná vazba: text 3–1000 znaků.'})
+    if not isinstance(sections, list) or any(s not in cfg.SECTION_ORDER for s in sections):
+        raise ValidationError({'feedback': 'Neplatná sekce (SectionId §8.1).'})
+    return {'text': text, 'sections': list(dict.fromkeys(sections)),
+            'by': request.user.get_full_name() or request.user.username, 'at': timezone.localtime().isoformat()}
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -683,11 +711,14 @@ def case_decision(request, cid):
         return Response(decision.content)
     _require_case_edit(request, case)
     if decision and decision.status == 'confirmed':
-        return Response({'detail': 'Závěr je potvrzený a zapsaný v IRIS, nelze ho měnit.'}, status=409)
+        return Response({'detail': 'Závěr je potvrzený a zamčený. Změna jde jen jako nová verze (předseda).'}, status=409)
+    # verzi a auditní stopu drží server, klient je nepřepíše (T-332)
+    kept = {k: decision.content.get(k) for k in ('version', 'revision_of', 'history')} if decision else {}
     try:
         content = DecisionSchema.model_validate(
             {**request.data, 'case_id': str(case.pk), 'status': 'draft', 'confirmed_by': None,
-             'confirmed_at': None, 'fhir_ids': None}).model_dump(mode='json')
+             'confirmed_at': None, 'fhir_ids': None, 'version': kept.get('version') or 1,
+             'revision_of': kept.get('revision_of'), 'history': kept.get('history') or []}).model_dump(mode='json')
     except SchemaError as e:
         return Response({'detail': 'Neplatný závěr (ARCH §8.4).', 'errors': e.errors(include_url=False)}, status=400)
     decision, _ = Decision.objects.update_or_create(case=case, defaults={'content': content})
@@ -715,7 +746,8 @@ def case_decision_confirm(request, cid):
         try:
             ids = writeback.confirm_decision(
                 decision.content, patient_id=case.patient_fhir_id, service_request_id=case.service_request_fhir_id,
-                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now)
+                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now,
+                mdt_id=decision.content.get('revision_of'))
         except (FhirError, LookupError) as e:
             return Response({'detail': f'IRIS zápis odmítl: {e}', 'outcome': getattr(e, 'outcome', None)}, status=502)
         decision.content = {**decision.content, 'status': 'confirmed', 'confirmed_by': confirmed_by,
@@ -725,6 +757,98 @@ def case_decision_confirm(request, cid):
         case.status = 'confirmed'
         case.save(update_fields=['status', 'updated_at'])
     return Response(decision.content)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_decision_revise(request, cid):
+    """Nová verze potvrzeného závěru (BONUS C, T-332): `{reason}` (předseda). Potvrzená verze přejde do `history`
+    s důvodem a autorem změny, závěr je znovu draft; po potvrzení se zapíše do stejné `Composition` (IRIS drží historii)."""
+    _require(request, roles.ADMIN)
+    reason = str(request.data.get('reason') or '').strip()
+    if not reason:
+        raise ValidationError({'reason': 'Uveďte, proč se potvrzený závěr mění (auditní stopa).'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    with transaction.atomic():
+        decision = get_object_or_404(Decision.objects.select_for_update(), case=case)
+        if decision.status != 'confirmed':
+            return Response({'detail': 'Novou verzi jde založit jen z potvrzeného závěru.'}, status=409)
+        content = decision.content
+        version = content.get('version') or 1
+        entry = {'version': version, 'composition': (content.get('fhir_ids') or {}).get('composition'),
+                 'confirmed_by': content.get('confirmed_by'), 'confirmed_at': content.get('confirmed_at'),
+                 'revised_by': {'user_id': str(request.user.pk),
+                                'name': request.user.get_full_name() or request.user.username},
+                 'revised_at': timezone.localtime().isoformat(), 'reason': reason[:500]}
+        decision.content = DecisionSchema.model_validate({
+            **content, 'status': 'draft', 'confirmed_by': None, 'confirmed_at': None, 'fhir_ids': None,
+            'patient_summary': None, 'gp_report': None, 'version': version + 1,
+            'revision_of': entry['composition'], 'history': [*(content.get('history') or []), entry],
+        }).model_dump(mode='json')
+        decision.status, decision.confirmed_by, decision.confirmed_at, decision.fhir_ids = 'draft', None, None, {}
+        decision.save()
+        case.status = 'decided'
+        case.save(update_fields=['status', 'updated_at'])
+    return Response(decision.content)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_gp_report(request, cid):
+    """Zpráva pro praktického lékaře (T-332): vzniká spolu se shrnutím pro pacienta z potvrzeného závěru."""
+    decision = Decision.objects.filter(case_id=cid).first()
+    report = (decision.content if decision else {}).get('gp_report')
+    return Response(report) if report else Response({'detail': 'Zpráva pro praktického lékaře ještě není.'}, status=404)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_ask(request, cid):
+    """Otázka nad případem (BONUS Q&A, T-332): `{question}` → odpověď jen z dat pacienta v IRIS, s citacemi."""
+    from services.ai.brief import _llm_call_log
+    from services.ai.case_qa import MAX_QUESTION, answer_question
+    from services.ai.context_builder import load_resources
+    from services.ai_service import provider_for_patient
+
+    question = str(request.data.get('question') or '').strip()
+    if not question:
+        raise ValidationError({'question': 'Napište otázku.'})
+    if len(question) > MAX_QUESTION:
+        raise ValidationError({'question': f'Otázka může mít nejvýš {MAX_QUESTION} znaků.'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    try:
+        resources, studies = load_resources(case.patient_fhir_id)
+    except FhirError as e:
+        return Response({'detail': f'Data pacienta z IRIS se nepodařilo načíst: {e}'}, status=502)
+    return Response(answer_question(case.patient_fhir_id, question, resources, provider_for_patient(resources),
+                                    _llm_call_log, studies=studies))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_similar(request, cid):
+    """Podobné případy (BONUS B2, T-332): předchozí závěry MDT jiných pacientů s obdobnou diagnózou, anonymizovaně."""
+    from services.ai.similar_cases import similar_cases
+
+    case = get_object_or_404(MdtCase, pk=cid)
+    try:
+        return Response(similar_cases(case.patient_fhir_id))
+    except FhirError as e:
+        return Response({'detail': f'Záznamy z IRIS se nepodařilo načíst: {e}'}, status=502)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rule_catalog(request):
+    """Katalog pravidel varovných signálů pro nastavení podkladu (T-332): `[{id, title, source}]`."""
+    from services.rules.red_flags import RULE_CATALOG
+
+    return Response([{'id': rid, 'title': title, 'source': source or None} for rid, (title, source) in RULE_CATALOG.items()])
 
 
 def _attachment(content, content_type: str, filename: str) -> HttpResponse:

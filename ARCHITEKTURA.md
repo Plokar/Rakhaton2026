@@ -722,7 +722,7 @@ Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-
 
 **Implementace (T-106, T-213):**
 
-- `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí `0.55`); chybějící vektor nebo nedostupné IRIS znamená `unverified`. Bod 4 běží jen u tvrzení, jejichž **všechny** citace mají vektor (odstavce `#n`, textové zprávy `DocumentReference` / `DiagnosticReport` / `Composition` / `ServiceRequest`, pasáže guidelines, kritéria studií). Strukturovaná data (`bm`, `tnm`, `dg`, `proc`, ECOG, labs) vektor nemají a stačí jim body 1–3 (Q23). Bod 4 se přeskočí i u tvrzení, která sestavil kód (`_computed`, např. RECIST), a odvozená čísla (`_derived`, např. % změny SLD) se v bodě 2 nekontrolují. Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
+- `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí podle embedding modelu: Gemini / mock `0.55`, **NVIDIA `0.40`**; kalibrace T-323 na 135 + 135 párech z podkladů P01–P06: správná citace medián 0,67, cizí odstavec téhož pacienta 0,23, při 0,40 projde ~90 % správných a ~10 % cizích); chybějící vektor nebo nedostupné IRIS znamená `unverified`. Bod 4 běží jen u tvrzení, jejichž **všechny** citace mají vektor (odstavce `#n`, textové zprávy `DocumentReference` / `DiagnosticReport` / `Composition` / `ServiceRequest`, pasáže guidelines, kritéria studií). Strukturovaná data (`bm`, `tnm`, `dg`, `proc`, ECOG, labs) vektor nemají a stačí jim body 1–3 (Q23). Bod 4 se přeskočí i u tvrzení, která sestavil kód (`_computed`, např. RECIST), a odvozená čísla (`_derived`, např. % změny SLD) se v bodě 2 nekontrolují. Citace odstavce, který zdroj nemá (`P02-prom02#3` u dotazníku), se převede na celý zdroj; závorky kolem ID (`[P03-dg1]`) odstraní už validace výstupu LLM (`ai_service._clean_citations`). Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
 - `services/ai/brief.py:generate_brief(case, config, progress)` je generátor pro joby z T-107.
   - Hlavička (D-018), časová osa, chybějící údaje (z T-502, přeskočené jako „Chybí (přeskočeno lékařem)“) a red flags jsou deterministické z FHIR.
   - Souhrn píše Gemini (`prompts/summary.md` + pravidla zkratek z T-509), souběžně s RF-LLM.
@@ -850,9 +850,14 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
 
 ### 5.7 Model a ochrana údajů
 
-**Provider: Google AI Studio, Gemini API** (D-008). SDK `google-genai` (`from google import genai`).
+**Provideři (T-323, výběr v `.env`):**
 
-**Rozhraní provideru** (`WEB_Template/backend/services/ai_service.py`, T-012). `get_ai_provider()` vrátí `GeminiProvider` nebo `MockAIProvider` podle `AI_PROVIDER`. Jiné providery nejsou, data smí jen do Gemini. `gemini` bez klíče spadne na mock a výsledek má `is_mock: true`.
+- **LLM = `AI_PROVIDER`**, výchozí **`nvidia`**: NVIDIA API (`integrate.api.nvidia.com`, OpenAI-kompatibilní), model `NVIDIA_MODEL` = `nvidia/nemotron-3-super-120b-a12b`, strukturovaný výstup `response_format: json_schema`, bez přemýšlení (`chat_template_kwargs.enable_thinking=false`, ~3× rychlejší, `NVIDIA_THINKING=1` zapne). Alternativa `gemini` (Google AI Studio, SDK `google-genai`, D-008).
+- **Vektory v IRIS = `EMBEDDING_PROVIDER`** (výchozí = LLM): NVIDIA `nvidia/nemotron-3-embed-1b` @ **2048** (`input_type` passage / query), Gemini `gemini-embedding-001` @ 1536. Index drží vektory jednoho modelu a dimenze; jiná dimenze = `ensure_schema` založí tabulky znovu a `ingest_dataset --skip-fhir` je přepočítá. RAG i grounding tak fungují stejně s kterýmkoli LLM.
+- **Přepis audia = `TRANSCRIBE_PROVIDER`** (výchozí `groq`, je-li `GROQ_API_KEY`): Groq Whisper `whisper-large-v3` (`verbose_json`, čeština, slovník domény v `prompt`, úseky s `no_speech_prob` > 0,8 pryč); Whisper mluvčí nerozlišuje, role doplní LLM (`scribe.label_speakers`, jinak „neuvedeno“).
+- **OCR skenů PDF**: NVIDIA `nvidia/nemotron-parse` (`markdown_bbox`: typy prvků Page-header / Section-header / Text / Table), viz §6.3 import.
+
+**Rozhraní provideru** (`WEB_Template/backend/services/ai_service.py`, T-012, T-323). `get_ai_provider()` vrátí `NvidiaProvider`, `GeminiProvider`, `GroqProvider` nebo `MockAIProvider`; `embedding_provider()` a `transcription_provider()` vyberou providera pro vektory a audio. Provider bez klíče spadne na mock a výsledek má `is_mock: true`. **`AI_PROVIDER=mock` vypne i embeddingy a přepis** a testy ho vynucují v `conftest.py`, takže nic neodchází ven ani s klíči v `.env`.
 
 - `generate(prompt, system_prompt=…, response_schema=PydanticModel)` vrátí dict:
   - `status`, `response` (text), `data`, `model`, `tokens_in`, `tokens_out`, `latency_ms`, `prompt_hash` (pro `LlmCallLog`);
@@ -867,7 +872,11 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
 
 | Účel | Model (výchozí) | Pozn. |
 |---|---|---|
-| Generace sekcí, red flags (LLM), B2 | **`gemini-3.8-flash`** (stable, doporučený pro nové projekty) | rychlost kvůli NFR-1 |
+| Generace sekcí, red flags (LLM), B2, zapisovatel, import | **`nvidia/nemotron-3-super-120b-a12b`** (NVIDIA, výchozí) | bez přemýšlení kvůli NFR-1; `gemini-3.8-flash` jako alternativa |
+| Embeddingy (výchozí) | **`nvidia/nemotron-3-embed-1b`** @ 2048 + L2 | passage / query |
+| Přepis audia (výchozí) | **Groq `whisper-large-v3`** | 3 min nahrávky ≈ 3 s; mluvčí doplní LLM |
+| OCR skenů PDF | `nvidia/nemotron-parse` | stránka po stránce, hlavička / patička podle typu prvku |
+| Generace (Gemini) | `gemini-3.8-flash` | `AI_PROVIDER=gemini` |
 | Porovnání kvality v evalu | `gemini-4-argon` (flagship, 1M kontext) nebo `gemini-3.1-pro-preview` | rozhodne T-301 podle čísel |
 | Levné pomocné úlohy | `gemini-3.5-flash-lite` | např. normalizace textu, klasifikace symptomů |
 | Embeddingy | **`gemini-embedding-001`** @ 1536 + L2 normalizace | alternativa `gemini-embedding-2` (auto-normalizace, 8 192 tokenů, bez `task_type`) |
@@ -877,6 +886,7 @@ Model ID se mohou měnit. Před použitím ověřit na [ai.google.dev/gemini-api
 
 **Podmínky Gemini API, které nás přímo ovlivňují:**
 
+- **NVIDIA API Catalog a Groq (T-323)** jsou hostované služby mimo EU: stejně jako Gemini free tier **jen nad syntetickým datasetem hackathonu** (D-021). **Cesta do produkce s NVIDIA:** stejné modely jako **NIM kontejnery on-prem / v EU cloudu** (OpenAI-kompatibilní API, stačí `NVIDIA_BASE_URL`), data pacientů pak neopustí nemocnici; Whisper lze provozovat lokálně stejně.
 - **V EHP (tedy i v ČR) smí aplikace používat jen placené služby.** Bezplatný tier smí data používat ke zlepšování produktů a k lidské revizi a výslovně se do něj nemají posílat osobní údaje. Proto je nutné **zapnout billing v AI Studio** (Q9). **Výjimka týmu (D-021):** pro vývoj a demo nad syntetickým, veřejným datasetem hackathonu (žádné osobní údaje) smí běžet i free tier. Skutečná data pacientů nikdy, ta jen placený tier / Vertex AI EU.
 - **Pojistka v kódu (T-323):** `ai_service.provider_for_patient(resources)` dává LLM jen pacientovi s tagem `fiktivni-data` (dataset, testovací pacient založený se `synthetic`), jinak jen s `AI_REAL_PATIENT_DATA=True` (placený tier / Vertex AI EU). Bez toho vrátí `MockAIProvider`: z dat skutečného pacienta neodejde nic do LLM ani do embeddingů a aplikace jede deterministicky. Používá ji podklad (`build_brief`), zapisovatel, shrnutí pro pacienta, vložení zprávy (BON-7), vektory (`index_patient`) i nový pacient.
 - V placeném tieru Google prompty k trénování nepoužívá, loguje je ale omezenou dobu kvůli zneužití. Data mohou být dočasně uložena v jakékoli zemi.
@@ -1141,8 +1151,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/patient-drafts/{id}/documents/` | další podklady (`text`, `files[]`), prázdná pole nominace se z nich doplní |
 | POST | `/api/mdt/patient-drafts/{id}/confirm/` | zápis do IRIS jednou transakcí + `Provenance`, vektory, `MdtCase` na boardu návrhu → 201 `{patient_id, case_id, synthetic, fhir_written}`; 400 `{missing}` bez otázky nebo diagnózy |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
-| POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a `source` = jeho znění (lékař ho vidí před potvrzením) a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem (`reasons`). Nic se nezapisuje (předseda, lékař) |
-| POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
+| POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (PDF čte `services/ai/pdf_text.py`: textová vrstva `pdfplumber` po řádcích ze slov, tabulky s linkami jako „buňka | buňka“, bez opakované hlavičky / patičky a čísel stránek, věta přes zlom stránky a nadpisy oddílů drží odstavce; sken přes OCR `nemotron-parse`, jinak Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a `source` = jeho znění (lékař ho vidí před potvrzením) a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem (`reasons`). Nic se nezapisuje (předseda, lékař) |
+| POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}`. Bez hodnot se zapíše jen zpráva (text je pak citovatelný v podkladu); ID hodnot nesou druh jako dataset (`Pxx-impNN-lab01`, `-bm`, `-tnm`, `-ecog`, `-vit`) |
 | POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1), na uzavřený board (`status: closed`) 409. Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
@@ -1176,7 +1186,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | `/login` | z templatu + 1-click demo účty (předseda, chirurg, onkolog…) |
 | `/dashboard` | **kalendář zasedání** (UI v2, [NAVRH_UI §6](docs/NAVRH_UI.md#6-přehled--kalendář-zasedání)): 2 týdny, sloupce = dny, dlaždice zasedání s pacienty a připraveností; přesun pacienta drag & drop (myš, dotyk, klávesnice) i „Přesunout na…“ s „Vrátit“; moji pacienti, se kterými smím hýbat (`created_by` = já, otevřený board), jsou jemně zvýraznění; „+“ na dlaždici zařadí pacienta (boční panel); klik na pacienta = rychlý přehled v bočním panelu; stav v `?tyden=&pacient=&komise=` |
 | `/dashboard/mdt` | **seznam zasedání** v řádcích (nadcházející, minulá); předseda zakládá board a posílá odkaz na registraci kolegovi |
-| `/dashboard/mdt/[sessionId]` | **jednání komise** ([NAVRH_UI §7](docs/NAVRH_UI.md#7-jednání-komise)): vlevo agenda (pořadí, projednáno, čas u pacienta), vpravo 30s rychlý přehled; zkratky ↑↓ / J K, D detail, Z závěr, P projektor, H projednáno; výběr pacienta se publikuje do `/projector` (BroadcastChannel); stav v `?pacient=` |
+| `/dashboard/mdt/[sessionId]` | **jednání komise** ([NAVRH_UI §7](docs/NAVRH_UI.md#7-jednání-komise)): vlevo agenda (pořadí, projednáno, čas u pacienta), vpravo 30s rychlý přehled; zkratky ↑↓ / J K, D detail, Z závěr, P projektor, H projednáno; výběr pacienta se publikuje do `/projector` (BroadcastChannel); stav v `?pacient=`; v boku pod agendou **„Nahrávat diskusi“** (BON-3, T-323): úsek pacienta na řadě se po přepnutí na dalšího (nebo vypnutí) sám odešle k přepisu (Whisper) a vznikne draft závěru, toast „Otevřít“ |
 | `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4) jako stránka, záloha k bočnímu panelu: předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
 | `/dashboard/cases/[caseId]` | **detail pacienta** ([NAVRH_UI §8](docs/NAVRH_UI.md#8-detail-pacienta)): přilepená hlavička (D-018, PS lékař / pacient, C/P, varování, předchozí / další pacient boardu), navigace po sekcích; rychlý přehled a varovné signály otevřené, souhrn a časová osa (AI / události z IRIS), anamnéza, odbornosti, léčba a studie, hlas pacienta a otázky sbalené |
@@ -1214,7 +1224,9 @@ Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**,
 | `JobProgress` | průběh generování (polling `/api/jobs/{id}`) |
 | `CompatibilityLight` | semafor 🟢/🟠/🔴/⚪ s ikonou a textem, rozbalení na pravidla s citacemi (FR-D4) |
 | `IntakeForm` + `IntakeWarning` | formulář zařazení: předvyplněné údaje s citací, Doplnit / Přeskočit, varování s „Beru na vědomí“, ECOG + C/P, checkbox snímku (FR-P4) |
-| `AnamnesisBlock` | anamnéza doslovně nebo jako shrnutí s citacemi, přepínač (FR-A5) |
+| `SectionClaims` (`ClaimList.tsx`) | tvrzení sekce; u dlouhé anamnézy přepínač „Shrnutí AI / Doslovně ze zpráv“ (`BriefSection.verbatim`, FR-A5) |
+| `DiscussionRecorder` | nahrávání diskuse v jednání komise po pacientech → zapisovatel (BON-3) |
+| `NewPatientForm` | nový pacient při zařazení: pohlaví, rok narození, MKN-10, diagnóza, stadium, otázka pro MDT → IRIS (T-323) |
 | `ModalityCatalog` | léčebné metody pro diagnózu s odborníkem a daty k ruce (FR-D5) |
 | `ScaleCard` | Lung-RADS / Fleischner s kontrolou použitelnosti (BON-6) |
 | `BoardList` / `BoardEditor` | boardy, termíny (mění jen předseda), přesun pacientů (FR-P1) |
@@ -1323,6 +1335,7 @@ interface BriefSection {
   ai_generated: true;
   items: Claim[];
   assessment?: RoleAssessment;                  // jen u role_views (FR-B7)
+  verbatim?: Claim[];                           // jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5, T-323)
 }
 
 interface RoleAssessment {
@@ -1673,6 +1686,9 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
   chair: { user_id: number; name: string } | null;
   config_id: number | null;                     // výchozí BriefConfig boardu
 }
+
+// GET /api/mdt/sessions/?expand=cases[&from&to] (T-518): kalendář jedním dotazem, plní i cache agend a připraveností
+type MdtSessionWithCases = MdtSession & { patients: string[]; cases: (MdtCase & { readiness: Readiness | null })[] };
 ```
 
 ---
@@ -1689,7 +1705,17 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 | `IRIS_USER` / `IRIS_PASSWORD` | backend | dev `SuperUser` / `SYS`, **na VPS jiné** |
 | `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4` |
 | `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1`; bez proměnné ho `ingest.dataset_dir()` najde v checkoutu repa (CI, testy) |
-| `AI_PROVIDER` | backend | `gemini` (prod) / `mock` (testy, CI) |
+| `AI_PROVIDER` | backend | **`nvidia`** (výchozí) / `gemini` / `mock` (testy, CI; vypne i embeddingy a přepis) |
+| `NVIDIA_API_KEY` | backend | NVIDIA API Catalog (jen syntetická data, D-021); nikdy do gitu ani do frontendu |
+| `NVIDIA_MODEL` / `NVIDIA_MODEL_STRONG` | backend | `nvidia/nemotron-3-super-120b-a12b` |
+| `NVIDIA_EMBEDDING_MODEL` / `NVIDIA_EMBEDDING_DIM` | backend | `nvidia/nemotron-3-embed-1b` / `2048` |
+| `NVIDIA_PARSE_MODEL` | backend | `nvidia/nemotron-parse` (OCR skenů PDF) |
+| `NVIDIA_THINKING` | backend | nenastaveno = bez přemýšlení (rychlé); `1` = přemýšlení zapnuté |
+| `NVIDIA_BASE_URL` | backend | `https://integrate.api.nvidia.com/v1`; v produkci NIM on-prem / EU |
+| `EMBEDDING_PROVIDER` | backend | nenastaveno = jako `AI_PROVIDER`; `nvidia` / `gemini` (jiná dimenze → přepočet vektorů) |
+| `TRANSCRIBE_PROVIDER` | backend | nenastaveno = `groq`, je-li `GROQ_API_KEY`, jinak LLM provider |
+| `GROQ_API_KEY` / `GROQ_TRANSCRIBE_MODEL` | backend | Groq / `whisper-large-v3` (limit 20 req/min, 7 200 s audia/h) |
+| `TRANSCRIBE_LANGUAGE` | backend | `cs` |
 | `GEMINI_API_KEY` | backend | Google AI Studio (free tier jen nad syntetickým datasetem, D-021; jinak placený tier); nikdy do gitu ani do frontendu |
 | `AI_REAL_PATIENT_DATA` | backend | `False` (výchozí): data pacientů bez tagu `fiktivni-data` do LLM ani embeddingů nejdou (D-021, `provider_for_patient`). `True` jen s placeným tierem / Vertex AI EU |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |
@@ -1698,7 +1724,7 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 | `TRANSCRIBE_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_TIMEOUT_S` | backend | `90` (timeout jednoho volání Gemini; SDK opakuje 408, 429 a 5xx, celkem 3 pokusy) |
 | `AI_THINKING_LEVEL` | backend | nenastaveno = výchozí podle modelu; `minimal` / `low` / `medium` / `high` (latence vs. kvalita, NFR-1, ladí T-302) |
-| `GROUNDING_MIN_SIMILARITY` | backend | `0.55` (ladit podle evalu) |
+| `GROUNDING_MIN_SIMILARITY` | backend | nenastaveno = podle embedding modelu (NVIDIA `0.40`, Gemini / mock `0.55`, kalibrace §5.3) |
 | `INTAKE_ANAMNESIS_MAX_CHARS` | backend | `600` (FR-A5: delší anamnéza se zkrátí na shrnutí) |
 | `COMPATIBILITY_RULES_FILE` | backend | `services/rules/data/compatibility_rules.yaml` (D-015) |
 | `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` | backend | Vercel doména(y) |

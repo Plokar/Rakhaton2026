@@ -40,6 +40,19 @@ def test_nvidia_structured_output(monkeypatch):
     assert body['chat_template_kwargs'] == {'enable_thinking': False}       # výchozí rychlý režim
 
 
+class Cited(BaseModel):
+    text: str
+    citations: list[str]
+
+
+def test_bracketed_citations_are_cleaned(monkeypatch):
+    """Model opíše ID i se závorkami z promptu; grounding by je jinak nenašel. Text tvrzení zůstane beze změny."""
+    content = '{"text": "[ECOG] 0 podle lékaře", "citations": ["[P03-ecog03]", " P03-prom02 "]}'
+    monkeypatch.setattr(ai, '_post', lambda *a, **k: {'choices': [{'message': {'content': content}, 'finish_reason': 'stop'}]})
+    data = ai.NvidiaProvider(api_key='k').generate('q', response_schema=Cited)['data']
+    assert data == {'text': '[ECOG] 0 podle lékaře', 'citations': ['P03-ecog03', 'P03-prom02']}
+
+
 @pytest.mark.parametrize('content,finish', [('{"larger": "x"}', 'stop'), ('{"larger": 9.8', 'length'), ('', 'stop')])
 def test_nvidia_invalid_truncated_or_empty_output_is_error(monkeypatch, content, finish):
     monkeypatch.setattr(ai, '_post', lambda *a, **k: {'choices': [{'message': {'content': content}, 'finish_reason': finish}]})

@@ -233,8 +233,25 @@ def _check_texts(texts: Sequence[str]) -> list[str]:
     return texts
 
 
+# Pole s Evidence ID ve výstupech LLM (kontrakt §8 i interní schémata promptů)
+CITATION_KEYS = {"citation", "citations", "guideline", "guideline_citations", "patient_citations", "rule_citation",
+                 "criterion_id", "study_ids"}
+
+
+def _clean_citations(node: Any, key: str | None = None) -> Any:
+    """Model občas opíše ID i se závorkami z promptu („[P03-dg1]“); takové ID neexistuje a tvrzení by
+    grounding zbytečně označil za neověřené. Mimo pole s citacemi se nic nemění."""
+    if isinstance(node, dict):
+        return {k: _clean_citations(v, k) for k, v in node.items()}
+    if isinstance(node, list):
+        return [_clean_citations(v, key) for v in node]
+    if isinstance(node, str) and key in CITATION_KEYS:
+        return node.strip().strip("[]").strip()
+    return node
+
+
 def _validate(schema: type[BaseModel], payload: Any) -> dict[str, Any]:
-    return schema.model_validate(payload).model_dump(mode="json")
+    return schema.model_validate(_clean_citations(payload)).model_dump(mode="json")
 
 
 def _short(exc: Exception, limit: int = 500) -> str:

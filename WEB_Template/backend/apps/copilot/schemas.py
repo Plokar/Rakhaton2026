@@ -637,6 +637,56 @@ class MdtSessionDetail(MdtSession):
     cases: list[MdtCase]
 
 
+# ── Šablony projektoru a pohled „pro mě“ (T-318, T-319, §8.6) ───────────────
+KbItemStatus = Literal["present", "mention", "stale", "missing", "not_applicable"]
+
+
+class KbItem(BaseModel):
+    """Údaj z katalogu `data/onko/udaje.tsv` u pacienta."""
+    id: str = Field(description='ID báze, jde i do skipped_fields: "pli.vo2max"')
+    label: str
+    status: KbItemStatus = Field(description="mention = jen zmínka („doporučeno“, „probíhá“)")
+    citations: list[EvidenceId]
+    age_days: int | None = None
+    warning: IntakeWarning | None = Field(default=None, description="Jen ve SpecialtyView")
+
+
+class CaseTemplate(BaseModel):
+    """GET /api/mdt/cases/{cid}/template/"""
+    template_id: str
+    name: str
+    specialties: str
+    sources: list[EvidenceId]
+    config: BriefConfig
+    config_id: str | None
+    projector: list[KbItem]
+    trials: list[EvidenceId]
+    warnings: list[IntakeWarning]
+
+
+class SpecialtyProcedure(BaseModel):
+    id: str
+    title: str
+    sources: list[EvidenceId]
+
+
+class SpecialtyInterest(BaseModel):
+    specialty: str
+    what: str
+    why: str
+    sources: list[EvidenceId]
+
+
+class SpecialtyView(BaseModel):
+    """GET /api/mdt/cases/{cid}/for-me/"""
+    role: RoleId
+    template_id: str
+    sections: list[SectionId]
+    items: list[KbItem]
+    procedures: list[SpecialtyProcedure]
+    interests: list[SpecialtyInterest]
+
+
 # ── Pomocné funkce ────────────────────────────────────────────────────────────
 def iter_claims(node: Any) -> Iterator[Claim]:
     """Všechny ``Claim`` v modelu (hlavička, sekce, B2…), do hloubky."""

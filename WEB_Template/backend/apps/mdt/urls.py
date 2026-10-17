@@ -4,6 +4,8 @@ from . import views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
+    path('users/', views.user_list, name='user-list'),
+    path('users/<int:uid>/', views.user_detail, name='user-detail'),
     path('sessions/', views.session_list, name='session-list'),
     path('sessions/<int:sid>/', views.session_detail, name='session-detail'),
     path('configs/', views.config_list, name='config-list'),
@@ -24,4 +26,6 @@ urlpatterns = [
     path('cases/<int:cid>/patient-summary/', views.case_patient_summary, name='case-patient-summary'),
     path('cases/<int:cid>/readiness/', views.case_readiness, name='case-readiness'),
     path('cases/<int:cid>/compatibility/', views.case_compatibility, name='case-compatibility'),
+    path('cases/<int:cid>/template/', views.case_template, name='case-template'),
+    path('cases/<int:cid>/for-me/', views.case_for_me, name='case-for-me'),
 ]

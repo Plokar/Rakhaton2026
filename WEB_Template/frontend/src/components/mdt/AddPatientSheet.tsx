@@ -75,7 +75,6 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
 
   const submit = (r: IntakeResult) => {
     if (!intake.data || !me || !patientId) return;
-    const at = new Date().toISOString();
     create.mutate(
       {
         session: session.id,
@@ -85,9 +84,7 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
         intent: r.intent,
         imaging_recent_checked: r.imaging_recent_checked,
         skipped_fields: r.skipped_fields,
-        acknowledged_warnings: r.acknowledged.map((id) => ({ id, by: me.user_id, at })),
         acknowledge: r.acknowledged,
-        status: 'nominated',
       },
       {
         onSuccess: () => {

@@ -447,7 +447,9 @@ def case_create(request):
     """Zařazení pacienta do boardu (FR-P4): `{session, patient_id, ecog, intent, imaging_recent_checked,
     skipped_fields, acknowledge}`. Nominace už má případ (seed_mdt) → doplní ho a přesune (200), jinak založí (201)."""
     _require(request, roles.ADMIN, roles.DOCTOR)
-    data = request.data
+    # stav po zařazení určuje server (`ready`), odkliknutí se posílá jako `acknowledge` (T-329: formulář posílal
+    # `status: nominated` a lékař pak dostal 403, protože stav smí měnit jen předseda)
+    data = {k: v for k, v in request.data.items() if k not in ('status', 'acknowledged_warnings')}
     _validate_case_input(request, data)
     _validate_collaborators(request, data, None)
     session = get_object_or_404(MdtSession, pk=data.get('session'))

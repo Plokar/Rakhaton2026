@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Iterable
 
-from services.rules.compatibility import LIGHT_ORDER, Facts
+from services.rules.compatibility import LIGHT_ORDER, Facts, lung_histology
 from services.rules.red_flags import SYMPTOMS, _code, _date
 
 MODALITY = (("CHIR", "chirurgie"), ("ABL", "chirurgie"), ("RT", "rt"), ("NUK", "rt"), ("CHT", "chemoterapie"),
@@ -27,7 +27,12 @@ GUIDELINE_ID = re.compile(r"^(KRC|PLI|PRS|OBC)-\d+\.\d+$")
 LOINC_FACT = re.compile(r"LOINC (\d+-\d)")
 ICD_FACT = re.compile(r"Condition(?: ICD)? ([A-Z]\d\d(?:\.\d)?(?:[–-][A-Z]\d\d)?(?:, [A-Z]\d\d(?:\.\d)?(?:[–-][A-Z]\d\d)?)*)")
 ATC_FACT = re.compile(r"ATC ([A-Z]\d\d[A-Z]{0,2}\d{0,2}(?:, [A-Z]\d\d[A-Z]{0,2}\d{0,2})*)")
-M1_CONTEXT = re.compile(r"\bM1\b|\bIV\b|metast|pokročil|\b[1-3]L\b|udržovac|oligometast|rozsáhlé", re.IGNORECASE)
+# mHSPC / mCRPC = metastatický karcinom prostaty (nmCRPC je M0, `\b` ho nechytí)
+M1_CONTEXT = re.compile(r"\bM1\b|\bIV\b|metast|pokročil|\b[1-3]L\b|udržovac|oligometast|rozsáhlé|\bm(?:HSPC|CRPC)\b",
+                        re.IGNORECASE)
+CASTRATION_CONTEXT = re.compile(r"HSPC|CRPC")
+CRPC_TEXT = re.compile(r"kastračn\w* rezistent|\bn?m?CRPC\b", re.IGNORECASE)
+HSPC_TEXT = re.compile(r"(hormonálně|kastračně) senzitiv|\bm?HSPC\b", re.IGNORECASE)
 MISSING = re.compile(r"nevyšetř|probíh|čeká|nestanov|nedostat", re.IGNORECASE)
 
 
@@ -195,6 +200,17 @@ def _metastatic(f: Facts) -> bool:
     return any(re.match(r"C7[89]", _code(c.get("code"), "icd-10")) for c in f.oncologic)
 
 
+def _castration(f: Facts) -> str | None:
+    """Prostata: „CRPC“ / „HSPC“ podle výslovné zmínky v textech, jinak `None` (nefiltruje se, nehádá se).
+
+    ponytail: jen ze zmínky v textu; strukturovaně (PSA progrese na ADT) až s fakty z LLM s citací.
+    """
+    texts = list(f.texts.values())
+    if any(CRPC_TEXT.search(t) for t in texts):
+        return "CRPC"
+    return "HSPC" if any(HSPC_TEXT.search(t) for t in texts) else None
+
+
 ROMAN = {"I": 1, "II": 2, "III": 3, "IV": 4}
 STAGE_TOKEN = re.compile(r"\b(IV|I{1,3})[ABC]?\b(?:\s*[–-]\s*\b(IV|I{1,3})[ABC]?\b)?")
 
@@ -262,7 +278,8 @@ def kb_procedures(resources: list[dict], *, existing_ids: Iterable[str] = (), al
     dg = str(facts["dg"]).upper()[:3]
     patient = Facts(resources, comorbidities_confirmed)
     metastatic, stage = _metastatic(patient), _stage(patient)
-    sclc = any(re.search(r"(?<!ne)malobuněčn", t, re.IGNORECASE) for t in patient.texts.values())
+    histology = lung_histology(patient) if dg == "C34" else None
+    castration = _castration(patient) if dg == "C61" else None
     allowed, existing = set(allowed_sources), set(existing_ids)
     out = []
     for p in q().kb()["postupy"]:
@@ -277,8 +294,12 @@ def kb_procedures(resources: list[dict], *, existing_ids: Iterable[str] = (), al
             continue                                     # marker nesedí (např. KRAS G12C u G12D)
         if not _context_fits(p["kontext"], facts):
             continue
-        if not _stage_fits(p["kontext"], stage) or (p["kontext"].startswith("SCLC") != sclc and dg == "C34"):
-            continue                                     # stadium I–IV a histologie SCLC / NSCLC podle kontextu
+        if not _stage_fits(p["kontext"], stage):
+            continue                                     # stadium I–IV podle kontextu
+        if histology and p["kontext"].startswith("SCLC") != (histology == "SCLC"):
+            continue                                     # histologie SCLC / NSCLC, jen když je v datech
+        if castration and (m := CASTRATION_CONTEXT.search(p["kontext"])) and m[0] != castration:
+            continue                                     # HSPC před kastrační rezistencí, CRPC až po ní
         result = q().evaluate_postup(p["postup"], facts)
         rules, unknown = [], []
         for r in result["pravidla"]:

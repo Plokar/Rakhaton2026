@@ -23,7 +23,7 @@ from services.ai.guidelines import GuidelinePassage, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
 from services.ai.text import resource_paragraphs
 from services.rules import red_flags as rules
-from services.rules.guideline_sets import guideline_sets_for, trial_is_relevant
+from services.rules.guideline_sets import guideline_sets_for, is_oncologic, trial_is_relevant
 
 LOINC_ECOG = "89247-1"
 
@@ -268,8 +268,7 @@ def _referenced_ids(node: Any, rtype: str) -> set[str]:
 
 
 def _diagnosis_codes(resources: Iterable[dict]) -> list[str]:
-    conditions = [r for r in resources if r.get("resourceType") == "Condition"]
-    oncologic = [c for c in conditions if "onkolog" in _category_text(c)] or conditions
+    oncologic = [r for r in resources if r.get("resourceType") == "Condition" and is_oncologic(r)]
     return [code for c in oncologic if (code := _coding_code(c.get("code"), "icd-10"))]
 
 
@@ -286,7 +285,7 @@ def _facts(patient_id: str, resources: list[dict]) -> dict[str, Any]:
     diagnoses = [
         {"id": c["id"], "icd10": _coding_code(c.get("code"), "icd-10"), "text": _cc(c.get("code")),
          "verification": _coding_code(c.get("verificationStatus"), "")}
-        for c in resources if c["resourceType"] == "Condition" and "onkolog" in _category_text(c)
+        for c in resources if c["resourceType"] == "Condition" and is_oncologic(c)
     ]
     return {
         "patient_id": patient_id,
@@ -304,7 +303,7 @@ def _sort_key(group: str, r: dict, date: str, text: str) -> tuple:
     if group == "patient":
         within: tuple = (_PATIENT_GROUP_ORDER.get(r["resourceType"], 9), date, r["id"])
     elif group == "diagnosis":
-        within = (0 if "onkolog" in _category_text(r) else 1, date, r["id"])   # nádory před komorbiditami
+        within = (0 if r["resourceType"] == "Condition" and is_oncologic(r) else 1, date, r["id"])  # nádory napřed
     elif group == "lab" and r["resourceType"] == "Observation":
         within = (0, text.split(":", 1)[0], date, r["id"])     # trend jednoho parametru pohromadě
     elif group == "lab":
@@ -356,10 +355,6 @@ def _category_label(r: dict) -> str:
     category = r.get("category")
     items = category if isinstance(category, list) else [category] if category else []
     return "; ".join(t for t in (_cc(c) for c in items) if t)
-
-
-def _category_text(r: dict) -> str:
-    return _category_label(r).lower()
 
 
 def _num(value: Any) -> str:

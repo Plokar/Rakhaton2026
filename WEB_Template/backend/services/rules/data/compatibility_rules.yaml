@@ -304,6 +304,7 @@ procedures:
   - id: pli-neoadjuvance-lobektomie
     title: "Neoadjuvantní chemoimunoterapie a lobektomie"
     sets: [PLI]
+    requires: nsclc            # PLI je výtah pro NSCLC; SCLC má postupy z báze data/onko (T-320)
     modality: chirurgie
     owner_role: surgeon
     guidelines: [PLI-2.2, PLI-3.1]
@@ -313,6 +314,7 @@ procedures:
   - id: pli-chrt-durvalumab
     title: "Konkomitantní chemoradioterapie a konsolidační durvalumab"
     sets: [PLI]
+    requires: nsclc
     modality: rt
     owner_role: radiation_oncologist
     guidelines: [PLI-2.4]

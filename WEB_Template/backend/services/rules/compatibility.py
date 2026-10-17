@@ -823,7 +823,28 @@ def _er_positive(f: Facts) -> bool:
                if re.match(r"(ER\b|Estrogen)", o.text))
 
 
+SCLC_MORPHOLOGY = re.compile(r"^804[1-5]/")                 # ICD-O-3 malobuněčný karcinom a jeho varianty
+SCLC_TEXT = re.compile(r"(?<!ne)malobuněčn", re.IGNORECASE)
+NSCLC_TEXT = re.compile(r"nemalobuněčn|\bNSCLC\b", re.IGNORECASE)
+
+
+def lung_histology(f: rf.PatientData) -> str | None:
+    """„SCLC“ / „NSCLC“ u C34: morfologie ICD-O-3 (8041–8045 = SCLC), bez ní výslovná zmínka v textech.
+    Neuvedená histologie = `None`: nic se nevyřadí, nehádá se (zadání, pravidlo 3; T-320)."""
+    lung = [c for c in f.oncologic if _code(c.get("code"), "icd-10").startswith("C34")]
+    morphologies = [x.get("code", "") for c in lung for e in c.get("extension", [])
+                    if e.get("url", "").endswith("/icd-o-3-morfologie")
+                    for x in (e.get("valueCodeableConcept") or {}).get("coding", [])]
+    if morphologies:
+        return "SCLC" if any(SCLC_MORPHOLOGY.match(m) for m in morphologies) else "NSCLC"
+    texts = list(f.texts.values())
+    if any(SCLC_TEXT.search(t) for t in texts):
+        return "SCLC"
+    return "NSCLC" if any(NSCLC_TEXT.search(t) for t in texts) else None
+
+
 REQUIRES: dict[str, Callable[[Facts], bool]] = {
+    "nsclc": lambda f: lung_histology(f) != "SCLC",
     "her2_positive": lambda f: any(state == "positive" for _, state in _her2_samples(f)),
     "her2_tested": lambda f: bool(_her2_samples(f)),
     "hr_positive_her2_not_positive": lambda f: _er_positive(f)

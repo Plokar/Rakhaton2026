@@ -725,7 +725,7 @@ class GroqProvider(BaseAIProvider):
         model_name = model or _env("GROQ_TRANSCRIBE_MODEL", DEFAULT_GROQ_TRANSCRIBE_MODEL)
         p_hash = hashlib.sha256(audio).hexdigest()
         if response_schema is not Transcript:
-            return self._error("Groq přepisuje jen audio (PDF čte pypdf)", model=model_name, started=started, p_hash=p_hash)
+            return self._error("Groq přepisuje jen audio (PDF čte parser, services/ai/pdf_text.py)", model=model_name, started=started, p_hash=p_hash)
         mime = mime_type.split(";")[0].strip().lower()
         try:
             resp = _post(f"{self.base_url}/audio/transcriptions", self.api_key,

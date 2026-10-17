@@ -984,7 +984,7 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 
 **Nový pacient z rodného čísla (T-323):** `services/new_patient.py`, `services/rc.py`, endpointy `apps/mdt/drafts.py`.
 
-1. Lékař zadá **RČ** (kontrola formátu, kontrolní číslice a data; odvodí se datum narození, pohlaví a věk) a vloží **text** nebo **soubory** (PDF, TXT, MD). Textové PDF čte `pypdf` lokálně, sken jen Gemini a jen podle D-021. Pacient se stejným RČ v IRIS → 409 s jeho ID (další zprávy přes BON-7).
+1. Lékař zadá **RČ** (kontrola formátu, kontrolní číslice a data; odvodí se datum narození, pohlaví a věk) a vloží **text** nebo **soubory** (PDF, TXT, MD). PDF čte stejný parser jako BON-7 (`services/ai/pdf_text.py`, textová vrstva lokálně bez LLM), sken přes OCR (NVIDIA `nemotron-parse`, jinak Gemini) jen podle D-021, jinak 400. Pacient se stejným RČ v IRIS → 409 s jeho ID (další zprávy přes BON-7).
 2. Vznikne **návrh** (`PatientDraft` v Postgresu, v IRIS zatím nic) s ID `Pnn` a dokumenty `Pnn-impNN`. Pravidla z textu předvyplní nominaci, každý údaj s citací odstavce: otázka pro MDT, histologie, předchozí léčba, komorbidity, preference (podle nadpisů jako v datasetu), diagnózy jen z kódů MKN-10 (onkologické), TNM, ECOG (rozmezí „0–1“ se nepředvyplní). S povoleným LLM přibudou hodnoty jako u BON-7 (ověřené proti odstavci).
 3. **Náhledy bez LLM:** `preview.detail` = celý podklad podrobně, `preview.narrow` = úzký pás podle šablony projektoru pro diagnózu (T-318), `preview.template` (klíčové údaje na projektor) a `preview.intake` (pole a varování kontroly úplnosti).
 4. Lékař návrh **upraví** (`PATCH`: pole nominace, diagnózy, TNM, ECOG, výběr hodnot, odebrání dokumentu, board, `synthetic`) nebo přidá podklady. Upravený údaj nemá citaci dokumentu; jde do textu nominace (`Pnn-zad01#n`), a cituje se ten.
@@ -1153,7 +1153,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/patient-drafts/{id}/confirm/` | zápis do IRIS jednou transakcí + `Provenance`, vektory, `MdtCase` na boardu návrhu → 201 `{patient_id, case_id, synthetic, fhir_written}`; 400 `{missing}` bez otázky nebo diagnózy |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (PDF čte `services/ai/pdf_text.py`: textová vrstva `pdfplumber` po řádcích ze slov, tabulky s linkami jako „buňka | buňka“, bez opakované hlavičky / patičky a čísel stránek, věta přes zlom stránky a nadpisy oddílů drží odstavce; sken přes OCR `nemotron-parse`, jinak Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a `source` = jeho znění (lékař ho vidí před potvrzením) a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem (`reasons`). Nic se nezapisuje (předseda, lékař) |
-| POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}`. Bez hodnot se zapíše jen zpráva (text je pak citovatelný v podkladu); ID hodnot nesou druh jako dataset (`Pxx-impNN-lab01`, `-bm`, `-tnm`, `-ecog`, `-vit`) |
+| POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-<druh>NN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}`. Bez hodnot se zapíše jen zpráva (text je pak citovatelný v podkladu); ID hodnot nesou druh jako dataset (`Pxx-impNN-lab01`, `-bm`, `-tnm`, `-ecog`, `-vit`) |
 | POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1), na uzavřený board (`status: closed`) 409. Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
@@ -1227,7 +1227,7 @@ Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**,
 | `IntakeForm` + `IntakeWarning` | formulář zařazení: předvyplněné údaje s citací, Doplnit / Přeskočit, varování s „Beru na vědomí“, ECOG + C/P, checkbox snímku (FR-P4) |
 | `SectionClaims` (`ClaimList.tsx`) | tvrzení sekce; u dlouhé anamnézy přepínač „Shrnutí AI / Doslovně ze zpráv“ (`BriefSection.verbatim`, FR-A5) |
 | `DiscussionRecorder` | nahrávání diskuse v jednání komise po pacientech → zapisovatel (BON-3) |
-| `NewPatientForm` | nový pacient při zařazení: pohlaví, rok narození, MKN-10, diagnóza, stadium, otázka pro MDT → IRIS (T-323) |
+| `NewPatientForm` | nový pacient při zařazení (T-323, `patient-drafts`): RČ + text nebo soubory → návrh s citacemi (otázka, MKN-10, TNM, ECOG) → úpravy, další podklady → zápis do IRIS a případ na boardu; rozpracované návrhy jde otevřít znovu |
 | `ModalityCatalog` | léčebné metody pro diagnózu s odborníkem a daty k ruce (FR-D5) |
 | `ScaleCard` | Lung-RADS / Fleischner s kontrolou použitelnosti (BON-6) |
 | `BoardList` / `BoardEditor` | boardy, termíny (mění jen předseda), přesun pacientů (FR-P1) |
@@ -1689,8 +1689,6 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
   config_id: number | null;                     // výchozí BriefConfig boardu
 }
 
-// GET /api/mdt/sessions/?expand=cases[&from&to] (T-518): kalendář jedním dotazem, plní i cache agend a připraveností
-type MdtSessionWithCases = MdtSession & { patients: string[]; cases: (MdtCase & { readiness: Readiness | null })[] };
 ```
 
 ---

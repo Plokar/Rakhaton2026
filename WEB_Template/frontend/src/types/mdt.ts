@@ -587,8 +587,6 @@ export type MdtSessionListItem = MdtSession & { patients: string[] };
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };
 
-/** GET /api/mdt/sessions/?expand=cases[&from&to] (T-518): seznam i s agendami a připraveností, jeden dotaz pro kalendář. */
-export type MdtSessionWithCases = MdtSessionListItem & { cases: (MdtCase & { readiness: Readiness | null })[] };
 
 /** GET /api/mdt/cases/{cid}/readiness/ (BON-1, OBC-1.1 / OBC-1.2) */
 export interface Readiness {

@@ -64,20 +64,14 @@ def test_move_case_updates_task_in_iris(seeded):
     assert task['restriction']['period']['start'] == '2026-10-14T14:00:00+02:00'
 
 
-def test_sessions_expand_cases_for_calendar(seeded):
-    """T-518: kalendář jedním dotazem: agendy (MdtCase + hlavička z IRIS) a připravenost, filtr dnů."""
-    client = as_user('chirurg')
-    plain = client.get('/api/mdt/sessions/').json()
-    assert 'cases' not in plain[0] and len(plain) == 4
-    expanded = client.get('/api/mdt/sessions/?expand=cases').json()
-    assert [s['patients'] for s in expanded] == [s['patients'] for s in plain]
-    case = next(c for s in expanded for c in s['cases'] if c['patient_id'] == 'P03')
-    assert case['patient']['display_name'].startswith('P03') and case['created_by']['name']
-    assert case['readiness']['patient_id'] == 'P03' and 0 <= case['readiness']['score']['percent'] <= 100
-    week = client.get('/api/mdt/sessions/?from=2026-10-19&to=2026-10-25&expand=cases').json()
-    assert {s['title'] for s in week} == {'Mamární komise', 'GIT – kolorektální karcinom / hepatobiliární',
-                                          'Hrudní – karcinom plic'}
-    assert client.get('/api/mdt/sessions/?from=21.10.').status_code == 400
+def test_intake_ignores_status_from_client(seeded):
+    """Lékař zařadí svého pacienta i s tělem z UI (`status` posílá formulář, mění ho jen předseda; dřív 403)."""
+    board = MdtSession.objects.get(title='Hrudní – karcinom plic')
+    body = {'session': board.pk, 'patient_id': 'P04', 'ecog': 1, 'intent': 'C', 'imaging_recent_checked': True,
+            'skipped_fields': [], 'acknowledge': [], 'status': 'nominated'}
+    r = as_user('pneumolog').post('/api/mdt/cases/', body, format='json')
+    assert r.status_code in (200, 201), r.json()
+    assert r.json()['status'] == 'ready'
 
 
 def test_regenerate_brief_with_doctor_feedback(seeded, monkeypatch):

@@ -24,7 +24,7 @@ import type {
   TaskStatus,
   MdtSession,
   MdtSessionDetail,
-  MdtSessionWithCases,
+  MdtSessionListItem,
   ObservationSeries,
   TimelineEvent,
 } from '@/types/mdt';
@@ -74,18 +74,44 @@ export interface ImportProposal {
   rejected: ImportValue[];
 }
 
-/** POST /api/mdt/patients/ (T-323): bez jména a RČ, otázka pro MDT povinná (OBC-1.1). */
-export interface NewPatient {
-  sex: 'female' | 'male' | 'other';
-  birth_year: number;
-  /** MKN-10 onkologické diagnózy, např. "C34.1". */
-  icd10: string;
-  diagnosis: string;
-  stage?: string;
-  question: string;
-  /** Board, na který pacient míří (termín nominace). */
-  session?: number;
+/** Údaj nominace v návrhu nového pacienta s citací odstavce podkladu (`null` = upravil lékař). */
+export type DraftText = { text: string; citation: string | null };
+
+/** Návrh nového pacienta (`/api/mdt/patient-drafts/`, T-323, ARCH §8.6); RČ se nevrací nikdy. */
+export interface PatientDraft {
+  id: number;
+  status: 'draft' | 'confirmed';
+  patient_id: string;
+  synthetic: boolean;
+  session: { id: number; title: string; date: string } | null;
+  case_id: number | null;
+  documents: { id: string; title: string; date: string | null; text?: string; source?: string }[];
+  fields?: {
+    nomination_type: 'primarni' | 'restaging' | 'progrese';
+    question?: DraftText | null;
+    histology?: DraftText | null;
+    history?: DraftText | null;
+    comorbidities?: DraftText | null;
+    preferences?: DraftText | null;
+    diagnoses: (DraftText & { code: string })[];
+    tnm?: (DraftText & { date?: string | null }) | null;
+    ecog?: { value: number; citation: string | null; date?: string | null } | null;
+  };
+  edited?: string[];
+  values?: ImportValue[];
+  rejected?: ImportValue[];
+  ai?: { used: boolean; reason: string | null };
+  patient?: { rc_masked: string; sex: 'male' | 'female'; birth_year: number; age: number };
+  missing_for_confirm?: string[];
 }
+
+/** PATCH návrhu: pole nominace upravená lékařem (text `''` = smazat). */
+export type PatientDraftEdits = {
+  question?: string;
+  tnm?: string;
+  ecog?: number | null;
+  diagnoses?: { code: string; text?: string }[];
+};
 
 const fileBody = (name: string, file: Blob) => {
   const data = new FormData();
@@ -120,7 +146,7 @@ export const mdtApi = {
     apiFetch<SpecialtyView>(`/api/mdt/cases/${caseId}/for-me/${specialty ? `?specialty=${specialty}` : ''}`),
 
   /** Boardy (zasedání) s pacienty v pořadí agendy, s agendami a připraveností (`expand=cases`, T-518). */
-  getSessions: () => apiFetch<MdtSessionWithCases[]>('/api/mdt/sessions/?expand=cases'),
+  getSessions: () => apiFetch<MdtSessionListItem[]>('/api/mdt/sessions/'),
 
   /** Board + agenda: případy s hlavičkou pacienta z IRIS. */
   getSession: (sessionId: string) =>
@@ -208,12 +234,22 @@ export const mdtApi = {
   /** Pacienti z IRIS (hlavička bez jména a RČ). */
   getPatients: () => apiFetch<PatientListItem[]>('/api/patients/'),
 
-  /** Nový pacient do IRIS (pseudonym Pxx, onkologická diagnóza, nominace s otázkou); předseda, lékař. */
-  createPatient: (input: NewPatient) =>
-    apiFetch<{ patient_id: string; fhir_written: string[]; patient: PatientListItem }>('/api/mdt/patients/', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
+  /** Nový pacient z RČ (T-323): rozpracované návrhy, založení z textu / souborů, úpravy, zápis do IRIS. */
+  getPatientDrafts: () =>
+    apiFetch<{ id: number; patient_id: string; documents: number; created_at: string; updated_at: string }[]>('/api/mdt/patient-drafts/'),
+  getPatientDraft: (id: number) => apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/`),
+  /** `rc`, `text?`, `files[]?` (PDF, TXT), `synthetic?`, `session?`; 409 = RČ už v IRIS (`patient_id`) nebo v návrhu (`draft_id`). */
+  createPatientDraft: (body: FormData) => apiFetch<PatientDraft>('/api/mdt/patient-drafts/', { method: 'POST', body }),
+  addPatientDraftDocuments: (id: number, body: FormData) =>
+    apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/documents/`, { method: 'POST', body }),
+  updatePatientDraft: (id: number, fields: PatientDraftEdits) =>
+    apiFetch<PatientDraft>(`/api/mdt/patient-drafts/${id}/`, { method: 'PATCH', body: JSON.stringify({ fields }) }),
+  deletePatientDraft: (id: number) => apiFetch<void>(`/api/mdt/patient-drafts/${id}/`, { method: 'DELETE' }),
+  confirmPatientDraft: (id: number) =>
+    apiFetch<{ patient_id: string; case_id: number | null; synthetic: boolean; fhir_written: string[] }>(
+      `/api/mdt/patient-drafts/${id}/confirm/`,
+      { method: 'POST' },
+    ),
 
   /** Detail pacienta: diagnózy, komorbidity, TNM v čase, ECOG lékař i pacient. */
   getPatient: (patientId: string) => apiFetch<PatientDetail>(`/api/patients/${encodeURIComponent(patientId)}/`),

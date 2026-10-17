@@ -468,6 +468,56 @@ export interface MdtCase {
   patient?: PatientListItem | null;
 }
 
+/** Stav údaje z katalogu `data/onko/udaje.tsv`: mention = jen zmínka („doporučeno“, „probíhá“). */
+export type KbItemStatus = 'present' | 'mention' | 'stale' | 'missing' | 'not_applicable';
+
+/** Údaj z katalogu báze u pacienta (T-318). */
+export interface KbItem {
+  /** "pli.vo2max" (ID báze; jde i do skipped_fields) */
+  id: string;
+  label: string;
+  status: KbItemStatus;
+  /** Kde je údaj (nebo zmínka) v podkladech. */
+  citations: EvidenceId[];
+  /** U "stale": stáří posledního výsledku. */
+  age_days?: number;
+  /** Jen ve SpecialtyView: "Chybí: …" / "Doporučeno: …" */
+  warning?: IntakeWarning;
+}
+
+/** GET /api/mdt/cases/{cid}/template/ (T-318): doporučená šablona projektoru podle diagnózy. */
+export interface CaseTemplate {
+  /** "sab-pli-radikalni" */
+  template_id: string;
+  /** "NSCLC I–III: operabilita vs. chemoradioterapie" */
+  name: string;
+  /** Kdo má být u stolu (text pro konfigurátor). */
+  specialties: string;
+  sources: EvidenceId[];
+  /** name "Šablona: …", is_preset */
+  config: BriefConfig;
+  /** Preset se stejným názvem (seed_mdt), pro POST …/brief/ {config_id}. */
+  config_id: string | null;
+  /** Klíčové údaje na projektor (T-310). */
+  projector: KbItem[];
+  trials: EvidenceId[];
+  /** Všechna varování katalogu údajů (CHYBI:* i DOP:*). */
+  warnings: IntakeWarning[];
+}
+
+/** GET /api/mdt/cases/{cid}/for-me/ (T-319): co jde lékaři dané odbornosti nahoru. */
+export interface SpecialtyView {
+  role: RoleId;
+  template_id: string;
+  /** "summary" první, pak sekce odbornosti, pak ostatní ze šablony. */
+  sections: SectionId[];
+  /** Údaje odbornosti v pořadí podle odbornosti, s varováním. */
+  items: KbItem[];
+  /** Postupy modalit, o kterých odbornost rozhoduje. */
+  procedures: { id: string; title: string; sources: EvidenceId[] }[];
+  interests: { specialty: string; what: string; why: string; sources: EvidenceId[] }[];
+}
+
 export type MdtRole = 'mdt_admin' | 'mdt_doctor' | 'mdt_viewer';
 
 /** GET /api/mdt/me/ */

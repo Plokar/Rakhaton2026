@@ -2,13 +2,13 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: process.env.NEXT_PUBLIC_APP_NAME || 'MDT Copilot',
-    short_name: 'MDT Copilot',
+    name: 'MedTeam · MDT Copilot',
+    short_name: 'MedTeam',
     description: 'Podklady pro multidisciplinární onkologickou komisi (MDT)',
     start_url: '/dashboard',
     display: 'standalone',
-    background_color: '#0f172a',
-    theme_color: '#6366f1',
+    background_color: '#f4f6f8',
+    theme_color: '#0f766e',
     icons: [
       {
         src: '/icon-192.png',

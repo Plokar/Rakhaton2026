@@ -8,14 +8,15 @@ import type { IntakeField, IntakePrefill, IntakeWarning, Severity, WarningKind }
 import { Citations } from './citations';
 
 const KIND_LABEL: Record<WarningKind, string> = {
-  missing: 'CHYBÍ',
-  out_of_range: 'MIMO NORMU',
-  conflict: 'ROZPOR',
-  ai_uncertain: 'NEJISTOTA AI',
+  missing: 'Chybí',
+  out_of_range: 'Mimo normu',
+  conflict: 'Rozpor',
+  ai_uncertain: 'Nejistota AI',
 };
+/** Pruh vlevo = závažnost varování (D-017), vždy s textem typu. */
 const SEVERITY_CLASS: Record<Severity, string> = {
-  high: 'border-l-red-500',
-  moderate: 'border-l-orange-500',
+  high: 'border-l-red-600 dark:border-l-red-500',
+  moderate: 'border-l-amber-500',
   low: 'border-l-slate-400',
 };
 const UNSKIPPABLE = new Set(['mdt.question']); // OBC-1.1: bez otázky je případ neúplný
@@ -69,7 +70,7 @@ export function IntakeForm({
 
   return (
     <form
-      className="space-y-5"
+      className="flex flex-col gap-6"
       onSubmit={(e) => {
         e.preventDefault();
         if (!canSubmit) return;
@@ -83,36 +84,36 @@ export function IntakeForm({
       }}
     >
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-foreground">Údaje z IRIS</h2>
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <h2 className="mb-2 text-sm font-semibold">Údaje z IRIS</h2>
+        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {fields.map((f) => {
             const isSkipped = skipped.has(f.id);
             const missing = f.status === 'missing' || f.status === 'pending';
             return (
               <li key={f.id} className="flex flex-wrap items-start gap-2 px-3 py-2 text-sm">
                 {missing && !isSkipped ? (
-                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400" aria-hidden />
+                  <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
                 ) : isSkipped ? (
-                  <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
                 ) : (
-                  <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-700 dark:text-emerald-400" aria-hidden />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground">
+                  <p className="font-medium">
                     {f.label}
                     {f.required_by && <Citations ids={[f.required_by]} />}
                   </p>
                   {isSkipped ? (
-                    <p className="text-xs text-muted-foreground">Chybí (přeskočeno lékařem), v podkladu zůstane jako chybějící údaj</p>
+                    <p className="text-[13px] text-muted-foreground">Chybí (přeskočeno lékařem), v podkladu zůstane jako chybějící údaj</p>
                   ) : (
-                    <p className={cn('text-xs', missing ? 'font-semibold text-orange-700 dark:text-orange-300' : 'text-muted-foreground')}>
-                      {missing ? `CHYBÍ${f.value ? `: ${f.value}` : ''}` : f.value}
+                    <p className={cn('text-[13px]', missing ? 'font-medium text-amber-800 dark:text-amber-300' : 'text-muted-foreground')}>
+                      {missing ? `Chybí${f.value ? `: ${f.value}` : ''}` : f.value}
                       {f.citation && <Citations ids={[f.citation]} />}
                     </p>
                   )}
                   {fillHint === f.id && (
-                    <p className="mt-1 flex items-start gap-1 text-[11px] text-muted-foreground">
-                      <Info className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
+                    <p className="mt-1 flex items-start gap-1 text-xs text-muted-foreground">
+                      <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                       Doplňte údaj do dokumentace pacienta (IRIS); formulář ho po novém načtení převezme s citací.
                     </p>
                   )}
@@ -126,7 +127,7 @@ export function IntakeForm({
                     )}
                     {!UNSKIPPABLE.has(f.id) && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => toggleSkip(f)} className="gap-1">
-                        {isSkipped ? <><RotateCcw className="h-3.5 w-3.5" /> Vrátit</> : 'Přeskočit'}
+                        {isSkipped ? <><RotateCcw aria-hidden /> Vrátit</> : 'Přeskočit'}
                       </Button>
                     )}
                   </div>
@@ -143,18 +144,20 @@ export function IntakeForm({
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-foreground">Varování ({active.length})</h2>
+        <h2 className="mb-2 text-sm font-semibold">
+          Varování <span className="font-normal text-muted-foreground">({active.length})</span>
+        </h2>
         {active.length === 0 && <p className="text-sm text-muted-foreground">Žádné aktivní varování.</p>}
-        <ul className="space-y-2">
+        <ul className="flex flex-col gap-2">
           {active.map((w) => (
-            <li key={w.id} className={cn('rounded-lg border border-border border-l-4 bg-background px-3 py-2', SEVERITY_CLASS[w.severity])}>
+            <li key={w.id} className={cn('rounded-lg border border-border border-l-2 bg-card px-3 py-2', SEVERITY_CLASS[w.severity])}>
               <div className="flex flex-wrap items-start gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    <span className="mr-1.5 rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold tracking-wide">{KIND_LABEL[w.kind]}</span>
+                  <p className="text-sm font-medium">
+                    <span className="mr-1.5 text-xs font-medium text-muted-foreground">{KIND_LABEL[w.kind]}</span>
                     {w.title}
                   </p>
-                  <p className="mt-0.5 text-sm text-foreground">
+                  <p className="mt-0.5 text-[13px] leading-snug">
                     {w.detail}
                     <Citations ids={w.citations} />
                   </p>
@@ -183,9 +186,9 @@ export function IntakeForm({
         )}
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-5 sm:grid-cols-2">
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-foreground">ECOG (zadává nebo potvrzuje lékař)</h2>
+          <h2 className="mb-2 text-sm font-semibold">ECOG (zadává nebo potvrzuje lékař)</h2>
           <div className="flex gap-1.5" role="radiogroup" aria-label="ECOG">
             {[0, 1, 2, 3, 4].map((v) => (
               <button
@@ -195,8 +198,8 @@ export function IntakeForm({
                 aria-checked={ecog === v}
                 onClick={() => setEcog(v)}
                 className={cn(
-                  'h-12 w-12 rounded-lg border text-2xl font-extrabold transition',
-                  ecog === v ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:bg-accent',
+                  'size-11 rounded-lg border text-xl font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  ecog === v ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card hover:bg-accent',
                 )}
               >
                 {v}
@@ -204,14 +207,14 @@ export function IntakeForm({
             ))}
           </div>
           {prefill.ecog_physician && (
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               Předvyplněno z IRIS: ECOG {prefill.ecog_physician.value}
               <Citations ids={[prefill.ecog_physician.citation]} />
             </p>
           )}
         </div>
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-foreground">Předpokládaný záměr</h2>
+          <h2 className="mb-2 text-sm font-semibold">Předpokládaný záměr</h2>
           <div className="flex gap-1.5" role="radiogroup" aria-label="Záměr">
             {(['C', 'P'] as const).map((v) => (
               <button
@@ -221,26 +224,26 @@ export function IntakeForm({
                 aria-checked={intent === v}
                 onClick={() => setIntent(v)}
                 className={cn(
-                  'flex h-12 flex-1 flex-col items-center justify-center rounded-lg border transition',
-                  intent === v ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-foreground hover:bg-accent',
+                  'flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  intent === v ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card hover:bg-accent',
                 )}
               >
-                <span className="text-xl font-extrabold leading-none">{v}</span>
-                <span className="text-[10px]">{v === 'C' ? 'kurativní' : 'paliativní'}</span>
+                <span className="text-xl font-semibold leading-none">{v}</span>
+                <span className="text-[13px]">{v === 'C' ? 'kurativní' : 'paliativní'}</span>
               </button>
             ))}
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
+          <p className="mt-1.5 text-xs text-muted-foreground">
             {prefill.intent_prefill ? 'Předvyplněno z poslední MDT.' : 'Minulá MDT rozhodnutí odložila, vyberte C nebo P.'}
           </p>
         </div>
       </section>
 
-      <label className="flex items-start gap-2 text-sm text-foreground">
-        <input type="checkbox" className="mt-1" checked={imaging} onChange={(e) => setImaging(e.target.checked)} />
+      <label className="flex items-start gap-2.5 text-sm">
+        <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={imaging} onChange={(e) => setImaging(e.target.checked)} />
         <span>
           Snímek mladší než 3 měsíce
-          <span className="block text-[11px] text-muted-foreground">
+          <span className="mt-0.5 block text-xs text-muted-foreground">
             Připomínka. Pro radikální léčbu a změnu linie musí být staging ≤ 6 týdnů (OBC-1.2), před resekcí jater ≤ 4–6 týdnů
             (KRC-2.4); kontrola stagingu běží automaticky.
           </span>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useSyncExternalStore } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
 
@@ -12,45 +12,51 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
-  const [resolvedTheme, setResolvedTheme] = useState<'dark' | 'light'>('light');
+const STORAGE_KEY = 'theme';
+const CHANGE_EVENT = 'mdt-theme-change';
+const DARK_QUERY = '(prefers-color-scheme: dark)';
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    if (savedTheme) {
-      setThemeState(savedTheme);
-    } else {
-      setThemeState('light');
-    }
-  }, []);
+function readTheme(): Theme {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved === 'dark' || saved === 'system' ? saved : 'light';
+  } catch {
+    return 'light';
+  }
+}
 
-  useEffect(() => {
-    const root = document.documentElement;
-    let effective: 'dark' | 'light' = 'light';
-
-    if (theme === 'system') {
-      effective = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-    } else {
-      effective = theme;
-    }
-
-    setResolvedTheme(effective);
-
-    if (effective === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+/** Volba v localStorage + systémový režim jako externí store (bez setState v efektu). */
+function subscribe(onChange: () => void) {
+  const media = window.matchMedia(DARK_QUERY);
+  window.addEventListener('storage', onChange);
+  window.addEventListener(CHANGE_EVENT, onChange);
+  media.addEventListener('change', onChange);
+  return () => {
+    window.removeEventListener('storage', onChange);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+    media.removeEventListener('change', onChange);
   };
+}
+
+const resolve = (theme: Theme): 'dark' | 'light' =>
+  theme === 'system' ? (window.matchMedia(DARK_QUERY).matches ? 'dark' : 'light') : theme;
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useSyncExternalStore(subscribe, readTheme, () => 'light' as Theme);
+  const resolvedTheme = useSyncExternalStore(subscribe, () => resolve(readTheme()), () => 'light' as const);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+  }, [resolvedTheme]);
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    } catch {
+      // bez úložiště platí volba jen do přenačtení
+    }
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
@@ -65,4 +71,11 @@ export function useTheme() {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
+}
+
+const noopSubscribe = () => () => {};
+
+/** `true` až na klientovi po hydrataci (místo `mounted` přes setState v efektu). */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
 }

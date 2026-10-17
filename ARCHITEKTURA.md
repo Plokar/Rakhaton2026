@@ -1155,30 +1155,33 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 |---|---|
 | `/` | přesměruje na `/dashboard` (veřejná landing page není) |
 | `/login` | z templatu + 1-click demo účty (předseda, chirurg, onkolog…) |
-| `/dashboard` | **boardy** (zasedání 2026-10-14 a 2026-10-21), případy a jejich stav, úkoly po termínu; předseda zakládá board a mění termín |
-| `/dashboard/mdt` | seznam zasedání (boardů) s termínem → agenda; v navigaci „Zasedání“ |
-| `/dashboard/mdt/[sessionId]` | agenda zasedání: pacienti, readiness, stav, přesun pacienta do jiného boardu, tlačítko „Zařadit pacienta“ |
-| `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4): předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
+| `/dashboard` | **kalendář zasedání** (UI v2, [NAVRH_UI §6](docs/NAVRH_UI.md#6-přehled--kalendář-zasedání)): 2 týdny, sloupce = dny, dlaždice zasedání s pacienty a připraveností; přesun pacienta drag & drop (myš, dotyk, klávesnice) i „Přesunout na…“ s „Vrátit“; „+“ na dlaždici zařadí pacienta (boční panel); klik na pacienta = rychlý přehled v bočním panelu; stav v `?tyden=&pacient=&komise=` |
+| `/dashboard/mdt` | **seznam zasedání** v řádcích (nadcházející, minulá); předseda zakládá board a posílá odkaz na registraci kolegovi |
+| `/dashboard/mdt/[sessionId]` | **jednání komise** ([NAVRH_UI §7](docs/NAVRH_UI.md#7-jednání-komise)): vlevo agenda (pořadí, projednáno, čas u pacienta), vpravo 30s rychlý přehled; zkratky ↑↓ / J K, D detail, Z závěr, P projektor, H projednáno; výběr pacienta se publikuje do `/projector` (BroadcastChannel); stav v `?pacient=` |
+| `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4) jako stránka, záloha k bočnímu panelu: předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
-| `/dashboard/cases/[caseId]` | **podklad** v úzkém sloupci: hlavička (D-018) + A / red flags / anamnéza / B (sekce odborností s posouzením) / B2 (semafor, studie, otázky) / otázka pro MDT |
+| `/dashboard/cases/[caseId]` | **detail pacienta** ([NAVRH_UI §8](docs/NAVRH_UI.md#8-detail-pacienta)): přilepená hlavička (D-018, PS lékař / pacient, C/P, varování, předchozí / další pacient boardu), navigace po sekcích; rychlý přehled a varovné signály otevřené, souhrn a časová osa (AI / události z IRIS), anamnéza, odbornosti, léčba a studie, hlas pacienta a otázky sbalené |
 | `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
+| `/projector` | **úzký panel pro projektor** vedle snímku z PACS (T-512, 320–420 px, bez navigace, chráněno v `proxy.ts`): hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P, anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z jednání komise (`/dashboard/mdt/[sessionId]`) |
 | `…/cases/demo`, `/brief/demo` | podklad P03 z fixtures (`data/fixtures/brief_P03.json` + zdroje citací `evidence_P03.json`), funguje bez backendu; obě stránky skládá `CaseBriefScreen` |
 | `/dashboard/cases/[caseId]/record` | **zápis závěru**: editor (sekce jako záznam MDT), úkoly, potvrzení, export |
 | `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |
 | `/dashboard/tasks` | úkoly po zasedání |
+| `/dashboard/tym` | **tým komise** (T-319, jen předseda): členové, role a odbornost (`/api/mdt/users/`), odkaz na registraci; `/register` vyžaduje odbornost |
 
-Navigace (`DashboardLayout.tsx`, Ctrl+K): **Přehled**, **Zasedání**, **Úkoly** + Nastavení. Template stránky `projects`, `storage`, `realtime` a `ai` jsou z navigace skryté (kód zůstává). Odkazy na localhost služby (Swagger, Mailhog, Traefik) se ukazují jen v dev režimu.
+Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**, **Úkoly** (počet po termínu) + nejbližší zasedání jedním klikem + okno projektoru; horní lišta s drobečky, hledáním Ctrl K (pacienti, zasedání, akce) a avatarem (Nastavení, Klávesové zkratky, Odhlásit). Sdílená cache dat je TanStack Query (`src/lib/queries.ts`, providery v `app/providers.tsx`). Template stránky `projects`, `storage`, `realtime` a `ai` jsou z navigace skryté (kód zůstává). Dev služby (Swagger, Mailhog, Traefik) v aplikaci nejsou, jen v README a `dev.ps1`.
 
 ### 7.2 Klíčové komponenty (`src/components/mdt/` ★)
 
 | Komponenta | Účel |
 |---|---|
 | `CaseHeader` | sticky hlavička (D-018): `Pxx · pohlaví · věk`, diagnóza + TNM, **hlavní otázka**, **ECOG lékaře velkou číslicí + ECOG pacienta**, velké **C/P**, komorbidity, alergie, implantáty / předchozí výkony, počet red flags (orientace do 30 s) |
-| `AiBlock` | obal AI obsahu: badge „AI návrh“, odlišný styl (např. fialový levý okraj + ikona ✨ + jemné pozadí), stav `draft` / `confirmed` |
+| `AiBlock` | obal AI obsahu: štítek „AI návrh“ a fialový levý pruh (token `--ai`, NAVRH_UI Q1, neplete se s primární akcí ani semaforem), stav `draft` / `confirmed` (zeleně „Potvrzeno lékařem“) |
 | `Claim` + `CitationChip` | věta s čísly citací `[1]`; `unverified` se zobrazí s varováním |
 | `SourceDrawer` | boční panel: zdroj citace se zvýrazněným odstavcem / hodnota + referenční rozsah + zdrojový dokument (`derivedFrom`) / znění pasáže guidelines / kritéria |
-| `MissingData` | šedý chip „Údaj chybí v podkladech“ + co doplnit |
-| `RedFlagCard` | závažnost (barva), popis, **dva zdroje vedle sebe**, odkaz na pasáž guidelines |
+| `MissingData` | „Chybí: …“ s přerušovaným okrajem + co doplnit; přeskočený údaj „Chybí (přeskočeno lékařem)“ (D-019) |
+| `RedFlagList` | kompaktní seznam varovných signálů: závažnost (ikona + text), název, pravidlo; rozbalení = popis a **dva zdroje vedle sebe**; filtr podle závažnosti |
+| `CaseQuickView` (`quick-view.tsx`) | 30s rychlý přehled ve stejném pořadí všude (boční panel, jednání, detail, `/projector`): hlavička, klíčové údaje (závažné a chybějící nahoře, normální sbalené), všechny postupy se semaforem, anamnéza (AI), otázka pro MDT |
 | `EcogCompare` | dvě hodnoty + rozdíl + data + text odpovědi pacienta |
 | `Timeline` | horizontální časová osa (dg., léčba, zobrazení, PROMs, předchozí MDT) |
 | `TrendChart` | Hb, markery, Na, hmotnost, LVEF, skóre PROMs v čase (doporučení: `recharts`) |

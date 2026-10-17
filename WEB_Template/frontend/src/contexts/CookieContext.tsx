@@ -37,19 +37,20 @@ export function CookieProvider({ children }: { children: React.ReactNode }) {
   // Načíst existující consent po připojení na klienta
   useEffect(() => {
     const existing = getStoredConsent();
-    if (existing) {
-      setPreferences(existing);
-      setHasAnswered(true);
-      setShowBanner(false);
-    } else {
-      setHasAnswered(false);
-      // Malá prodleva (např. 300ms) pro plynulý nástup a aby to nepřebíjelo první render
-      const timer = setTimeout(() => {
-        setShowBanner(true);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-    setIsLoaded(true);
+    // Stav se nastaví v callbacku časovače; bez souhlasu s prodlevou 300 ms pro plynulý nástup banneru
+    const timer = setTimeout(
+      () => {
+        if (existing) {
+          setPreferences(existing);
+          setHasAnswered(true);
+        } else {
+          setShowBanner(true);
+        }
+        setIsLoaded(true);
+      },
+      existing ? 0 : 300,
+    );
+    return () => clearTimeout(timer);
   }, []);
 
   const acceptAll = useCallback(() => {

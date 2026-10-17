@@ -22,13 +22,15 @@ export function CookieSettingsModal() {
   const [marketing, setMarketing] = React.useState(preferences.marketing);
   const [showCookieList, setShowCookieList] = React.useState(false);
 
-  // Synchronizace stavu při otevření
-  React.useEffect(() => {
+  // Synchronizace stavu při otevření (úprava stavu při renderu místo efektu)
+  const [wasOpen, setWasOpen] = React.useState(isSettingsOpen);
+  if (wasOpen !== isSettingsOpen) {
+    setWasOpen(isSettingsOpen);
     if (isSettingsOpen) {
       setAnalytics(preferences.analytics);
       setMarketing(preferences.marketing);
     }
-  }, [isSettingsOpen, preferences]);
+  }
 
   const handleSave = () => {
     savePreferences({

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Cpu, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -46,13 +46,13 @@ const roleLabel = (r: RoleId | 'chair') => (r === 'chair' ? 'Předseda' : ROLE_M
 /** Úprava textu od AI z něj udělá „AI návrh upravený lékařem“ (FR-R4). */
 const afterEdit = (source: Source): Source => (source === 'ai' ? 'ai_edited' : source);
 
-const fieldClass = 'h-9 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground disabled:opacity-70';
+const fieldClass = 'h-9 rounded-lg border border-input bg-card px-2.5 text-sm text-foreground disabled:opacity-70';
 
 function SourceBadge({ source }: { source: Source }) {
   if (source === 'human') return null;
   return (
-    <span className="inline-flex items-center gap-1 rounded-md border border-teal-700/30 bg-teal-50 px-2 py-0.5 font-mono text-[10px] font-semibold text-teal-900 dark:border-teal-400/30 dark:bg-teal-950/70 dark:text-teal-200">
-      <Cpu className="h-3 w-3" aria-hidden /> {source === 'ai' ? 'AI návrh' : 'AI návrh upravený lékařem'}
+    <span className="inline-flex items-center rounded-md bg-ai-soft px-1.5 py-0.5 text-xs font-medium text-ai">
+      {source === 'ai' ? 'AI návrh' : 'AI návrh upravený lékařem'}
     </span>
   );
 }
@@ -60,7 +60,7 @@ function SourceBadge({ source }: { source: Source }) {
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-foreground">{label}{hint}</p>
+      <p className="flex flex-wrap items-center gap-2 text-[13px] font-medium">{label}{hint}</p>
       {children}
     </div>
   );
@@ -83,8 +83,8 @@ function SourcedText({
 }) {
   const id = React.useId();
   return (
-    <div className={cn('space-y-1.5', value.source !== 'human' && 'border-l-2 border-teal-700 dark:border-teal-400 pl-3')}>
-      <label htmlFor={id} className="flex flex-wrap items-center gap-2 text-xs font-semibold text-foreground">
+    <div className={cn('space-y-1.5', value.source !== 'human' && 'border-l-2 border-ai pl-3')}>
+      <label htmlFor={id} className="flex flex-wrap items-center gap-2 text-[13px] font-medium">
         {label} <SourceBadge source={value.source} />
       </label>
       <Textarea
@@ -95,7 +95,7 @@ function SourcedText({
         onChange={(e) => onChange({ text: e.target.value, source: afterEdit(value.source) })}
       />
       {citations && citations.length > 0 && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Zdroje:
           <Citations ids={citations} />
         </p>
@@ -205,7 +205,7 @@ export function DecisionEditor({
       <Field label="Doporučený postup">
         <ul className="space-y-2">
           {s.recommendation.map((r, i) => (
-            <li key={i} className={cn('space-y-1.5 rounded-lg border border-border p-2', r.source !== 'human' && 'border-l-2 border-l-teal-700 dark:border-l-teal-400')}>
+            <li key={i} className={cn('space-y-1.5 rounded-lg border border-border p-2', r.source !== 'human' && 'border-l-2 border-l-ai')}>
               <div className="flex flex-wrap items-center gap-2">
                 <select
                   className={fieldClass}
@@ -428,7 +428,7 @@ export function DecisionEditor({
             const update = (patch: Partial<typeof t>) =>
               setTop({ tasks: decision.tasks.map((x, j) => (j === i ? { ...x, ...patch, source: afterEdit(x.source) } : x)) });
             return (
-              <li key={t.id} className={cn('space-y-1.5 rounded-lg border border-border p-2', t.source !== 'human' && 'border-l-2 border-l-teal-700 dark:border-l-teal-400')}>
+              <li key={t.id} className={cn('space-y-1.5 rounded-lg border border-border p-2', t.source !== 'human' && 'border-l-2 border-l-ai')}>
                 <div className="flex items-center gap-2">
                   <SourceBadge source={t.source} />
                   {!readOnly && (
@@ -500,7 +500,7 @@ export function DecisionEditor({
                     }
                   />
                   <span>
-                    {f.title} <span className="text-[11px] text-muted-foreground">({f.rule})</span>
+                    {f.title} <span className="text-xs text-muted-foreground">({f.rule})</span>
                   </span>
                 </label>
               </li>

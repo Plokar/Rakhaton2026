@@ -5,6 +5,10 @@ import { apiFetch } from '@/lib/api';
 import type {
   Brief,
   BriefConfig,
+  CaseTemplate,
+  MdtRole,
+  RoleId,
+  SpecialtyView,
   Decision,
   EvidenceSource,
   IntakePrefill,
@@ -42,6 +46,20 @@ export type StoredBrief = Brief & { brief_id?: number; created_at?: string };
 export const mdtApi = {
   getMe: () => apiFetch<Me>('/api/mdt/me/'),
 
+  /** Uživatelé s rolí a odborností (`Me[]`), jen předseda (T-319). */
+  getUsers: () => apiFetch<Me[]>('/api/mdt/users/'),
+
+  /** Změna role a odbornosti uživatele (jen předseda; sám sobě roli předsedy odebrat nejde). */
+  updateUser: (userId: number, input: { role?: MdtRole; specialty?: RoleId }) =>
+    apiFetch<Me>(`/api/mdt/users/${userId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
+
+  /** Doporučená šablona projektoru podle diagnózy (T-318); 404 bez báze nebo diagnózy. */
+  getTemplate: (caseId: number) => apiFetch<CaseTemplate>(`/api/mdt/cases/${caseId}/template/`),
+
+  /** Pohled „pro mě“ podle odbornosti přihlášeného nebo `specialty` (T-319). */
+  getForMe: (caseId: number, specialty?: RoleId) =>
+    apiFetch<SpecialtyView>(`/api/mdt/cases/${caseId}/for-me/${specialty ? `?specialty=${specialty}` : ''}`),
+
   /** Boardy (zasedání) s pacienty v pořadí agendy. */
   getSessions: () => apiFetch<MdtSessionListItem[]>('/api/mdt/sessions/'),
 
@@ -67,8 +85,8 @@ export const mdtApi = {
   /** Jen prázdný board (409, když má pacienty). */
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
 
-  /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019). */
-  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields'>> & { acknowledge?: string[] }) =>
+  /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
+  updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status'>> & { acknowledge?: string[] }) =>
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),

@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,16 +32,18 @@ export default function StoragePage() {
   const [success, setSuccess] = React.useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const loadFiles = React.useCallback(async () => {
-    try {
-      const res = await storageApi.list();
-      setFiles(res);
-    } catch {
-      // handled
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Stav se nastavuje jen v callbacku promise (react-hooks/set-state-in-effect)
+  const loadFiles = React.useCallback(
+    () =>
+      storageApi
+        .list()
+        .then(setFiles)
+        .catch(() => {
+          // handled
+        })
+        .finally(() => setLoading(false)),
+    [],
+  );
 
   React.useEffect(() => {
     loadFiles();
@@ -92,7 +94,7 @@ export default function StoragePage() {
   const humanTotal = (totalBytes / (1024 * 1024)).toFixed(2) + ' MB';
 
   return (
-    <DashboardLayout>
+    <Page>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -250,6 +252,6 @@ export default function StoragePage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </Page>
   );
 }

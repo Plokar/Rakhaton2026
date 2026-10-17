@@ -249,6 +249,28 @@ Toto je seznam „důležitých informací“, který měl tým dohledat. Zákla
 - DPD před fluoropyrimidiny (EMA 2020). V datasetu není.
 - Rodinná anamnéza (Lynchův syndrom). OBC-2.4, KRC-1.2
 
+### 4.5 Karcinom prostaty (C61): rešerše, v datasetu není
+
+> Rešerše T-512 (17. 10. 2026) jako podklad šablony. Pacient ani guidelines s C61 v datasetu nejsou, `intake.py` tato pole zatím nemá (T-513). Zdroj: kapesní doporučení EAU-EANM-ESTRO-ESUR-ISUP-SIOG 2025, ověřeno v plném textu. Průdušnost (spirometrie) se u prostaty nesleduje, patří jen k plicím (4.2).
+
+- PSA a jeho kinetika (PSA-DT). U M0 s PSA-DT > 12 měsíců nenabízet ADT; high-risk biochemický relaps = PSA-DT ≤ 9 měsíců a PSA ≥ 2 ng/ml nad nadirem po RT nebo ≥ 1 ng/ml po RP.
+- Histologie: Gleason skóre a globální ISUP grade group (1–5).
+- cTNM (cT podle DRE), MR prostaty.
+- Staging: u ISUP GG 3 a u high-risk / lokálně pokročilého onemocnění PSMA-PET/CT, jinak aspoň CT/MR břicha a pánve a scintigrafie skeletu.
+- Testosteron: kastrační hladina < 50 ng/dl potvrzená před diagnózou CRPC.
+- mCRPC: somatické a/nebo germinální testování (HRR, BRCA2) a MMR/MSI; mCRPC projednává MDT.
+- Germinální testování: více příbuzných s CaP pod 60 let nebo úmrtí na CaP v rodině, vysoce rizikové mutace v rodině, BRCA ze somatického testu; před testem genetické poradenství.
+- Zdravotní stav: očekávaná délka života, komorbidity, G8 (+ mini-COG, Clinical Frailty Scale); G8 ≤ 14 → specializované geriatrické vyšetření (shodně s OBC-2.2).
+
+### 4.6 Nádor ledviny (C64, P06 D41.0): rešerše, guidelines v datasetu nejsou
+
+> Rešerše T-512 (17. 10. 2026). Zdroj: souhrny EAU RCC 2025 (European Urology) a IMDC; ⚠ jen ze sekundárních souhrnů, plný text EAU se nepodařilo stáhnout (HTTP 403).
+
+- Histologie z jádrové biopsie (ne FNA); cystické léze bez solidní složky nebiopsovat.
+- Funkce ledvin: eGFR; při eGFR < 45 ml/min/1,73 m² nebo riziku zhoršení nefrolog před léčbou (nefrektomie mění funkci).
+- Staging: TNM, histologický podtyp (světlobuněčný / nesvětlobuněčný), grade.
+- Metastatické onemocnění: rizikové skupiny IMDC: interval od diagnózy do systémové léčby < 1 rok, Hb pod dolní mezí, korigované Ca nad horní mezí, neutrofily nad horní mezí, trombocyty nad horní mezí, Karnofsky < 80 % (Heng 2009). Podle skupiny se volí 1. linie; u poor-risk se nedoporučuje cytoredukční nefrektomie.
+
 ---
 
 ## 5. Soulad léčebného postupu se stavem pacienta (semafor)
@@ -765,3 +787,5 @@ Týmové otázky jsou v PROGRESS.md §5 (otevřená zůstává Q12: CRLF na Wind
 | Lung-RADS | [ACR Lung-RADS v2022](https://ACR.org/-/media/ACR/Files/RADS/Lung-RADS/Lung-RADS-2022-Summary-_Final.pdf) · [ctisus](https://ctisus.com/learning/journalclub/344580) |
 | Fleischner | [Cleveland Clinic](https://consultqd.clevelandclinic.org/incidental-pulmonary-nodules-a-summary-of-the-2017-fleischner-society-guidelines) · [Radiopaedia](https://radiopaedia.org/articles/13541) |
 | Modely Gemini | [ai.google.dev/gemini-api/docs/models](https://ai.google.dev/gemini-api/docs/models) |
+| Prostata (§4.5, 17. 10.) | [EAU Pocket on Prostate Cancer 2025 (PDF)](https://d56bochluxqnz.cloudfront.net/documents/pocket-guidelines/EAU-EANM-ESTRO-ESUR-ISUP-SIOG-Pocket-on-Prostate-Cancer-2025_updated.pdf) · [EAU guideline (plný text)](https://d56bochluxqnz.cloudfront.net/documents/full-guideline/EAU-EANM-ESTRO-ESUR-ISUP-SIOG-Guidelines-on-Prostate-Cancer-2025_2025-03-24-120144_rinw.pdf) |
+| Ledvina (§4.6, 17. 10.) ⚠ | [EAU RCC 2025 update (European Urology)](https://www.europeanurology.com/article/S0302-2838(25)00139-3/fulltext) · [IMDC (MDCalc)](https://www.mdcalc.com/imdc-international-metastatic-rcc-database-consortium-risk-score-rcc) · [Alberta RCC guideline 2025](https://www.albertahealthservices.ca/assets/info/hp/cancer/if-hp-cancer-guide-gu003-renal-cell.pdf) |

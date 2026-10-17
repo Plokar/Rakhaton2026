@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,13 +42,14 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = React.useState('');
   const [pwError, setPwError] = React.useState('');
 
-  React.useEffect(() => {
-    if (user) {
-      setFirstName(user.first_name || '');
-      setLastName(user.last_name || '');
-      setEmail(user.email || '');
-    }
-  }, [user]);
+  // Formulář převezme údaje po načtení uživatele (úprava stavu při renderu místo efektu)
+  const [formUser, setFormUser] = React.useState(user);
+  if (user && user !== formUser) {
+    setFormUser(user);
+    setFirstName(user.first_name || '');
+    setLastName(user.last_name || '');
+    setEmail(user.email || '');
+  }
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +111,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <Page>
       <div className="space-y-6 max-w-4xl">
         {/* Header */}
         <div>
@@ -264,6 +265,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </Page>
   );
 }

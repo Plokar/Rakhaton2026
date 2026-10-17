@@ -104,6 +104,8 @@ export interface RegisterData {
   password2: string;
   first_name?: string;
   last_name?: string;
+  /** Povinná odbornost (`RoleId` bez `patient`, T-319); nový uživatel je člen komise. */
+  specialty: Exclude<import('@/types/mdt').RoleId, 'patient'>;
 }
 
 export interface AuthResponse {

@@ -10,7 +10,7 @@ metadata:
 > **V MDT Copilot (čti první, má přednost před textem skillu níže):**
 >
 > - Next.js 16 a React 19: když se pravidlo liší od `node_modules/next/dist/docs/` (viz `WEB_Template/frontend/AGENTS.md`), platí dokumentace Next 16.
-> - Data jdou z API backendu přes `src/lib/api.ts`, `src/lib/mdt-api.ts` a hook `src/lib/use-api-data.ts`. Pravidlo `client-swr-dedup` ber jako princip; SWR ani jiné knihovny nepřidávej bez domluvy s UI lane (`@Mira`).
+> - Data jdou z API backendu přes `src/lib/api.ts` a `src/lib/mdt-api.ts`. Sdílená cache je TanStack Query v `src/lib/queries.ts` (UI v2, NAVRH_UI §10.3): pravidlo `client-swr-dedup` splňuje, SWR nepřidávej. Starší `src/lib/use-api-data.ts` zůstává jen pro okrajové stránky.
 > - Lint hlásí `react-hooks/set-state-in-effect` v template stránkách (Q14). Řeší ho pravidla `rerender-derived-state-no-effect` a `rerender-move-effect-to-event`.
 >
 > Převzato z [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) (commit `063bee9`, MIT, viz `../LICENSE-vercel-agent-skills`). Text skillu níže je beze změny.

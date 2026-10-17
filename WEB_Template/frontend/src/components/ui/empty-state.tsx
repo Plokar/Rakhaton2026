@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { FolderOpen } from 'lucide-react';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -10,26 +9,19 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({
-  icon,
-  title,
-  description,
-  action,
-  className,
-}: EmptyStateProps) {
+/** Prázdný stav: co tu bude a jaký je další krok. Bez ikonové dlaždice (NAVRH_UI §1.3). */
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div
       className={cn(
-        'flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/40 p-8 text-center animate-in fade-in-50',
-        className
+        'flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border px-6 py-10 text-center',
+        className,
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/80 text-muted-foreground mb-4">
-        {icon || <FolderOpen className="h-6 w-6" />}
-      </div>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
-      {action && <div className="mt-5">{action}</div>}
+      {icon && <div className="mb-2 text-muted-foreground [&_svg]:size-5">{icon}</div>}
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <p className="max-w-sm text-sm text-muted-foreground text-pretty">{description}</p>
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,25 +58,25 @@ export default function ProjectsPage() {
   const [projCategory, setProjCategory] = React.useState<Project['category']>('ai');
   const [creatingProject, setCreatingProject] = React.useState(false);
 
-  const loadData = React.useCallback(async () => {
-    try {
-      const [projList, taskList] = await Promise.all([
-        projectsApi.list(),
-        tasksApi.list(),
-      ]);
-      const validProjs = Array.isArray(projList) ? projList : [];
-      const validTasks = Array.isArray(taskList) ? taskList : [];
-      setProjects(validProjs);
-      setTasks(validTasks);
-      if (validProjs.length > 0 && !taskProject) {
-        setTaskProject(validProjs[0].id);
-      }
-    } catch {
-      // handled
-    } finally {
-      setLoading(false);
-    }
-  }, [taskProject]);
+  // Stav se nastavuje jen v callbacku promise (react-hooks/set-state-in-effect)
+  const loadData = React.useCallback(
+    () =>
+      Promise.all([projectsApi.list(), tasksApi.list()])
+        .then(([projList, taskList]) => {
+          const validProjs = Array.isArray(projList) ? projList : [];
+          const validTasks = Array.isArray(taskList) ? taskList : [];
+          setProjects(validProjs);
+          setTasks(validTasks);
+          if (validProjs.length > 0 && !taskProject) {
+            setTaskProject(validProjs[0].id);
+          }
+        })
+        .catch(() => {
+          // handled
+        })
+        .finally(() => setLoading(false)),
+    [taskProject],
+  );
 
   React.useEffect(() => {
     loadData();
@@ -196,7 +196,7 @@ export default function ProjectsPage() {
   ] as const;
 
   return (
-    <DashboardLayout>
+    <Page>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -531,6 +531,6 @@ export default function ProjectsPage() {
           </form>
         </Dialog>
       </div>
-    </DashboardLayout>
+    </Page>
   );
 }

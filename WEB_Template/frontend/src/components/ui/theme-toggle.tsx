@@ -1,16 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useHydrated, useTheme } from '@/contexts/ThemeContext';
 import { Moon, Sun } from 'lucide-react';
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useHydrated();
 
   return (
     <button

@@ -22,6 +22,8 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 - `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej Gemini**.
   - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDT Copilot“ má přednost před textem skillu (ARCH §4.8).
   - `impeccable` (T-016): `/impeccable audit | critique | polish | distill | harden | clarify | adapt <cíl>` nad `WEB_Template/frontend` (`--target`). Hook detektoru jen lokálně (`/impeccable hooks on`).
+  - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDT Copilot“ má přednost.
+  - **UI v2** ([docs/NAVRH_UI.md](docs/NAVRH_UI.md)): shell v `app/dashboard/layout.tsx`, data přes TanStack Query (`src/lib/queries.ts`), 30s přehled `components/mdt/quick-view.tsx` je společný pro kalendář, jednání, detail i projektor.
 
 ## Příkazy
 

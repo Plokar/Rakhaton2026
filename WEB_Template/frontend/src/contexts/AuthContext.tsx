@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { authApi, type User } from '@/lib/api';
+import { authApi, type RegisterData, type User } from '@/lib/api';
 
 interface AuthState {
   user: User | null;
@@ -17,14 +17,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (username: string, password: string) => Promise<void>;
-  register: (data: {
-    username: string;
-    email: string;
-    password: string;
-    password2: string;
-    first_name?: string;
-    last_name?: string;
-  }) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -38,23 +31,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
   });
 
-  /** Načte aktuálního uživatele ze serveru */
-  const refreshUser = useCallback(async () => {
-    try {
-      const status = await authApi.checkStatus();
-      setState({
-        user: status.user,
-        isAuthenticated: status.authenticated,
-        isLoading: false,
-      });
-    } catch {
-      setState({ user: null, isAuthenticated: false, isLoading: false });
-    }
-  }, []);
+  /** Načte aktuálního uživatele ze serveru (stav se nastaví až v callbacku promise). */
+  const refreshUser = useCallback(
+    () =>
+      authApi
+        .checkStatus()
+        .then((status) =>
+          setState({ user: status.user, isAuthenticated: status.authenticated, isLoading: false }),
+        )
+        .catch(() => setState({ user: null, isAuthenticated: false, isLoading: false })),
+    [],
+  );
 
   // Při mountu zkontrolovat auth status (JWT cookie)
   useEffect(() => {
-    refreshUser();
+    void refreshUser();
   }, [refreshUser]);
 
   const login = useCallback(
@@ -70,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (data: Parameters<typeof authApi.register>[0]) => {
+    async (data: RegisterData) => {
       const response = await authApi.register(data);
       setState({
         user: response.user,

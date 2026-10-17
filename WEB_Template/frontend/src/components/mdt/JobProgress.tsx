@@ -1,14 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { LoaderCircle } from 'lucide-react';
 import { mdtApi, type GenerationJob } from '@/lib/mdt-api';
 
 const STATUS_LABEL: Record<GenerationJob['status'], string> = {
   queued: 'Ve frontě…',
-  running: 'Generuji podklad…',
+  running: 'Připravuji podklad…',
   done: 'Hotovo',
-  error: 'Generování selhalo',
+  error: 'Podklad se nepodařilo připravit',
 };
 
 /** Průběh generování podkladu: polling `/api/jobs/{id}/` à 1 s (D-004). */
@@ -47,16 +46,14 @@ export function JobProgress({
 
   const progress = job?.progress ?? 0;
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-2xs" role="status" aria-live="polite">
-      <p className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
-        <LoaderCircle className="h-4 w-4 animate-spin text-primary" aria-hidden />
-        {STATUS_LABEL[job?.status ?? 'queued']}
-        <span className="ml-auto font-mono text-xs font-bold tabular-nums text-muted-foreground">{progress} %</span>
+    <div className="flex w-full max-w-sm flex-col gap-1.5" role="status" aria-live="polite">
+      <p className="flex items-baseline justify-between gap-3 text-sm">
+        <span className="font-medium">{STATUS_LABEL[job?.status ?? 'queued']}</span>
+        <span className="text-xs tabular-nums text-muted-foreground">{progress} %</span>
       </p>
-      <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
 }
-

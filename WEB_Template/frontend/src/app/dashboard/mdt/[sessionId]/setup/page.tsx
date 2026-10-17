@@ -3,9 +3,9 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { ArrowLeft, RefreshCw, Save } from 'lucide-react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { RefreshCw, Save } from 'lucide-react';
+import { Page, PageHeader } from '@/components/layout/Page';
+import { PageCrumbs } from '@/components/layout/TopBar';
 import { CitationProvider } from '@/components/mdt/citations';
 import { apiDataSource } from '@/components/mdt/data-source';
 import { formatDate } from '@/components/mdt/format';
@@ -16,8 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { mdtApi } from '@/lib/mdt-api';
+import { useQueries } from '@tanstack/react-query';
+import { Citations } from '@/components/mdt/citations';
+import { ApiError } from '@/lib/api';
+import { queryKeys } from '@/lib/queries';
 import { useApiData } from '@/lib/use-api-data';
-import type { BriefConfig, EvidenceId } from '@/types/mdt';
+import type { BriefConfig, CaseTemplate, EvidenceId, MdtSessionDetail } from '@/types/mdt';
 
 // Klíč „sessionId|verze“: po uložení se board i konfigurace načtou znovu.
 const fetchSetup = async (key: string) => {
@@ -29,9 +33,9 @@ const fetchSetup = async (key: string) => {
 export default function SetupPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = React.use(params);
   return (
-    <DashboardLayout>
+    <Page className="max-w-3xl">
       <SetupContent sessionId={sessionId} />
-    </DashboardLayout>
+    </Page>
   );
 }
 
@@ -94,45 +98,54 @@ function SetupContent({ sessionId }: { sessionId: string }) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <Link
-        href={`/dashboard/mdt/${encodeURIComponent(sessionId)}`}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Agenda
-      </Link>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Nastavení podkladu</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {session ? `${session.title} · ${formatDate(session.date)}` : ''}
-          {editable ? '' : ' · nastavuje předseda komise, bloky si můžete sbalit u sebe v podkladu'}
-        </p>
-      </div>
+    <>
+      {session && (
+        <PageCrumbs items={[{ label: session.title, href: `/dashboard/mdt/${encodeURIComponent(sessionId)}` }, { label: 'Nastavení podkladu' }]} />
+      )}
+      <PageHeader
+        title="Nastavení podkladu"
+        meta={
+          <>
+            {session ? `${session.title}, ${formatDate(session.date)}` : 'Načítám zasedání…'}
+            {editable ? '' : '. Nastavuje předseda komise, bloky si můžete sbalit u sebe v podkladu.'}
+          </>
+        }
+      />
 
       {loading && <Skeleton className="h-96 w-full" />}
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      )}
+      {error && <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
       {message && (
         <p
+          role={message.kind === 'error' ? 'alert' : 'status'}
           className={
             message.kind === 'error'
-              ? 'rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
-              : 'rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground'
+              ? 'rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive'
+              : 'rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground'
           }
         >
           {message.text}
         </p>
       )}
 
+      {session && (
+        <CitationProvider order={[]} activeId={openId} onOpen={setOpenId}>
+          <RecommendedTemplates session={session} editable={editable} onUse={(t) => setDraft({ ...t.config, id: t.config_id ?? undefined, is_preset: true })} />
+        </CitationProvider>
+      )}
+      {!loading && !error && session && !current && (
+        <p className="text-sm text-muted-foreground">
+          Pro board zatím není žádné nastavení podkladu.{editable ? ' Vyjděte z doporučené šablony výše.' : ''}
+        </p>
+      )}
+
       {current && session && (
         <CitationProvider order={[]} activeId={openId} onOpen={setOpenId}>
-          <section className="space-y-5 rounded-xl border border-border bg-card p-4">
+          <section className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5">
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-xs font-semibold text-foreground">
+              <label className="flex flex-col gap-1.5 text-[13px] font-medium">
                 <span className="block">Preset</span>
                 <select
-                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm font-normal disabled:opacity-70"
+                  className="h-9 w-full rounded-lg border border-input bg-card px-2 text-sm font-normal disabled:opacity-70"
                   value={current.id ?? ''}
                   disabled={!editable}
                   onChange={(e) => {
@@ -148,7 +161,7 @@ function SetupContent({ sessionId }: { sessionId: string }) {
                   ))}
                 </select>
               </label>
-              <label className="space-y-1 text-xs font-semibold text-foreground">
+              <label className="flex flex-col gap-1.5 text-[13px] font-medium">
                 <span className="block">Název nastavení boardu</span>
                 <Input
                   value={current.name}
@@ -167,10 +180,10 @@ function SetupContent({ sessionId }: { sessionId: string }) {
             {editable && (
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
                 <Button variant="outline" onClick={save} isLoading={busy} disabled={!draft} className="gap-1.5">
-                  <Save className="h-4 w-4" /> Uložit pro board
+                  <Save aria-hidden /> Uložit pro board
                 </Button>
                 <Button onClick={regenerate} isLoading={busy} className="gap-1.5">
-                  <RefreshCw className="h-4 w-4" /> Uložit a přegenerovat podklady ({session.cases.length})
+                  <RefreshCw aria-hidden /> Uložit a přegenerovat podklady ({session.cases.length})
                 </Button>
               </div>
             )}
@@ -178,6 +191,66 @@ function SetupContent({ sessionId }: { sessionId: string }) {
           <SourceDrawer evidenceId={openId} loadSource={apiDataSource.loadSource} onClose={close} />
         </CitationProvider>
       )}
-    </div>
+    </>
+  );
+}
+
+/**
+ * Doporučená šablona podle diagnózy pacientů na boardu (T-318, báze `data/onko`): „Použít“ ji vezme
+ * jako výchozí bod, uloží se jako nastavení boardu (preset sám zůstává beze změny).
+ */
+function RecommendedTemplates({
+  session,
+  editable,
+  onUse,
+}: {
+  session: MdtSessionDetail;
+  editable: boolean;
+  onUse: (template: CaseTemplate) => void;
+}) {
+  const cases = session.cases.filter((c): c is typeof c & { id: number } => c.id != null);
+  const results = useQueries({
+    queries: cases.map((c) => ({
+      queryKey: queryKeys.template(c.id),
+      queryFn: () =>
+        mdtApi.getTemplate(c.id).catch((err: unknown) => {
+          if (err instanceof ApiError && err.status === 404) return null;
+          throw err;
+        }),
+      staleTime: 5 * 60_000,
+    })),
+  });
+  const byTemplate = new Map<string, { template: CaseTemplate; patients: string[] }>();
+  results.forEach((r, i) => {
+    if (!r.data) return;
+    const entry = byTemplate.get(r.data.template_id) ?? { template: r.data, patients: [] };
+    entry.patients.push(cases[i].patient_id);
+    byTemplate.set(r.data.template_id, entry);
+  });
+  if (!byTemplate.size) return null;
+  return (
+    <section aria-labelledby="doporucene-sablony" className="flex flex-col gap-2">
+      <h2 id="doporucene-sablony" className="text-base font-semibold">Doporučená šablona podle diagnózy</h2>
+      <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+        {[...byTemplate.values()].map(({ template, patients }) => (
+          <li key={template.template_id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+            <div className="min-w-0 flex-1 basis-64">
+              <p className="text-sm font-medium">
+                {template.name}
+                <Citations ids={template.sources} />
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                <span translate="no">{patients.join(', ')}</span> · u stolu: {template.specialties}
+              </p>
+            </div>
+            {editable && (
+              <Button variant="outline" size="sm" onClick={() => onUse(template)}>
+                Použít
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -107,7 +107,21 @@ export interface PatientDraft {
   rejected?: ImportValue[];
   ai?: { used: boolean; reason: string | null };
   /** Import z FHIR JSON (T-335): soubor, přečíslování, počty resources podle typu, lékaři z bundlu. */
-  import?: { file: string; total: number; renamed_from: string | null; counts: Record<string, number>; practitioners: string[]; synthetic: boolean } | null;
+  import?: {
+    file: string;
+    total: number;
+    renamed_from: string | null;
+    counts: Record<string, number>;
+    practitioners: string[];
+    synthetic: boolean;
+    /** Přepis `.md` nahraný k bundlu a nesoulady přepisu proti bundlu (prázdné = sedí). */
+    transcript?: string | null;
+    validation?: string[];
+  } | null;
+  /** Náhledy bez LLM nad návrhem (T-323): celý podklad, úzký pás pro projektor, šablona a kontrola úplnosti. */
+  preview?: { detail: Brief; narrow: Brief; template: CaseTemplate | null; intake: IntakePrefill };
+  /** Jen v odpovědi na založení ze souboru s víc pacienty: návrh pro každého (T-335). */
+  batch?: { id: number; patient_id: string; file: string; renamed_from: string | null }[];
   /** `rc_masked` je null u importu z FHIR JSON bez RČ (dataset RČ nemá). */
   patient?: { rc_masked: string | null; sex: 'male' | 'female'; birth_year: number; age: number };
   missing_for_confirm?: string[];

@@ -23,8 +23,8 @@ export function UserMenu({ onShowShortcuts }: { onShowShortcuts: () => void }) {
   const me = useMe();
   if (!user) return null;
   const name = me?.name ?? ([user.first_name, user.last_name].filter(Boolean).join(' ') || user.username);
-  // Iniciály jména bez titulů („MUDr. Jana Horáková“ → „JH“).
-  const parts = name.split(/\s+/).filter((part) => part && !part.endsWith('.'));
+  // Iniciály jména bez titulů a závorek („MUDr. Jana Horáková“ → „JH“, „Klinický onkolog (GIT)“ → „KO“).
+  const parts = name.replace(/\([^)]*\)/g, ' ').split(/\s+/).filter((part) => /^\p{L}/u.test(part) && !part.endsWith('.'));
   const initial = (parts.length > 1 ? `${parts[0][0]}${parts.at(-1)?.[0]}` : (parts[0] ?? user.username).slice(0, 1)).toUpperCase();
 
   return (

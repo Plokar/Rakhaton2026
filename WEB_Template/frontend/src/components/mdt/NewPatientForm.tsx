@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ApiError } from '@/lib/api';
 import { mdtApi, type PatientDraft, type PatientDraftEdits } from '@/lib/mdt-api';
 import { apiErrorMessage, queryKeys } from '@/lib/queries';
+import { DraftPreview } from './DraftPreview';
 
 const SELECT = 'h-9 w-full rounded-lg border border-input bg-card px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const DRAFTS_KEY = ['patient-drafts'] as const;
@@ -20,6 +21,7 @@ const fieldErrors = (err: unknown): Record<string, string> | null =>
     : null;
 
 const isJson = (f: File) => /\.json$/i.test(f.name) || f.type === 'application/json' || f.type === 'application/fhir+json';
+const isMd = (f: File) => /\.md$/i.test(f.name);
 
 /**
  * Nový pacient z rodného čísla (T-323, `/api/mdt/patient-drafts/`): RČ + text nebo soubory (PDF, TXT) → návrh
@@ -68,18 +70,18 @@ function DocumentInputs({ text, onText, files, onFiles, error, allowJson = false
             <input
               ref={jsonRef}
               type="file"
-              accept="application/json,application/fhir+json,.json"
+              multiple
+              accept="application/json,application/fhir+json,.json,.md,text/markdown"
               className="sr-only"
               tabIndex={-1}
               aria-hidden
               onChange={(e) => {
-                const picked = e.target.files?.[0];
-                if (picked) onFiles([...files.filter((f) => !isJson(f)), picked]);
+                onFiles([...files, ...Array.from(e.target.files ?? [])]);
                 e.target.value = '';
               }}
             />
             <Button type="button" variant="outline" size="sm" onClick={() => jsonRef.current?.click()}>
-              <FileJson aria-hidden /> Nahrát FHIR JSON
+              <FileJson aria-hidden /> Nahrát FHIR JSON (+ přepis .md)
             </Button>
           </>
         )}
@@ -106,7 +108,9 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
   const [existing, setExisting] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const drafts = useQuery({ queryKey: DRAFTS_KEY, queryFn: () => mdtApi.getPatientDrafts() });
-  const json = files.find(isJson);
+  const jsonFiles = files.filter(isJson);
+  const json = jsonFiles[0];
+  const transcripts = json ? files.filter(isMd) : [];
 
   const open = async (id: number) => {
     try {
@@ -128,7 +132,14 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
     for (const f of files) body.append('files', f);
     if (sessionId) body.append('session', String(sessionId));
     try {
-      onDraft(await mdtApi.createPatientDraft(body));
+      const created = await mdtApi.createPatientDraft(body);
+      if (created.batch && created.batch.length > 1) {
+        void drafts.refetch();
+        toast.success(`Vzniklo ${created.batch.length} návrhů pacientů`, {
+          description: `${created.batch.map((b) => b.patient_id).join(', ')}. Otevírám první, ostatní jsou v Rozpracovaných návrzích.`,
+        });
+      }
+      onDraft(created);
     } catch (err) {
       const data = err instanceof ApiError && err.status === 409 ? (err.data as { patient_id?: string; draft_id?: number }) : null;
       if (data?.draft_id) {
@@ -181,8 +192,10 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
         <p className="flex items-start gap-1.5 rounded-lg bg-muted px-3 py-2 text-[13px]">
           <FileJson className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>
-            {json.name}: pacient se načte ze strukturovaných dat souboru (diagnózy, TNM, ECOG, nominace, lékaři). ID se
-            přečíslují na volné Pxx, reference a RČ se zkontrolují.
+            {jsonFiles.map((f) => f.name).join(', ')}: pacienti se načtou ze strukturovaných dat (diagnózy, TNM, ECOG,
+            nominace, lékaři). Víc pacientů v souborech = návrh pro každého. ID se přečíslují na volné Pxx, reference a
+            RČ se zkontrolují.
+            {transcripts.length > 0 && ` Přepis ${transcripts.map((f) => f.name).join(', ')} se porovná s bundlem (není podklad).`}
           </span>
         </p>
       )}
@@ -221,7 +234,7 @@ function DraftReview({
   const [text, setText] = React.useState('');
   const [files, setFiles] = React.useState<File[]>([]);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const [busy, setBusy] = React.useState<'save' | 'docs' | 'delete' | null>(null);
+  const [busy, setBusy] = React.useState<'save' | 'docs' | 'delete' | 'preview' | null>(null);
   const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
@@ -238,7 +251,7 @@ function DraftReview({
     return Object.keys(out).length ? out : null;
   };
 
-  const run = async (kind: 'save' | 'docs' | 'delete', action: () => Promise<void>) => {
+  const run = async (kind: 'save' | 'docs' | 'delete' | 'preview', action: () => Promise<void>) => {
     setBusy(kind);
     setErrors({});
     try {
@@ -284,6 +297,9 @@ function DraftReview({
       onChange(await mdtApi.addPatientDraftDocuments(draft.id, body));
     });
 
+  const refreshPreview = () => run('preview', async () => onChange(await saved()));
+  const dirty = edits() !== null;
+
   const discard = () =>
     run('delete', async () => {
       await mdtApi.deletePatientDraft(draft.id);
@@ -323,6 +339,18 @@ function DraftReview({
             <p className="mt-0.5 text-muted-foreground">
               Lékaři do IRIS: <span translate="no">{imported.practitioners.join(', ')}</span>
             </p>
+          )}
+          {imported.transcript && (
+            (imported.validation ?? []).length === 0 ? (
+              <p className="mt-1 text-emerald-800 dark:text-emerald-300">Přepis {imported.transcript} odpovídá souboru.</p>
+            ) : (
+              <div role="alert" className="mt-1 text-amber-800 dark:text-amber-300">
+                <p className="font-medium">Přepis {imported.transcript} nesedí se souborem:</p>
+                <ul className="list-disc pl-4">
+                  {imported.validation!.map((issue) => <li key={issue}>{issue}</li>)}
+                </ul>
+              </div>
+            )
           )}
         </div>
       )}
@@ -399,6 +427,16 @@ function DraftReview({
       {draft.missing_for_confirm && draft.missing_for_confirm.length > 0 && (
         <p role="alert" className="text-sm text-destructive">K zápisu chybí: {draft.missing_for_confirm.join(', ')}.</p>
       )}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">Náhled pro komisi</h3>
+          <Button type="button" variant="outline" size="sm" onClick={() => void refreshPreview()} isLoading={busy === 'preview'} disabled={busy !== null || !dirty}>
+            Uložit úpravy a obnovit náhled
+          </Button>
+        </div>
+        {dirty && <p className="text-xs text-muted-foreground">Úpravy ještě nejsou v náhledu, uložte je.</p>}
+        <DraftPreview draft={draft} />
+      </div>
       <details className="rounded-lg border border-border p-3">
         <summary className="cursor-pointer text-sm font-medium">Přidat další podklad</summary>
         <div className="mt-3 flex flex-col gap-2">

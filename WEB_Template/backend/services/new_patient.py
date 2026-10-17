@@ -473,6 +473,112 @@ def _refs(node) -> set[str]:
     return references(node)
 
 
+def _ref_keys(node, full_urls: dict[str, str]) -> set[str]:
+    """Odkazy `Type/id` včetně `urn:uuid:…` přes `fullUrl` bundlu."""
+    found = set()
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k == "reference" and isinstance(v, str):
+                if v in full_urls:
+                    found.add(full_urls[v])
+                else:
+                    parts = v.split("/_history/")[0].rstrip("/").split("/")
+                    if len(parts) >= 2:
+                        found.add(f"{parts[-2]}/{parts[-1]}")
+            else:
+                found |= _ref_keys(v, full_urls)
+    elif isinstance(node, list):
+        for v in node:
+            found |= _ref_keys(v, full_urls)
+    return found
+
+
+def split_by_patient(resources: list[dict], full_urls: dict[str, str] | None = None) -> list[list[dict]]:
+    """Soubor s víc pacienty → resources po pacientech (T-335). Patří k pacientovi, kdo na něj odkazuje přímo
+    nebo přes jiný jeho resource (Task → ServiceRequest); sdílené (lékař, organizace) dostane každý, kdo je odkazuje."""
+    full_urls = full_urls or {}
+    patients = [r for r in resources if r["resourceType"] == "Patient"]
+    if len(patients) <= 1:
+        return [resources]
+    key = lambda r: f"{r['resourceType']}/{r['id']}"  # noqa: E731
+    owner = {key(p): key(p) for p in patients}
+    refs = {key(r): _ref_keys(r, full_urls) for r in resources}
+    changed = True
+    while changed:                                   # vlastník přes řetěz odkazů (Observation → Patient, Task → SR → Patient)
+        changed = False
+        for r in resources:
+            k = key(r)
+            if k in owner or r["resourceType"] in SHARED_TYPES:
+                continue
+            owners = {owner[x] for x in refs[k] if x in owner}
+            if len(owners) == 1:
+                owner[k] = owners.pop()
+                changed = True
+            elif len(owners) > 1:
+                raise DraftError(f"{k} odkazuje na víc pacientů ({', '.join(sorted(owners))}), nejde ho rozdělit.")
+    orphans = [key(r) for r in resources if key(r) not in owner and r["resourceType"] not in SHARED_TYPES]
+    if orphans:
+        raise DraftError(f"Záznamy bez pacienta v souboru s víc pacienty: {', '.join(orphans[:5])}.")
+    groups = []
+    for p in patients:
+        mine = [r for r in resources if owner.get(key(r)) == key(p)]
+        needed = set().union(*(refs[key(r)] for r in mine))
+        shared, added = [], True
+        while added:                                 # sdílené i přes sebe (PractitionerRole → Practitioner)
+            added = False
+            for r in resources:
+                if r["resourceType"] in SHARED_TYPES and key(r) in needed and r not in shared:
+                    shared.append(r)
+                    needed |= refs[key(r)]
+                    added = True
+        groups.append(mine + shared)
+    return groups
+
+
+# ── přepis `.md` proti bundlu (T-335) ─────────────────────────────────────────
+_MD_RC = re.compile(r"\bR[ČC]\b\W{0,6}(\d{6}\s*/?\s*\d{3,4})")
+_MD_SEX = re.compile(r"Pohlaví:\**\s*(žena|muž)", re.I)
+_MD_YEAR = re.compile(r"rok narození:\**\s*(\d{4})", re.I)
+_MD_DG = re.compile(r"\[([A-Za-z0-9_.-]+)\]`?\s*\*\*([CDEIZ]\d{2}(?:\.\d{1,2})?)\*\*")
+_MD_QUESTION = re.compile(r"\*\*Otázka pro MDT\*\*\s*\|\s*\**(.+?)\**\s*\|")
+_MD_PATIENT = re.compile(r"Patient/(P\d{2}|[A-Za-z0-9-]+)`")
+
+
+def transcript_patient(md: str) -> str | None:
+    """ID pacienta, ke kterému přepis patří (`Patient/P01`, jinak `P01` v nadpisu)."""
+    m = _MD_PATIENT.search(md) or re.search(r"^#.*?\b(P\d{2})\b", md, re.M)
+    return m[1] if m else None
+
+
+def check_transcript(md: str, resources: list[dict]) -> tuple[list[str], str | None]:
+    """Přepis `.md` (formát datasetu) proti resources souboru s původními ID. Vrací (nesoulady, RČ z přepisu)."""
+    from services.fhir.ids import sanitize_id
+
+    issues = []
+    patient = next(r for r in resources if r["resourceType"] == "Patient")
+    if (m := _MD_SEX.search(md)) and patient.get("gender"):
+        sex = "female" if m[1].lower() == "žena" else "male"
+        if sex != patient["gender"]:
+            issues.append(f"Pohlaví: v přepisu {m[1].lower()}, v souboru {'žena' if patient['gender'] == 'female' else 'muž'}.")
+    if (m := _MD_YEAR.search(md)) and patient.get("birthDate") and m[1] != patient["birthDate"][:4]:
+        issues.append(f"Rok narození: v přepisu {m[1]}, v souboru {patient['birthDate'][:4]}.")
+    by_id = {sanitize_id(r["id"]): r for r in resources}
+    for rid, code in _MD_DG.findall(md):
+        condition = by_id.get(sanitize_id(rid))
+        if condition is None or condition["resourceType"] != "Condition":
+            issues.append(f"Diagnóza {rid} ({code}) z přepisu v souboru chybí.")
+        elif (_code(condition, "icd-10") or "").upper() != code.upper():
+            issues.append(f"Diagnóza {rid}: v přepisu {code}, v souboru {_code(condition, 'icd-10') or 'bez kódu'}.")
+    if m := _MD_QUESTION.search(md):
+        question = " ".join(m[1].split())
+        texts = [" ".join((c.get("text") or "").split()) for r in resources if r["resourceType"] == "ServiceRequest"
+                 for c in r.get("reasonCode") or []]
+        if texts and question not in texts:
+            issues.append("Otázka pro MDT v přepisu se liší od nominace v souboru.")
+    rc = _MD_RC.search(md)
+    return issues, re.sub(r"\s", "", rc[1]) if rc else None
+
+
 def _sr_notes(request: dict) -> dict[str, str]:
     out = {}
     for note in request.get("note") or []:

@@ -309,11 +309,13 @@ def test_json_upload_errors(board):
     assert 'pohlaví' in post(bundle, rc=man).json()['files']
     woman_other_year = make_rc(date(1970, 1, 5), female=True)
     assert 'Rok narození' in post(bundle, rc=woman_other_year).json()['files']
-    two = {'resourceType': 'Bundle', 'entry': [{'resource': {'resourceType': 'Patient', 'id': 'a', 'gender': 'male',
-                                                             'birthDate': '1950'}},
-                                               {'resource': {'resourceType': 'Patient', 'id': 'b', 'gender': 'male',
-                                                             'birthDate': '1950'}}]}
-    assert 'právě jednoho pacienta' in post(two).json()['files']
+    both = {'resourceType': 'Bundle', 'entry': [
+        {'resource': {'resourceType': 'Patient', 'id': 'a', 'gender': 'male', 'birthDate': '1950'}},
+        {'resource': {'resourceType': 'Patient', 'id': 'b', 'gender': 'male', 'birthDate': '1950'}},
+        {'resource': {'resourceType': 'Observation', 'id': 'o', 'subject': {'reference': 'Patient/a'},
+                      'focus': [{'reference': 'Patient/b'}]}}]}
+    assert 'víc pacientů' in post(both).json()['files']
+    assert 'právě jednoho pacienta' in post({'resourceType': 'Observation', 'id': 'x'}).json()['files']
     dangling = {'resourceType': 'Bundle', 'entry': [
         {'resource': {'resourceType': 'Patient', 'id': 'a', 'gender': 'male', 'birthDate': '1950'}},
         {'resource': {'resourceType': 'Condition', 'id': 'c', 'subject': {'reference': 'Patient/a'},
@@ -324,3 +326,76 @@ def test_json_upload_errors(board):
     r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'files': [broken]}, format='multipart')
     assert r.status_code == 400 and 'platný JSON' in r.json()['files']
     assert as_user('onkolog').post('/api/mdt/patient-drafts/', {'text': 'Dg.: C50.4'}, format='multipart').status_code == 400  # bez JSON je RČ povinné
+
+
+def _dataset_file(pid, kind):
+    from services.fhir import ingest
+    path = ingest.repo_dataset() / 'pacienti' / pid / f'{pid}_{kind}'
+    return path.read_bytes()
+
+
+def test_json_with_transcript_md_and_rc(board):
+    """DoD T-335: P01 bundle + přepis `.md` s RČ → návrh bez chyb validace, otázka, 3 diagnózy, TNM a ECOG z resources."""
+    rc = make_rc(date(1963, 2, 11), female=True)
+    md = _dataset_file('P01', 'pacient.md').decode('utf-8').replace(
+        '**rok narození:** 1963', f'**rok narození:** 1963 · **RČ:** {rc}', 1)
+    bundle = io.BytesIO(_dataset_file('P01', 'bundle.json'))
+    bundle.name = 'P01_bundle.json'
+    transcript = io.BytesIO(md.encode('utf-8'))
+    transcript.name = 'P01_pacient.md'
+    r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'files': [bundle, transcript]}, format='multipart')
+    assert r.status_code == 201, r.json()
+    _no_rc_value(r, rc)
+    d = r.json()
+    assert d['import']['transcript'] == 'P01_pacient.md' and d['import']['validation'] == []
+    assert d['patient']['rc_masked'].endswith(rc[-4:]) and d['documents'] == []          # přepis není podklad
+    f = d['fields']
+    new = d['patient_id']
+    assert d['import']['renamed_from'] == 'P01' and new == 'P07'
+    assert [x['code'] for x in f['diagnoses']] == ['C50.4', 'C78.7', 'C79.5']
+    assert f['question']['citation'] == f'{new}-zad01' and f['tnm'] and f['ecog']['value'] == 1
+
+    changed = md.replace('**C78.7**', '**C78.8**', 1)
+    transcript = io.BytesIO(changed.encode('utf-8'))
+    transcript.name = 'P01_pacient.md'
+    bundle = io.BytesIO(_dataset_file('P01', 'bundle.json'))
+    bundle.name = 'P01_bundle.json'
+    rc2 = make_rc(date(1963, 3, 12), female=True)
+    other = as_user('onkolog').post('/api/mdt/patient-drafts/', {'rc': rc2, 'files': [bundle, transcript]}, format='multipart')
+    assert other.status_code == 201
+    assert any('C78.8' in issue for issue in other.json()['import']['validation'])
+
+
+def test_json_with_more_patients_creates_draft_for_each(board):
+    """Soubor se 2 pacienty → návrh pro každého; sdílené lékaře a organizaci dostane každý, kdo je odkazuje."""
+    entries = _dataset_bundle('P10')['entry'] + _dataset_bundle('P11')['entry']
+    seen, unique = set(), []
+    for e in entries:                                   # ORG-FN je v obou bundlech
+        k = (e['resource']['resourceType'], e['resource']['id'])
+        if k not in seen:
+            seen.add(k)
+            unique.append(e)
+    r = as_user('onkolog').post('/api/mdt/patient-drafts/', {
+        'files': [_json_file({'resourceType': 'Bundle', 'type': 'collection', 'entry': unique}, 'dva.json')]}, format='multipart')
+    assert r.status_code == 201, r.json()
+    batch = r.json()['batch']
+    assert [(b['patient_id'], b['renamed_from']) for b in batch] == [('P07', 'P10'), ('P08', 'P11')]
+    second = as_user('onkolog').get(f"/api/mdt/patient-drafts/{batch[1]['id']}/").json()
+    assert second['fields']['diagnoses'][0]['code'] == 'C21.1' and second['import']['practitioners']
+    assert {x['patient_id'] for x in as_user('onkolog').get('/api/mdt/patient-drafts/').json()} >= {'P07', 'P08'}
+    rc = make_rc(date(1960, 1, 1))
+    mixed = as_user('onkolog').post('/api/mdt/patient-drafts/', {
+        'rc': rc, 'files': [_json_file({'resourceType': 'Bundle', 'entry': unique}, 'dva.json')]}, format='multipart')
+    assert mixed.status_code == 400 and '2 pacienty' in mixed.json()['files']
+
+
+@pytest.mark.parametrize('name, patients', [('dva_pacienti_P10_P11.json', 2), ('obecny_export_uuid.json', 1)])
+def test_import_examples_stay_valid(board, name, patients):
+    """Ukázkové soubory v data/import_ukazky jdou naimportovat (README tamtéž)."""
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[4] / 'data' / 'import_ukazky' / name
+    f = io.BytesIO(path.read_bytes())
+    f.name = name
+    r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'files': [f]}, format='multipart')
+    assert r.status_code == 201, r.json()
+    assert len(r.json().get('batch') or [r.json()]) == patients and r.json()['missing_for_confirm'] == []

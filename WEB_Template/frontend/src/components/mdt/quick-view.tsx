@@ -111,6 +111,31 @@ export function fixtureQuickViewSources(loadSource: SourceLoader): QuickViewSour
   };
 }
 
+/**
+ * Zdroje přehledu z hotových dat bez dotazů na API: náhled návrhu nového pacienta (T-323), který ještě
+ * není v IRIS. Semafor bere z možností léčby podkladu (`options`), laboratorní řady nejsou.
+ */
+export function staticQuickViewSources(input: {
+  patientId: string;
+  brief: StoredBrief | null;
+  options: { id: string; title: string; guideline_citations: string[]; compatibility: ProcedureCompatibility['compatibility'] }[];
+  intake: IntakePrefill;
+  template: CaseTemplate | null;
+  loadSource: SourceLoader;
+}): QuickViewSources {
+  return {
+    patientId: input.patientId,
+    caseId: null,
+    session: done(null),
+    brief: done(input.brief),
+    compatibility: done(input.options.map((o) => ({ id: o.id, title: o.title, guideline_citations: o.guideline_citations, compatibility: o.compatibility }))),
+    intake: done(input.intake),
+    observations: done([]),
+    template: done(input.template),
+    loadSource: input.loadSource,
+  };
+}
+
 const INTENT_LABEL: Record<'C' | 'P', string> = { C: 'kurativní', P: 'paliativní' };
 
 /** Hlavička přehledu z agendy boardu, šablony údajů a podkladu (co je k dispozici dřív). */

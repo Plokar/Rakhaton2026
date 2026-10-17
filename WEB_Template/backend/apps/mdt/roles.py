@@ -14,6 +14,9 @@ DEMO_USERS = {
     'predseda': (ADMIN, 'oncologist', 'Předseda komise (klinický onkolog)'),
     'onkolog': (DOCTOR, 'oncologist', 'Klinický onkolog'),
     'pneumolog': (DOCTOR, 'pulmonologist', 'Pneumolog'),
+    # další zadávající lékaři pro nové pacienty a import víc pacientů (T-335)
+    'onkolog-git': (DOCTOR, 'oncologist', 'Klinický onkolog (GIT)'),
+    'paliatr': (DOCTOR, 'palliative_care', 'Lékař paliativní péče'),
     'chirurg': (VIEWER, 'surgeon', 'Chirurg'),
     'radiolog': (VIEWER, 'radiologist', 'Radiolog'),
     'patolog': (VIEWER, 'pathologist', 'Patolog'),

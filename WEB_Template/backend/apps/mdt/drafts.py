@@ -62,7 +62,8 @@ def _read_inputs(request, start: int, patient_id: str, provider) -> list[dict]:
     if text:
         docs.append(np.make_document(patient_id, number, text, 'vložený text'))
         number += 1
-    files = [f for f in request.FILES.getlist('files') if not np.is_json_upload(f.name or '', f.content_type)]
+    jsons, transcripts = _uploads(request)           # FHIR JSON a jeho přepis .md nejsou podklady (T-335)
+    files = [f for f in request.FILES.getlist('files') if f not in jsons and f not in transcripts]
     if len(files) > MAX_FILES:
         raise ValidationError({'files': f'Najednou nejvýš {MAX_FILES} souborů.'})
     for f in files:
@@ -113,14 +114,17 @@ def _extract_values(d: PatientDraft, docs: list[dict]) -> None:
     ai.update(used=True, reason=None)
 
 
-def _json_upload(request):
-    """FHIR JSON mezi soubory (T-335): nejvýš jeden soubor = jeden pacient."""
-    files = [f for f in request.FILES.getlist('files') if np.is_json_upload(f.name or '', f.content_type)]
-    if len(files) > 1:
-        raise ValidationError({'files': 'Nahrajte jeden soubor FHIR JSON (jeden pacient); další pacienty po jednom.'})
-    if files and files[0].size > MAX_FILE_BYTES:
-        raise ValidationError({'files': f'{files[0].name}: soubor je větší než 20 MB.'})
-    return files[0] if files else None
+def _uploads(request) -> tuple[list, list]:
+    """FHIR JSON a přepisy `.md` k nim (T-335). Bez JSON jsou `.md` obyčejné podklady (`_read_inputs`)."""
+    files = request.FILES.getlist('files')
+    jsons = [f for f in files if np.is_json_upload(f.name or '', f.content_type)]
+    mds = [f for f in files if (f.name or '').lower().endswith('.md')] if jsons else []
+    if len(jsons) + len(mds) > MAX_FILES:
+        raise ValidationError({'files': f'Najednou nejvýš {MAX_FILES} souborů.'})
+    for f in jsons + mds:
+        if f.size > MAX_FILE_BYTES:
+            raise ValidationError({'files': f'{f.name}: soubor je větší než 20 MB.'})
+    return jsons, mds
 
 
 def _patient_info(d: PatientDraft) -> dict:
@@ -188,43 +192,90 @@ def draft_list(request):
             drafts = drafts.filter(created_by=request.user)
         return Response([{'id': d.pk, 'patient_id': d.patient_fhir_id, 'documents': len(d.content.get('documents', [])),
                           'created_at': d.created_at, 'updated_at': d.updated_at} for d in drafts])
-    upload = _json_upload(request)
+    jsons, mds = _uploads(request)
     raw_rc = str(request.data.get('rc') or '').strip()
     rc = None
-    if raw_rc or not upload:                     # u FHIR JSON je RČ nepovinné (dataset ho nemá), jinak povinné
+    if raw_rc or not jsons:                      # u FHIR JSON je RČ nepovinné (dataset ho nemá), jinak povinné
         try:
             rc = rc_module.parse(raw_rc)
         except rc_module.RcError as e:
             raise ValidationError({'rc': str(e)}) from None
+    imports = _parse_imports(jsons, mds) if jsons else [None]
+    if len(imports) > 1 and (rc or request.data.get('text') or [f for f in request.FILES.getlist('files')
+                                                                 if f not in jsons and f not in mds]):
+        raise ValidationError({'files': f'Soubory obsahují {len(imports)} pacienty: RČ, text a PDF přidejte až ke '
+                                        'konkrétnímu návrhu (RČ může být v přepisu .md).'})
     patients = fhir.search('Patient')
-    existing = rc and np.patient_with_rc(patients, rc.value)
-    if existing:
-        return Response({'detail': 'Pacient s tímto rodným číslem už v IRIS je.', 'patient_id': existing}, status=409)
-    open_draft = rc and PatientDraft.objects.filter(status='draft', rc=rc.value).first()
-    if open_draft:
-        return Response({'detail': 'Pro toto rodné číslo už rozpracovaný návrh je.', 'draft_id': open_draft.pk},
-                        status=409)
+    for item in imports:
+        candidate = rc or (item and item['rc'])
+        existing = candidate and np.patient_with_rc(patients, candidate.value)
+        if existing:
+            return Response({'detail': 'Pacient s tímto rodným číslem už v IRIS je.', 'patient_id': existing}, status=409)
+        open_draft = candidate and PatientDraft.objects.filter(status='draft', rc=candidate.value).first()
+        if open_draft:
+            return Response({'detail': 'Pro toto rodné číslo už rozpracovaný návrh je.', 'draft_id': open_draft.pk},
+                            status=409)
+    synthetic = str(request.data.get('synthetic', '')).lower() in ('1', 'true', 'yes')
+    session = _session(request.data.get('session'))
+    drafts = []
     with transaction.atomic():
         taken = [p['id'] for p in patients] + list(PatientDraft.objects.filter(status='draft')
                                                    .values_list('patient_fhir_id', flat=True))
-        d = PatientDraft(created_by=request.user, patient_fhir_id=np.next_patient_id(taken), rc=rc.value if rc else '',
-                         synthetic=str(request.data.get('synthetic', '')).lower() in ('1', 'true', 'yes'),
-                         session=_session(request.data.get('session')), content={})
-        content = {}
-        if upload:
-            content = _import_json(d, upload, rc)
-        docs = _read_inputs(request, 1, d.patient_fhir_id, _ai_provider(d))
-        fields = np.prefill(docs, content.get('fields'), [])
-        d.content = {**content, 'documents': docs, 'fields': fields, 'edited': [], 'values': [], 'rejected': [], 'ai': {}}
-        _extract_values(d, docs)
-        d.save()
-    return _response(d, status=201)
+        for item in imports:
+            patient_rc = rc or (item and item['rc'])
+            d = PatientDraft(created_by=request.user, patient_fhir_id=np.next_patient_id(taken),
+                             rc=patient_rc.value if patient_rc else '', synthetic=synthetic, session=session, content={})
+            taken.append(d.patient_fhir_id)
+            content = _import_json(d, item, patient_rc) if item else {}
+            docs = _read_inputs(request, 1, d.patient_fhir_id, _ai_provider(d)) if len(imports) == 1 else []
+            fields = np.prefill(docs, content.get('fields'), [])
+            d.content = {**content, 'documents': docs, 'fields': fields, 'edited': [], 'values': [], 'rejected': [],
+                         'ai': {}}
+            _extract_values(d, docs)
+            d.save()
+            drafts.append(d)
+    response = _response(drafts[0], status=201)
+    if len(drafts) > 1:                          # víc pacientů: návrh prvního + seznam všech (T-335)
+        response.data['batch'] = [{'id': d.pk, 'patient_id': d.patient_fhir_id,
+                                   'file': d.content['import']['file'], 'renamed_from': d.content['import']['renamed_from']}
+                                  for d in drafts]
+    return response
 
 
-def _import_json(d: PatientDraft, upload, rc) -> dict:
+def _parse_imports(jsons, mds) -> list[dict]:
+    """Soubory FHIR JSON → pacienti (soubor může mít víc pacientů) s přepisem `.md` a RČ z přepisu."""
+    transcripts = {}
+    for f in mds:
+        text = f.read().decode('utf-8-sig', errors='replace')
+        transcripts[np.transcript_patient(text) or f.name] = (f.name, text)
+    out = []
+    for f in jsons:
+        name = f.name or 'soubor.json'
+        try:
+            resources, full_urls, tags = np.fhir_resources(f.read(), name)
+            groups = np.split_by_patient(resources, full_urls)
+        except np.DraftError as e:
+            raise ValidationError({'files': str(e)}) from None
+        for group in groups:
+            patient = next((r for r in group if r['resourceType'] == 'Patient'), None)
+            transcript = transcripts.pop(patient['id'], None) if patient else None
+            if transcript is None and len(jsons) == 1 and len(groups) == 1 and len(transcripts) == 1:
+                transcript = transcripts.popitem()[1]          # jeden soubor, jeden přepis: patří k sobě
+            validation, md_rc = (np.check_transcript(transcript[1], group) if transcript and patient else ([], None))
+            try:
+                rc = rc_module.parse(md_rc) if md_rc else None
+            except rc_module.RcError as e:
+                raise ValidationError({'files': f'{transcript[0]}: RČ v přepisu je neplatné ({e}).'}) from None
+            out.append({'file': name, 'resources': group, 'full_urls': full_urls, 'tags': tags, 'rc': rc,
+                        'transcript': transcript[0] if transcript else None, 'validation': validation})
+    if transcripts:
+        raise ValidationError({'files': f'Přepis {", ".join(n for n, _ in transcripts.values())} nepatří k žádnému '
+                                        'pacientovi v nahraných souborech FHIR JSON.'})
+    return out
+
+
+def _import_json(d: PatientDraft, item: dict, rc) -> dict:
     """FHIR JSON → `bundle` (sanitizovaný, přečíslovaný na `d.patient_fhir_id`) a nominace ze strukturovaných dat."""
-    name = upload.name or 'soubor.json'
-
     def in_iris(rtype: str, rid: str) -> bool:
         try:
             return bool(fhir.read(rtype, rid))
@@ -232,14 +283,15 @@ def _import_json(d: PatientDraft, upload, rc) -> dict:
             return False
 
     try:
-        resources, full_urls, tags = np.fhir_resources(upload.read(), name)
-        bundle, info = np.import_bundle(resources, d.patient_fhir_id, rc, d.synthetic, full_urls, tags, in_iris)
+        bundle, info = np.import_bundle(item['resources'], d.patient_fhir_id, rc, d.synthetic, item['full_urls'],
+                                        item['tags'], in_iris)
     except np.DraftError as e:
-        raise ValidationError({'files': str(e)}) from None
+        raise ValidationError({'files': f"{item['file']}: {e}"}) from None
     d.synthetic = info['synthetic']
     fields, request_id = np.prefill_from_resources(bundle)
     return {'bundle': bundle, 'service_request_id': request_id, 'fields': fields,
-            'import': {**info, 'file': name, 'total': len(bundle)}}
+            'import': {**info, 'file': item['file'], 'total': len(bundle), 'transcript': item['transcript'],
+                       'validation': item['validation']}}
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -291,6 +343,8 @@ def draft_documents(request, draft_id):
     d = _get_draft(request, draft_id)
     if d.status != 'draft':
         return Response({'detail': 'Návrh je potvrzený, další zprávy přidejte přes vložení zprávy (BON-7).'}, status=409)
+    if _uploads(request)[0]:
+        raise ValidationError({'files': 'FHIR JSON jde nahrát jen při založení nového pacienta.'})
     numbers = [int(x['id'].rsplit('imp', 1)[1]) for x in d.content.get('documents', [])]
     docs = _read_inputs(request, max(numbers, default=0) + 1, d.patient_fhir_id, _ai_provider(d))
     if not docs:

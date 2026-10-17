@@ -23,6 +23,7 @@ export function ClaimItem({ claim }: { claim: Claim }) {
         </span>
         {claim.text}
         <Citations ids={claim.citations} />
+        <Confidence value={claim.confidence} />
       </p>
     );
   }
@@ -30,7 +31,25 @@ export function ClaimItem({ claim }: { claim: Claim }) {
     <p className="text-sm leading-relaxed">
       {claim.text}
       <Citations ids={claim.citations} />
+      <Confidence value={claim.confidence} />
     </p>
+  );
+}
+
+/**
+ * Míra jistoty (BONUS zadání §3.3, T-332): sémantická shoda tvrzení s citovaným textem z grounding validátoru.
+ * U strukturovaných dat (laboratoř, TNM) chybí, ta se ověřují čísly a daty přímo ve zdroji.
+ */
+function Confidence({ value }: { value?: number | null }) {
+  if (value === undefined || value === null) return null;
+  const percent = Math.round(value * 100);
+  return (
+    <span
+      className="ml-1.5 inline-flex items-center rounded bg-muted px-1 align-baseline text-[11px] tabular-nums text-muted-foreground"
+      title="Míra jistoty: sémantická shoda tvrzení s citovaným textem (grounding validátor, ne odhad AI)"
+    >
+      shoda {percent} %
+    </span>
   );
 }
 

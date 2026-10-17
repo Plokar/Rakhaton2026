@@ -668,11 +668,14 @@ def case_decision(request, cid):
         return Response(decision.content)
     _require_case_edit(request, case)
     if decision and decision.status == 'confirmed':
-        return Response({'detail': 'Závěr je potvrzený a zapsaný v IRIS, nelze ho měnit.'}, status=409)
+        return Response({'detail': 'Závěr je potvrzený a zamčený. Změna jde jen jako nová verze (předseda).'}, status=409)
+    # verzi a auditní stopu drží server, klient je nepřepíše (T-332)
+    kept = {k: decision.content.get(k) for k in ('version', 'revision_of', 'history')} if decision else {}
     try:
         content = DecisionSchema.model_validate(
             {**request.data, 'case_id': str(case.pk), 'status': 'draft', 'confirmed_by': None,
-             'confirmed_at': None, 'fhir_ids': None}).model_dump(mode='json')
+             'confirmed_at': None, 'fhir_ids': None, 'version': kept.get('version') or 1,
+             'revision_of': kept.get('revision_of'), 'history': kept.get('history') or []}).model_dump(mode='json')
     except SchemaError as e:
         return Response({'detail': 'Neplatný závěr (ARCH §8.4).', 'errors': e.errors(include_url=False)}, status=400)
     decision, _ = Decision.objects.update_or_create(case=case, defaults={'content': content})
@@ -700,7 +703,8 @@ def case_decision_confirm(request, cid):
         try:
             ids = writeback.confirm_decision(
                 decision.content, patient_id=case.patient_fhir_id, service_request_id=case.service_request_fhir_id,
-                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now)
+                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now,
+                mdt_id=decision.content.get('revision_of'))
         except (FhirError, LookupError) as e:
             return Response({'detail': f'IRIS zápis odmítl: {e}', 'outcome': getattr(e, 'outcome', None)}, status=502)
         decision.content = {**decision.content, 'status': 'confirmed', 'confirmed_by': confirmed_by,
@@ -710,6 +714,98 @@ def case_decision_confirm(request, cid):
         case.status = 'confirmed'
         case.save(update_fields=['status', 'updated_at'])
     return Response(decision.content)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_decision_revise(request, cid):
+    """Nová verze potvrzeného závěru (BONUS C, T-332): `{reason}` (předseda). Potvrzená verze přejde do `history`
+    s důvodem a autorem změny, závěr je znovu draft; po potvrzení se zapíše do stejné `Composition` (IRIS drží historii)."""
+    _require(request, roles.ADMIN)
+    reason = str(request.data.get('reason') or '').strip()
+    if not reason:
+        raise ValidationError({'reason': 'Uveďte, proč se potvrzený závěr mění (auditní stopa).'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    with transaction.atomic():
+        decision = get_object_or_404(Decision.objects.select_for_update(), case=case)
+        if decision.status != 'confirmed':
+            return Response({'detail': 'Novou verzi jde založit jen z potvrzeného závěru.'}, status=409)
+        content = decision.content
+        version = content.get('version') or 1
+        entry = {'version': version, 'composition': (content.get('fhir_ids') or {}).get('composition'),
+                 'confirmed_by': content.get('confirmed_by'), 'confirmed_at': content.get('confirmed_at'),
+                 'revised_by': {'user_id': str(request.user.pk),
+                                'name': request.user.get_full_name() or request.user.username},
+                 'revised_at': timezone.localtime().isoformat(), 'reason': reason[:500]}
+        decision.content = DecisionSchema.model_validate({
+            **content, 'status': 'draft', 'confirmed_by': None, 'confirmed_at': None, 'fhir_ids': None,
+            'patient_summary': None, 'gp_report': None, 'version': version + 1,
+            'revision_of': entry['composition'], 'history': [*(content.get('history') or []), entry],
+        }).model_dump(mode='json')
+        decision.status, decision.confirmed_by, decision.confirmed_at, decision.fhir_ids = 'draft', None, None, {}
+        decision.save()
+        case.status = 'decided'
+        case.save(update_fields=['status', 'updated_at'])
+    return Response(decision.content)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_gp_report(request, cid):
+    """Zpráva pro praktického lékaře (T-332): vzniká spolu se shrnutím pro pacienta z potvrzeného závěru."""
+    decision = Decision.objects.filter(case_id=cid).first()
+    report = (decision.content if decision else {}).get('gp_report')
+    return Response(report) if report else Response({'detail': 'Zpráva pro praktického lékaře ještě není.'}, status=404)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_ask(request, cid):
+    """Otázka nad případem (BONUS Q&A, T-332): `{question}` → odpověď jen z dat pacienta v IRIS, s citacemi."""
+    from services.ai.brief import _llm_call_log
+    from services.ai.case_qa import MAX_QUESTION, answer_question
+    from services.ai.context_builder import load_resources
+    from services.ai_service import provider_for_patient
+
+    question = str(request.data.get('question') or '').strip()
+    if not question:
+        raise ValidationError({'question': 'Napište otázku.'})
+    if len(question) > MAX_QUESTION:
+        raise ValidationError({'question': f'Otázka může mít nejvýš {MAX_QUESTION} znaků.'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    try:
+        resources, studies = load_resources(case.patient_fhir_id)
+    except FhirError as e:
+        return Response({'detail': f'Data pacienta z IRIS se nepodařilo načíst: {e}'}, status=502)
+    return Response(answer_question(case.patient_fhir_id, question, resources, provider_for_patient(resources),
+                                    _llm_call_log, studies=studies))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_similar(request, cid):
+    """Podobné případy (BONUS B2, T-332): předchozí závěry MDT jiných pacientů s obdobnou diagnózou, anonymizovaně."""
+    from services.ai.similar_cases import similar_cases
+
+    case = get_object_or_404(MdtCase, pk=cid)
+    try:
+        return Response(similar_cases(case.patient_fhir_id))
+    except FhirError as e:
+        return Response({'detail': f'Záznamy z IRIS se nepodařilo načíst: {e}'}, status=502)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rule_catalog(request):
+    """Katalog pravidel varovných signálů pro nastavení podkladu (T-332): `[{id, title, source}]`."""
+    from services.rules.red_flags import RULE_CATALOG
+
+    return Response([{'id': rid, 'title': title, 'source': source or None} for rid, (title, source) in RULE_CATALOG.items()])
 
 
 def _attachment(content, content_type: str, filename: str) -> HttpResponse:

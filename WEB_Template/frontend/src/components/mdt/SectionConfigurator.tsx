@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { ArrowDown, ArrowUp, GripVertical, TriangleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { BriefConfig, DetailLevel, EvidenceId, MdtCase, RoleId, SectionId } from '@/types/mdt';
+import type { BriefConfig, DetailLevel, EvidenceId, MdtCase, RoleId, RuleInfo, SectionId } from '@/types/mdt';
 import { Citations } from './citations';
 import { ROLE_META } from './roles';
 
@@ -22,6 +22,7 @@ export const SECTION_LABEL: Record<SectionId, string> = {
 const DETAIL_LABEL: Record<DetailLevel, string> = { brief: 'stručně', standard: 'standardně', detailed: 'podrobně' };
 const ROLES: RoleId[] = [
   'oncologist', 'surgeon', 'radiologist', 'pathologist', 'radiation_oncologist', 'pulmonologist', 'cardiologist', 'patient',
+  'nuclear_medicine', 'palliative_care', 'geriatrician', 'geneticist', 'coordinator',
 ];
 
 type Requirement = { role: RoleId; source: EvidenceId; reason: string };
@@ -56,11 +57,14 @@ export function SectionConfigurator({
   onChange,
   readOnly,
   requirements,
+  rules = [],
 }: {
   config: BriefConfig;
   onChange: (c: BriefConfig) => void;
   readOnly: boolean;
   requirements: Requirement[];
+  /** Katalog pravidel varovných signálů (GET /api/mdt/rules/, T-332). */
+  rules?: RuleInfo[];
 }) {
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const sections = [...config.sections].sort((a, b) => a.order - b.order);
@@ -189,6 +193,44 @@ export function SectionConfigurator({
           </ul>
         )}
       </div>
+
+      {rules.length > 0 && (
+        <fieldset>
+          <legend className="mb-1 text-sm font-semibold">Pravidla varovných signálů</legend>
+          <p className="mb-2 text-xs text-muted-foreground">
+            Výchozí jsou zapnutá všechna. Vypnuté pravidlo se v podkladu boardu nevyhodnotí a podklad to uvede.
+          </p>
+          <ul className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
+            {rules.map((rule) => {
+              const enabled = !(config.disabled_rules ?? []).includes(rule.id);
+              return (
+                <li key={rule.id}>
+                  <label className={cn('flex items-start gap-2 text-sm', !enabled && 'text-muted-foreground')}>
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={enabled}
+                      disabled={readOnly}
+                      onChange={(e) =>
+                        onChange({
+                          ...config,
+                          disabled_rules: e.target.checked
+                            ? (config.disabled_rules ?? []).filter((x) => x !== rule.id)
+                            : [...(config.disabled_rules ?? []), rule.id],
+                        })
+                      }
+                    />
+                    <span className="min-w-0">
+                      {rule.title} <span translate="no" className="whitespace-nowrap text-xs text-muted-foreground">{rule.id}</span>
+                      {rule.source && <Citations ids={[rule.source]} />}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </fieldset>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-3">
         <label className="flex flex-col gap-1.5 text-[13px] font-medium">

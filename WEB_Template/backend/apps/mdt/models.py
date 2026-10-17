@@ -16,11 +16,14 @@ class BriefConfig(models.Model):
     detail_level = models.CharField(max_length=10, choices=DETAIL_LEVELS, default='standard')
     language = models.CharField(max_length=2, default='cs')
     hide_unverified = models.BooleanField(default=False)
+    # Pravidla varovných signálů vypnutá pro board (T-332, `red_flags.RULE_CATALOG`); výchozí jsou zapnutá všechna.
+    disabled_rules = models.JSONField(default=list, blank=True)
 
     def snapshot(self) -> dict:
         return {
             'id': str(self.pk), 'name': self.name, 'sections': self.sections, 'roles_present': self.roles_present,
             'detail_level': self.detail_level, 'language': self.language, 'hide_unverified': self.hide_unverified,
+            'disabled_rules': self.disabled_rules,
         }
 
     def __str__(self):

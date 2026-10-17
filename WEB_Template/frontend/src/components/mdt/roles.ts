@@ -33,6 +33,27 @@ export const ROLE_META: Record<RoleId, { label: string; className: string }> = {
     label: 'Kardiolog',
     className: 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-700/60',
   },
+  // další role (BONUS zadání B, T-332)
+  nuclear_medicine: {
+    label: 'Nukleární medicína',
+    className: 'bg-indigo-100 text-indigo-900 border-indigo-300 dark:bg-indigo-950/70 dark:text-indigo-200 dark:border-indigo-700/70',
+  },
+  palliative_care: {
+    label: 'Paliativní péče',
+    className: 'bg-pink-100 text-pink-900 border-pink-300 dark:bg-pink-950/60 dark:text-pink-200 dark:border-pink-700/60',
+  },
+  geriatrician: {
+    label: 'Geriatr',
+    className: 'bg-zinc-200/80 text-zinc-900 border-zinc-400/70 dark:bg-zinc-800/80 dark:text-zinc-200 dark:border-zinc-600',
+  },
+  geneticist: {
+    label: 'Klinický genetik',
+    className: 'bg-fuchsia-100 text-fuchsia-900 border-fuchsia-300 dark:bg-fuchsia-950/60 dark:text-fuchsia-200 dark:border-fuchsia-700/60',
+  },
+  coordinator: {
+    label: 'Koordinátor',
+    className: 'bg-neutral-200/80 text-neutral-900 border-neutral-400/70 dark:bg-neutral-800/80 dark:text-neutral-200 dark:border-neutral-600',
+  },
   patient: {
     label: 'Hlas pacienta',
     className: 'bg-amber-100/80 text-amber-950 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700/60',

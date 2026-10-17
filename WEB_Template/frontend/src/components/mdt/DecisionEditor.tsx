@@ -45,6 +45,7 @@ const TASK_STATUS_LABEL: Record<Decision['tasks'][number]['status'], string> = {
 };
 const ATTENDEE_ROLES: (RoleId | 'chair')[] = [
   'chair', 'oncologist', 'surgeon', 'radiologist', 'pathologist', 'radiation_oncologist', 'pulmonologist', 'cardiologist',
+  'nuclear_medicine', 'palliative_care', 'geriatrician', 'geneticist', 'coordinator',
 ];
 const roleLabel = (r: RoleId | 'chair') => (r === 'chair' ? 'Předseda' : ROLE_META[r].label);
 

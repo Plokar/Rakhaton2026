@@ -91,6 +91,64 @@ cardiologist:
     - {group: staging, pattern: "LVEF"}
     - {group: diagnosis, pattern: "Komorbidita: I"}
 
+# Další role (BONUS zadání B, T-332): bez otázky posouzení, jen pohled odbornosti s citacemi.
+nuclear_medicine:
+  title: "Nukleární medicína"
+  focus: >-
+    výsledky PET-CT a scintigrafií (SUVmax, nová ložiska, metabolická odpověď), kostní scintigrafie, co z
+    nukleárních vyšetření chybí pro rozhodnutí komise
+  question: {}
+  modalities: []
+  evidence:
+    - {group: imaging, pattern: "PET|scintigraf|SUV", last: 3}
+
+palliative_care:
+  title: "Paliativní a podpůrná péče"
+  focus: >-
+    kontrola symptomů (bolest, dušnost, únava, nutriční stav), vývoj PS, symptomová zátěž podle pacienta;
+    upozorni na kombinaci zhoršeného PS, vysoké symptomové zátěže a progrese (včasné zapojení paliativního týmu, OBC-2.1)
+  question: {}
+  modalities: []
+  evidence:
+    - {group: performance, pattern: "^ECOG", last: 2}
+    - {group: performance, pattern: "^Dotazník pacienta", last: 1}
+    - {group: performance, pattern: "hmotnost", last: 2}
+
+geriatrician:
+  title: "Geriatrická onkologie"
+  focus: >-
+    věk, screening křehkosti (G8 u věku od 70 let, OBC-2.2), polypragmazie (počet léků a doplňků),
+    soběstačnost a sociální zázemí jako vstup pro intenzitu léčby
+  question: {}
+  modalities: []
+  evidence:
+    - {group: patient, pattern: "let|věk"}
+    - {group: treatment, pattern: "medikac|Medikac|lék", last: 6}
+    - {group: performance, pattern: "^Dotazník pacienta", last: 1}
+
+geneticist:
+  title: "Klinická genetika"
+  focus: >-
+    indikace genetického poradenství a testování zárodečných mutací (BRCA1/2, Lynchův syndrom) podle diagnózy,
+    věku a rodinné anamnézy; MMR/MSI a jejich důsledky (OBC-2.4, KRC-1.2, PRS-1.4)
+  question: {}
+  modalities: []
+  evidence:
+    - {group: staging, pattern: "MMR|MSI|BRCA|zárodeč|germin"}
+    - {group: diagnosis, pattern: "rodin"}
+    - {group: document, pattern: "rodinn|genetick", last: 3}
+
+coordinator:
+  title: "Koordinátor / onkologická sestra"
+  focus: >-
+    logistika a termíny vyšetření, kontaktní osoba pro pacienta, stav realizace předchozích závěrů MDT
+    (co bylo doporučeno a zda se to stalo)
+  question: {}
+  modalities: []
+  evidence:
+    - {group: mdt, pattern: ".", last: 3}
+    - {group: patient, pattern: "MDT|termín|Termín|Nominace|nominace", last: 2}
+
 patient:
   title: "Hlas pacienta"
   focus: >-

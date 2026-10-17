@@ -23,7 +23,9 @@ MODALITIES = {'chirurgie': 'Chirurgie', 'chemoterapie': 'Chemoterapie', 'rt': 'R
               'diagnostika': 'Diagnostika', 'sledovani': 'Sledování'}
 ROLES_CS = {'chair': 'předseda komise', 'surgeon': 'chirurg', 'oncologist': 'klinický onkolog',
             'radiation_oncologist': 'radiační onkolog', 'radiologist': 'radiolog', 'pathologist': 'patolog',
-            'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient'}
+            'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient',
+            'nuclear_medicine': 'nukleární medicína', 'palliative_care': 'paliativní péče',
+            'geriatrician': 'geriatr', 'geneticist': 'klinický genetik', 'coordinator': 'koordinátor'}
 SEVERITY = {'high': 'high', 'moderate': 'moderate', 'low': 'low'}
 LIGHTS = {'green': 'nevylučuje', 'orange': 'pozor', 'red': 'vylučuje', 'grey': 'nelze posoudit', 'skipped': 'nehodnoceno'}
 RE_MDT = 'Plánované re-MDT'
@@ -231,7 +233,9 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
     sources = [v['source'] for v in s.values() if isinstance(v, dict) and 'source' in v]
     composition = {
         'resourceType': 'Composition', 'id': mdt_id,
-        'identifier': {'system': f'{BASE}/sid/mdt-zaznam', 'value': mdt_id}, 'status': 'final',
+        # nová verze potvrzeného záznamu (T-332) je „amended“, IRIS drží předchozí verzi v historii
+        'identifier': {'system': f'{BASE}/sid/mdt-zaznam', 'value': mdt_id},
+        'status': 'amended' if decision.get('version', 1) > 1 else 'final',
         'type': _coding('mdt-typ-zaznamu', 'mdt-zaznam', 'Záznam MDT'),
         'category': [_coding('mdt-typ-projednani', decision['mdt_type'], MDT_TYPES[decision['mdt_type']]),
                      {'text': f'Zaměření MDT: {focus}'}],
@@ -283,11 +287,12 @@ def _participant(code: str, display: str) -> dict:
 
 
 def confirm_decision(decision: dict, *, patient_id: str, service_request_id: str, mdt_date: datetime,
-                     confirmed_by: dict, red_flags: dict[str, dict], now: datetime) -> dict:
-    """Jeden transaction Bundle do IRIS. Vrací `fhir_ids`; při chybě `FhirError` a nic se nezapíše (transaction)."""
+                     confirmed_by: dict, red_flags: dict[str, dict], now: datetime, mdt_id: str | None = None) -> dict:
+    """Jeden transaction Bundle do IRIS. Vrací `fhir_ids`; při chybě `FhirError` a nic se nezapíše (transaction).
+    `mdt_id` = nová verze už potvrzeného záznamu (T-332): stejné ID, IRIS uchová předchozí verzi v historii."""
     bundle, ids = build_decision_bundle(
         decision, patient_id=patient_id, service_request=fhir.read('ServiceRequest', service_request_id),
-        task=nomination_task(patient_id, service_request_id), mdt_id=next_mdt_id(patient_id), mdt_date=mdt_date,
+        task=nomination_task(patient_id, service_request_id), mdt_id=mdt_id or next_mdt_id(patient_id), mdt_date=mdt_date,
         confirmed_by=confirmed_by, red_flags=red_flags, now=now,
     )
     fhir.transaction(bundle)

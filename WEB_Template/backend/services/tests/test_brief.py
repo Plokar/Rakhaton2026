@@ -90,9 +90,9 @@ class LiveLikeProvider(MockAIProvider):
 def test_decision_support_keeps_every_option_even_when_llm_picks_two():
     """D-015: LLM vybere 2 možnosti, podklad i tak ukáže všechny postupy ze sady guidelines (i červené)."""
     all_ids = [o["id"] for o in brief_for("P03")["decision_support"]["treatment_options"]]
-    picked = {"options": [{"procedure_id": pid, "title": pid, "rationale": [], "guideline_citations": [],
-                           "considerations": []} for pid in all_ids[:2]]}
-    decision = brief_for("P03", LiveLikeProvider(responses={"OptionsDraft": picked}))["decision_support"]
+    draft = {"procedure_id": "x", "title": "Možnost", "rationale": [], "guideline_citations": [], "considerations": []}
+    llm = LiveLikeProvider(responses={"OptionPick": {"procedure_ids": all_ids[:2]}, "OptionDraft": draft})
+    decision = brief_for("P03", llm)["decision_support"]
     assert sorted(o["id"] for o in decision["treatment_options"]) == sorted(all_ids)
     assert any(o["compatibility"]["overall"] == "red" for o in decision["treatment_options"])
 
@@ -104,6 +104,15 @@ def test_p05_decision_support_includes_basket_trial():
     assert all(c["criterion_id"].startswith("RKT-06/") for c in rkt06["criteria"])
     assert any("dávkovací protokol" in question["text"] and "RKT-06" in question["citations"]
                for question in decision["discussion_questions"])
+
+
+def test_paragraph_of_resource_without_paragraphs_cites_whole_resource():
+    """Model cituje „odstavec“ dotazníku (P03-prom02#3), který odstavce nemá: citace se převede na celý zdroj."""
+    llm = {"items": [{"text": "Pacient hodnotí samostatnost jako ECOG 1.", "citations": ["P03-prom02#3"]},
+                     {"text": "Vymyšlený zdroj.", "citations": ["P03-xyz99#1"]}]}
+    items = section(brief_for("P03", MockAIProvider(responses={"SummaryOutput": llm})), "summary")["items"]
+    assert items[0]["citations"] == ["P03-prom02"] and items[0]["verification"] == "verified"
+    assert items[1]["citations"] == ["P03-xyz99#1"] and items[1]["verification"] == "unverified"
 
 
 def test_hallucinated_number_is_unverified():

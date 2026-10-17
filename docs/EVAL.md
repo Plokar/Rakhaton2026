@@ -35,6 +35,26 @@ Pravidla, semafor, screening studií, RECIST a grounding běží bez LLM (`AI_PR
 
 **Pro pitch:** 90 % klíčových varovných signálů, 100 % klíčových faktů s citací zdroje, 86 % barev semaforu, **0 neověřených tvrzení z 484**. Všechno deterministicky, bez LLM, takže výsledek je opakovatelný.
 
+## NVIDIA (`nvidia/nemotron-3-super-120b-a12b`, výchozí LLM), 17. 10. 2026
+
+Plný běh nad 6 pacienty se stejnou cestou jako aplikace (T-323): LLM NVIDIA bez přemýšlení, vektory v IRIS z `nvidia/nemotron-3-embed-1b` @ 2048 (index přepočítaný z datasetu), práh grounding v2 0,40 (kalibrace v ARCH §5.3).
+
+| Pacient | Red flags (key) | Red flags (vše) | Klíčová fakta | Údaj chybí | Nejistota AI | Kritéria studií | Studie celkem | RECIST | Semafor (pravidla) | Neověřená tvrzení | Čas |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| P01 | 7/7 (100%) | 11/12 (92%) | 13/13 (100%) | 4/4 (100%) | – | 18/19 (95%) | 4/6 (67%) | 1/1 (100%) | 5/5 (100%) | 6/83 (7%) | 30 s |
+| P02 | 7/10 (70%) | 11/14 (79%) | 13/13 (100%) | 1/2 (50%) | – | 17/17 (100%) | 4/6 (67%) | 1/1 (100%) | 4/4 (100%) | 5/71 (7%) | 194 s |
+| P03 | 6/6 (100%) | 10/10 (100%) | 19/19 (100%) | 2/3 (67%) | 1/1 (100%) | 18/18 (100%) | 3/6 (50%) | 0/1 (0%) | 13/13 (100%) | 11/74 (15%) | 28 s |
+| P04 | 8/8 (100%) | 9/9 (100%) | 12/12 (100%) | 5/5 (100%) | – | 11/15 (73%) | 1/6 (17%) | – | 12/12 (100%) | 7/74 (9%) | 51 s |
+| P05 | 6/7 (86%) | 8/11 (73%) | 12/12 (100%) | 3/3 (100%) | 1/1 (100%) | 16/17 (94%) | 3/6 (50%) | 1/1 (100%) | 4/7 (57%) | 8/76 (11%) | 97 s |
+| P06 | 9/10 (90%) | 13/14 (93%) | 12/12 (100%) | 3/4 (75%) | 1/1 (100%) | 18/19 (95%) | 4/6 (67%) | 1/1 (100%) | 5/9 (56%) | 10/80 (12%) | 123 s |
+| **Celkem** | **43/48 (90%)** | **62/70 (89%)** | **81/81 (100%)** | **18/21 (86%)** | **3/3 (100%)** | **98/105 (93%)** | **19/36 (53%)** | **4/5 (80%)** | **43/50 (86%)** | **47/458 (10%)** | 524 s |
+
+**Co přidal LLM proti deterministické vrstvě:** „údaj chybí“ 67 % → **86 %**, kritéria studií 82 % → **93 %**, studie celkem 47 % → 53 %. Klíčové red flags 90 %, fakta 100 % a semafor 86 % drží pravidla.
+
+**Neověřená tvrzení 10 %** (47 z 458): validátor dělá, co má, a v UI jsou označená „Neověřeno“. Nejčastěji jde o čísla, která model dopočítal a ve zdroji doslova nejsou (součet lézí 83 mm, věk, procenta). Citace „odstavce“ dotazníku (`P02-prom02#3`) se po tomto běhu převádí na celý zdroj, další kolo ladění promptů je T-302.
+
+**Čas:** 28–51 s na pacienta bez čekání na limit; s limitem hostovaného API (429, 40 požadavků za minutu) až 194 s. Cíl NFR-1 (< 20 s) splní vyhrazený NIM, na demo slouží záloha podkladu (`demo save`, `MDT_DEMO_OFFLINE`).
+
 ## Gemini (`gemini-3.8-flash`)
 
 **Stav:** plný běh nad 6 pacienty a srovnání s `gemini-4-argon` **neproběhlo**. Free tier (D-021) má limit **5 požadavků za minutu a 20 požadavků za den** na model (embeddingy 1 000 za den). Jeden podklad potřebuje ~9 volání LLM, takže denní limit stačí zhruba na 2 podklady. Běh 17. 10. v 01:22 po vyčerpání denního limitu spadl na fallback a jeho čísla neměří Gemini, proto tu nejsou. **Pro plný eval a srovnání modelů je potřeba placený tier (Q9).**

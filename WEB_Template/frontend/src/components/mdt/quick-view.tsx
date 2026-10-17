@@ -12,9 +12,11 @@ import {
   useIntakeQuery,
   useObservationsQuery,
   useSessionQuery,
+  useTemplateQuery,
 } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type {
+  CaseTemplate,
   IntakePrefill,
   IntakeWarning,
   MdtCase,
@@ -28,6 +30,7 @@ import { CompatibilityLight, LightIcon } from './CompatibilityLight';
 import { dayLabel, timeLabel } from './dates';
 import { FactIcon, FactLegend, FACT_META } from './FactIcon';
 import { formatDate } from './format';
+import { KbItemRow } from './KbItem';
 import { buildKeyFacts, type KeyFact } from './key-facts';
 import { SourceDrawer, type SourceLoader } from './SourceDrawer';
 
@@ -48,6 +51,8 @@ export interface QuickViewSources {
   compatibility: Res<ProcedureCompatibility[]>;
   intake: Res<IntakePrefill>;
   observations: Res<ObservationSeries[]>;
+  /** Doporučená šablona podle diagnózy (T-318); `null` = báze ji pro diagnózu nemá. */
+  template: Res<CaseTemplate | null>;
   loadSource: SourceLoader;
 }
 
@@ -64,6 +69,7 @@ export function useQuickViewSources(target: { sessionId: number | null; caseId: 
   const compatibility = useCompatibilityQuery(target.caseId);
   const intake = useIntakeQuery(target.patientId);
   const observations = useObservationsQuery(target.patientId);
+  const template = useTemplateQuery(target.caseId);
   return {
     patientId: target.patientId ?? '',
     caseId: target.caseId,
@@ -72,6 +78,7 @@ export function useQuickViewSources(target: { sessionId: number | null; caseId: 
     compatibility: res(compatibility),
     intake: res(intake),
     observations: res(observations),
+    template: res(template),
     loadSource: mdtApi.getEvidence,
   };
 }
@@ -95,6 +102,7 @@ export function fixtureQuickViewSources(loadSource: SourceLoader): QuickViewSour
     ),
     intake: done(intakeP03),
     observations: done(observationsP03),
+    template: done(null),
     loadSource,
   };
 }
@@ -396,6 +404,51 @@ function SkeletonRows({ rows }: { rows: number }) {
   );
 }
 
+// ── Šablona podle diagnózy (T-318) ─────
+
+/**
+ * Úplnost podle šablony projektoru pro diagnózu (báze `data/onko`, bez AI): kolik údajů šablony je
+ * v podkladech, co je jen zmínka, starší než limit nebo chybí. Vidět jsou jen nedořešené, zbytek na klik.
+ */
+export function TemplateSummary() {
+  const { sources } = useQuickView();
+  const [all, setAll] = React.useState(false);
+  const template = sources.template.data;
+  if (!template?.projector.length) return null;
+  const items = template.projector.filter((i) => i.status !== 'not_applicable');
+  const open = items.filter((i) => i.status !== 'present');
+  const count = (status: string) => items.filter((i) => i.status === status).length;
+  const parts = [
+    `v podkladech ${count('present')} z ${items.length}`,
+    count('mention') && `jen zmínka ${count('mention')}`,
+    count('stale') && `starší než limit ${count('stale')}`,
+    count('missing') && `chybí ${count('missing')}`,
+  ].filter(Boolean);
+  return (
+    <section aria-labelledby="qv-template">
+      <h3 id="qv-template" className="text-sm font-semibold">
+        Šablona: <span className="font-normal">{template.name}</span>
+        <Citations ids={template.sources} />
+      </h3>
+      <p className="mt-0.5 text-xs text-muted-foreground">{parts.join(' · ')}</p>
+      <ul className="mt-1 divide-y divide-border/60">
+        {(all ? items : open).map((item) => <KbItemRow key={item.id} item={item} />)}
+      </ul>
+      {open.length < items.length && (
+        <button
+          type="button"
+          onClick={() => setAll(!all)}
+          aria-expanded={all}
+          className="mt-1 inline-flex items-center gap-1.5 rounded-md py-1 text-[13px] font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ChevronRight className={cn('size-4 transition-transform motion-reduce:transition-none', all && 'rotate-90')} aria-hidden />
+          {all ? 'Jen nedořešené údaje' : `Všechny údaje šablony (${items.length})`}
+        </button>
+      )}
+    </section>
+  );
+}
+
 // ── Léčebné postupy ─────────────────────────────────────────────────────────
 
 function TreatmentRow({ option }: { option: ProcedureCompatibility }) {
@@ -607,6 +660,7 @@ export function CaseQuickViewNarrow({
           <div className="flex flex-col gap-6 px-4 py-4">
             <AnamnesisPanel />
             <KeyFactsList />
+            <TemplateSummary />
             <TreatmentList />
           </div>
         </div>
@@ -654,6 +708,7 @@ export function CaseQuickViewWide({
         <div className="grid gap-x-10 gap-y-8 py-5 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
           <div className="flex min-w-0 flex-col gap-6">
             <KeyFactsList />
+            <TemplateSummary />
             <AnamnesisPanel defaultOpen={false} empty={anamnesisEmpty} />
           </div>
           <div className="min-w-0">
@@ -690,6 +745,7 @@ export function CaseQuickViewBody({
         <div className="grid gap-x-10 gap-y-8 @3xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
           <div className="flex min-w-0 flex-col gap-6">
             <KeyFactsList />
+            <TemplateSummary />
             <AnamnesisPanel defaultOpen={false} empty={anamnesisEmpty} />
           </div>
           <div className="min-w-0">

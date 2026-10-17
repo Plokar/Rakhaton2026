@@ -11,9 +11,9 @@ import { Skeleton } from '@/components/shadcn/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip';
 import { briefP03, timelineP03 } from '@/lib/fixtures';
-import { agendaOrder, apiErrorMessage, useBriefQuery, useCaseLocation, useTimelineQuery } from '@/lib/queries';
+import { agendaOrder, apiErrorMessage, useBriefQuery, useCaseLocation, useForMeQuery, useTimelineQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import type { Brief, BriefSection, MdtCase, MdtSessionDetail, TimelineEvent } from '@/types/mdt';
+import type { Brief, BriefSection, MdtCase, MdtSessionDetail, SectionId, TimelineEvent } from '@/types/mdt';
 import { AiBlock } from '../AiBlock';
 import { Citations } from '../citations';
 import { ClaimItem, ClaimList } from '../ClaimList';
@@ -23,11 +23,13 @@ import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
 import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
 import { RedFlagList } from '../RedFlagList';
+import { ROLE_META } from '../roles';
 import { RoleSection } from '../RoleSection';
 import { Timeline } from '../Timeline';
 import { TreatmentOptions } from '../TreatmentOptions';
 import { TrialScreening } from '../TrialScreening';
 import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './DetailSection';
+import { ForMePanel } from './ForMePanel';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -94,6 +96,38 @@ function DemoCaseDetail() {
 
 const sectionsOf = (brief: Brief | null, id: BriefSection['id']) => brief?.sections.filter((s) => s.id === id) ?? [];
 
+/** Kam patří sekce podkladu (`SectionId`) v detailu; otázka pro MDT je v rychlém přehledu. */
+const DETAIL_SECTION: Partial<Record<SectionId, string>> = {
+  summary: 'souhrn',
+  timeline: 'souhrn',
+  red_flags: 'varovani',
+  anamnesis: 'anamneza',
+  role_views: 'odbornosti',
+  modalities: 'lecba',
+  decision_support: 'lecba',
+  trials: 'lecba',
+  questions: 'otazky',
+};
+const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'pacient', 'otazky'];
+
+/** Rychlý přehled zůstává první (ARCH §7.3), pak podle `sections` (předseda nebo odbornost), pak zbytek. */
+function detailOrder(sections: SectionId[], forMe: boolean): string[] {
+  const mapped = sections.map((id) => DETAIL_SECTION[id]).filter((id): id is string => Boolean(id));
+  return [...new Set(['prehled', ...(forMe ? ['pro-me'] : []), ...mapped, ...DEFAULT_ORDER])];
+}
+
+type OrderMode = 'chair' | 'me';
+const ORDER_KEY = 'mdt-poradi-podkladu';
+
+function readOrderMode(): OrderMode | null {
+  try {
+    const v = localStorage.getItem(ORDER_KEY);
+    return v === 'chair' || v === 'me' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 function DetailLayout({
   caseKey,
   brief,
@@ -113,22 +147,27 @@ function DetailLayout({
   const isDemo = caseKey === DEMO_CASE;
   const canGenerate = !isDemo && can.generateBrief(me);
   const hideUnverified = brief?.config.hide_unverified ?? false;
-  const roles = sectionsOf(brief, 'role_views').filter((s) => s.role !== 'patient');
+  const forMe = useForMeQuery(isDemo ? null : Number(caseKey), me?.specialty && me.specialty !== 'patient' ? me.specialty : null);
+  const view = forMe.data ?? null;
+  // Výchozí „pro mě“, když má lékař odbornost a báze k diagnóze pohled; volba se pamatuje v prohlížeči.
+  const [stored, setStored] = React.useState<OrderMode | null>(readOrderMode);
+  const mode: OrderMode = view ? stored ?? 'me' : 'chair';
+  const setMode = (next: OrderMode) => {
+    setStored(next);
+    try {
+      localStorage.setItem(ORDER_KEY, next);
+    } catch {
+      // bez úložiště platí volba do přenačtení
+    }
+  };
+
+  const allRoles = sectionsOf(brief, 'role_views').filter((s) => s.role !== 'patient');
+  // V režimu „pro mě“ je vlastní pohled role první (T-319).
+  const roles = mode === 'me' && view ? allRoles.toSorted((a, b) => Number(b.role === view.role) - Number(a.role === view.role)) : allRoles;
   const patientVoice = sectionsOf(brief, 'role_views').filter((s) => s.role === 'patient');
   const ds = brief?.decision_support;
   const redFlags = brief?.red_flags ?? [];
   const alerts = brief?.header.alerts ?? [];
-
-  const sections: SectionDef[] = [
-    { id: 'prehled', label: 'Rychlý přehled' },
-    { id: 'varovani', label: 'Varovné signály', count: brief ? redFlags.length : undefined },
-    { id: 'souhrn', label: 'Souhrn a časová osa' },
-    ...(sectionsOf(brief, 'anamnesis').length || brief?.header.comorbidities.length ? [{ id: 'anamneza', label: 'Anamnéza' }] : []),
-    ...(roles.length ? [{ id: 'odbornosti', label: 'Odbornosti', count: roles.length }] : []),
-    ...(ds || sectionsOf(brief, 'modalities').length ? [{ id: 'lecba', label: 'Léčba a studie' }] : []),
-    ...(patientVoice.length ? [{ id: 'pacient', label: 'Hlas pacienta' }] : []),
-    ...(ds?.discussion_questions.length ? [{ id: 'otazky', label: 'Otázky k diskusi', count: ds.discussion_questions.length }] : []),
-  ];
 
   const missingBrief = !brief && (
     <div className="flex flex-col items-start gap-2">
@@ -139,8 +178,181 @@ function DetailLayout({
     </div>
   );
 
+  const blocks: Record<string, { def: SectionDef; node: React.ReactNode } | null> = {
+    prehled: {
+      def: { id: 'prehled', label: 'Rychlý přehled' },
+      node: (
+        <DetailSection id="prehled" title="Rychlý přehled">
+          <CaseQuickViewBody sources={sources} caseId={item?.id ?? null} anamnesisEmpty={missingBrief || undefined} />
+        </DetailSection>
+      ),
+    },
+    'pro-me':
+      view && mode === 'me'
+        ? {
+            def: { id: 'pro-me', label: 'Pro vás' },
+            node: (
+              <DetailSection id="pro-me" title={`Pro vás · ${ROLE_META[view.role].label.toLowerCase()}`}>
+                <ForMePanel view={view} />
+              </DetailSection>
+            ),
+          }
+        : null,
+    varovani: {
+      def: { id: 'varovani', label: 'Varovné signály', count: brief ? redFlags.length : undefined },
+      node: (
+        <DetailSection id="varovani" title="Varovné signály" count={brief ? redFlags.length : undefined}>
+          {brief ? (
+            <div className="flex flex-col gap-5">
+              <RedFlagList flags={redFlags} />
+              {alerts.length > 0 && (
+                <AiBlock title="Alergie, implantáty a předchozí výkony" status={brief.status} headingLevel="h3">
+                  <ul className="flex flex-col gap-1.5">
+                    {alerts.map((a) => <li key={a.id}><ClaimItem claim={a} /></li>)}
+                  </ul>
+                </AiBlock>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Varovné signály z rozporů mezi zdroji vzniknou s podkladem. Varování z kontroly úplnosti jsou v rychlém přehledu.
+            </p>
+          )}
+        </DetailSection>
+      ),
+    },
+    souhrn: {
+      def: { id: 'souhrn', label: 'Souhrn a časová osa' },
+      node: (
+        <DetailSection id="souhrn" title="Souhrn a časová osa">
+          <SummaryAndTimeline brief={brief} timeline={timeline} hideUnverified={hideUnverified} />
+        </DetailSection>
+      ),
+    },
+    anamneza:
+      sectionsOf(brief, 'anamnesis').length || brief?.header.comorbidities.length
+        ? {
+            def: { id: 'anamneza', label: 'Anamnéza' },
+            node: (
+              <DetailSection id="anamneza" title="Anamnéza">
+                <div className="flex flex-col gap-5">
+                  {sectionsOf(brief, 'anamnesis').map((s) => (
+                    <AiBlock key={s.title} title={s.title || 'Anamnéza'} status={brief?.status} headingLevel="h3">
+                      <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+                    </AiBlock>
+                  ))}
+                  {brief && brief.header.comorbidities.length > 0 && (
+                    <div>
+                      <h3 className="mb-1.5 text-sm font-semibold">Komorbidity</h3>
+                      <ul className="flex flex-col gap-1 text-sm">
+                        {brief.header.comorbidities.map((c) => (
+                          <li key={c.citation}>
+                            {c.icd10 && <span translate="no" className="mr-1.5 font-medium">{c.icd10}</span>}
+                            {c.text}
+                            <Citations ids={[c.citation]} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </DetailSection>
+            ),
+          }
+        : null,
+    odbornosti:
+      roles.length > 0 && brief
+        ? {
+            def: { id: 'odbornosti', label: 'Odbornosti', count: roles.length },
+            node: (
+              <DetailSection id="odbornosti" title="Odbornosti" count={roles.length}>
+                <div className="flex flex-col gap-5">
+                  {roles.map((s) => (
+                    <RoleSection
+                      key={`${s.role}-${s.title}`}
+                      section={s}
+                      series={sources.observations.data ?? []}
+                      hideUnverified={hideUnverified}
+                      status={brief.status}
+                      defaultOpen={mode === 'me' && s.role === view?.role}
+                    />
+                  ))}
+                </div>
+              </DetailSection>
+            ),
+          }
+        : null,
+    lecba:
+      brief && (ds || sectionsOf(brief, 'modalities').length)
+        ? {
+            def: { id: 'lecba', label: 'Léčba a studie' },
+            node: (
+              <DetailSection id="lecba" title="Léčba a studie">
+                <div className="flex flex-col gap-8">
+                  {sectionsOf(brief, 'modalities').map((s) => (
+                    <AiBlock key={s.title} title={s.title || 'Léčebné metody a odborníci'} status={brief.status} headingLevel="h3">
+                      <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+                    </AiBlock>
+                  ))}
+                  {ds && (
+                    <>
+                      <div>
+                        <h3 className="mb-2 text-sm font-semibold">Možnosti léčby a soulad se stavem pacienta</h3>
+                        <TreatmentOptions options={ds.treatment_options} />
+                      </div>
+                      <AiBlock title="Klinické studie (screening RKT)" status={brief.status} headingLevel="h3">
+                        <TrialScreening trials={ds.trials} />
+                      </AiBlock>
+                    </>
+                  )}
+                </div>
+              </DetailSection>
+            ),
+          }
+        : null,
+    pacient:
+      patientVoice.length > 0 && brief
+        ? {
+            def: { id: 'pacient', label: 'Hlas pacienta' },
+            node: (
+              <DetailSection id="pacient" title="Hlas pacienta">
+                {patientVoice.map((s) => (
+                  <RoleSection key={s.title} section={s} series={sources.observations.data ?? []} hideUnverified={hideUnverified} status={brief.status} />
+                ))}
+              </DetailSection>
+            ),
+          }
+        : null,
+    otazky:
+      ds && ds.discussion_questions.length > 0 && brief
+        ? {
+            def: { id: 'otazky', label: 'Otázky k diskusi', count: ds.discussion_questions.length },
+            node: (
+              <DetailSection id="otazky" title="Otázky k diskusi" count={ds.discussion_questions.length}>
+                <AiBlock title="Otázky pro komisi" status={brief.status} headingLevel="h3">
+                  <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm leading-relaxed">
+                    {ds.discussion_questions.map((q) => (
+                      <li key={q.text}>
+                        {q.text}
+                        <Citations ids={q.citations} />
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="mt-3 text-xs text-muted-foreground">{ds.disclaimer}</p>
+                </AiBlock>
+              </DetailSection>
+            ),
+          }
+        : null,
+  };
+
+  const chairSections = (brief?.config.sections ?? []).filter((s) => s.enabled).toSorted((a, b) => a.order - b.order).map((s) => s.id);
+  const order = mode === 'me' && view ? detailOrder(view.sections, true) : detailOrder(chairSections, false);
+  const shown = order.map((id) => blocks[id]).filter((b): b is NonNullable<typeof b> => Boolean(b));
+  const sections = shown.map((b) => b.def);
+
   return (
-    <SectionsProvider initialOpen={['prehled', 'varovani']}>
+    <SectionsProvider initialOpen={['prehled', 'pro-me', 'varovani']}>
       <PageCrumbs
         items={[
           ...(session ? [{ label: session.title, href: `/dashboard/mdt/${session.id}` }] : []),
@@ -151,121 +363,32 @@ function DetailLayout({
 
       <div className="mx-auto grid w-full max-w-[1440px] gap-10 px-4 py-6 sm:px-6 lg:px-8 xl:grid-cols-[12rem_minmax(0,1fr)]">
         <aside className="hidden xl:block">
-          <div className="sticky top-40">
+          <div className="sticky top-40 flex flex-col gap-4">
             <SectionNav sections={sections} variant="rail" />
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-col gap-6">
-          <DetailSection id="prehled" title="Rychlý přehled">
-            <CaseQuickViewBody sources={sources} caseId={item?.id ?? null} anamnesisEmpty={missingBrief || undefined} />
-          </DetailSection>
-
-          <DetailSection id="varovani" title="Varovné signály" count={brief ? redFlags.length : undefined}>
-            {brief ? (
-              <div className="flex flex-col gap-5">
-                <RedFlagList flags={redFlags} />
-                {alerts.length > 0 && (
-                  <AiBlock title="Alergie, implantáty a předchozí výkony" status={brief.status} headingLevel="h3">
-                    <ul className="flex flex-col gap-1.5">
-                      {alerts.map((a) => <li key={a.id}><ClaimItem claim={a} /></li>)}
-                    </ul>
-                  </AiBlock>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Varovné signály z rozporů mezi zdroji vzniknou s podkladem. Varování z kontroly úplnosti jsou v rychlém přehledu.
-              </p>
-            )}
-          </DetailSection>
-
-          <DetailSection id="souhrn" title="Souhrn a časová osa">
-            <SummaryAndTimeline brief={brief} timeline={timeline} hideUnverified={hideUnverified} />
-          </DetailSection>
-
-          {sections.some((s) => s.id === 'anamneza') && (
-            <DetailSection id="anamneza" title="Anamnéza">
-              <div className="flex flex-col gap-5">
-                {sectionsOf(brief, 'anamnesis').map((s) => (
-                  <AiBlock key={s.title} title={s.title || 'Anamnéza'} status={brief?.status} headingLevel="h3">
-                    <ClaimList claims={s.items} hideUnverified={hideUnverified} />
-                  </AiBlock>
-                ))}
-                {brief && brief.header.comorbidities.length > 0 && (
-                  <div>
-                    <h3 className="mb-1.5 text-sm font-semibold">Komorbidity</h3>
-                    <ul className="flex flex-col gap-1 text-sm">
-                      {brief.header.comorbidities.map((c) => (
-                        <li key={c.citation}>
-                          {c.icd10 && <span translate="no" className="mr-1.5 font-medium">{c.icd10}</span>}
-                          {c.text}
-                          <Citations ids={[c.citation]} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </DetailSection>
+          {view && (
+            <div className="-mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="text-[13px] text-muted-foreground" id="poradi-label">Pořadí podkladu</span>
+              <ToggleGroup
+                value={[mode]}
+                onValueChange={(v) => v[0] && setMode(v[0] as OrderMode)}
+                variant="outline"
+                size="sm"
+                spacing={0}
+                aria-labelledby="poradi-label"
+              >
+                <ToggleGroupItem value="chair">Předsedy</ToggleGroupItem>
+                <ToggleGroupItem value="me">Pro mě · {ROLE_META[view.role].label.toLowerCase()}</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
           )}
 
-          {roles.length > 0 && brief && (
-            <DetailSection id="odbornosti" title="Odbornosti" count={roles.length}>
-              <div className="flex flex-col gap-5">
-                {roles.map((s) => (
-                  <RoleSection key={`${s.role}-${s.title}`} section={s} series={sources.observations.data ?? []} hideUnverified={hideUnverified} status={brief.status} defaultOpen={false} />
-                ))}
-              </div>
-            </DetailSection>
-          )}
-
-          {sections.some((s) => s.id === 'lecba') && brief && (
-            <DetailSection id="lecba" title="Léčba a studie">
-              <div className="flex flex-col gap-8">
-                {sectionsOf(brief, 'modalities').map((s) => (
-                  <AiBlock key={s.title} title={s.title || 'Léčebné metody a odborníci'} status={brief.status} headingLevel="h3">
-                    <ClaimList claims={s.items} hideUnverified={hideUnverified} />
-                  </AiBlock>
-                ))}
-                {ds && (
-                  <>
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold">Možnosti léčby a soulad se stavem pacienta</h3>
-                      <TreatmentOptions options={ds.treatment_options} />
-                    </div>
-                    <AiBlock title="Klinické studie (screening RKT)" status={brief.status} headingLevel="h3">
-                      <TrialScreening trials={ds.trials} />
-                    </AiBlock>
-                  </>
-                )}
-              </div>
-            </DetailSection>
-          )}
-
-          {patientVoice.length > 0 && brief && (
-            <DetailSection id="pacient" title="Hlas pacienta">
-              {patientVoice.map((s) => (
-                <RoleSection key={s.title} section={s} series={sources.observations.data ?? []} hideUnverified={hideUnverified} status={brief.status} />
-              ))}
-            </DetailSection>
-          )}
-
-          {ds && ds.discussion_questions.length > 0 && brief && (
-            <DetailSection id="otazky" title="Otázky k diskusi" count={ds.discussion_questions.length}>
-              <AiBlock title="Otázky pro komisi" status={brief.status} headingLevel="h3">
-                <ol className="flex list-decimal flex-col gap-2 pl-5 text-sm leading-relaxed">
-                  {ds.discussion_questions.map((q) => (
-                    <li key={q.text}>
-                      {q.text}
-                      <Citations ids={q.citations} />
-                    </li>
-                  ))}
-                </ol>
-                <p className="mt-3 text-xs text-muted-foreground">{ds.disclaimer}</p>
-              </AiBlock>
-            </DetailSection>
-          )}
+          {shown.map((b) => (
+            <React.Fragment key={b.def.id}>{b.node}</React.Fragment>
+          ))}
 
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">

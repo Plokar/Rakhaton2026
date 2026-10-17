@@ -16,8 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { mdtApi } from '@/lib/mdt-api';
+import { useQueries } from '@tanstack/react-query';
+import { Citations } from '@/components/mdt/citations';
+import { ApiError } from '@/lib/api';
+import { queryKeys } from '@/lib/queries';
 import { useApiData } from '@/lib/use-api-data';
-import type { BriefConfig, EvidenceId } from '@/types/mdt';
+import type { BriefConfig, CaseTemplate, EvidenceId, MdtSessionDetail } from '@/types/mdt';
 
 // Klíč „sessionId|verze“: po uložení se board i konfigurace načtou znovu.
 const fetchSetup = async (key: string) => {
@@ -123,6 +127,17 @@ function SetupContent({ sessionId }: { sessionId: string }) {
         </p>
       )}
 
+      {session && (
+        <CitationProvider order={[]} activeId={openId} onOpen={setOpenId}>
+          <RecommendedTemplates session={session} editable={editable} onUse={(t) => setDraft({ ...t.config, id: t.config_id ?? undefined, is_preset: true })} />
+        </CitationProvider>
+      )}
+      {!loading && !error && session && !current && (
+        <p className="text-sm text-muted-foreground">
+          Pro board zatím není žádné nastavení podkladu.{editable ? ' Vyjděte z doporučené šablony výše.' : ''}
+        </p>
+      )}
+
       {current && session && (
         <CitationProvider order={[]} activeId={openId} onOpen={setOpenId}>
           <section className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5">
@@ -177,5 +192,65 @@ function SetupContent({ sessionId }: { sessionId: string }) {
         </CitationProvider>
       )}
     </>
+  );
+}
+
+/**
+ * Doporučená šablona podle diagnózy pacientů na boardu (T-318, báze `data/onko`): „Použít“ ji vezme
+ * jako výchozí bod, uloží se jako nastavení boardu (preset sám zůstává beze změny).
+ */
+function RecommendedTemplates({
+  session,
+  editable,
+  onUse,
+}: {
+  session: MdtSessionDetail;
+  editable: boolean;
+  onUse: (template: CaseTemplate) => void;
+}) {
+  const cases = session.cases.filter((c): c is typeof c & { id: number } => c.id != null);
+  const results = useQueries({
+    queries: cases.map((c) => ({
+      queryKey: queryKeys.template(c.id),
+      queryFn: () =>
+        mdtApi.getTemplate(c.id).catch((err: unknown) => {
+          if (err instanceof ApiError && err.status === 404) return null;
+          throw err;
+        }),
+      staleTime: 5 * 60_000,
+    })),
+  });
+  const byTemplate = new Map<string, { template: CaseTemplate; patients: string[] }>();
+  results.forEach((r, i) => {
+    if (!r.data) return;
+    const entry = byTemplate.get(r.data.template_id) ?? { template: r.data, patients: [] };
+    entry.patients.push(cases[i].patient_id);
+    byTemplate.set(r.data.template_id, entry);
+  });
+  if (!byTemplate.size) return null;
+  return (
+    <section aria-labelledby="doporucene-sablony" className="flex flex-col gap-2">
+      <h2 id="doporucene-sablony" className="text-base font-semibold">Doporučená šablona podle diagnózy</h2>
+      <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+        {[...byTemplate.values()].map(({ template, patients }) => (
+          <li key={template.template_id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+            <div className="min-w-0 flex-1 basis-64">
+              <p className="text-sm font-medium">
+                {template.name}
+                <Citations ids={template.sources} />
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                <span translate="no">{patients.join(', ')}</span> · u stolu: {template.specialties}
+              </p>
+            </div>
+            {editable && (
+              <Button variant="outline" size="sm" onClick={() => onUse(template)}>
+                Použít
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Keyboard, LogOut, Settings } from 'lucide-react';
+import { Keyboard, LogOut, Settings, UsersRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { meLabel, useMe } from '@/components/mdt/me';
+import { can, meLabel, useMe } from '@/components/mdt/me';
 import { Avatar, AvatarFallback } from '@/components/shadcn/avatar';
 import {
   DropdownMenu,
@@ -50,6 +50,12 @@ export function UserMenu({ onShowShortcuts }: { onShowShortcuts: () => void }) {
             <Settings aria-hidden />
             Nastavení
           </DropdownMenuItem>
+          {can.manageBoards(me) && (
+            <DropdownMenuItem onClick={() => router.push('/dashboard/tym')}>
+              <UsersRound aria-hidden />
+              Tým komise
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={onShowShortcuts}>
             <Keyboard aria-hidden />
             Klávesové zkratky

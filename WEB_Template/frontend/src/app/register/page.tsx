@@ -3,23 +3,36 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Activity, CircleAlert, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ROLE_META } from '@/components/mdt/roles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import {
-  Stethoscope,
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Lock,
-  ArrowRight,
-  AlertCircle,
-  CheckCircle2,
-  Sparkles,
-} from 'lucide-react';
+import { ApiError, type RegisterData } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
+type Specialty = RegisterData['specialty'];
+
+/** Odbornosti pro registraci (RoleId bez „patient“, T-319); barva štítku podle D-017. */
+const SPECIALTIES = (Object.keys(ROLE_META) as (keyof typeof ROLE_META)[]).filter((r): r is Specialty => r !== 'patient');
+
+/** České chyby registrace: DRF vrací chyby po polích. */
+function registerError(err: unknown): string {
+  if (err instanceof ApiError && err.data && typeof err.data === 'object') {
+    const messages = Object.values(err.data as Record<string, unknown>)
+      .flatMap((v) => (Array.isArray(v) ? v : [v]))
+      .filter((v): v is string => typeof v === 'string');
+    if (messages.length) return messages.join(' ');
+  }
+  if (err instanceof ApiError) return `Server vrátil chybu ${err.status}. Zkuste to prosím znovu.`;
+  return 'Server neodpovídá. Zkontrolujte připojení a zkuste to znovu.';
+}
+
+/**
+ * Registrace kolegy (T-319): povinná odbornost, aby podklad mohl dát nahoru, co ho zajímá.
+ * Nový účet je člen komise; roli předsedy nebo zadávajícího lékaře nastaví předseda v Týmu komise.
+ */
 export default function RegisterPage() {
   const router = useRouter();
   const { register, user } = useAuth();
@@ -28,35 +41,24 @@ export default function RegisterPage() {
   const [email, setEmail] = React.useState('');
   const [firstName, setFirstName] = React.useState('');
   const [lastName, setLastName] = React.useState('');
+  const [specialty, setSpecialty] = React.useState<Specialty | ''>('');
   const [password, setPassword] = React.useState('');
   const [password2, setPassword2] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
-
   const [error, setError] = React.useState('');
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    }
+    if (user) router.push('/dashboard');
   }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (password !== password2) {
-      setError('Zadaná hesla se neshodují.');
-      return;
-    }
-
-    if (password.length < 8) {
-      setError('Heslo musí mít minimálně 8 znaků.');
-      return;
-    }
-
+    if (!specialty) return setError('Vyberte svou odbornost.');
+    if (password !== password2) return setError('Zadaná hesla se neshodují.');
+    if (password.length < 8) return setError('Heslo musí mít aspoň 8 znaků.');
     setLoading(true);
-
     try {
       await register({
         username: username.trim(),
@@ -65,210 +67,145 @@ export default function RegisterPage() {
         password2,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
+        specialty,
       });
       router.push('/dashboard');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Registrace se nezdařila. Zkontrolujte vyplněná pole.';
-      setError(msg);
-    } finally {
+      setError(registerError(err));
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left side: Hero showcase (desktop only) */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between border-r border-border bg-card p-12 relative overflow-hidden">
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
-
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-indigo-500/30">
-            <Stethoscope className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="text-base font-bold tracking-tight">MDT Copilot</span>
-            <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>
-          </div>
-        </div>
-
-        <div className="space-y-6 max-w-md">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> AI připravuje, rozhoduje lékař
-          </div>
-          <h2 className="text-3xl font-extrabold tracking-tight">
-            Připravte se <br />
-            na zasedání komise.
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Zařazení pacientů do boardů, podklady s citacemi zdrojů a úkoly po zasedání na jednom místě.
-          </p>
-
-          <div className="space-y-2 pt-4 border-t border-border text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>Po registraci se rovnou přihlásíte</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>Prototyp pracuje jen s fiktivními pacienty</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} MDT Copilot • Rakathon 2026
-        </div>
+    <div className="flex min-h-dvh flex-col bg-background px-5 py-4 sm:px-10">
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/login" className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Activity className="size-5" aria-hidden />
+          </span>
+          <span translate="no" className="text-base font-semibold tracking-tight">MedTeam</span>
+        </Link>
+        <ThemeToggle />
       </div>
 
-      {/* Right side: Register form */}
-      <div className="flex flex-1 flex-col justify-between p-6 sm:p-12 lg:p-16">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="lg:hidden flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Stethoscope className="h-4 w-4" />
+      <main className="mx-auto my-auto w-full max-w-md py-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Registrace do komise</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Odbornost určí, co se vám v podkladu ukáže nahoře. Roli předsedy nebo zadávajícího lékaře nastaví předseda komise.
+        </p>
+
+        {error && (
+          <p role="alert" className="mt-5 flex items-start gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+            <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {error}
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field id="reg-first" label="Jméno">
+              <Input id="reg-first" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </Field>
+            <Field id="reg-last" label="Příjmení">
+              <Input id="reg-last" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </Field>
+          </div>
+
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-medium">Odbornost</legend>
+            <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Odbornost">
+              {SPECIALTIES.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  role="radio"
+                  aria-checked={specialty === r}
+                  onClick={() => setSpecialty(r)}
+                  className={cn(
+                    'rounded-md border px-2.5 py-1 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    specialty === r ? ROLE_META[r].className : 'border-border bg-card text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {ROLE_META[r].label}
+                </button>
+              ))}
             </div>
-            <span className="font-bold text-sm">MDT Copilot</span>
+          </fieldset>
+
+          <Field id="reg-username" label="Uživatelské jméno">
+            <Input
+              id="reg-username"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="např. novak…"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </Field>
+          <Field id="reg-email" label="E-mail">
+            <Input id="reg-email" type="email" autoComplete="email" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </Field>
+          <Field id="reg-password" label="Heslo (aspoň 8 znaků)">
+            <Input
+              id="reg-password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Skrýt heslo' : 'Zobrazit heslo'}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+                </button>
+              }
+              required
+            />
+          </Field>
+          <Field id="reg-password2" label="Heslo znovu">
+            <Input
+              id="reg-password2"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={password2}
+              onChange={(e) => setPassword2(e.target.value)}
+              required
+            />
+          </Field>
+
+          <Button type="submit" size="lg" className="mt-2 w-full" isLoading={loading}>
+            Zaregistrovat se
+          </Button>
+          <p className="text-center text-xs leading-relaxed text-muted-foreground">
+            Registrací souhlasíte s{' '}
+            <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">podmínkami užití</Link> a berete na vědomí{' '}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">zásady ochrany soukromí</Link>. Prototyp pracuje jen se syntetickými pacienty.
+          </p>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Už máte účet?{' '}
+          <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+            Přihlásit se
           </Link>
-          <div className="ml-auto">
-            <ThemeToggle />
-          </div>
-        </div>
+        </p>
+      </main>
+    </div>
+  );
+}
 
-        <div className="mx-auto w-full max-w-md my-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Vytvořit nový účet</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Zaregistrujte se do MDT Copilot.
-            </p>
-          </div>
-
-          {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive font-medium animate-in fade-in">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Jméno
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Petr"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">
-                  Příjmení
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Novák"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">
-                Uživatelské jméno *
-              </label>
-              <Input
-                type="text"
-                placeholder="petr_dev"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                leftIcon={<User className="h-4 w-4" />}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">
-                E-mailová adresa *
-              </label>
-              <Input
-                type="email"
-                placeholder="petr@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                leftIcon={<Mail className="h-4 w-4" />}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">
-                Heslo (min. 8 znaků) *
-              </label>
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                leftIcon={<Lock className="h-4 w-4" />}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-foreground mb-1.5">
-                Potvrzení hesla *
-              </label>
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password2}
-                onChange={(e) => setPassword2(e.target.value)}
-                leftIcon={<Lock className="h-4 w-4" />}
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full mt-2" isLoading={loading} size="lg">
-              Zaregistrovat se a pokračovat <ArrowRight className="h-4 w-4" />
-            </Button>
-
-            <p className="text-[11px] text-muted-foreground text-center leading-relaxed pt-1">
-              Registrací souhlasíte s našimi{' '}
-              <Link href="/terms" className="text-primary hover:underline font-medium">
-                Podmínkami užití
-              </Link>{' '}
-              a berete na vědomí{' '}
-              <Link href="/privacy" className="text-primary hover:underline font-medium">
-                Zásady ochrany soukromí
-              </Link>.
-            </p>
-          </form>
-
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Už máte účet?{' '}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
-              Přihlaste se zde
-            </Link>
-          </p>
-        </div>
-
-        <div className="text-center text-xs text-muted-foreground">
-          MDT Copilot • Rakathon 2026
-        </div>
-      </div>
+function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-sm font-medium">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

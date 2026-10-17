@@ -2,11 +2,10 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Check, ChevronRight, Copy, Lock, Plus, UserPlus } from 'lucide-react';
+import { ChevronRight, Lock, Plus, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Button } from '@/components/shadcn/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useSaveSession, useSessionsQuery } from '@/lib/queries';
@@ -14,6 +13,7 @@ import { cn } from '@/lib/utils';
 import type { MdtSessionListItem } from '@/types/mdt';
 import { BoardDialog } from './BoardDialog';
 import { dayLabel, patientsLabel, pragueDay, timeLabel, todayPrague } from './dates';
+import { InviteDialog } from './InviteDialog';
 import { can, useMe } from './me';
 
 /**
@@ -151,45 +151,5 @@ function SessionRows({ sessions, today, muted = false }: { sessions: MdtSessionL
         );
       })}
     </ul>
-  );
-}
-
-/**
- * Přidání kolegy: API zatím nemá seznam členů ani pozvánky (PROGRESS Q26). Přihlášený předseda se na
- * /register nedostane (proxy ho vrátí na dashboard), proto mu dáme odkaz, který pošle kolegovi.
- */
-function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [copy, setCopy] = React.useState<'idle' | 'done' | 'failed'>('idle');
-  const link = typeof window === 'undefined' ? '/register' : `${window.location.origin}/register`;
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopy('done');
-    } catch {
-      setCopy('failed');     // schránka bez HTTPS nebo bez oprávnění: odkaz zůstane k ručnímu zkopírování
-    }
-  };
-  return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Pozvat kolegu</DialogTitle>
-          <DialogDescription>
-            Pošlete kolegovi odkaz na registraci. Po registraci má přístup člena komise. Roli předsedy a odbornost zatím
-            nastavuje správce systému.
-          </DialogDescription>
-        </DialogHeader>
-        <p className="select-all rounded-md bg-muted px-3 py-2 text-sm">{link}</p>
-        <p role="status" className="sr-only">{copy === 'done' ? 'Odkaz na registraci je ve schránce.' : ''}</p>
-        {copy === 'failed' && <p role="alert" className="text-sm">Odkaz se nepodařilo zkopírovat, označte ho ručně.</p>}
-        <DialogFooter>
-          <Button variant="outline" size="lg" onClick={onClose}>Zavřít</Button>
-          <Button size="lg" onClick={copyLink}>
-            {copy === 'done' ? <Check aria-hidden /> : <Copy aria-hidden />}
-            {copy === 'done' ? 'Zkopírováno' : 'Zkopírovat odkaz'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

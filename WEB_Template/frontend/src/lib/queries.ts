@@ -4,7 +4,7 @@ import * as React from 'react';
 import { QueryClient, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api';
 import { mdtApi, type SessionInput, type StoredBrief } from '@/lib/mdt-api';
-import type { MdtCase, MdtSessionDetail, MdtSessionListItem } from '@/types/mdt';
+import type { Me, MdtCase, MdtRole, MdtSessionDetail, MdtSessionListItem, RoleId } from '@/types/mdt';
 
 /**
  * Serverová data pro UI v2 (docs/NAVRH_UI.md §10.3): jedna cache pro sidebar, kalendář, jednání,
@@ -23,6 +23,9 @@ export function createQueryClient() {
 }
 
 export const queryKeys = {
+  users: ['users'] as const,
+  template: (caseId: number | string) => ['case', String(caseId), 'template'] as const,
+  forMe: (caseId: number | string, specialty: string) => ['case', String(caseId), 'for-me', specialty] as const,
   sessions: ['sessions'] as const,
   session: (id: number | string) => ['session', String(id)] as const,
   tasks: ['tasks'] as const,
@@ -102,6 +105,48 @@ export function useTimelineQuery(patientId: string | null | undefined) {
     queryKey: queryKeys.timeline(patientId ?? ''),
     queryFn: () => mdtApi.getTimeline(patientId as string),
     enabled: Boolean(patientId),
+  });
+}
+
+/** 404 = pro diagnózu není šablona (bez báze `data/onko`); to není chyba, jen nic k nabídnutí. */
+const orNullOn404 = <T,>(promise: Promise<T>) =>
+  promise.catch((err: unknown) => {
+    if (err instanceof ApiError && (err.status === 404 || err.status === 400)) return null;
+    throw err;
+  });
+
+/** Doporučená šablona projektoru podle diagnózy (T-318). */
+export function useTemplateQuery(caseId: number | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.template(caseId ?? ''),
+    queryFn: () => orNullOn404(mdtApi.getTemplate(caseId as number)),
+    enabled: Boolean(caseId),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Pohled „pro mě“ podle odbornosti (T-319); bez odbornosti nebo šablony `null`. */
+export function useForMeQuery(caseId: number | null | undefined, specialty: RoleId | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.forMe(caseId ?? '', specialty ?? ''),
+    queryFn: () => orNullOn404(mdtApi.getForMe(caseId as number, specialty ?? undefined)),
+    enabled: Boolean(caseId && specialty),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Tým komise: uživatelé s rolí a odborností (jen předseda). */
+export function useUsersQuery(enabled: boolean) {
+  return useQuery({ queryKey: queryKeys.users, queryFn: () => mdtApi.getUsers(), enabled });
+}
+
+export function useUpdateUser() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, input }: { userId: number; input: { role?: MdtRole; specialty?: RoleId } }) => mdtApi.updateUser(userId, input),
+    onSuccess: (saved) => {
+      client.setQueryData<Me[]>(queryKeys.users, (prev) => prev?.map((u) => (u.user_id === saved.user_id ? saved : u)));
+    },
   });
 }
 

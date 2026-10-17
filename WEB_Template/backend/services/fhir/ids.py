@@ -42,7 +42,7 @@ _PATIENT_RULES = (  # část ID za `Pxx-`
     (r'(dg|kom|ae)\d+', 'Condition'),                     # ae = nežádoucí účinek léčby (P05-ae1)
     (r'doc\d+', 'DocumentReference'),
     (r'imp\d+', 'DocumentReference'),                     # vložená zpráva / podklad nového pacienta (BON-7, T-323)
-    (r'imp\d+-obs\d+', 'Observation'),
+    (r'imp\d+-(obs|lab|bm|tnm|ecog|vit)\d+', 'Observation'),  # hodnota ze zprávy, druh v ID jako v datasetu
     (r'imp\d+-prov', 'Provenance'),
     (r'zad\d+-prov', 'Provenance'),                      # založení nového pacienta (T-323)
     (r'img\d+-study', 'ImagingStudy'),
@@ -63,8 +63,9 @@ _PATIENT_RULES = (  # část ID za `Pxx-`
     (r'mdt\d+-rf\d+', 'DetectedIssue'),
     (r'mdt\d+-rs\d+', 'ResearchSubject'),
     (r'mdt\d+-prov', 'Provenance'),
-    (r'mdt\d+-(prepis|pdf)', 'DocumentReference'),
+    (r'mdt\d+-(prepis|pdf|pacient)', 'DocumentReference'),
     (r'case\d+-w\d+', 'DetectedIssue'),                   # odkliknuté varování (FR-P4)
+    (r'case\d+-prov', 'Provenance'),
 )
 _GLOBAL = [(re.compile(p), t) for p, t in _GLOBAL_RULES]
 _PATIENT = [(re.compile(p), t) for p, t in _PATIENT_RULES]

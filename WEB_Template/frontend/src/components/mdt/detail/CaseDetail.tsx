@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -16,9 +16,9 @@ import { cn } from '@/lib/utils';
 import type { Brief, BriefSection, MdtCase, MdtSessionDetail, SectionId, TimelineEvent } from '@/types/mdt';
 import { AiBlock } from '../AiBlock';
 import { Citations } from '../citations';
-import { ClaimItem, ClaimList } from '../ClaimList';
+import { ClaimItem, ClaimList, SectionClaims } from '../ClaimList';
 import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-source';
-import { GenerateBrief, useBriefJob } from '../GenerateBrief';
+import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
 import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
@@ -241,7 +241,7 @@ function DetailLayout({
                 <div className="flex flex-col gap-5">
                   {sectionsOf(brief, 'anamnesis').map((s) => (
                     <AiBlock key={s.title} title={s.title || 'Anamnéza'} status={brief?.status} headingLevel="h3">
-                      <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+                      <SectionClaims section={s} hideUnverified={hideUnverified} />
                     </AiBlock>
                   ))}
                   {brief && brief.header.comorbidities.length > 0 && (
@@ -359,7 +359,10 @@ function DetailLayout({
       <PageCrumbs
         items={[
           ...(session ? [{ label: session.title, href: `/dashboard/mdt/${session.id}` }] : []),
-          { label: item?.patient_id ?? brief?.patient_id ?? sources.patientId },
+          {
+            label: item?.patient_id ?? brief?.patient_id ?? sources.patientId,
+            href: isDemo ? undefined : `/dashboard/patients/${encodeURIComponent(sources.patientId)}`,
+          },
         ]}
       />
       <StickyCaseHeader caseKey={caseKey} sources={sources} session={session} item={item} brief={brief} canGenerate={canGenerate} sections={sections} />
@@ -393,6 +396,7 @@ function DetailLayout({
             <React.Fragment key={b.def.id}>{b.node}</React.Fragment>
           ))}
 
+          {brief?.feedback && <FeedbackNote feedback={brief.feedback} />}
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">
               Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
@@ -473,6 +477,7 @@ function StickyCaseHeader({
   const isDemo = caseKey === DEMO_CASE;
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
+  const [regenerating, setRegenerating] = React.useState(false);
   const flags = brief?.red_flags.length ?? 0;
 
   return (
@@ -551,9 +556,14 @@ function StickyCaseHeader({
                 <DropdownMenuItem onClick={() => { if (!briefWindow(caseKey)) router.push(`/brief/${caseKey}`); }}>
                   <PanelRightOpen aria-hidden /> Úzké okno vedle PACS
                 </DropdownMenuItem>
+                {!isDemo && (
+                  <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${encodeURIComponent(sources.patientId)}`)}>
+                    <UserRound aria-hidden /> Karta pacienta, vložit zprávu
+                  </DropdownMenuItem>
+                )}
                 {canGenerate && brief && (
-                  <DropdownMenuItem onClick={() => void job.start()} disabled={job.running || job.starting}>
-                    <RefreshCw aria-hidden /> Přegenerovat podklad
+                  <DropdownMenuItem onClick={() => setRegenerating(true)} disabled={job.running || job.starting}>
+                    <RefreshCw aria-hidden /> Přegenerovat s připomínkou…
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -561,6 +571,7 @@ function StickyCaseHeader({
           </div>
         </div>
         {job.progress}
+        <RegenerateDialog open={regenerating} onClose={() => setRegenerating(false)} onSubmit={(feedback) => void job.start(feedback)} />
         <div className="xl:hidden">
           <SectionNav sections={sections} variant="tabs" />
         </div>

@@ -113,6 +113,16 @@ export interface Brief {
   decision_support?: DecisionSupport;
   /** Ze všech Claim v podkladu (hlavička, sekce i B2). */
   stats: { claims_total: number; claims_unverified: number; missing_total: number };
+  /** Přegenerováno podle zpětné vazby lékaře k předchozí verzi (T-323). */
+  feedback?: BriefFeedback;
+}
+
+/** Co lékař vytkl předchozí verzi podkladu a na co se má AI zaměřit; `sections` prázdné = celý podklad. */
+export interface BriefFeedback {
+  text: string;
+  sections: SectionId[];
+  by: string;
+  at: string;
 }
 
 /**
@@ -128,6 +138,8 @@ export interface BriefSection {
   items: Claim[];
   /** Jen u role_views (FR-B7). */
   assessment?: RoleAssessment;
+  /** Jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5, lékař přepne). */
+  verbatim?: Claim[];
 }
 
 export interface RoleAssessment {
@@ -574,6 +586,7 @@ export type MdtSessionListItem = MdtSession & { patients: string[] };
 
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };
+
 
 /** GET /api/mdt/cases/{cid}/readiness/ (BON-1, OBC-1.1 / OBC-1.2) */
 export interface Readiness {

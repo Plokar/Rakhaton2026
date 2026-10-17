@@ -10,8 +10,8 @@
 2. Čistý stav P03 (smaže zápisy z nácviku, vrátí P03 na původní board a načte uložený podklad):
    `docker compose -f docker-compose.dev.yml exec backend python manage.py demo reset P03`
 3. **Rozhodni, jestli generovat živě:**
-   - Gemini free tier má limit **5 požadavků za minutu a 20 za den** (jeden podklad ≈ 9 volání). Živý podklad P03 trvá ~1,5 minuty a denně vyjdou jen ~2 podklady. Nácvik proto dělej s offline demem a na pitch ho nech zapnuté: **offline demo**: v `WEB_Template/.env` `MDT_DEMO_OFFLINE=True`, pak `docker compose -f docker-compose.dev.yml up -d backend`. Podklad se načte z `data/demo_cache/brief_P03.json` (předgenerovaný, stejný obsah).
-   - S placeným tierem (Q9) podklad trvá < 20 s, offline režim pak není potřeba.
+   - Výchozí LLM je **NVIDIA** (T-323): živý podklad P03 trvá **25–40 s** (hostované API, limit 40 požadavků za minutu). Na pitch je jistější **offline demo**: v `WEB_Template/.env` `MDT_DEMO_OFFLINE=True`, pak `docker compose -f docker-compose.dev.yml up -d backend`. Podklad se načte z `data/demo_cache/brief_P03.json` (předgenerovaný přes NVIDIA, stejný obsah).
+   - Gemini free tier (20 požadavků za den) na živé demo nestačí, proto už není výchozí.
 4. Otevři dvě okna: aplikaci (`http://localhost:3000`) a **úzké okno** podkladu (tlačítko „Úzké okno“ v agendě). Druhý panel: IRIS Management Portal (`http://localhost:52773/csp/sys/UtilHome.csp`, SuperUser / SYS) nebo Swagger (`http://localhost:8000/api/docs/`).
 5. Heslo všech demo účtů: `demo123456` (na přihlášení jsou 1-click tlačítka).
 
@@ -27,21 +27,21 @@
 | 5 | 2:30–3:20 | predseda | Sekce odborností: chirurg FLR 38 % a poslední bevacizumab, **RECIST PR 83 → 50 mm**, Lung-RADS / Fleischner „nelze použít“. B2: možnosti se **semaforem** (resekce 🟠, anti-EGFR 🔴 KRAS G12D), **RKT-03** po kritériích | „Semafor počítá kód, ne AI, a vždy ukáže všechny možnosti, i červené. AI předkládá, nerozhoduje.“ |
 | 6 | 3:20–4:10 | predseda | Záznam → **AI zapisovatel** z nahrávky diskuse (viz níže) → draft s úkoly → **Potvrdit** → v Management Portalu / Swaggeru `Composition/P03-mdt02` + `Provenance` | „Z 3 minut diskuse vznikne návrh zápisu s úkoly a termíny. Oficiální je až po potvrzení předsedou, zapisuje se do nemocniční FHIR databáze.“ |
 | 7 | 4:10–4:30 | predseda | **Export** PDF + FHIR (mCODE profily) · Úkoly po zasedání | „Standardní HL7 FHIR s mCODE profily. Úkoly komise mají vlastníka a termín, nic se neztratí.“ |
-| 8 | 4:30–5:00 | — | slide s čísly z [EVAL.md](EVAL.md) | Gemini (placený tier / Vertex AI EU pro ostrý provoz), IRIS FHIR + Vector Search s filtrem na pacienta, grounding validátor, pseudonymizace, AI Act / MDR |
+| 8 | 4:30–5:00 | — | slide s čísly z [EVAL.md](EVAL.md) | NVIDIA Nemotron (v ostrém provozu NIM on-prem, data neopustí nemocnici), IRIS FHIR + Vector Search s filtrem na pacienta, grounding validátor, pseudonymizace, AI Act / MDR |
 
 ## Kroky, které zatím nemají tlačítko v UI
 
-Backend je hotový, tlačítka doplní UI lane. Do té doby se ukazují přes Swagger (`/api/docs/`, přihlášení stejným účtem):
+Všechno je v UI (T-322, T-323):
 
-- **AI zapisovatel (krok 6):** `POST /api/mdt/cases/{id}/scribe/` → multipart `audio` = `data/audio/P03_mdt02.m4a`. S free tierem ~1 min, proto ho na pitch spusť **předem** (po `demo reset`, před pitchem) a v kroku 6 jen otevři Záznam: draft už tam je. Bez Gemini lze poslat JSON `{"segments": …}` z `data/audio/P03_mdt02_transcript.json`.
-- **Shrnutí pro pacienta:** po potvrzení `POST /api/mdt/cases/{id}/patient-summary/` → text je v PDF exportu („Shrnutí pro pacienta [AI návrh]“).
-- **Vložení zprávy (BON-7):** `POST /api/mdt/patients/P03/import/` `{"text": "…"}` → návrh hodnot s citací → `…/import/confirm/`.
+- **AI zapisovatel (krok 6):** v Závěru komise „Nahrát nahrávku diskuse“ = `data/audio/P03_mdt02.m4a` (Groq Whisper + NVIDIA, ~30 s), nebo v jednání komise přepínač **„Nahrávat diskusi“** v boku agendy (po přepnutí pacienta se úsek sám odešle). Bez sítě: vložit přepis z `data/audio/P03_mdt02.md`.
+- **Shrnutí pro pacienta:** po potvrzení v Závěru komise „Připravit shrnutí pro pacienta“; text je i v PDF exportu („Shrnutí pro pacienta [AI návrh]“).
+- **Nový pacient a vložení zprávy (BON-7):** v zařazení „Nový pacient“ (pseudonym Pxx do IRIS), pak „Vložit zprávu“: text nebo PDF (parser, sken přes OCR) → návrh hodnot se zněním odstavce → zápis do IRIS → podklad cituje odstavce zprávy.
 
 ## Zálohy
 
 | Problém | Záloha |
 |---|---|
-| Gemini nedostupný / limit | `MDT_DEMO_OFFLINE=True` (podklad z cache); zapisovatel s `segments` místo audia |
+| NVIDIA / Groq nedostupné nebo limit | `MDT_DEMO_OFFLINE=True` (podklad z cache); zapisovatel s vloženým přepisem místo audia; přepnout `AI_PROVIDER=gemini` |
 | IRIS nenaběhne | `docker compose -f docker-compose.dev.yml restart iris`, počkat na healthy (~1 min) |
 | Rozbitý stav po nácviku | `python manage.py demo reset P03` |
 | Nic nefunguje | záložní video (T-403) |

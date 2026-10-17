@@ -14,7 +14,6 @@ vektory a případ na boardu.
 """
 from __future__ import annotations
 
-import io
 import re
 from datetime import date, datetime
 from typing import Iterable
@@ -58,17 +57,6 @@ def is_oncologic_code(code: str) -> bool:
 
 
 # ── dokumenty ────────────────────────────────────────────────────────────────
-def pdf_text_local(data: bytes) -> str:
-    """Text textového PDF bez LLM (pypdf). Sken bez textové vrstvy vrátí prázdný řetězec."""
-    from pypdf import PdfReader
-    from pypdf.errors import PyPdfError
-    try:
-        reader = PdfReader(io.BytesIO(data))
-        return "\n\n".join((page.extract_text() or "").strip() for page in reader.pages).strip()
-    except (PyPdfError, ValueError, KeyError) as e:
-        raise DraftError(f"PDF nejde přečíst ({e.__class__.__name__}).") from None
-
-
 def _first_date(text: str) -> str | None:
     for d, m, y in DATE.findall(text):
         try:

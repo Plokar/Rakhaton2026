@@ -36,6 +36,7 @@ export const queryKeys = {
   compatibility: (caseId: number | string) => ['case', String(caseId), 'compatibility'] as const,
   readiness: (caseId: number | string) => ['case', String(caseId), 'readiness'] as const,
   intake: (patientId: string) => ['patient', patientId, 'intake'] as const,
+  patient: (patientId: string) => ['patient', patientId, 'detail'] as const,
   observations: (patientId: string) => ['patient', patientId, 'observations'] as const,
   timeline: (patientId: string) => ['patient', patientId, 'timeline'] as const,
 };
@@ -90,6 +91,10 @@ export function usePractitionersQuery(enabled = true) {
 
 export function usePatientsQuery(enabled = true) {
   return useQuery({ queryKey: queryKeys.patients, queryFn: () => mdtApi.getPatients(), enabled, staleTime: 5 * 60_000 });
+}
+
+export function usePatientQuery(patientId: string) {
+  return useQuery({ queryKey: queryKeys.patient(patientId), queryFn: () => mdtApi.getPatient(patientId) });
 }
 
 export function useBriefQuery(caseId: number | string | null | undefined) {
@@ -181,7 +186,7 @@ export function prefetchQuickView(client: QueryClient, target: { sessionId: numb
 
 /**
  * Zasedání i s případy: seznam + detail každého boardu souběžně (bez waterfallu).
- * Až API umí `sessions?expand=cases` (NAVRH_UI §10.2, T-518), stačí jeden dotaz.
+ * `sessions?expand=cases` (T-518) vrací jen `MdtCaseSummary`; agenda potřebuje celé `MdtCase` (zadávající, spolupracovníci).
  */
 export function useSessionsWithCases(filter: (session: MdtSessionListItem) => boolean) {
   const sessions = useSessionsQuery();

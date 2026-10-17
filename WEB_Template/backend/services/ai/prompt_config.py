@@ -31,6 +31,23 @@ def output_limit(config: dict | None, section_id: str) -> int:
     return MAX_ITEMS[detail_level(config, section_id)][section_id]
 
 
+# SectionId z UI → část podkladu, kterou generuje jedno volání LLM
+FEEDBACK_PARTS = {"summary": "summary", "timeline": "summary", "role_views": "role_views", "modalities": "role_views",
+                  "decision_support": "decision_support", "trials": "decision_support", "questions": "decision_support",
+                  "red_flags": "red_flags", "anamnesis": "anamnesis"}
+
+
+def feedback_note(config: dict | None, section_id: str) -> str:
+    """Připomínka lékaře k předchozí verzi (T-323) pro tuto část; prázdná, když se jí netýká."""
+    feedback = (config or {}).get("_feedback") or {}
+    text = (feedback.get("text") or "").strip()
+    parts = {FEEDBACK_PARTS.get(s, s) for s in feedback.get("sections") or []}
+    if not text or (parts and section_id not in parts):
+        return ""
+    return ("\n\nZpětná vazba lékaře k předchozí verzi (oprav, na co upozorňuje, a zaměř se na to; pořád jen fakta "
+            f"z podkladů s citacemi, nic nedomýšlej, chybějící údaj označ jako chybějící): „{text}“")
+
+
 def prompt_settings(config: dict | None, section_id: str) -> str:
     """Return explicit language/detail directions, honoring section detail overrides."""
     config = config or {}
@@ -45,4 +62,4 @@ def prompt_settings(config: dict | None, section_id: str) -> str:
     elif level == "detailed":
         instructions.append("Zahrň důležité souvislosti a explicitně uveď, co chybí.")
     instructions.append(LANGUAGE_DIRECTIVES.get(config.get("language"), LANGUAGE_DIRECTIVES["cs"]))
-    return " ".join(instructions)
+    return " ".join(instructions) + feedback_note(config, section_id)

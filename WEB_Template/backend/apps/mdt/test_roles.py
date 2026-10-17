@@ -64,6 +64,49 @@ def test_move_case_updates_task_in_iris(seeded):
     assert task['restriction']['period']['start'] == '2026-10-14T14:00:00+02:00'
 
 
+def test_intake_ignores_status_from_client(seeded):
+    """Lékař zařadí svého pacienta i s tělem z UI (`status` posílá formulář, mění ho jen předseda; dřív 403)."""
+    board = MdtSession.objects.get(title='Hrudní – karcinom plic')
+    body = {'session': board.pk, 'patient_id': 'P04', 'ecog': 1, 'intent': 'C', 'imaging_recent_checked': True,
+            'skipped_fields': [], 'acknowledge': [], 'status': 'nominated'}
+    r = as_user('pneumolog').post('/api/mdt/cases/', body, format='json')
+    assert r.status_code in (200, 201), r.json()
+    assert r.json()['status'] == 'ready'
+
+
+def test_regenerate_brief_with_doctor_feedback(seeded, monkeypatch):
+    """T-323: přegenerování se zpětnou vazbou: validace, pseudonymizace, uložení v parametrech jobu."""
+    from apps.copilot import jobs
+    from apps.copilot.models import GenerationJob
+
+    monkeypatch.setattr(jobs, 'start', lambda job: None)                 # job se jen založí
+    case = MdtCase.objects.get(patient_fhir_id='P03')
+    url = f'/api/mdt/cases/{case.pk}/brief/'
+    client = as_user('onkolog')
+    assert client.post(url, {'feedback': {'text': 'x'}}, format='json').status_code == 400
+    assert client.post(url, {'feedback': {'text': 'Chybí CT', 'sections': ['nic']}}, format='json').status_code == 400
+    r = client.post(url, {'feedback': {'text': 'Pan Novák, RČ 670315/1234: souhrn vynechal CT hrudníku',
+                                       'sections': ['summary', 'summary']}}, format='json')
+    assert r.status_code == 202
+    feedback = GenerationJob.objects.get(pk=r.json()['job_id']).params['feedback']
+    assert feedback['sections'] == ['summary'] and feedback['by'] and '670315' not in feedback['text']
+    assert 'feedback' not in GenerationJob.objects.get(pk=client.post(url, {}, format='json').json()['job_id']).params
+
+
+def test_closed_board_rejects_move_and_intake(seeded):
+    """Na uzavřený board nejde pacienta přesunout ani zařadit (409, T-518); úpravy v něm ano."""
+    closed = MdtSession.objects.get(title='Mamární komise (urgentní)')
+    closed.status = 'closed'
+    closed.save()
+    case = MdtCase.objects.get(patient_fhir_id='P01')
+    assert as_user('onkolog').patch(f'/api/mdt/cases/{case.pk}/', {'session': closed.pk}, format='json').status_code == 409
+    body = {'session': closed.pk, 'patient_id': 'P01', 'ecog': 1, 'intent': 'C', 'skipped_fields': []}
+    assert as_user('onkolog').post('/api/mdt/cases/', body, format='json').status_code == 409
+    p02 = MdtCase.objects.get(patient_fhir_id='P02')        # už na uzavřeném boardu
+    assert as_user('predseda').patch(f'/api/mdt/cases/{p02.pk}/', {'session': closed.pk, 'ecog': 1},
+                                     format='json').status_code == 200
+
+
 def test_case_edit_permissions(seeded):
     p04 = MdtCase.objects.get(patient_fhir_id='P04')       # zadal pneumolog
     assert as_user('onkolog').patch(f'/api/mdt/cases/{p04.pk}/', {'ecog': 1}, format='json').status_code == 403

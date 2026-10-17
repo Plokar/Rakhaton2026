@@ -53,6 +53,7 @@ import { openProjectorWindow, publishSelection } from '../projector';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { formatDuration, useCaseTimer } from './use-case-timer';
+import { DiscussionRecorder } from './DiscussionRecorder';
 
 type Case = MdtCase & { id: number };
 
@@ -204,7 +205,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       {cases.length > 0 && wide ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
           <ResizablePanel defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
-            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} />
+            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} recorder={<DiscussionRecorder current={current} />} />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Šířka agendy" />
           <ResizablePanel className="min-h-0">
@@ -214,6 +215,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       ) : (
         <div className="relative min-h-0 flex-1 overflow-y-auto">
           {cases.length > 0 && <AgendaPicker cases={cases} current={current} onSelect={select} />}
+          {cases.length > 0 && <DiscussionRecorder current={current} className="border-b bg-card" />}
           {main}
         </div>
       )}
@@ -370,11 +372,14 @@ function MeetingRail({
   current,
   elapsed,
   onSelect,
+  recorder,
 }: {
   cases: Case[];
   current: Case | null;
   elapsed: Record<string, number>;
   onSelect: (item: Case) => void;
+  /** Nahrávání diskuse (BON-3) v boku pod agendou. */
+  recorder: React.ReactNode;
 }) {
   return (
     <nav aria-label="Agenda zasedání" className="flex h-full min-h-0 flex-col bg-card">
@@ -427,6 +432,7 @@ function MeetingRail({
           );
         })}
       </ol>
+      {recorder}
       <p className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
         <Kbd>↑</Kbd> <Kbd>↓</Kbd> pacient · <Kbd>?</Kbd> zkratky
       </p>

@@ -1,6 +1,7 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
 import base64
 import json
+import logging
 import re
 
 from django.contrib.auth import get_user_model
@@ -30,6 +31,8 @@ from . import config as cfg
 from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
 from .models import BriefConfig, Decision, MdtCase, MdtSession
+
+logger = logging.getLogger(__name__)
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
@@ -279,6 +282,9 @@ def session_detail(request, sid):
     return _agenda_response(s)
 
 
+CLOSED_BOARD = {'detail': 'Board je uzavřený, pacienta na něj nejde zařadit ani přesunout.'}
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -289,6 +295,9 @@ def case_detail(request, cid):
     _require_case_edit(request, case)
     _validate_case_input(request, request.data, case)
     _validate_collaborators(request, request.data, case)
+    if request.data.get('session', case.session_id) != case.session_id and \
+            MdtSession.objects.filter(pk=request.data['session'], status='closed').exists():
+        return Response(CLOSED_BOARD, status=409)
     with transaction.atomic():
         written = _apply_case_input(request, case, request.data)
     return Response({**_case(case), 'fhir_written': written})
@@ -447,10 +456,13 @@ def case_create(request):
     """Zařazení pacienta do boardu (FR-P4): `{session, patient_id, ecog, intent, imaging_recent_checked,
     skipped_fields, acknowledge}`. Nominace už má případ (seed_mdt) → doplní ho a přesune (200), jinak založí (201)."""
     _require(request, roles.ADMIN, roles.DOCTOR)
-    data = request.data
+    # stav po zařazení určuje server (`ready`); klient ho posílá z typu MdtCase a lékaři by jinak padl na 403
+    data = {k: v for k, v in request.data.items() if k != 'status'}
     _validate_case_input(request, data)
     _validate_collaborators(request, data, None)
     session = get_object_or_404(MdtSession, pk=data.get('session'))
+    if session.status == 'closed':
+        return Response(CLOSED_BOARD, status=409)
     pid = data.get('patient_id')
     prefill = intake.intake_prefill(_patient_resources(pid), data.get('skipped_fields', []))
     question = next((f for f in prefill['fields'] if f['id'] == 'mdt.question'), {})
@@ -487,10 +499,30 @@ def case_brief(request, cid):
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
         return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
-    job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
-                                       created_by=request.user)
+    params = {'config': _config(request.data, case)}
+    if feedback := _brief_feedback(request):
+        params['feedback'] = feedback
+    job = GenerationJob.objects.create(case=case, kind='brief', params=params, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+def _brief_feedback(request) -> dict | None:
+    """`{feedback: {text, sections?}}` při přegenerování: co AI udělala špatně a na co se zaměřit (T-323).
+    Text jde do LLM, proto pseudonymizace (lékař může omylem napsat jméno nebo RČ) a délkový limit."""
+    raw = request.data.get('feedback')
+    if not raw:
+        return None
+    from services.ai.pseudonymize import pseudonymize_text
+
+    text = pseudonymize_text(str(raw.get('text', '') if isinstance(raw, dict) else '').strip())
+    sections = raw.get('sections') or [] if isinstance(raw, dict) else None
+    if not isinstance(raw, dict) or not 3 <= len(text) <= 1000:
+        raise ValidationError({'feedback': 'Zpětná vazba: text 3–1000 znaků.'})
+    if not isinstance(sections, list) or any(s not in cfg.SECTION_ORDER for s in sections):
+        raise ValidationError({'feedback': 'Neplatná sekce (SectionId §8.1).'})
+    return {'text': text, 'sections': list(dict.fromkeys(sections)),
+            'by': request.user.get_full_name() or request.user.username, 'at': timezone.localtime().isoformat()}
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])

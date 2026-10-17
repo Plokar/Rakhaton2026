@@ -249,10 +249,59 @@ export function QuickMetrics() {
   );
 }
 
-/** Identita, diagnóza + TNM, zasedání. `as` určuje úroveň nadpisu (h1 v samostatném okně). */
-export function QuickIdentity({ as: Title = 'h2', size = 'default' }: { as?: 'h1' | 'h2'; size?: 'default' | 'large' }) {
+/**
+ * Kompaktní identita pro okno projektoru (T-327): kód + TNM na jeden řádek, název diagnózy a board zkrácené
+ * na řádek (celé v `title`), počet varování. Pořád D-018: bez jména a RČ, diagnóza + TNM.
+ */
+function QuickIdentityCompact({ as: Title }: { as: 'h1' | 'h2' }) {
   const { header, sources } = useQuickView();
   const session = sources.session.data;
+  const high = header.warnings.filter((w) => w.severity === 'high').length;
+  return (
+    <div className="min-w-0 flex-1">
+      <Title translate="no" className="text-base font-semibold leading-tight tracking-tight">{header.displayName}</Title>
+      {sources.session.loading && !header.diagnosis ? (
+        <Skeleton className="mt-1.5 h-4 w-40" />
+      ) : (
+        <>
+          <p className="mt-0.5 text-sm leading-snug">
+            {header.diagnosis ? <span translate="no" className="font-semibold">{header.diagnosis.icd10}</span> : 'Diagnóza v záznamu chybí'}
+            {header.tnm && (
+              <>
+                {' · '}
+                {/* „(TNM 8. vyd.)“ jen v title, aby se TNM vešlo na řádek */}
+                <span translate="no" title={header.tnm}>{header.tnm.replace(/\s*\(TNM[^)]*\)\s*$/, '')}</span>
+              </>
+            )}
+          </p>
+          {header.diagnosis && (
+            <p className="truncate text-xs text-muted-foreground" title={header.diagnosis.text}>{header.diagnosis.text}</p>
+          )}
+        </>
+      )}
+      <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        {header.warnings.length > 0 && (
+          <span className="inline-flex shrink-0 items-center gap-1 font-medium text-foreground">
+            <TriangleAlert className={cn('size-3.5', high ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400')} aria-hidden />
+            {header.warnings.length} varování{high ? ` (${high} závažn${high === 1 ? 'é' : 'á'})` : ''}
+          </span>
+        )}
+        {session && (
+          <span className="truncate" title={session.title}>
+            {header.warnings.length > 0 && '· '}
+            {session.title}, {dayLabel(session.date)} {timeLabel(session.date)}
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/** Identita, diagnóza + TNM, zasedání. `as` určuje úroveň nadpisu (h1 v samostatném okně). */
+export function QuickIdentity({ as: Title = 'h2', size = 'default' }: { as?: 'h1' | 'h2'; size?: 'default' | 'large' | 'compact' }) {
+  const { header, sources } = useQuickView();
+  const session = sources.session.data;
+  if (size === 'compact') return <QuickIdentityCompact as={Title} />;
   return (
     <div className="min-w-0 flex-1">
       <Title translate="no" className={cn('font-semibold leading-tight tracking-tight', size === 'large' ? 'text-xl' : 'text-base')}>
@@ -395,16 +444,54 @@ export function KeyFactsList({ legend = true }: { legend?: boolean }) {
   );
 }
 
+/** Text buňky: „Chybí“ + „Chybí: Deficit DPD“ → stačí „Deficit DPD“ (celé znění zůstává v bublině). */
+function factCell(fact: KeyFact) {
+  const value = fact.value ?? FACT_META[fact.status].label;
+  const cell = value.startsWith(`${fact.abbr}: `) ? value.slice(fact.abbr.length + 2) : value;
+  const length = fact.abbr.length + 1 + cell.length;
+  // šířka v šestinách řádku (okno projektoru 420 px): třetina, polovina, dvě třetiny, nebo celý řádek
+  const units: CellUnits = length <= 13 ? 2 : length <= 22 ? 3 : length <= 32 ? 4 : 6;
+  return { value, cell, units };
+}
+
+type CellUnits = 2 | 3 | 4 | 6;
+
+const CELL_BASIS: Record<CellUnits, string> = {
+  2: 'basis-[calc(50%-1px)] @[22rem]:basis-[calc(33.333%-1px)] @[40rem]:basis-[calc(25%-1px)]',
+  3: 'basis-[calc(50%-1px)] @[40rem]:basis-[calc(33.333%-1px)]',
+  4: 'basis-full @[22rem]:basis-[calc(66.666%-1px)] @[40rem]:basis-[calc(50%-1px)]',
+  6: 'basis-full',
+};
+
 /**
- * Hustá mřížka pro projektor (T-326): v buňce jen zkratka, hodnota a ikona stavu. Důvod barvy, datum a plný
- * název jsou v bublině po najetí nebo fokusu; klik otevře zdroj (dohledatelnost, zadání §3.3).
- * Pořadí: závažné, mimo normu, chybějící, zaznamenané, v normě.
+ * Seřadí skupinu do řádků po 6 dílech (first-fit), aby krátké hodnoty vyplnily místo vedle delších
+ * a v mřížce nezůstaly díry. Balí se jen uvnitř skupiny, takže pořadí podle závažnosti platí dál.
+ */
+function packFacts(group: KeyFact[]): KeyFact[] {
+  const rows: { used: number; facts: KeyFact[] }[] = [];
+  for (const fact of group) {
+    const { units } = factCell(fact);
+    const row = rows.find((r) => r.used + units <= 6);
+    if (row) {
+      row.facts.push(fact);
+      row.used += units;
+    } else {
+      rows.push({ used: units, facts: [fact] });
+    }
+  }
+  return rows.flatMap((r) => r.facts);
+}
+
+/**
+ * Hustá mřížka pro projektor (T-326, T-327): buňka = jeden řádek se zkratkou, hodnotou a ikonou stavu. Důvod
+ * barvy, datum a plný název jsou v bublině po najetí nebo fokusu; klik otevře zdroj (dohledatelnost, zadání §3.3).
+ * Pořadí: závažné, mimo normu, chybějící, zaznamenané, v normě; poslední buňka řádku se roztáhne (žádné díry).
  */
 export function KeyFactsGrid() {
   const { facts, sources } = useQuickView();
   const open = useCitationOpen();
   const groups = orderFacts(facts);
-  const ordered = [...groups.attention, ...groups.unresolved, ...groups.recorded, ...groups.normal];
+  const ordered = [groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap(packFacts);
   const loading = sources.intake.loading || sources.observations.loading;
 
   return (
@@ -418,12 +505,10 @@ export function KeyFactsGrid() {
         <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
       ) : (
         <>
-          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border @[34rem]:grid-cols-3 @[48rem]:grid-cols-4">
+          <ul className="flex flex-wrap gap-px overflow-hidden rounded-lg border border-border bg-border">
             {ordered.map((fact) => {
               const meta = FACT_META[fact.status];
-              const value = fact.value ?? meta.label;
-              // „Chybí“ + „Chybí: Deficit DPD“ → v buňce stačí „Deficit DPD“; celé znění zůstává v bublině
-              const cell = value.startsWith(`${fact.abbr}: `) ? value.slice(fact.abbr.length + 2) : value;
+              const { value, cell, units } = factCell(fact);
               const tip = [
                 `${fact.label}: ${value}`,
                 fact.date ? `ze dne ${formatDate(fact.date)}` : null,
@@ -432,7 +517,7 @@ export function KeyFactsGrid() {
               ].filter(Boolean).join(' · ');
               const source = fact.citations.find((c) => /^P\d{2}/.test(c)) ?? fact.citations[0];
               return (
-                <li key={fact.id} className="bg-card">
+                <li key={fact.id} className={cn('min-w-0 grow bg-card', CELL_BASIS[units])}>
                   <Tooltip>
                     <TooltipTrigger
                       render={
@@ -441,18 +526,16 @@ export function KeyFactsGrid() {
                           onClick={() => source && open?.(source)}
                           aria-label={`${fact.label}: ${value}, ${meta.label}${fact.reason ? `. ${fact.reason}` : ''}${source ? '. Otevřít zdroj' : ''}`}
                           className={cn(
-                            'flex h-full w-full min-w-0 flex-col gap-0.5 px-2.5 py-1.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                            'flex h-full w-full min-w-0 items-center gap-1.5 px-2 py-1 text-left text-[13px] leading-5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                             fact.status === 'critical' && 'bg-red-50/70 dark:bg-red-950/30',
                             fact.status === 'abnormal' && 'bg-amber-50/60 dark:bg-amber-950/25',
                           )}
                         />
                       }
                     >
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <FactIcon status={fact.status} className="size-3.5 shrink-0" />
-                        <span translate="no" className="truncate text-[13px] font-semibold leading-5">{fact.abbr}</span>
-                      </span>
-                      <span className={cn('line-clamp-2 text-[13px] leading-[1.15rem] tabular-nums', fact.status === 'missing' || fact.status === 'pending' ? 'text-muted-foreground' : 'text-foreground')}>
+                      <FactIcon status={fact.status} className="size-3.5 shrink-0" />
+                      <span translate="no" className="shrink-0 font-semibold">{fact.abbr}</span>
+                      <span className={cn('min-w-0 truncate tabular-nums', fact.status === 'missing' || fact.status === 'pending' ? 'text-muted-foreground' : 'text-foreground')}>
                         {cell}
                       </span>
                     </TooltipTrigger>
@@ -487,8 +570,10 @@ function TreatmentRowCompact({ option }: { option: ProcedureCompatibility }) {
   const summary = lightSummary(option);
   const muted = compatibility.overall === 'grey' || compatibility.overall === 'skipped';
   return (
-    <li className="flex items-center gap-2 py-1.5">
-      <p className={cn('min-w-0 flex-1 text-[13px] leading-snug', muted ? 'text-muted-foreground' : 'font-medium')}>{option.title}</p>
+    <li className="flex items-center gap-2 py-1">
+      <p className={cn('min-w-0 flex-1 truncate text-[13px] leading-5', muted ? 'text-muted-foreground' : 'font-medium')} title={option.title}>
+        {option.title}
+      </p>
       <Tooltip>
         <TooltipTrigger
           render={
@@ -649,8 +734,10 @@ export function TreatmentList({ compact = false }: { compact?: boolean }) {
             {options.map((option) =>
               compact ? <TreatmentRowCompact key={option.id} option={option} /> : <TreatmentRow key={option.id} option={option} />)}
           </ul>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Barvu počítají pravidla z doporučených postupů, ne AI. Ukazuje soulad se stavem pacienta, nejde o doporučení. Rozhoduje komise.
+          <p className={cn('text-xs text-muted-foreground', compact ? 'mt-1' : 'mt-2 leading-relaxed')}>
+            {compact
+              ? 'Barvu počítají pravidla z guidelines, ne AI; nejde o doporučení.'
+              : 'Barvu počítají pravidla z doporučených postupů, ne AI. Ukazuje soulad se stavem pacienta, nejde o doporučení. Rozhoduje komise.'}
           </p>
         </>
       )}
@@ -660,10 +747,26 @@ export function TreatmentList({ compact = false }: { compact?: boolean }) {
 
 // ── Anamnéza a otázka ───────────────────────────────────────────────────────
 
-export function AnamnesisPanel({ defaultOpen = true, empty }: { defaultOpen?: boolean; empty?: React.ReactNode }) {
+export function AnamnesisPanel({
+  defaultOpen = true,
+  empty,
+  compact = false,
+}: {
+  defaultOpen?: boolean;
+  empty?: React.ReactNode;
+  /** Okno projektoru (T-327): bez podkladu jen jeden řádek místo bloku. */
+  compact?: boolean;
+}) {
   const { sources } = useQuickView();
   const brief = sources.brief.data ?? null;
   const section = brief?.sections.find((s) => s.id === 'anamnesis');
+  if (compact && !sources.brief.loading && !section?.items.length) {
+    return (
+      <p className="text-[13px] text-muted-foreground">
+        <span className="font-semibold text-foreground">Anamnéza</span> · {brief ? 'podklad ji neobsahuje' : 'zatím bez podkladu pro komisi'}
+      </p>
+    );
+  }
   if (sources.brief.loading) {
     return (
       <section aria-labelledby="qv-anamnesis">
@@ -779,19 +882,19 @@ export function CaseQuickViewNarrow({
   return (
     <QuickViewRoot sources={sources} caseId={caseId}>
       <article className={cn('flex h-full min-h-0 flex-col bg-background', className)} aria-label="Rychlý přehled případu">
-        <header className="flex shrink-0 items-start gap-3 border-b border-border bg-card px-4 py-3">
-          <QuickIdentity as={titleAs} />
+        <header className="flex shrink-0 items-start gap-3 border-b border-border bg-card px-3 py-2">
+          <QuickIdentity as={titleAs} size="compact" />
           <QuickMetrics />
         </header>
         <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="flex flex-col gap-5 px-4 py-4">
-            <AnamnesisPanel />
+          <div className="flex flex-col gap-3.5 px-3 py-3">
+            <AnamnesisPanel compact />
             <KeyFactsGrid />
             <TemplateSummary />
             <TreatmentList compact />
           </div>
         </div>
-        <QuestionStrip className="shrink-0" />
+        <QuestionStrip className="shrink-0 px-3 py-2" clampLines={2} />
         {footer}
       </article>
     </QuickViewRoot>

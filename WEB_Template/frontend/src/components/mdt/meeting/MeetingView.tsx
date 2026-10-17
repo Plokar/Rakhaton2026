@@ -505,10 +505,13 @@ function CaseToolbar({
             variant="outline"
             size="lg"
             onClick={onCollaborate}
+            aria-label={item.collaborators?.length ? `Spolupráce, přizváno ${item.collaborators.length}` : 'Spolupráce'}
             title={item.collaborators?.length ? `Spolupracují: ${item.collaborators.map((u) => u.name).join(', ')}` : 'Přizvat lékaře ke spolupráci'}
           >
             <UsersRound aria-hidden />
-            Spolupráce{item.collaborators?.length ? ` (${item.collaborators.length})` : ''}
+            {/* popisek až na široké ploše, jinak se lišta zalomí (1440 px s agendou) */}
+            <span className="hidden @5xl:inline">Spolupráce</span>
+            {item.collaborators?.length ? <span className="tabular-nums">{item.collaborators.length}</span> : null}
           </Button>
         )}
       </span>

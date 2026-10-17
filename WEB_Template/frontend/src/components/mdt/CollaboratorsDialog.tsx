@@ -27,7 +27,10 @@ export function CollaboratorsDialog({ item, open, onOpenChange }: { item: MdtCas
   const [saving, setSaving] = React.useState(false);
   const creatorId = item.created_by?.user_id;
   // Předseda smí vše bez přizvání; zadávající lékař právo má.
-  const candidates = (users.data ?? []).filter((u) => u.role !== 'mdt_admin' && u.user_id !== creatorId && u.user_id !== me?.user_id);
+  // Lékaři s odborností nahoře (účty bez odbornosti jsou z registrace před T-319 nebo z ukázkových dat šablony)
+  const candidates = (users.data ?? [])
+    .filter((u) => u.role !== 'mdt_admin' && u.user_id !== creatorId && u.user_id !== me?.user_id)
+    .toSorted((a, b) => Number(!a.specialty) - Number(!b.specialty) || a.name.localeCompare(b.name, 'cs'));
 
   const toggle = (id: number) =>
     setSelected((prev) => {

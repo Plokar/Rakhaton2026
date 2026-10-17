@@ -99,7 +99,7 @@ def _ddl(name: str, dim: int) -> str:
 
 def embedding_model_id(provider=None) -> str:
     """Identita vektorů v tabulkách: provider, model a dimenze (mock a Gemini se nesmí míchat)."""
-    provider = provider or ai_service.get_ai_provider()
+    provider = ai_service.embedding_provider(provider)
     model = 'hashed' if provider.is_mock else ai_service.embedding_model()
     return f'{provider.provider_name}:{model}@{ai_service.embedding_dim()}'
 
@@ -111,7 +111,7 @@ def _vector_param(vector: Sequence[float]) -> str:
 def embed(texts: Sequence[str], task_type: str, provider=None,
           prepare: Callable[[str], str] = pseudonymize_text) -> list[list[float]]:
     """Embeddingy přes provider (T-012). ``prepare`` = pseudonymizace před odesláním (NFR-3)."""
-    provider = provider or ai_service.get_ai_provider()
+    provider = ai_service.embedding_provider(provider)
     return provider.embed([prepare(t) for t in texts], task_type=task_type) if texts else []
 
 
@@ -144,17 +144,28 @@ def _missing_columns(cursor, name: str, dim: int) -> dict[str, str]:
     return {col: t for col, t in _column_types(name, dim).items() if col.lower() not in existing}
 
 
+def _other_dimension(cursor, name: str, dim: int) -> bool:
+    """Vektory jiné dimenze (přechod Gemini @1536 → NVIDIA @2048): sloupec `VECTOR` má pevnou dimenzi, IRIS ji
+    v katalogu neukazuje, takže se pozná podle `EmbeddingModel` (`…@dim`)."""
+    cursor.execute(f'SELECT %EXACT(EmbeddingModel), COUNT(*) FROM {_table(name)} GROUP BY %EXACT(EmbeddingModel)')
+    other = [model for model, _ in cursor.fetchall() if model and not str(model).endswith(f'@{dim}')]
+    if other:
+        logger.warning('%s: vektory %s nemají dimenzi %d, zakládám tabulku znovu', _table(name), other, dim)
+    return bool(other)
+
+
 def ensure_schema(recreate: bool = False) -> list[str]:
     """Založí chybějící tabulky a doplní chybějící sloupce (idempotentní, vrací provedené změny).
 
-    ``recreate`` = zahodit a založit znovu (např. jiná ``EMBEDDING_DIM``).
+    ``recreate`` = zahodit a založit znovu; stane se samo, když v tabulce jsou vektory jiné dimenze
+    (jiný ``EMBEDDING_PROVIDER``). Data jsou odvozená, volající je hned přepočítá (ingest, reindex).
     """
     dim = ai_service.embedding_dim()
     changes = []
     with _cursor(commit=True) as cursor:
         for name, (_, _, indexed) in _COLUMNS.items():
             exists = _table_exists(cursor, name)
-            if exists and recreate:
+            if exists and (recreate or _other_dimension(cursor, name, dim)):
                 cursor.execute(f'DROP TABLE {_table(name)}')
                 exists = False
             if not exists:
@@ -183,7 +194,7 @@ def _replace(name: str, rows: list, delete_where: str, delete_params: list, prov
     Schéma založí, když chybí (reindex po zápisu závěru T-209 na čistém IRIS, testy s ``fake_iris``).
     """
     ensure_schema()
-    provider = provider or ai_service.get_ai_provider()
+    provider = ai_service.embedding_provider(provider)
     vectors = embed([_embedding_text(r) for r in rows], ai_service.TASK_RETRIEVAL_DOCUMENT, provider, prepare)
     model_id = embedding_model_id(provider)
     cls = _COLUMNS[name][0]
@@ -267,7 +278,7 @@ def _select(name: str, where: dict[str, object], top: int | None = None, query_v
 
 
 def _search(name: str, query: str, where: dict, top_k: int, provider=None) -> list[dict]:
-    provider = provider or ai_service.get_ai_provider()
+    provider = ai_service.embedding_provider(provider)
     vector = embed([query], ai_service.TASK_RETRIEVAL_QUERY, provider)[0]
     rows = _select(name, {**where, 'EmbeddingModel': embedding_model_id(provider)}, top_k, vector)
     if not rows:
@@ -333,7 +344,7 @@ def similarity(text: str, evidence_ids: Iterable[str], task_type: str | None = N
     Odstavec ``P03-img03#2`` → ten odstavec; resource ``P03-img03`` → nejlepší z jeho odstavců;
     ``KRC-2.4`` / ``EXT-…`` → pasáž; ``RKT-03/V3`` → kritérium. ID bez vektoru ve výsledku chybí.
     """
-    provider = provider or ai_service.get_ai_provider()
+    provider = ai_service.embedding_provider(provider)
     model_id = embedding_model_id(provider)
     by_table: dict[tuple[str, str], list[str]] = {}
     for eid in evidence_ids:

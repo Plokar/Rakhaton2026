@@ -3,10 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { ArrowLeft, CircleCheck, FileDown, FileJson, Save, ShieldCheck } from 'lucide-react';
-import { Page } from '@/components/layout/Page';
-import { DEMO_CASE } from '@/components/mdt/CaseBriefScreen';
+import { CircleCheck, FileDown, FileJson, Save, ShieldCheck } from 'lucide-react';
+import { Page, PageHeader } from '@/components/layout/Page';
+import { PageCrumbs } from '@/components/layout/TopBar';
+import { buttonVariants } from '@/components/shadcn/button';
+import { DEMO_CASE } from '@/components/mdt/detail/CaseDetail';
 import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
@@ -20,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError, apiUrl } from '@/lib/api';
 import { briefP03, decisionP03 } from '@/lib/fixtures';
 import { mdtApi } from '@/lib/mdt-api';
+import { useCaseLocation } from '@/lib/queries';
 import { useApiData } from '@/lib/use-api-data';
 import type { Brief, Decision, EvidenceId, Me } from '@/types/mdt';
 
@@ -63,7 +65,7 @@ function initialDraft(caseId: string, brief: Brief | null, me: Me | null): Decis
 export default function DecisionPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = React.use(params);
   return (
-    <Page>
+    <Page className="max-w-4xl">
       <DecisionContent caseId={caseId} />
     </Page>
   );
@@ -81,6 +83,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const [confirming, setConfirming] = React.useState(false);
   const [openId, setOpenId] = React.useState<EvidenceId | null>(null);
   const close = React.useCallback(() => setOpenId(null), []);
+  const location = useCaseLocation(isDemo ? null : Number(caseId));
 
   const loading = decisionData.loading || briefData.loading;
   const brief = briefData.data ?? null;
@@ -128,40 +131,45 @@ function DecisionContent({ caseId }: { caseId: string }) {
     setConfirming(false);
   };
 
+  const patientLabel = location.item?.patient_id ?? brief?.patient_id ?? caseId;
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link
-          href={`/dashboard/cases/${encodeURIComponent(caseId)}`}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Podklad
-        </Link>
-        {current && !confirmed && (
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">
-              {dirty ? 'Neuložené změny' : savedAt ? `Uloženo v ${savedAt}` : ''}
-            </span>
-            {canEdit && (
-              <Button variant="outline" size="sm" onClick={save} isLoading={saving} className="gap-1.5">
-                <Save className="h-3.5 w-3.5" /> Uložit draft
-              </Button>
-            )}
-            {canConfirm && (
-              <Button size="sm" onClick={() => setConfirming(true)} className="gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" /> Potvrdit závěr
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Závěr komise</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {brief?.header.display_name ?? caseId} · zápis ve struktuře záznamu MDT. Text od AI je odlišený, rozhoduje lékař.
-        </p>
-      </div>
+    <>
+      <PageCrumbs
+        items={[
+          ...(location.session ? [{ label: location.session.title, href: `/dashboard/mdt/${location.session.id}` }] : []),
+          { label: patientLabel, href: `/dashboard/cases/${encodeURIComponent(caseId)}` },
+          { label: 'Závěr komise' },
+        ]}
+      />
+      <PageHeader
+        title="Závěr komise"
+        meta={
+          <>
+            <span translate="no">{brief?.header.display_name ?? patientLabel}</span> · zápis ve struktuře záznamu MDT. Text od AI je
+            odlišený, rozhoduje lékař.
+          </>
+        }
+        actions={
+          current &&
+          !confirmed && (
+            <>
+              <span className="text-xs text-muted-foreground" aria-live="polite">
+                {dirty ? 'Neuložené změny' : savedAt ? `Uloženo v ${savedAt}` : ''}
+              </span>
+              {canEdit && (
+                <Button variant="outline" onClick={save} isLoading={saving}>
+                  <Save aria-hidden /> Uložit draft
+                </Button>
+              )}
+              {canConfirm && (
+                <Button onClick={() => setConfirming(true)}>
+                  <ShieldCheck aria-hidden /> Potvrdit závěr
+                </Button>
+              )}
+            </>
+          )
+        }
+      />
 
       {isDemo && (
         <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
@@ -170,46 +178,41 @@ function DecisionContent({ caseId }: { caseId: string }) {
       )}
       {message && (
         <p
+          role={message.kind === 'error' ? 'alert' : 'status'}
           className={
             message.kind === 'error'
-              ? 'rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
-              : 'rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground'
+              ? 'rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive'
+              : 'rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground'
           }
         >
           {message.text}
         </p>
       )}
       {(decisionData.error || briefData.error) && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {decisionData.error ?? briefData.error}
         </p>
       )}
 
       {confirmed && current && (
         <div className="rounded-xl border border-border bg-card p-4 text-sm">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            <CircleCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+          <p className="flex items-center gap-2 font-semibold">
+            <CircleCheck className="size-4 text-emerald-700 dark:text-emerald-400" aria-hidden />
             Potvrzeno: {current.confirmed_by?.name}, {formatDate(current.confirmed_at?.slice(0, 16))}
           </p>
           {current.fhir_ids && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Zapsáno do IRIS: <span className="font-mono">{current.fhir_ids.composition}</span>, CarePlan, CareTeam,{' '}
+              Zapsáno do IRIS: <span translate="no" className="font-medium text-foreground">{current.fhir_ids.composition}</span>, CarePlan, CareTeam,{' '}
               {current.fhir_ids.tasks.length} úkolů, {current.fhir_ids.detected_issues.length} varovných signálů, Provenance.
             </p>
           )}
           {!isDemo && (
             <div className="mt-3 flex flex-wrap gap-2">
-              <a
-                href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.pdf`)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                <FileDown className="h-3.5 w-3.5" aria-hidden /> Export PDF
+              <a href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.pdf`)} className={buttonVariants({ size: 'lg' })}>
+                <FileDown aria-hidden /> Export PDF
               </a>
-              <a
-                href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.fhir.json`)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
-              >
-                <FileJson className="h-3.5 w-3.5" aria-hidden /> FHIR document Bundle
+              <a href={apiUrl(`/api/mdt/cases/${encodeURIComponent(caseId)}/export.fhir.json`)} className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+                <FileJson aria-hidden /> FHIR document Bundle
               </a>
             </div>
           )}
@@ -224,7 +227,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
       )}
       {current && (
         <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="rounded-xl border border-border bg-card p-5">
             <DecisionEditor decision={current} onChange={edit} readOnly={!canEdit} redFlags={brief?.red_flags ?? []} />
           </section>
           <SourceDrawer
@@ -245,6 +248,6 @@ function DecisionContent({ caseId }: { caseId: string }) {
           onConfirm={confirm}
         />
       )}
-    </div>
+    </>
   );
 }

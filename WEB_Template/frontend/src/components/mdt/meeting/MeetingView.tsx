@@ -34,6 +34,7 @@ import {
 } from '@/components/shadcn/dropdown-menu';
 import { Kbd } from '@/components/shadcn/kbd';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/shadcn/resizable';
+import { useSidebar } from '@/components/shadcn/sidebar';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -80,6 +81,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const wide = useMediaQuery('(min-width: 1024px)');
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
+  useFocusLayout();
 
   React.useEffect(() => {
     if (current) publishSelection({ board: sessionId, caseId: current.id, patient: current.patient_id });
@@ -216,6 +218,24 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   );
 }
 
+/**
+ * Jednání je režim soustředění: pod 1440 px (projektor 1024 × 768) se postranní panel sbalí na ikony,
+ * aby přehled pacienta měl místo. Po odchodu z jednání se vrátí, jak byl.
+ */
+function useFocusLayout() {
+  const { open, setOpen, isMobile } = useSidebar();
+  const initial = React.useRef({ open, isMobile, setOpen });
+  React.useEffect(() => {
+    const { open: wasOpen, isMobile: mobile, setOpen: set } = initial.current;
+    if (mobile || !wasOpen || window.innerWidth >= 1440) return;
+    const frame = requestAnimationFrame(() => set(false));
+    return () => {
+      cancelAnimationFrame(frame);
+      set(true);
+    };
+  }, []);
+}
+
 function MeetingHeader({
   board,
   discussed,
@@ -240,8 +260,8 @@ function MeetingHeader({
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-3 border-b border-border bg-card px-4 py-3 sm:px-6">
-      <div className="min-w-0 flex-1">
+    <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-border bg-card px-4 py-3 sm:px-6">
+      <div className="min-w-0 basis-full sm:basis-0 sm:flex-1">
         <h1 className="truncate text-lg font-semibold tracking-tight">{board.title}</h1>
         <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
           <span className="tabular-nums">
@@ -256,7 +276,7 @@ function MeetingHeader({
           <span className="font-medium text-foreground">{discussed} / {count}</span> projednáno · {formatDuration(total)}
         </p>
       )}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
           <MonitorUp aria-hidden /> Projektor
         </Button>

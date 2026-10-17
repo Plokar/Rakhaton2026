@@ -30,13 +30,26 @@ export function AddPatientSheet({ session, onClose }: { session: MdtSession | nu
   return (
     <Sheet open={session !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 data-[side=right]:sm:max-w-xl">
-        {shown && <AddPatientBody key={shown.id} session={shown} onDone={onClose} />}
+        {shown && (
+          <>
+            <SheetHeader className="border-b border-border px-5 py-4 pr-12">
+              <SheetTitle className="text-base font-semibold">Zařadit pacienta</SheetTitle>
+              <SheetDescription>
+                {shown.title}, {dayLabel(shown.date)} {timeLabel(shown.date)}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+              <AddPatientForm key={shown.id} session={shown} onDone={onClose} />
+            </div>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );
 }
 
-function AddPatientBody({ session, onDone }: { session: MdtSession; onDone: () => void }) {
+/** Výběr pacienta a formulář zařazení; sdílí ho boční panel i stránka `/dashboard/mdt/[id]/add`. */
+export function AddPatientForm({ session, onDone }: { session: MdtSession; onDone: () => void }) {
   const me = useMe();
   const [patientId, setPatientId] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
@@ -87,15 +100,7 @@ function AddPatientBody({ session, onDone }: { session: MdtSession; onDone: () =
 
   return (
     <>
-      <SheetHeader className="border-b border-border px-5 py-4 pr-12">
-        <SheetTitle className="text-base font-semibold">Zařadit pacienta</SheetTitle>
-        <SheetDescription>
-          {session.title}, {when}
-        </SheetDescription>
-      </SheetHeader>
-
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        {!selected ? (
+      {!selected ? (
           <div className="flex flex-col gap-3">
             <Input
               value={query}
@@ -160,7 +165,6 @@ function AddPatientBody({ session, onDone }: { session: MdtSession; onDone: () =
             )}
           </div>
         )}
-      </div>
     </>
   );
 }

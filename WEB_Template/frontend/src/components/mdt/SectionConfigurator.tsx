@@ -78,7 +78,7 @@ export function SectionConfigurator({
   return (
     <div className="space-y-5">
       <div>
-        <p className="mb-2 text-xs font-semibold text-foreground">Sekce a pořadí</p>
+        <p className="mb-2 text-sm font-semibold">Sekce a pořadí</p>
         <ol className="space-y-1.5">
           {sections.map((s, i) => (
             <li
@@ -97,7 +97,7 @@ export function SectionConfigurator({
                 !s.enabled && 'text-muted-foreground',
               )}
             >
-              {!readOnly && <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground" aria-hidden />}
+              {!readOnly && <GripVertical className="size-4 shrink-0 text-muted-foreground" aria-hidden />}
               <label className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -108,7 +108,7 @@ export function SectionConfigurator({
                 <span className="truncate">{SECTION_LABEL[s.id]}</span>
               </label>
               <select
-                className="h-8 rounded-md border border-input bg-background px-1.5 text-xs disabled:opacity-70"
+                className="h-8 rounded-md border border-input bg-card px-1.5 text-[13px] disabled:opacity-70"
                 value={s.detail ?? config.detail_level}
                 disabled={readOnly || !s.enabled}
                 aria-label={`Podrobnost: ${SECTION_LABEL[s.id]}`}
@@ -148,7 +148,7 @@ export function SectionConfigurator({
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold text-foreground">Přítomní (pohledy a posouzení rolí)</p>
+        <p className="mb-2 text-sm font-semibold">Přítomní (pohledy a posouzení rolí)</p>
         <div className="flex flex-wrap gap-2">
           {ROLES.map((r) => (
             <label
@@ -178,7 +178,7 @@ export function SectionConfigurator({
         {missing.length > 0 && (
           <ul className="mt-2 space-y-1">
             {missing.map((m) => (
-              <li key={m.role} className="flex items-start gap-1.5 text-xs font-medium text-orange-700 dark:text-orange-300">
+              <li key={m.role} className="flex items-start gap-1.5 text-[13px] font-medium text-amber-800 dark:text-amber-300">
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span>
                   Chybí role {ROLE_META[m.role].label.toLowerCase()}, kterou guidelines vyžadují: {m.reason}
@@ -191,10 +191,10 @@ export function SectionConfigurator({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <label className="space-y-1 text-xs font-semibold text-foreground">
+        <label className="flex flex-col gap-1.5 text-[13px] font-medium">
           <span className="block">Podrobnost celkově</span>
           <select
-            className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm font-normal disabled:opacity-70"
+            className="h-9 w-full rounded-lg border border-input bg-card px-2 text-sm font-normal disabled:opacity-70"
             value={config.detail_level}
             disabled={readOnly}
             onChange={(e) => onChange({ ...config, detail_level: e.target.value as DetailLevel })}
@@ -204,10 +204,10 @@ export function SectionConfigurator({
             ))}
           </select>
         </label>
-        <label className="space-y-1 text-xs font-semibold text-foreground">
+        <label className="flex flex-col gap-1.5 text-[13px] font-medium">
           <span className="block">Jazyk</span>
           <select
-            className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm font-normal disabled:opacity-70"
+            className="h-9 w-full rounded-lg border border-input bg-card px-2 text-sm font-normal disabled:opacity-70"
             value={config.language}
             disabled={readOnly}
             onChange={(e) => onChange({ ...config, language: e.target.value as BriefConfig['language'] })}

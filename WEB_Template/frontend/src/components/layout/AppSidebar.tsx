@@ -109,7 +109,8 @@ export function AppSidebar() {
                         <SidebarMenuButton
                           render={<Link href={`/dashboard/mdt/${s.id}`} />}
                           isActive={pathname === `/dashboard/mdt/${s.id}`}
-                          className="h-auto py-1.5"
+                          className="h-auto py-1.5 pr-8"
+                          title={s.title}
                         >
                           <span className="w-10 shrink-0 text-xs tabular-nums text-muted-foreground">{timeLabel(s.date)}</span>
                           <span className="truncate">{s.title}</span>

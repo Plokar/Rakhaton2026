@@ -522,11 +522,20 @@ export function AnamnesisPanel({ defaultOpen = true, empty }: { defaultOpen?: bo
  * Otázka pro MDT: kotva celé diskuse, proto vždy vidět (dole přilepená). V úzkém panelu se dlouhá
  * otázka zkrátí na 3 řádky a rozbalí klikem, aby nezakryla údaje.
  */
-export function QuestionStrip({ className, size = 'default' }: { className?: string; size?: 'default' | 'large' }) {
+export function QuestionStrip({
+  className,
+  size = 'default',
+  clampLines = size === 'default' ? 3 : 0,
+}: {
+  className?: string;
+  size?: 'default' | 'large';
+  /** Kolik řádků ukázat, než se otázka rozbalí (0 = celá). */
+  clampLines?: 0 | 2 | 3;
+}) {
   const { header, sources } = useQuickView();
   const [expanded, setExpanded] = React.useState(false);
-  const clamp = size === 'default';
-  const long = (header.question?.length ?? 0) > 140;
+  const clamp = clampLines > 0;
+  const long = (header.question?.length ?? 0) > (clampLines === 2 ? 110 : 140);
   return (
     <footer className={cn('border-t border-border bg-card px-4 py-3', className)}>
       <h2 className="sr-only">Otázka pro MDT</h2>
@@ -539,7 +548,7 @@ export function QuestionStrip({ className, size = 'default' }: { className?: str
               className={cn(
                 'font-semibold leading-snug text-balance',
                 size === 'large' ? 'text-xl' : 'text-base',
-                clamp && long && !expanded && 'line-clamp-3',
+                clamp && long && !expanded && (clampLines === 2 ? 'line-clamp-2' : 'line-clamp-3'),
               )}
             >
               {header.question ?? 'Otázka pro MDT v záznamu chybí.'}
@@ -633,7 +642,9 @@ export function CaseQuickViewWide({
     <QuickViewRoot sources={sources} caseId={caseId}>
       <article className={cn('flex min-h-0 flex-col', className)} aria-label="Rychlý přehled případu">
         <header className="flex flex-wrap items-start gap-x-6 gap-y-3 px-1 pb-4">
-          <QuickIdentity size="large" />
+          <div className="flex min-w-[min(100%,18rem)] flex-1">
+            <QuickIdentity size="large" />
+          </div>
           <div className="flex items-center gap-5">
             <QuickWarnings href={warningsHref} />
             <QuickMetrics />
@@ -649,7 +660,11 @@ export function CaseQuickViewWide({
             <TreatmentList />
           </div>
         </div>
-        <QuestionStrip size="large" className={cn('rounded-lg border', stickyQuestion && 'sticky bottom-0 z-10 shadow-[0_-12px_24px_-16px_rgb(15_23_42/0.25)]')} />
+        <QuestionStrip
+          size="large"
+          clampLines={stickyQuestion ? 2 : 0}
+          className={cn('rounded-lg border', stickyQuestion && 'lg:sticky lg:bottom-0 lg:z-10 lg:shadow-[0_-12px_24px_-16px_rgb(15_23_42/0.25)]')}
+        />
       </article>
     </QuickViewRoot>
   );

@@ -99,7 +99,7 @@ export function TopBar({
 
       <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
         <BreadcrumbList ref={slotRef} className="flex-nowrap">
-          <BreadcrumbItem className="hidden sm:inline-flex">
+          <BreadcrumbItem className={section ? 'hidden sm:inline-flex' : undefined}>
             {isRoot ? <BreadcrumbPage>Přehled</BreadcrumbPage> : <BreadcrumbLink render={<Link href="/dashboard" />}>Přehled</BreadcrumbLink>}
           </BreadcrumbItem>
           {section && (

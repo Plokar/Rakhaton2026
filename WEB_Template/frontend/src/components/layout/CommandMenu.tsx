@@ -4,9 +4,10 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Keyboard, LayoutGrid, ListChecks, MonitorUp, Moon, Settings, Sun, UserRound } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import { dayLabel, timeLabel } from '@/components/mdt/dates';
+import { dayLabel, pragueDay, timeLabel, todayPrague } from '@/components/mdt/dates';
 import { openProjectorWindow } from '@/components/mdt/projector';
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -16,7 +17,6 @@ import {
   CommandSeparator,
 } from '@/components/shadcn/command';
 import { useSessionsWithCases } from '@/lib/queries';
-import type { MdtSessionListItem } from '@/types/mdt';
 
 const ALL_SESSIONS = () => true;
 
@@ -39,11 +39,18 @@ export function CommandMenu({
     action();
   };
 
-  const upcoming = [...sessions].sort((a, b) => a.date.localeCompare(b.date));
+  // Nadcházející zasedání nahoře (od nejbližšího), minulá pod nimi.
+  const today = todayPrague();
+  const upcoming = [...sessions].sort((a, b) => {
+    const pastA = pragueDay(a.date) < today;
+    const pastB = pragueDay(b.date) < today;
+    return pastA === pastB ? (pastA ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)) : pastA ? 1 : -1;
+  });
   const cases = upcoming.flatMap((s) => (detail.get(s.id)?.cases ?? []).map((c) => ({ c, session: s })));
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange} title="Hledat" description="Pacient, zasedání nebo akce">
+    <CommandDialog open={open} onOpenChange={onOpenChange} title="Hledat" description="Pacient, zasedání nebo akce" className="sm:max-w-xl">
+      <Command loop>
       <CommandInput placeholder="Hledat pacienta (P03), diagnózu, komisi…" />
       <CommandList>
         <CommandEmpty>Nic nenalezeno.</CommandEmpty>
@@ -57,7 +64,7 @@ export function CommandMenu({
               >
                 <UserRound aria-hidden />
                 <span className="truncate">{c.patient?.display_name ?? c.patient_id}</span>
-                <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                <span className="ml-auto shrink-0 text-right text-xs text-muted-foreground">
                   {c.patient?.diagnosis?.icd10} · {session.title.split('–')[0].trim()}
                 </span>
               </CommandItem>
@@ -70,7 +77,7 @@ export function CommandMenu({
               <CommandItem key={s.id} value={`zasedání ${s.title} ${dayLabel(s.date)}`} onSelect={() => run(() => router.push(`/dashboard/mdt/${s.id}`))}>
                 <CalendarDays aria-hidden />
                 <span className="truncate">{s.title}</span>
-                <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
+                <span className="ml-auto shrink-0 text-right text-xs tabular-nums text-muted-foreground">
                   {dayLabel(s.date)} {timeLabel(s.date)}
                 </span>
               </CommandItem>
@@ -108,6 +115,7 @@ export function CommandMenu({
           </CommandItem>
         </CommandGroup>
       </CommandList>
+      </Command>
     </CommandDialog>
   );
 }

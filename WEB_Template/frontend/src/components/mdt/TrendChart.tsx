@@ -31,11 +31,11 @@ export function TrendChart({ series }: { series: ObservationSeries }) {
   const unit = series.unit ? ` ${series.unit}` : '';
 
   return (
-    <figure className="rounded-lg border border-border bg-background p-2">
+    <figure className="rounded-lg border border-border bg-card p-2.5">
       <figcaption className="flex items-baseline justify-between gap-2 text-xs">
-        <span className="font-semibold text-foreground">{series.label}</span>
+        <span className="font-medium text-foreground">{series.label}</span>
         <span className="text-muted-foreground">
-          {fmt(first.value)} → <span className="font-semibold text-foreground">{fmt(last.value)}</span>
+          {fmt(first.value)} → <span className="font-medium text-foreground">{fmt(last.value)}</span>
           {unit}
         </span>
       </figcaption>
@@ -52,14 +52,14 @@ export function TrendChart({ series }: { series: ObservationSeries }) {
         {promsScale && (
           <>
             <line x1={PAD.left} x2={W - PAD.right} y1={y(7)} y2={y(7)} className="stroke-muted-foreground/60" strokeDasharray="4 3" />
-            <text x={W - PAD.right} y={y(7) - 2} textAnchor="end" className="fill-muted-foreground text-[9px]">
+            <text x={W - PAD.right} y={y(7) - 2} textAnchor="end" className="fill-muted-foreground" fontSize={11}>
               7 = výrazná zátěž
             </text>
           </>
         )}
         <polyline
           points={points.map((p, i) => `${x(times[i])},${y(p.value)}`).join(' ')}
-          className="fill-none stroke-primary"
+          className="fill-none stroke-chart-2"
           strokeWidth={2}
         />
         {points.map((p, i) => (
@@ -68,21 +68,21 @@ export function TrendChart({ series }: { series: ObservationSeries }) {
             cx={x(times[i])}
             cy={y(p.value)}
             r={4}
-            className="cursor-pointer fill-card stroke-primary hover:fill-primary"
+            className="cursor-pointer fill-card stroke-chart-2 hover:fill-chart-2"
             strokeWidth={2}
             onClick={() => open?.(p.citation)}
           >
             <title>{`${formatDate(p.date)}: ${fmt(p.value)}${unit} (${p.citation})`}</title>
           </circle>
         ))}
-        <text x={PAD.left} y={H - 2} className="fill-muted-foreground text-[9px]">
+        <text x={PAD.left} y={H - 2} className="fill-muted-foreground" fontSize={11}>
           {formatDate(first.date)}
         </text>
-        <text x={W - PAD.right} y={H - 2} textAnchor="end" className="fill-muted-foreground text-[9px]">
+        <text x={W - PAD.right} y={H - 2} textAnchor="end" className="fill-muted-foreground" fontSize={11}>
           {formatDate(last.date)}
         </text>
       </svg>
-      <p className="flex flex-wrap gap-x-2 text-[10px] text-muted-foreground">
+      <p className="flex flex-wrap gap-x-2 text-xs tabular-nums text-muted-foreground">
         {points.map((p) => (
           <button key={p.citation} type="button" onClick={() => open?.(p.citation)} className="hover:text-foreground hover:underline">
             {formatDate(p.date)} {fmt(p.value)}

@@ -4,14 +4,19 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import { ListChecks } from 'lucide-react';
-import { Page } from '@/components/layout/Page';
+import { toast } from 'sonner';
+import { Page, PageHeader } from '@/components/layout/Page';
+import { Skeleton } from '@/components/shadcn/skeleton';
+import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
+import { todayPrague } from '@/components/mdt/dates';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Skeleton } from '@/components/ui/skeleton';
 import { mdtApi } from '@/lib/mdt-api';
-import { useApiData } from '@/lib/use-api-data';
+import { apiErrorMessage, queryKeys, useTasksQuery } from '@/lib/queries';
+import { cn } from '@/lib/utils';
 import type { MdtTask, TaskStatus } from '@/types/mdt';
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
@@ -20,139 +25,100 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
   completed: 'Hotovo',
 };
 
-// Klíč = verze (po změně stavu se seznam načte znovu z IRIS).
-const fetchTasks = () => mdtApi.getTasks();
+type Filter = 'open' | 'all' | TaskStatus;
 
-const isOverdue = (t: MdtTask, today: string) => t.status !== 'completed' && !!t.due_date && t.due_date < today;
+const isOverdue = (t: MdtTask, today: string) => t.status !== 'completed' && !!t.due_date && t.due_date.slice(0, 10) < today;
 
 /** Úkoly po zasedání (FR-P3): úkoly z potvrzených závěrů (FHIR Task v IRIS), stav, termíny a re-MDT. */
 export default function MdtTasksPage() {
-  return (
-    <Page>
-      <TasksContent />
-    </Page>
-  );
-}
-
-function TasksContent() {
   const me = useMe();
-  const [version, setVersion] = React.useState(0);
-  const [statusFilter, setStatusFilter] = React.useState<TaskStatus | 'open' | ''>('open');
-  const [patientFilter, setPatientFilter] = React.useState('');
-  const [saveError, setSaveError] = React.useState<string | null>(null);
-  const { data: tasks, error, loading } = useApiData(fetchTasks, String(version));
-  const today = new Date().toISOString().slice(0, 10);
+  const client = useQueryClient();
+  const tasks = useTasksQuery();
+  const [filter, setFilter] = React.useState<Filter>('open');
+  const [patient, setPatient] = React.useState('');
+  const today = todayPrague();
 
-  const patients = [...new Set((tasks ?? []).map((t) => t.patient_id))].sort();
-  const shown = (tasks ?? []).filter(
-    (t) =>
-      (!patientFilter || t.patient_id === patientFilter) &&
-      (statusFilter === '' || (statusFilter === 'open' ? t.status !== 'completed' : t.status === statusFilter)),
-  );
-  const overdue = (tasks ?? []).filter((t) => isOverdue(t, today)).length;
+  const all = tasks.data ?? [];
+  const patients = [...new Set(all.map((t) => t.patient_id))].sort();
+  const shown = all
+    .filter((t) => (!patient || t.patient_id === patient) && (filter === 'all' || (filter === 'open' ? t.status !== 'completed' : t.status === filter)))
+    .toSorted((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
+  const overdue = all.filter((t) => isOverdue(t, today)).length;
   // Re-MDT po pacientech (z CarePlanu), jen jedno datum na záznam MDT.
-  const reMdt = [...new Map((tasks ?? []).filter((t) => t.re_mdt?.date).map((t) => [t.mdt_record, t])).values()];
+  const reMdt = [...new Map(all.filter((t) => t.re_mdt?.date).map((t) => [t.mdt_record, t])).values()];
 
   const changeStatus = async (task: MdtTask, status: TaskStatus) => {
-    setSaveError(null);
     try {
       await mdtApi.updateTask(task.id, status);
-      setVersion((v) => v + 1);
+      await client.invalidateQueries({ queryKey: queryKeys.tasks });
+      toast(`Úkol: ${STATUS_LABEL[status].toLowerCase()}`, { description: task.description });
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Stav úkolu se nepodařilo uložit.');
+      toast.error(apiErrorMessage(err, 'Stav úkolu se nepodařilo uložit.'));
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Úkoly po zasedání</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Úkoly z potvrzených závěrů komise, jejich stav a termíny opětovného projednání.
-          {overdue > 0 && <strong className="ml-1 text-destructive">Po termínu: {overdue}.</strong>}
-        </p>
+    <Page className="max-w-5xl">
+      <PageHeader
+        title="Úkoly po zasedání"
+        meta={
+          <>
+            Úkoly z potvrzených závěrů komise a termíny opětovného projednání.
+            {overdue > 0 && <span className="ml-1 font-medium text-destructive">Po termínu: {overdue}.</span>}
+          </>
+        }
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <ToggleGroup value={[filter]} onValueChange={(v) => v[0] && setFilter(v[0] as Filter)} variant="outline" spacing={0} aria-label="Stav úkolů">
+          <ToggleGroupItem value="open">Nedokončené</ToggleGroupItem>
+          <ToggleGroupItem value="completed">Hotové</ToggleGroupItem>
+          <ToggleGroupItem value="all">Všechny</ToggleGroupItem>
+        </ToggleGroup>
+        {patients.length > 1 && (
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Pacient</span>
+            <select className="h-8 rounded-lg border border-input bg-card px-2 text-sm" value={patient} onChange={(e) => setPatient(e.target.value)}>
+              <option value="">Všichni</option>
+              {patients.map((pid) => <option key={pid} value={pid}>{pid}</option>)}
+            </select>
+          </label>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-3 text-sm">
-        <label className="flex items-center gap-2">
-          Stav
-          <select
-            className="rounded-md border border-border bg-background px-2 py-1"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as TaskStatus | 'open' | '')}
-          >
-            <option value="open">Nedokončené</option>
-            <option value="">Všechny</option>
-            {Object.entries(STATUS_LABEL).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
-          Pacient
-          <select
-            className="rounded-md border border-border bg-background px-2 py-1"
-            value={patientFilter}
-            onChange={(e) => setPatientFilter(e.target.value)}
-          >
-            <option value="">Všichni</option>
-            {patients.map((pid) => (
-              <option key={pid} value={pid}>
-                {pid}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      {tasks.isLoading && <Skeleton className="h-40" />}
+      {tasks.isError && <p role="alert" className="text-sm text-destructive">{apiErrorMessage(tasks.error, 'Úkoly se nepodařilo načíst.')}</p>}
 
-      {loading && <Skeleton className="h-40 w-full" />}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {saveError && <p className="text-sm text-destructive">{saveError}</p>}
-
-      {reMdt.length > 0 && (
-        <section aria-label="Plánovaná re-MDT" className="rounded-xl border border-border bg-card p-4">
-          <h2 className="text-sm font-bold text-foreground">Plánovaná re-MDT</h2>
-          <ul className="mt-2 space-y-1 text-sm">
-            {reMdt.map((t) => (
-              <li key={t.mdt_record}>
-                <strong>{t.patient_id}</strong> · {formatDate(t.re_mdt?.date)} {t.re_mdt?.reason && `· ${t.re_mdt.reason}`}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {tasks && shown.length === 0 && (
+      {tasks.data && shown.length === 0 && (
         <EmptyState
-          icon={<ListChecks className="h-6 w-6" />}
-          title={tasks.length === 0 ? 'Zatím žádné úkoly' : 'Filtru neodpovídá žádný úkol'}
-          description="Úkoly vzniknou po potvrzení závěru komise."
+          icon={<ListChecks aria-hidden />}
+          title={all.length === 0 ? 'Zatím žádné úkoly' : 'Filtru neodpovídá žádný úkol'}
+          description="Úkoly vzniknou po potvrzení závěru komise a zapíšou se do IRIS."
         />
       )}
 
       {shown.length > 0 && (
-        <ul className="space-y-2.5" aria-label="Úkoly">
-          {shown.map((t) => (
-            <li key={t.id} className="rounded-xl border border-border bg-card p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1">
-                  <p className="font-semibold text-foreground">{t.description}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t.patient_id} · {t.owner.name}
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card" aria-label="Úkoly">
+          {shown.map((t) => {
+            const late = isOverdue(t, today);
+            return (
+              <li key={t.id} className="grid gap-x-4 gap-y-1 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{t.description}</p>
+                  <p className="text-[13px] text-muted-foreground">
+                    <span translate="no" className="font-medium text-foreground">{t.patient_id}</span> · {t.owner.name}
                     {t.due_date && (
                       <>
                         {' · termín '}
-                        <span className={isOverdue(t, today) ? 'font-bold text-destructive' : undefined}>
+                        <span className={cn('tabular-nums', late && 'font-medium text-destructive')}>
                           {formatDate(t.due_date)}
-                          {isOverdue(t, today) && ' (po termínu)'}
+                          {late && ' (po termínu)'}
                         </span>
                       </>
                     )}
                     {' · '}
                     {t.case_id ? (
-                      <Link className="underline" href={`/dashboard/cases/${t.case_id}/record`}>
+                      <Link className="underline underline-offset-4 hover:text-foreground" href={`/dashboard/cases/${t.case_id}/record`}>
                         záznam {t.mdt_record}
                       </Link>
                     ) : (
@@ -162,25 +128,36 @@ function TasksContent() {
                 </div>
                 {can.generateBrief(me) ? (
                   <select
-                    aria-label={`Stav úkolu ${t.id}`}
-                    className="rounded-md border border-border bg-background px-2 py-1 text-sm"
+                    aria-label={`Stav úkolu: ${t.description}`}
+                    className="h-8 w-fit rounded-lg border border-input bg-card px-2 text-sm"
                     value={t.status}
                     onChange={(e) => changeStatus(t, e.target.value as TaskStatus)}
                   >
-                    {Object.entries(STATUS_LABEL).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
+                    {Object.entries(STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                   </select>
                 ) : (
-                  <span className="text-sm font-semibold">{STATUS_LABEL[t.status]}</span>
+                  <span className="text-sm text-muted-foreground">{STATUS_LABEL[t.status]}</span>
                 )}
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
-    </div>
+
+      {reMdt.length > 0 && (
+        <section aria-labelledby="re-mdt" className="flex flex-col gap-2">
+          <h2 id="re-mdt" className="text-base font-semibold">Plánovaná re-MDT</h2>
+          <ul className="flex flex-col gap-1 text-sm">
+            {reMdt.map((t) => (
+              <li key={t.mdt_record}>
+                <span translate="no" className="font-medium">{t.patient_id}</span>{' '}
+                <span className="tabular-nums">{formatDate(t.re_mdt?.date)}</span>
+                {t.re_mdt?.reason && <span className="text-muted-foreground"> · {t.re_mdt.reason}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </Page>
   );
 }

@@ -87,7 +87,7 @@ export function Timeline({ events }: { events: TimelineEvent[] }) {
               <span className="absolute -left-[1.4rem] top-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-border bg-card">
                 <Icon className="h-3 w-3 text-muted-foreground" aria-hidden />
               </span>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs tabular-nums text-muted-foreground">
                 {formatDate(r.date)} · {meta.label}
               </p>
               <p className="text-sm text-foreground">
@@ -102,7 +102,7 @@ export function Timeline({ events }: { events: TimelineEvent[] }) {
         <button
           type="button"
           onClick={() => setShowAll(!showAll)}
-          className="mt-2 text-xs font-medium text-primary hover:underline"
+          className="mt-3 rounded-sm text-[13px] font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {showAll ? 'Skrýt léčbu a laboratoř' : `Zobrazit i léčbu a laboratoř (${hidden})`}
         </button>

@@ -1,5 +1,4 @@
 import { TriangleAlert } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { Claim } from '@/types/mdt';
 import { Citations } from './citations';
 import { MissingData } from './MissingData';
@@ -9,22 +8,22 @@ export function ClaimItem({ claim }: { claim: Claim }) {
   if (claim.kind === 'missing') {
     return <MissingData text={claim.text} expectedSource={claim.expected_source} citations={claim.citations} />;
   }
-  const unverified = claim.verification === 'unverified';
-  return (
-    <p
-      className={cn(
-        'text-sm leading-relaxed',
-        unverified && 'rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1',
-      )}
-    >
-      {unverified && (
+  if (claim.verification === 'unverified') {
+    return (
+      <p className="rounded-md bg-amber-50 px-2.5 py-1.5 text-sm leading-relaxed dark:bg-amber-400/10">
         <span
-          className="mr-1.5 inline-flex items-center gap-1 rounded bg-amber-500/20 px-1.5 py-0.5 align-baseline text-[11px] font-semibold text-amber-700 dark:text-amber-300"
+          className="mr-1.5 inline-flex items-center gap-1 align-baseline text-xs font-medium text-amber-800 dark:text-amber-300"
           title="Grounding validátor tvrzení neověřil proti citovanému zdroji"
         >
-          <TriangleAlert className="h-3 w-3" aria-hidden /> Neověřeno
+          <TriangleAlert className="size-3.5 self-center" aria-hidden /> Neověřeno
         </span>
-      )}
+        {claim.text}
+        <Citations ids={claim.citations} />
+      </p>
+    );
+  }
+  return (
+    <p className="text-sm leading-relaxed">
       {claim.text}
       <Citations ids={claim.citations} />
     </p>
@@ -37,17 +36,15 @@ export function ClaimList({ claims, hideUnverified = false }: { claims: Claim[];
     : claims;
   const hidden = claims.length - visible.length;
   return (
-    <div className="space-y-2">
-      <ul className="space-y-2">
+    <div className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-2">
         {visible.map((claim) => (
           <li key={claim.id}>
             <ClaimItem claim={claim} />
           </li>
         ))}
       </ul>
-      {hidden > 0 && (
-        <p className="text-xs text-muted-foreground">Skryto neověřených tvrzení: {hidden}</p>
-      )}
+      {hidden > 0 && <p className="text-xs text-muted-foreground">Skryto neověřených tvrzení: {hidden} (nastavení podkladu).</p>}
     </div>
   );
 }

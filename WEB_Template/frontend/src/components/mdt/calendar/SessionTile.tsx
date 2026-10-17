@@ -125,15 +125,16 @@ export function SessionTile({
         </Link>
       )}
 
-      {accepts && (
-        <p className={cn('mt-2 text-xs font-medium', isOver ? 'text-primary' : 'text-muted-foreground')} aria-hidden>
+      {/* Stav během tažení jako překryv: rozvržení se nehýbe, cíl pod kurzorem neposkočí. */}
+      {accepts && isOver && (
+        <span className="pointer-events-none absolute right-2 top-2 rounded-md bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground" aria-hidden>
           Přesunout sem
-        </p>
+        </span>
       )}
       {blocked && (
-        <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground" aria-hidden>
+        <span className="pointer-events-none absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground" aria-hidden>
           <Ban className="size-3.5" /> {session.status === 'closed' ? 'Uzavřený board' : 'Minulé zasedání'}
-        </p>
+        </span>
       )}
     </section>
   );

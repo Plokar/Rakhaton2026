@@ -3,9 +3,9 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { ArrowLeft, RefreshCw, Save } from 'lucide-react';
-import { Page } from '@/components/layout/Page';
+import { RefreshCw, Save } from 'lucide-react';
+import { Page, PageHeader } from '@/components/layout/Page';
+import { PageCrumbs } from '@/components/layout/TopBar';
 import { CitationProvider } from '@/components/mdt/citations';
 import { apiDataSource } from '@/components/mdt/data-source';
 import { formatDate } from '@/components/mdt/format';
@@ -29,7 +29,7 @@ const fetchSetup = async (key: string) => {
 export default function SetupPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = React.use(params);
   return (
-    <Page>
+    <Page className="max-w-3xl">
       <SetupContent sessionId={sessionId} />
     </Page>
   );
@@ -94,31 +94,29 @@ function SetupContent({ sessionId }: { sessionId: string }) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <Link
-        href={`/dashboard/mdt/${encodeURIComponent(sessionId)}`}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Agenda
-      </Link>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Nastavení podkladu</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {session ? `${session.title} · ${formatDate(session.date)}` : ''}
-          {editable ? '' : ' · nastavuje předseda komise, bloky si můžete sbalit u sebe v podkladu'}
-        </p>
-      </div>
+    <>
+      {session && (
+        <PageCrumbs items={[{ label: session.title, href: `/dashboard/mdt/${encodeURIComponent(sessionId)}` }, { label: 'Nastavení podkladu' }]} />
+      )}
+      <PageHeader
+        title="Nastavení podkladu"
+        meta={
+          <>
+            {session ? `${session.title}, ${formatDate(session.date)}` : 'Načítám zasedání…'}
+            {editable ? '' : '. Nastavuje předseda komise, bloky si můžete sbalit u sebe v podkladu.'}
+          </>
+        }
+      />
 
       {loading && <Skeleton className="h-96 w-full" />}
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      )}
+      {error && <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
       {message && (
         <p
+          role={message.kind === 'error' ? 'alert' : 'status'}
           className={
             message.kind === 'error'
-              ? 'rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
-              : 'rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground'
+              ? 'rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive'
+              : 'rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground'
           }
         >
           {message.text}
@@ -127,12 +125,12 @@ function SetupContent({ sessionId }: { sessionId: string }) {
 
       {current && session && (
         <CitationProvider order={[]} activeId={openId} onOpen={setOpenId}>
-          <section className="space-y-5 rounded-xl border border-border bg-card p-4">
+          <section className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5">
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-xs font-semibold text-foreground">
+              <label className="flex flex-col gap-1.5 text-[13px] font-medium">
                 <span className="block">Preset</span>
                 <select
-                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm font-normal disabled:opacity-70"
+                  className="h-9 w-full rounded-lg border border-input bg-card px-2 text-sm font-normal disabled:opacity-70"
                   value={current.id ?? ''}
                   disabled={!editable}
                   onChange={(e) => {
@@ -148,7 +146,7 @@ function SetupContent({ sessionId }: { sessionId: string }) {
                   ))}
                 </select>
               </label>
-              <label className="space-y-1 text-xs font-semibold text-foreground">
+              <label className="flex flex-col gap-1.5 text-[13px] font-medium">
                 <span className="block">Název nastavení boardu</span>
                 <Input
                   value={current.name}
@@ -167,10 +165,10 @@ function SetupContent({ sessionId }: { sessionId: string }) {
             {editable && (
               <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
                 <Button variant="outline" onClick={save} isLoading={busy} disabled={!draft} className="gap-1.5">
-                  <Save className="h-4 w-4" /> Uložit pro board
+                  <Save aria-hidden /> Uložit pro board
                 </Button>
                 <Button onClick={regenerate} isLoading={busy} className="gap-1.5">
-                  <RefreshCw className="h-4 w-4" /> Uložit a přegenerovat podklady ({session.cases.length})
+                  <RefreshCw aria-hidden /> Uložit a přegenerovat podklady ({session.cases.length})
                 </Button>
               </div>
             )}
@@ -178,6 +176,6 @@ function SetupContent({ sessionId }: { sessionId: string }) {
           <SourceDrawer evidenceId={openId} loadSource={apiDataSource.loadSource} onClose={close} />
         </CitationProvider>
       )}
-    </div>
+    </>
   );
 }

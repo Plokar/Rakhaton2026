@@ -41,31 +41,25 @@ export interface ChipActions {
   onMove: (target: MdtSessionListItem) => void;
 }
 
-/** Obsah čipu „P05 · Ž · 68  C50.4  81 %“; stejný v agendě dlaždice i v táhnutém náhledu. */
+/** Obsah čipu „P05 · Ž · 68  C50.4  81 %“; v úzkém sloupci se MKN a připravenost zalomí pod jméno. */
 export function ChipFace({ item, overlay = false }: { item: MdtCase; overlay?: boolean }) {
   const icd10 = item.patient?.diagnosis?.icd10;
   return (
     <span
       className={cn(
-        'flex min-h-9 w-full items-start gap-1 rounded-md py-1.5 pl-1 pr-1.5 text-[13px] leading-5',
+        'flex min-h-9 w-full flex-wrap items-baseline gap-x-1.5 rounded-md px-1.5 py-1.5 text-[13px] leading-5',
         overlay && 'bg-popover shadow-[0_12px_32px_-12px_rgb(15_23_42/0.35)] ring-1 ring-border',
       )}
     >
-      <GripVertical
-        className={cn('mt-0.5 size-4 shrink-0 text-muted-foreground/70', !overlay && 'opacity-0 transition-opacity group-hover/chip:opacity-100 [@media(hover:none)]:hidden')}
-        aria-hidden
-      />
-      <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-1.5">
-        <span translate="no" className="font-medium tabular-nums">{shortPatient(item)}</span>
-        {icd10 && <span translate="no" className="text-muted-foreground">{icd10}</span>}
-        {item.status === 'returned' && (
-          <span className="inline-flex items-center self-center text-amber-800 dark:text-amber-300" title="Vráceno k doplnění">
-            <Undo2 className="size-3.5" aria-hidden />
-            <span className="sr-only">vráceno k doplnění</span>
-          </span>
-        )}
-      </span>
-      {item.id != null && <ReadinessMark caseId={item.id} className="pt-px" />}
+      <span translate="no" className="whitespace-nowrap font-medium tabular-nums">{shortPatient(item)}</span>
+      {icd10 && <span translate="no" className="text-muted-foreground">{icd10}</span>}
+      {item.status === 'returned' && (
+        <span className="inline-flex items-center self-center text-amber-800 dark:text-amber-300" title="Vráceno k doplnění">
+          <Undo2 className="size-3.5" aria-hidden />
+          <span className="sr-only">vráceno k doplnění</span>
+        </span>
+      )}
+      {item.id != null && <ReadinessMark caseId={item.id} className="ml-auto" />}
     </span>
   );
 }
@@ -112,7 +106,7 @@ export const PatientChip = React.memo(function PatientChip({
           <m.li
             layout="position"
             layoutId={layoutId}
-            className="group/chip relative flex items-center rounded-md transition-colors hover:bg-muted/70 has-[:focus-visible]:bg-muted/70"
+            className="group/chip relative rounded-md transition-colors hover:bg-muted/70 has-[:focus-visible]:bg-muted/70"
           />
         }
       >
@@ -129,17 +123,23 @@ export const PatientChip = React.memo(function PatientChip({
           onPointerEnter={actions.onPrefetch}
           onFocus={actions.onPrefetch}
           className={cn(
-            'min-w-0 flex-1 cursor-pointer rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            'cursor-pointer rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:none)]:pr-8',
             draggable && 'cursor-grab active:cursor-grabbing',
             dimmed && 'opacity-35',
           )}
         >
           <ChipFace item={item} />
         </div>
+        {draggable && (
+          <GripVertical
+            className="pointer-events-none absolute -left-2.5 top-2.5 size-3 text-muted-foreground opacity-0 transition-opacity group-hover/chip:opacity-70 [@media(hover:none)]:hidden"
+            aria-hidden
+          />
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label={`Akce pro ${item.patient_id}`}
-            className="mr-0.5 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/chip:opacity-100 data-[popup-open]:opacity-100 [@media(hover:none)]:opacity-100"
+            className="absolute right-0.5 top-1 flex size-7 items-center justify-center rounded-md bg-muted text-muted-foreground opacity-0 outline-none transition-opacity hover:bg-background hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/chip:opacity-100 data-[popup-open]:opacity-100 [@media(hover:none)]:bg-transparent [@media(hover:none)]:opacity-100"
           >
             <MoreHorizontal className="size-4" aria-hidden />
           </DropdownMenuTrigger>

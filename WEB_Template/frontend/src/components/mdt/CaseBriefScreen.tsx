@@ -1,25 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { FileText, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
+import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ApiError } from '@/lib/api';
 import { briefP03 } from '@/lib/fixtures';
-import { mdtApi, type StoredBrief } from '@/lib/mdt-api';
+import { apiErrorMessage, useBriefQuery } from '@/lib/queries';
 import { BriefView } from './BriefView';
 import { apiDataSource, fixtureDataSource } from './data-source';
-import { JobProgress } from './JobProgress';
+import { DEMO_CASE } from './detail/CaseDetail';
+import { GenerateBrief, useBriefJob } from './GenerateBrief';
 
-/** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
-export const DEMO_CASE = 'demo';
-
-type LoadState = { key: string; brief?: StoredBrief; missing?: boolean; error?: string };
+export { DEMO_CASE };
 
 /**
- * Podklad případu: načtení z API (nebo fixture u `demo`), generování přes job s průběhem
- * a zobrazení v `BriefView`. Sdílí ho `/dashboard/cases/[caseId]` a úzké okno `/brief/[caseId]`.
+ * Podklad případu v úzkém okně `/brief/[caseId]` (FR-U2): načtení ze sdílené cache (nebo fixture
+ * u `demo`), generování přes job s průběhem a zobrazení v `BriefView`.
  */
 export function CaseBriefScreen({
   caseId,
@@ -32,97 +28,44 @@ export function CaseBriefScreen({
   canGenerate?: boolean;
 }) {
   const isDemo = caseId === DEMO_CASE;
-  const [version, setVersion] = React.useState(0);
-  const [loaded, setLoaded] = React.useState<LoadState | null>(null);
-  const [jobId, setJobId] = React.useState<number | null>(null);
-  const [jobError, setJobError] = React.useState<string | null>(null);
-  const key = `${caseId}:${version}`;
-
-  React.useEffect(() => {
-    if (isDemo) return;
-    let cancelled = false;
-    mdtApi
-      .getBrief(caseId)
-      .then((brief) => !cancelled && setLoaded({ key, brief }))
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        if (err instanceof ApiError && err.status === 404) setLoaded({ key, missing: true });
-        else setLoaded({ key, error: err instanceof Error ? err.message : 'Podklad se nepodařilo načíst.' });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [caseId, isDemo, key]);
-
-  const current: LoadState | null = isDemo ? { key, brief: briefP03 } : loaded?.key === key ? loaded : null;
-
-  const generate = async () => {
-    setJobError(null);
-    try {
-      const { job_id } = await mdtApi.generateBrief(caseId);
-      setJobId(job_id);
-    } catch (err) {
-      setJobError(err instanceof Error ? err.message : 'Generování se nepodařilo spustit.');
-    }
-  };
-  const onJobDone = React.useCallback(() => {
-    setJobId(null);
-    setVersion((v) => v + 1);
-  }, []);
-  const onJobError = React.useCallback((message: string) => {
-    setJobId(null);
-    setJobError(message);
-  }, []);
+  const query = useBriefQuery(isDemo ? null : caseId);
+  const job = useBriefJob(caseId);
+  const brief = isDemo ? briefP03 : query.data;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {toolbar}
-        {!isDemo && canGenerate && current?.brief && jobId === null && (
-          <Button variant="outline" size="sm" onClick={generate} className="ml-auto gap-1.5">
-            <RefreshCw className="h-3.5 w-3.5" /> Přegenerovat
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">{toolbar}</div>
 
       {isDemo && (
         <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">
-          Ukázkový podklad pacienta P03 z fixtures (bez backendu). Zdroje citací jsou odpovědi resolveru z datasetu.
+          Ukázkový podklad pacienta P03 z fixtures (syntetická data, bez backendu).
         </p>
       )}
+      {job.progress}
 
-      {jobId !== null && <JobProgress jobId={jobId} onDone={onJobDone} onError={onJobError} />}
-      {jobError && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {jobError}
-        </p>
-      )}
-
-      {!current && (
-        <div className="space-y-3" aria-busy="true" aria-label="Načítám podklad">
-          <Skeleton className="h-56 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
+      {!isDemo && query.isLoading && (
+        <div className="flex flex-col gap-3" aria-busy="true" aria-label="Načítám podklad">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-64" />
+          <Skeleton className="mt-4 h-32" />
         </div>
       )}
-      {current?.missing && jobId === null && (
+      {!isDemo && query.isError && (
+        <p role="alert" className="text-sm text-destructive">{apiErrorMessage(query.error, 'Podklad se nepodařilo načíst.')}</p>
+      )}
+      {!isDemo && query.data === null && !job.running && (
         <EmptyState
-          icon={<FileText className="h-6 w-6" />}
-          title="Podklad ještě nebyl vygenerován"
+          icon={<FileText aria-hidden />}
+          title="Podklad ještě nevznikl"
           description={
             canGenerate
               ? 'AI připraví podklad z dat pacienta v IRIS podle nastavení předsedy. Trvá to několik sekund.'
-              : 'Podklad vygeneruje předseda nebo zadávající lékař.'
+              : 'Podklad připraví předseda nebo zadávající lékař.'
           }
-          action={canGenerate ? <Button onClick={generate}>Vygenerovat podklad</Button> : undefined}
+          action={canGenerate ? <GenerateBrief caseId={caseId} /> : undefined}
         />
       )}
-      {current?.error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {current.error}
-        </p>
-      )}
-      {current?.brief && <BriefView brief={current.brief} dataSource={isDemo ? fixtureDataSource : apiDataSource} />}
+      {brief && <BriefView brief={brief} dataSource={isDemo ? fixtureDataSource : apiDataSource} />}
     </div>
   );
 }

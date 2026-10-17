@@ -4,11 +4,11 @@ import { MonitorUp } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import type { ProjectorSelection } from './projector';
-import { CaseQuickViewNarrow, useQuickViewSources } from './quick-view';
+import { CaseQuickViewProjector, useQuickViewSources } from './quick-view';
 
 /**
- * Úzký panel pro projektor vedle snímku z PACS (T-512, FR-U2). Obsah je společný rychlý přehled
- * (`CaseQuickViewNarrow`), případ vybírá jednání komise přes BroadcastChannel.
+ * Úzký panel pro projektor vedle snímku z PACS (T-512, FR-U2). Obsah má vlastní vzhled podle schváleného
+ * náhledu (`CaseQuickViewProjector`, T-330), případ vybírá jednání komise přes BroadcastChannel.
  */
 export function ProjectorPanel({
   selection,
@@ -37,5 +37,5 @@ export function ProjectorPanel({
       </div>
     );
   }
-  return <CaseQuickViewNarrow sources={sources} caseId={selection.caseId} titleAs={titleAs} className={className} />;
+  return <CaseQuickViewProjector sources={sources} caseId={selection.caseId} titleAs={titleAs} className={className} />;
 }

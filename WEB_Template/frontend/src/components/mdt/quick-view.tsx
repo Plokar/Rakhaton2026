@@ -19,6 +19,7 @@ import type {
   CaseTemplate,
   IntakePrefill,
   IntakeWarning,
+  Light,
   MdtCase,
   MdtSessionDetail,
   ObservationSeries,
@@ -467,10 +468,10 @@ const CELL_BASIS: Record<CellUnits, string> = {
  * Seřadí skupinu do řádků po 6 dílech (first-fit), aby krátké hodnoty vyplnily místo vedle delších
  * a v mřížce nezůstaly díry. Balí se jen uvnitř skupiny, takže pořadí podle závažnosti platí dál.
  */
-function packFacts(group: KeyFact[]): KeyFact[] {
+function packFacts(group: KeyFact[], unitsOf: (fact: KeyFact) => CellUnits = (fact) => factCell(fact).units): KeyFact[] {
   const rows: { used: number; facts: KeyFact[] }[] = [];
   for (const fact of group) {
-    const { units } = factCell(fact);
+    const units = unitsOf(fact);
     const row = rows.find((r) => r.used + units <= 6);
     if (row) {
       row.facts.push(fact);
@@ -491,7 +492,7 @@ export function KeyFactsGrid() {
   const { facts, sources } = useQuickView();
   const open = useCitationOpen();
   const groups = orderFacts(facts);
-  const ordered = [groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap(packFacts);
+  const ordered = [groups.attention, groups.unresolved, groups.recorded, groups.normal].flatMap((group) => packFacts(group));
   const loading = sources.intake.loading || sources.observations.loading;
 
   return (
@@ -983,6 +984,324 @@ export function CaseQuickViewBody({
           </div>
         </div>
       </div>
+    </QuickViewRoot>
+  );
+}
+
+// ── Okno pro projektor (T-330, schválený náhled) ────────────────────────────
+
+/** Akcent značky (korálová) jen pro kód MKN-10 v okně projektoru; semafor a závažnost mají vlastní barvy (D-017). */
+const PJ_ACCENT = 'bg-[#C84646]/10 text-[#C84646] dark:bg-[#F28B82]/15 dark:text-[#F28B82]';
+const PJ_CARD = 'rounded-[20px] bg-card p-4';
+
+/** Štítek semaforu: text nese význam sám, barva ho jen zvýrazní (POZADAVKY §3.4). */
+const PJ_PILL: Record<Light, string> = {
+  green: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200',
+  orange: 'bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200',
+  red: 'bg-red-700 text-white dark:bg-red-500',
+  grey: 'bg-muted text-slate-700 dark:text-slate-300',
+  skipped: 'text-muted-foreground ring-1 ring-inset ring-border',
+};
+
+const PJ_GROUPS = [
+  { key: 'attention', title: 'Pozornost' },
+  { key: 'unresolved', title: 'Chybí nebo je staré' },
+  { key: 'recorded', title: 'Zaznamenáno' },
+  { key: 'normal', title: 'V normě' },
+] as const;
+
+/**
+ * Šířka buňky v okně projektoru: závažný údaj má celý řádek (podbarvení přes celou šířku); buňky mají větší
+ * odsazení než v mřížce úzkého přehledu, proto se na třetinu řádku vejde jen kratší text („Leu 5,2 10⁹/l“ už ne).
+ */
+function pjUnits(fact: KeyFact): CellUnits {
+  if (fact.status === 'critical') return 6;
+  const { cell } = factCell(fact);
+  const length = fact.abbr.length + 1 + cell.length;
+  return length <= 11 ? 2 : length <= 22 ? 3 : length <= 32 ? 4 : 6;
+}
+
+function ProjectorFactCell({ fact }: { fact: KeyFact }) {
+  const open = useCitationOpen();
+  const meta = FACT_META[fact.status];
+  const { value, cell } = factCell(fact);
+  const critical = fact.status === 'critical';
+  const shown = critical && fact.reason ? `${cell} · ${fact.reason}` : cell;
+  const tip = [
+    `${fact.label}: ${value}`,
+    fact.date ? `ze dne ${formatDate(fact.date)}` : null,
+    fact.status !== 'recorded' && fact.status !== 'normal' ? meta.label : null,
+    fact.reason,
+  ].filter(Boolean).join(' · ');
+  const source = fact.citations.find((c) => /^P\d{2}/.test(c)) ?? fact.citations[0];
+  return (
+    <li className={cn('min-w-0 grow bg-card', CELL_BASIS[pjUnits(fact)])}>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              onClick={() => source && open?.(source)}
+              aria-label={`${fact.label}: ${value}, ${meta.label}${fact.reason ? `. ${fact.reason}` : ''}${source ? '. Otevřít zdroj' : ''}`}
+              className={cn(
+                'flex h-full w-full min-w-0 items-center gap-1.5 px-2.5 py-1.5 text-left text-[13px] leading-5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                critical && 'bg-red-100/80 text-red-950 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-100',
+                fact.status === 'abnormal' && 'bg-amber-50 dark:bg-amber-950/30',
+              )}
+            />
+          }
+        >
+          <FactIcon status={fact.status} className="size-3.5 shrink-0" />
+          <span translate="no" className="shrink-0 font-semibold">{fact.abbr}</span>
+          <span className={cn('min-w-0 truncate tabular-nums', (fact.status === 'missing' || fact.status === 'pending') && 'text-muted-foreground')}>
+            {shown}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-left leading-snug">{tip}</TooltipContent>
+      </Tooltip>
+    </li>
+  );
+}
+
+function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
+  const { header, sources, ecogWarnings } = useQuickView();
+  const high = header.warnings.filter((w) => w.severity === 'high').length;
+  const psTitle = header.psDiffers
+    ? ecogWarnings.map((w) => w.title).join(' · ') || 'PS lékaře a pacienta se liší o 1 a víc (OBC-1.3)'
+    : 'Performance status (ECOG) podle lékaře, pod ním podle pacienta (PROMs)';
+  return (
+    <header className={cn(PJ_CARD, 'flex shrink-0 items-start gap-3')}>
+      <div className="min-w-0 flex-1">
+        <Title translate="no" className="text-[19px] font-semibold leading-tight tracking-tight">{header.displayName}</Title>
+        {sources.session.loading && !header.diagnosis ? (
+          <Skeleton className="mt-2 h-4 w-40" />
+        ) : (
+          <>
+            <p className="mt-1 text-sm leading-snug">
+              {header.diagnosis ? <span translate="no" className="font-semibold">{header.diagnosis.icd10}</span> : 'Diagnóza v záznamu chybí'}
+              {header.tnm && (
+                <>
+                  {' · '}
+                  <span translate="no" title={header.tnm}>{header.tnm.replace(/\s*\(TNM[^)]*\)\s*$/, '')}</span>
+                </>
+              )}
+            </p>
+            {header.diagnosis && (
+              <p className="mt-0.5 truncate text-xs text-muted-foreground" title={header.diagnosis.text}>{header.diagnosis.text}</p>
+            )}
+          </>
+        )}
+        {header.warnings.length > 0 && (
+          <p className={cn('mt-2 flex items-center gap-1.5 text-[13px] font-semibold', high ? 'text-red-700 dark:text-red-400' : 'text-amber-800 dark:text-amber-300')}>
+            <TriangleAlert className="size-3.5 shrink-0" aria-hidden />
+            {header.warnings.length} varování{high ? `, ${high} závažn${high === 1 ? 'é' : 'á'}` : ''}
+          </p>
+        )}
+      </div>
+      <dl className="flex shrink-0 gap-1.5">
+        <div className="w-16 rounded-[14px] bg-muted/70 py-1.5 text-center" title={psTitle}>
+          <dt className="text-[11px] font-semibold text-muted-foreground">PS</dt>
+          <dd className="text-[28px] font-medium leading-8 tabular-nums">{header.physicianPs ?? '–'}</dd>
+          <dd className={cn('text-[11px] tabular-nums', header.psDiffers ? 'font-semibold text-amber-800 dark:text-amber-300' : 'text-muted-foreground')}>
+            pac. {header.patientPs ?? '–'}
+            {header.psDiffers && <span className="sr-only">, liší se od lékaře</span>}
+          </dd>
+        </div>
+        <div className="w-16 rounded-[14px] bg-muted/70 py-1.5 text-center" title={`Léčebný záměr: ${header.intentSource}`}>
+          <dt className="text-[11px] font-semibold text-muted-foreground">C/P</dt>
+          <dd className="text-[28px] font-medium leading-8">{header.intent ?? '–'}</dd>
+          <dd className="text-[11px] text-muted-foreground">{header.intent ? INTENT_LABEL[header.intent] : 'nezvoleno'}</dd>
+        </div>
+      </dl>
+    </header>
+  );
+}
+
+function ProjectorFacts() {
+  const { facts, sources } = useQuickView();
+  const groups = orderFacts(facts);
+  const loading = sources.intake.loading || sources.observations.loading;
+  return (
+    <section aria-labelledby="pj-facts" className={cn(PJ_CARD, '@container flex flex-col gap-2')}>
+      <h2 id="pj-facts" className="mb-1 text-base font-semibold">Klíčové údaje</h2>
+      {loading ? (
+        <SkeletonRows rows={5} />
+      ) : sources.intake.failed ? (
+        <p role="alert" className="text-sm text-destructive">Údaje pacienta se nepodařilo načíst. Obnovte okno (F5).</p>
+      ) : facts.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
+      ) : (
+        PJ_GROUPS.map(({ key, title }) =>
+          groups[key].length ? (
+            <div key={key}>
+              <h3 className="mx-0.5 mb-1.5 flex justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span>{title}</span>
+                <span className="tabular-nums">{groups[key].length}</span>
+              </h3>
+              <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
+                {packFacts(groups[key], pjUnits).map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
+              </ul>
+            </div>
+          ) : null,
+        )
+      )}
+    </section>
+  );
+}
+
+function ProjectorTreatmentRow({ option }: { option: ProcedureCompatibility }) {
+  const open = useCitationOpen();
+  const light = option.compatibility.overall;
+  const decisive = option.compatibility.rules.find((rule) => rule.status === light) ?? option.compatibility.rules[0];
+  const source = decisive?.patient_citations[0] ?? decisive?.rule_citation;
+  const summary = lightSummary(option);
+  const muted = light === 'grey' || light === 'skipped';
+  return (
+    <li className={cn('flex items-center gap-2.5 rounded-xl px-2.5 py-2', light === 'red' && 'bg-red-100/80 dark:bg-red-950/50')}>
+      <p
+        className={cn(
+          'min-w-0 flex-1 truncate text-[13px] font-medium',
+          muted && 'text-muted-foreground',
+          light === 'red' && 'text-red-900 dark:text-red-100',
+        )}
+        title={option.title}
+      >
+        {option.title}
+      </p>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              onClick={() => source && open?.(source)}
+              aria-label={`${summary}${source ? '. Otevřít zdroj' : ''}`}
+              className={cn(
+                'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                PJ_PILL[light],
+              )}
+            />
+          }
+        >
+          {LIGHT_META[light].label}
+        </TooltipTrigger>
+        <TooltipContent side="left" className="max-w-xs text-left leading-snug">
+          <div className="flex flex-col gap-1">
+            <p>{summary}</p>
+            {decisive && (
+              <p className="text-[11px] opacity-80">
+                Pravidlo {decisive.rule_citation}{source ? ' · kliknutím otevřete zdroj' : ''}
+              </p>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </li>
+  );
+}
+
+function ProjectorTreatments() {
+  const { sources } = useQuickView();
+  const options = sources.compatibility.data;
+  return (
+    <section aria-labelledby="pj-treatments" className={cn(PJ_CARD, 'flex flex-col')}>
+      <h2 id="pj-treatments" className="mb-2 text-base font-semibold">
+        Léčebné postupy{options?.length ? <span className="font-normal text-muted-foreground"> ({options.length})</span> : null}
+      </h2>
+      {sources.compatibility.loading ? (
+        <SkeletonRows rows={4} />
+      ) : sources.compatibility.failed ? (
+        <p role="alert" className="text-sm text-destructive">Soulad postupů se nepodařilo načíst. Obnovte okno (F5).</p>
+      ) : !options?.length ? (
+        <p className="text-sm text-muted-foreground">Pro diagnózu nejsou v katalogu žádné postupy.</p>
+      ) : (
+        <>
+          <ul className="flex flex-col gap-0.5">
+            {options.map((option) => <ProjectorTreatmentRow key={option.id} option={option} />)}
+          </ul>
+          <p className="mx-0.5 mt-2 text-[11px] text-muted-foreground">
+            Barvu počítají pravidla z guidelines, ne AI. Důvod se ukáže po najetí na barvu.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+function ProjectorQuestion() {
+  const { header, sources } = useQuickView();
+  const [expanded, setExpanded] = React.useState(false);
+  return (
+    <footer className={cn(PJ_CARD, 'flex shrink-0 items-start gap-3')}>
+      <div className="min-w-0 flex-1">
+        <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Otázka pro MDT</h2>
+        {sources.session.loading && !header.question ? (
+          <Skeleton className="h-5 w-full" />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            title={expanded ? 'Zkrátit otázku' : 'Celá otázka'}
+            className="block w-full rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className={cn('block text-base font-semibold leading-snug text-balance', !expanded && 'line-clamp-2')}>
+              {header.question ?? 'Otázka pro MDT v záznamu chybí.'}
+            </span>
+          </button>
+        )}
+        {header.questionCitation && <Citations ids={[header.questionCitation]} className="mt-1" />}
+      </div>
+      {header.diagnosis && (
+        <div className={cn('shrink-0 rounded-[14px] px-2.5 py-1.5 text-center', PJ_ACCENT)} title={header.diagnosis.text}>
+          <p className="text-[11px] font-semibold text-muted-foreground">MKN-10</p>
+          <p translate="no" className="text-base font-bold tabular-nums">{header.diagnosis.icd10}</p>
+        </div>
+      )}
+    </footer>
+  );
+}
+
+/** Anamnéza jen když ji podklad má; prázdný blok okno pro projektor nezabírá. */
+function ProjectorAnamnesis() {
+  const { sources } = useQuickView();
+  const section = sources.brief.data?.sections.find((s) => s.id === 'anamnesis');
+  if (!section?.items.length) return null;
+  return (
+    <div className={PJ_CARD}>
+      <AnamnesisPanel defaultOpen={false} />
+    </div>
+  );
+}
+
+/**
+ * Okno pro projektor (T-330, podle schváleného náhledu): šedé pozadí s bílými kartami, hlavička a otázka
+ * pro MDT vždy vidět, mezi nimi anamnéza (když je), klíčové údaje ve skupinách a postupy se semaforem.
+ * Závažný údaj a postup „vylučuje“ jsou podbarvené přes celý řádek.
+ */
+export function CaseQuickViewProjector({
+  sources,
+  caseId,
+  titleAs = 'h1',
+  className,
+}: {
+  sources: QuickViewSources;
+  caseId: number | null;
+  titleAs?: 'h1' | 'h2';
+  className?: string;
+}) {
+  return (
+    <QuickViewRoot sources={sources} caseId={caseId}>
+      <article className={cn('flex h-full min-h-0 flex-col gap-3 bg-muted p-3', className)} aria-label="Přehled případu pro projektor">
+        <ProjectorHeader as={titleAs} />
+        <div className="relative -mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
+          <div className="flex flex-col gap-3">
+            <ProjectorAnamnesis />
+            <ProjectorFacts />
+            <ProjectorTreatments />
+          </div>
+        </div>
+        <ProjectorQuestion />
+      </article>
     </QuickViewRoot>
   );
 }

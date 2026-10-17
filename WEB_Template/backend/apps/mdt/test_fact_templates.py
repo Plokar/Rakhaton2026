@@ -141,6 +141,18 @@ def test_registration_with_titles_and_template(seeded):
     assert FactTemplate.objects.get(user__username='svoboda', area='PRS').layout['categories']['hidden'] == ['alerts']
 
 
+def test_brief_from_before_t340_shows_modra_kniha(seeded):
+    """Podklad uložený bez `national` dostane oporu v Modré knize při čtení (mapování je statické, ne AI)."""
+    from apps.copilot.models import Brief
+
+    case = MdtCase.objects.get(patient_fhir_id='P04')
+    option = {'id': 'pli-imunoterapie', 'compatibility': {'rules': [{'rule_id': 'VS-PLI-07'}, {'rule_id': 'VS-PLI-01'}]}}
+    Brief.objects.create(case=case, content={'decision_support': {'treatment_options': [option]}})
+    rules = as_user('chirurg').get(f'/api/mdt/cases/{case.pk}/brief/').json()['decision_support']['treatment_options'][0]['compatibility']['rules']
+    assert rules[0]['national_status'] == 'prah' and rules[0]['national'][0]['evidence_id'] == 'EXT-MK-8.1.3.2-2'
+    assert rules[1]['national_status'] == 'neuvadi'
+
+
 def test_doctor_edits_own_titles(seeded):
     r = as_user('pneumolog').patch('/api/mdt/me/', {'title_before': 'MUDr.', 'title_after': 'Ph.D.'}, format='json')
     assert r.status_code == 200 and r.json()['name'] == 'MUDr. Pneumolog, Ph.D.'

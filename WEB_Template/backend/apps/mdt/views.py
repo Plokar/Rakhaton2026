@@ -567,7 +567,11 @@ def case_brief(request, cid):
         brief = case.briefs.first()
         if brief is None:
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
-        return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
+        content = brief.content
+        if (content.get('decision_support') or {}).get('treatment_options'):
+            from services.rules.national_rules import attach   # i podklad z doby před T-340 ukáže oporu v Modré knize
+            attach(content['decision_support']['treatment_options'])
+        return Response({**content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
     params = {'config': _config(request.data, case)}
     if feedback := _brief_feedback(request):

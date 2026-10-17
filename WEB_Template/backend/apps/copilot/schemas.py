@@ -386,6 +386,14 @@ class BriefVerifier(BaseModel):
     issues: list[VerifierIssue]
 
 
+class NationalGuideline(BaseModel):
+    """Pasáž Modré knihy ČOS, kterou měl podklad k dispozici (národní doporučené postupy, citovatelná)."""
+    evidence_id: str = Field(description='"EXT-MK-4.6.3" (oddíl Modré knihy, další části "-2")')
+    title: str
+    url: str | None = Field(default=None, description="Odkaz na stránku PDF Modré knihy")
+    excerpt: str = Field(description="Začátek pasáže (do 280 znaků)")
+
+
 class BriefFeedback(BaseModel):
     """Zpětná vazba lékaře k předchozí verzi, podle které podklad vznikl (T-323)."""
     text: str = Field(description="Co bylo špatně / na co se zaměřit (pseudonymizováno)")
@@ -408,6 +416,8 @@ class Brief(BaseModel):
     verifier: BriefVerifier | None = None
     stats: BriefStats
     feedback: BriefFeedback | None = Field(default=None, description="Přegenerováno podle zpětné vazby lékaře")
+    national_guidelines: list[NationalGuideline] | None = Field(
+        default=None, description="Modrá kniha ČOS k diagnóze pacienta (sada MK, Evidence ID EXT-MK-…)")
 
 
 # ── §8.4 Decision (závěr komise) ──────────────────────────────────────────────

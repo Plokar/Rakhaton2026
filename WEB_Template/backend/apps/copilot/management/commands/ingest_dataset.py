@@ -89,6 +89,7 @@ class Command(BaseCommand):
         for warning in indexing.guideline_count_warnings(guidelines):
             self.stdout.write(self.style.WARNING(f'⚠ {warning}'))
         guidelines += indexing.external_chunks()        # EXT-… pro semafor (T-504, D-016)
+        guidelines += indexing.modra_kniha_chunks()     # Modrá kniha ČOS, EXT-MK-… (národní doporučené postupy)
         paragraphs = {p.label: len(indexing.evidence_chunks(p.label, p.resources)) for p in patients}
         expected = {                                    # kolik řádků z datasetu vznikne (zápisy aplikace přidají další)
             f'{vs.SCHEMA}.EvidenceChunk': sum(paragraphs.values()),
@@ -98,7 +99,8 @@ class Command(BaseCommand):
         if offline:
             self.stdout.write(
                 f'Vektory (nic neodesláno): odstavce {paragraphs} = {sum(paragraphs.values())}, '
-                f'guidelines {len(guidelines)} (z toho EXT {sum(g.GuidelineSet == "EXT" for g in guidelines)}), '
+                f'guidelines {len(guidelines)} (z toho EXT {sum(g.GuidelineSet == "EXT" for g in guidelines)}, '
+                f'Modrá kniha {sum(g.GuidelineSet == "MK" for g in guidelines)}), '
                 f'kritéria studií {expected[f"{vs.SCHEMA}.TrialCriterion"]}.'
             )
             return

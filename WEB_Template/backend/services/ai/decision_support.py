@@ -115,7 +115,7 @@ def _sanitize_options(raw_options: list[dict], available: dict[str, dict], conte
         rationale = verify_claims(rationale, context)
         p = procedure["compatibility"]
         guidelines = list(dict.fromkeys(c for c in raw.get("guideline_citations", [])
-                                         if c in context.allowed_ids and c.startswith(("KRC-", "PRS-", "PLI-", "OBC-"))))
+                                         if c in context.allowed_ids and c.startswith(("KRC-", "PRS-", "PLI-", "OBC-", "EXT-MK-"))))
         if not guidelines:
             guidelines = [c for c in procedure.get("guideline_citations", []) if c in context.allowed_ids]
         options.append({

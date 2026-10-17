@@ -18,3 +18,6 @@ __pycache__/
 **/.impeccable/hook.pending.json
 **/skills/impeccable/scripts/bin/
 **/skills/impeccable/scripts/config.json
+
+# Modrá kniha ČOS: PDF se stahuje skriptem data/onko/modra_kniha/stahni.py, v gitu jsou jen pasáže
+data/onko/modra_kniha/*.pdf

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import type { Brief, EvidenceId, SectionId } from '@/types/mdt';
 import { AiBlock } from './AiBlock';
+import { NationalGuidelines } from './NationalGuidelines';
 import { CaseHeader } from './CaseHeader';
 import { CitationProvider, Citations, collectCitations } from './citations';
 import { SectionClaims } from './ClaimList';
@@ -124,6 +125,9 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
         return ds ? (
           <AiBlock key={`${id}-${allExpanded}`} id={id} title="Možnosti léčby a soulad se stavem pacienta" status={brief.status} defaultOpen={allExpanded}>
             <TreatmentOptions options={ds.treatment_options} />
+            <div className="mt-3">
+              <NationalGuidelines items={brief.national_guidelines} />
+            </div>
           </AiBlock>
         ) : null;
       case 'trials':

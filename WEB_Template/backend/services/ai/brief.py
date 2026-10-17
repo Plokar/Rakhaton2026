@@ -26,7 +26,7 @@ from services.ai.anamnesis import anamnesis_items, anamnesis_verbatim
 from services.ai.decision_support import build_decision_support
 from services.ai.diagnosis_data import modality_items
 from services.ai.grounding import verify_claims
-from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
+from services.ai.guidelines import NATIONAL_SET, GuidelinesUnavailable, load_guidelines, national_passages
 from services.ai.red_flags_llm import detect_llm_red_flags
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import load_roles, role_section
@@ -81,13 +81,15 @@ def generate_brief(case, config: dict, progress: Callable[[int], None], *,
     progress(5)
     resources, studies = load_resources(case.patient_fhir_id)
     progress(25)
-    sets = guideline_sets_for(rules.PatientData(resources).icd10)
+    data = rules.PatientData(resources)
+    sets = guideline_sets_for(data.icd10)
     try:
         passages = load_guidelines(sets)
     except GuidelinesUnavailable as exc:          # blok A guidelines nutně nepotřebuje
         log.warning("Guidelines nejsou k dispozici: %s", exc)
         passages = []
     notices = guideline_notices(sets, passages, resources)
+    passages = passages + national_passages(data.icd10, _national_query(data))       # Modrá kniha ČOS
     if log_call is None:
         log_call = _llm_call_log
     return build_brief(
@@ -220,12 +222,26 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
             "missing_total": sum(1 for c in claims if c["kind"] == "missing"),
         },
         **({"feedback": config["_feedback"]} if config.get("_feedback") else {}),
+        **({"national_guidelines": national} if (national := _national_guidelines(context.guidelines)) else {}),
     }
     progress(100)
     return brief
 
 
 # ── Pomocné funkce ────────────────────────────────────────────────────────────
+def _national_query(data) -> str:
+    """Dotaz do Modré knihy: otázka pro MDT, diagnózy a TNM (bez identifikátorů pacienta)."""
+    question = next((c.get("text") for c in data.request.get("reasonCode") or [] if c.get("text")), "")
+    diagnoses = " ".join((c.get("code") or {}).get("text") or "" for c in data.oncologic)
+    return f"{question} {diagnoses}".strip()
+
+
+def _national_guidelines(guidelines: Iterable) -> list[dict]:
+    """Pasáže Modré knihy ČOS, které měl podklad k dispozici (citovatelné, s odkazem na stránku PDF)."""
+    return [{"evidence_id": g.evidence_id, "title": g.title, "url": g.url,
+             "excerpt": " ".join(g.text.split())[:280]} for g in guidelines if g.guideline_set == NATIONAL_SET]
+
+
 def _merge_config(config: dict | None) -> dict:
     """Konfigurace z presetu (§8.5) doplněná o výchozí hodnoty; prázdný seznam = nenastaveno."""
     return {**DEFAULT_CONFIG, **{k: v for k, v in (config or {}).items() if v is not None and v != []}}

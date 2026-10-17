@@ -111,6 +111,16 @@ export interface BriefVerifier {
   issues: { claim_id: string; verdict: "unsupported" | "uncertain" | "unchecked"; issue: string }[];
 }
 
+/** Pasáž Modré knihy ČOS, kterou měl podklad k dispozici (národní doporučené postupy). */
+export interface NationalGuideline {
+  /** "EXT-MK-4.6.3" = oddíl 4.6.3 Modré knihy, další části "-2" */
+  evidence_id: EvidenceId;
+  title: string;
+  /** Odkaz na stránku PDF Modré knihy */
+  url: string | null;
+  excerpt: string;
+}
+
 export interface Brief {
   case_id: string;
   /** "P03" */
@@ -132,6 +142,8 @@ export interface Brief {
   stats: { claims_total: number; claims_unverified: number; missing_total: number };
   /** Přegenerováno podle zpětné vazby lékaře k předchozí verzi (T-323). */
   feedback?: BriefFeedback;
+  /** Modrá kniha ČOS k diagnóze pacienta (citovatelné pasáže EXT-MK-…). */
+  national_guidelines?: NationalGuideline[];
 }
 
 /** Co lékař vytkl předchozí verzi podkladu a na co se má AI zaměřit; `sections` prázdné = celý podklad. */

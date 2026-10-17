@@ -1,7 +1,7 @@
 /**
  * API podkladu pro komisi (ARCHITEKTURA §6.3): podklad, generování přes job a zdroje citací.
  */
-import { apiFetch } from '@/lib/api';
+import { apiFetch, apiUrl } from '@/lib/api';
 import type {
   Brief,
   BriefConfig,

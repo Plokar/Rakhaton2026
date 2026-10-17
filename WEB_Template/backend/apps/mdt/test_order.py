@@ -42,3 +42,21 @@ def test_moved_case_goes_to_end(board):
     r = as_user('predseda').patch(f'/api/mdt/cases/{p03.pk}/', {'session': board.pk}, format='json')
     assert r.status_code == 200, r.json()
     assert _agenda(board) == ['P01', 'P05', 'P06', 'P03']
+
+
+def test_calendar_sessions_with_case_summaries(board):
+    """T-518: `?from&to&expand=cases` → zasedání v rozsahu s `MdtCaseSummary` (hlavička, ECOG, záměr, připravenost)."""
+    from apps.copilot import schemas
+    r = as_user('chirurg').get('/api/mdt/sessions/?from=2026-10-20&to=2026-10-25&expand=cases')
+    assert r.status_code == 200
+    sessions = r.json()
+    assert {s['title'] for s in sessions} >= {'Mamární komise'} and all(s['date'] >= '2026-10-20' for s in sessions)
+    assert not any('urgentní' in s['title'] for s in sessions)                 # 14. 10. je mimo rozsah
+    mamarni = next(s for s in sessions if s['title'] == 'Mamární komise')
+    for c in mamarni['cases']:
+        schemas.MdtCaseSummary.model_validate(c)
+    p01 = mamarni['cases'][0]
+    assert p01['patient_id'] == 'P01' and p01['display_name'].startswith('P01 · žena')
+    assert p01['diagnosis']['icd10'].startswith('C50') and 0 < p01['readiness'] <= 1
+    assert 'cases' not in as_user('chirurg').get('/api/mdt/sessions/').json()[0]     # bez expand beze změny
+    assert as_user('chirurg').get('/api/mdt/sessions/?from=21.10.').status_code == 400

@@ -1127,7 +1127,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/patients/{pid}/timeline/` | události časové osy s Evidence ID |
 | GET | `/api/patients/{pid}/observations/?code=…[&source=sql]` | časové řady (labs, hmotnost, ECOG, PROMs skóre) pro grafy; `source=sql` čte kódované číselné `Observation` ze SQL pohledu `MDT.ObservationSeries` (T-309) |
 | GET | `/api/evidence/?id={EvidenceId}` | zdroj citace (text + zvýraznění / hodnota / pasáž guidelines / kritérium studie) |
-| GET, POST | `/api/mdt/sessions/` | zasedání |
+| GET, POST | `/api/mdt/sessions/` | zasedání; GET `?from=&to=` (YYYY-MM-DD včetně) omezí rozsah, `?expand=cases` přidá `cases: MdtCaseSummary[]` pro kalendář (§8.6, T-518): hlavička z IRIS jedním seznamem pacientů, připravenost jednou na pacienta |
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
 | PUT | `/api/mdt/sessions/{sid}/order/` | pořadí pacientů v agendě (T-324), jen `mdt_admin`: `{cases: [cid, …]}` = všechny případy boardu v novém pořadí (jinak 400) → agenda; přesun případu na jiný board ho zařadí na konec |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
@@ -1637,6 +1637,14 @@ interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTa
   status: "requested" | "in-progress" | "completed";
   authored_on: string | null;
   re_mdt: { date: string | null; reason: string } | null;   // z CarePlan (activity „Plánované re-MDT“, scheduledPeriod.start)
+}
+
+interface MdtCaseSummary {                      // GET /api/mdt/sessions/?expand=cases → sessions[].cases (T-518)
+  id: number; order: number; status: MdtCase["status"];
+  patient_id: string; display_name: string;     // "P03 · muž · 67 let"
+  diagnosis: { icd10: string; text: string } | null;
+  ecog: number | null; intent: "C" | "P" | null;   // ze zařazení (MdtCase)
+  readiness: number | null;                     // podíl přítomných údajů checklistu 0–1 (T-303), null = nespočteno
 }
 
 interface MdtSession {                          // GET /api/mdt/sessions/ → (MdtSession & { patients: string[] })[]

@@ -201,7 +201,7 @@ function Metric({
   warn?: boolean;
 }) {
   return (
-    <div className="flex min-w-15 flex-col items-center rounded-lg bg-muted/70 px-2.5 py-1.5" title={title}>
+    <div className="flex min-w-16 flex-col items-center rounded-xl border border-border bg-background px-2.5 py-1.5" title={title}>
       <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
       <dd className="text-[1.75rem] font-semibold leading-8 tabular-nums">{value}</dd>
       {sub && (
@@ -249,7 +249,16 @@ export function QuickMetrics() {
 }
 
 /** Identita, diagnóza + TNM, zasedání. `as` určuje úroveň nadpisu (h1 v samostatném okně). */
-export function QuickIdentity({ as: Title = 'h2', size = 'default' }: { as?: 'h1' | 'h2'; size?: 'default' | 'large' }) {
+export function QuickIdentity({
+  as: Title = 'h2',
+  size = 'default',
+  icd = true,
+}: {
+  as?: 'h1' | 'h2';
+  size?: 'default' | 'large';
+  /** MKN-10 u diagnózy; úzký panel ho má v pásu otázky. */
+  icd?: boolean;
+}) {
   const { header, sources } = useQuickView();
   const session = sources.session.data;
   return (
@@ -265,7 +274,8 @@ export function QuickIdentity({ as: Title = 'h2', size = 'default' }: { as?: 'h1
         <p className="mt-1 text-sm leading-snug text-muted-foreground">
           {header.diagnosis ? (
             <>
-              <span translate="no" className="font-medium text-foreground">{header.diagnosis.icd10}</span> {header.diagnosis.text}
+              {icd && <><span translate="no" className="font-medium text-foreground">{header.diagnosis.icd10}</span> </>}
+              {header.diagnosis.text}
             </>
           ) : (
             'Diagnóza v záznamu chybí'
@@ -347,15 +357,48 @@ function FactRow({ fact }: { fact: KeyFact }) {
   );
 }
 
-export function KeyFactsList({ legend = true }: { legend?: boolean }) {
+/**
+ * Údaj jako dlaždice úzkého panelu (projektor, boční panel): zkratka a krátká hodnota, ikona normality.
+ * Důvod barvy je v tooltipu a pro čtečky; dlouhá hodnota nebo samostatné varování zabere oba sloupce.
+ */
+const PATIENT_FACT = /^P\d{2}(?:-|#|$)/;
+
+function FactTile({ fact }: { fact: KeyFact }) {
+  const meta = FACT_META[fact.status];
+  const value = fact.value ?? meta.label;
+  const wide = fact.group === 'alert';
+  // V dlaždici jen fakta pacienta (nejvýš 2); pasáže pravidel a ostatní zdroje jsou v tooltipu a v detailu.
+  const shown = fact.citations.filter((c) => PATIENT_FACT.test(c)).slice(0, 2);
+  const detail = [fact.label, fact.date && formatDate(fact.date), fact.reason, fact.citations.join(', ')].filter(Boolean).join(' · ');
+  return (
+    <li className={cn('flex min-w-0 items-start gap-2', wide && 'col-span-2')} title={detail}>
+      <FactIcon status={fact.status} className="mt-0.5 size-[1.125rem]" />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold leading-5">
+          {fact.abbr}
+          <span className="sr-only">: {meta.label}{fact.reason ? `, ${fact.reason}` : ''}</span>
+          <Citations ids={shown} className="ml-1.5" />
+        </p>
+        <p className={cn('line-clamp-2 text-sm leading-5', fact.status === 'missing' ? 'text-muted-foreground/80' : 'text-muted-foreground')}>{value}</p>
+      </div>
+    </li>
+  );
+}
+
+export function KeyFactsList({ legend = true, layout = 'rows' }: { legend?: boolean; layout?: 'rows' | 'tiles' }) {
   const { facts, sources } = useQuickView();
   const [showNormal, setShowNormal] = React.useState(false);
   const groups = orderFacts(facts);
   const loading = sources.intake.loading || sources.observations.loading;
+  const Item = layout === 'tiles' ? FactTile : FactRow;
+  // Úzký panel: obecné údaje (histologie, TNM, komorbidity…) opakují hlavičku, sbalí se s hodnotami v normě.
+  const tiles = layout === 'tiles';
+  const primary = [...groups.attention, ...groups.unresolved, ...groups.recorded.filter((f) => !tiles || f.group !== 'general')];
+  const folded = [...(tiles ? groups.recorded.filter((f) => f.group === 'general') : []), ...groups.normal];
 
   return (
     <section aria-labelledby="qv-facts">
-      <h3 id="qv-facts" className="mb-1 text-sm font-semibold">Klíčové údaje</h3>
+      <h3 id="qv-facts" className={cn('text-sm font-semibold', layout === 'tiles' ? 'sr-only' : 'mb-1')}>Klíčové údaje</h3>
       {loading ? (
         <SkeletonRows rows={5} />
       ) : sources.intake.failed ? (
@@ -364,25 +407,32 @@ export function KeyFactsList({ legend = true }: { legend?: boolean }) {
         <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
       ) : (
         <>
-          <ul className="divide-y divide-border/60">
-            {[...groups.attention, ...groups.unresolved, ...groups.recorded].map((fact) => (
-              <FactRow key={fact.id} fact={fact} />
+          <ul className={layout === 'tiles' ? 'grid grid-cols-2 gap-x-4 gap-y-3 pt-1' : 'divide-y divide-border/60'}>
+            {primary.map((fact) => (
+              <Item key={fact.id} fact={fact} />
             ))}
-            {showNormal && groups.normal.map((fact) => <FactRow key={fact.id} fact={fact} />)}
+            {showNormal && folded.map((fact) => <Item key={fact.id} fact={fact} />)}
           </ul>
-          {groups.normal.length > 0 && (
+          {folded.length > 0 && (
             <button
               type="button"
               onClick={() => setShowNormal(!showNormal)}
               aria-expanded={showNormal}
-              className="mt-1 inline-flex items-center gap-1.5 rounded-md py-1 text-[13px] font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={cn(
+                'flex max-w-full items-center gap-1.5 rounded-md py-1 text-left text-[13px] font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                layout === 'tiles' ? 'mt-2' : 'mt-1',
+              )}
             >
               <ChevronRight className={cn('size-4 transition-transform motion-reduce:transition-none', showNormal && 'rotate-90')} aria-hidden />
-              {showNormal ? 'Skrýt hodnoty v normě' : `V normě (${groups.normal.length})`}
+              <span className="shrink-0 whitespace-nowrap">
+                {showNormal
+                  ? tiles ? 'Skrýt další údaje' : 'Skrýt hodnoty v normě'
+                  : tiles ? `Další údaje (${folded.length})` : `V normě (${folded.length})`}
+              </span>
               {!showNormal && (
-                <span className="font-normal" translate="no">
-                  {groups.normal.slice(0, 5).map((f) => f.abbr).join(', ')}
-                  {groups.normal.length > 5 ? '…' : ''}
+                <span className="min-w-0 truncate font-normal" translate="no">
+                  {folded.slice(0, 5).map((f) => f.abbr).join(', ')}
+                  {folded.length > 5 ? '…' : ''}
                 </span>
               )}
             </button>
@@ -451,23 +501,24 @@ export function TemplateSummary() {
 
 // ── Léčebné postupy ─────────────────────────────────────────────────────────
 
-function TreatmentRow({ option }: { option: ProcedureCompatibility }) {
+function TreatmentRow({ option, dense = false }: { option: ProcedureCompatibility; dense?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const { compatibility } = option;
-  const compact = compatibility.overall === 'grey' || compatibility.overall === 'skipped';
-  const decisive = compact ? [] : compatibility.rules.filter((rule) => rule.status === compatibility.overall).slice(0, 2);
+  const muted = !dense && (compatibility.overall === 'grey' || compatibility.overall === 'skipped');
+  // Úzký panel: jeden rozhodující důvod u každého postupu (i „nelze posoudit“), zbytek na klik.
+  const decisive = compatibility.rules.filter((rule) => rule.status === compatibility.overall).slice(0, dense ? 1 : muted ? 0 : 2);
   const rest = compatibility.rules.filter((rule) => !decisive.includes(rule));
   return (
-    <li className={cn(compact ? 'py-1.5' : 'py-2.5')}>
-      <div className="flex items-start gap-2">
-        <p className={cn('min-w-0 flex-1 leading-snug', compact ? 'text-[13px] text-muted-foreground' : 'text-sm font-medium')}>
+    <li className={cn(muted ? 'py-1.5' : dense ? 'py-3' : 'py-2.5')}>
+      <div className="flex items-start gap-3">
+        <p className={cn('min-w-0 flex-1 leading-snug', muted ? 'text-[13px] text-muted-foreground' : dense ? 'text-sm font-semibold' : 'text-sm font-medium')}>
           {option.title}
-          <Citations ids={option.guideline_citations} />
+          {!dense && <Citations ids={option.guideline_citations} />}
         </p>
         <CompatibilityLight light={compatibility.overall} />
       </div>
       {decisive.map((rule) => (
-        <p key={rule.rule_id} className="mt-1 text-[13px] leading-snug text-muted-foreground">
+        <p key={rule.rule_id} className={cn('text-muted-foreground', dense ? 'mt-0.5 text-sm leading-5' : 'mt-1 text-[13px] leading-snug')}>
           {rule.text}
           <Citations ids={[...rule.patient_citations, rule.rule_citation]} />
         </p>
@@ -481,7 +532,7 @@ function TreatmentRow({ option }: { option: ProcedureCompatibility }) {
             className="mt-0.5 inline-flex items-center gap-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ChevronRight className={cn('size-3.5 transition-transform motion-reduce:transition-none', open && 'rotate-90')} aria-hidden />
-            {compact ? `Proč (${rest.length})` : `Další pravidla (${rest.length})`}
+            {muted ? `Proč (${rest.length})` : `Další pravidla (${rest.length})`}
           </button>
           {open && (
             <ul className="mt-1 flex flex-col gap-1 pl-1">
@@ -503,12 +554,12 @@ function TreatmentRow({ option }: { option: ProcedureCompatibility }) {
 }
 
 /** Všechny postupy v pořadí katalogu (ne podle barvy, aby řazení nepůsobilo jako doporučení). */
-export function TreatmentList() {
+export function TreatmentList({ dense = false }: { dense?: boolean }) {
   const { sources } = useQuickView();
   const options = sources.compatibility.data;
   return (
     <section aria-labelledby="qv-treatments">
-      <h3 id="qv-treatments" className="mb-1 text-sm font-semibold">
+      <h3 id="qv-treatments" className={cn('text-sm font-semibold', dense ? 'sr-only' : 'mb-1')}>
         Léčebné postupy{options?.length ? <span className="font-normal text-muted-foreground"> ({options.length})</span> : null}
       </h3>
       {sources.compatibility.loading ? (
@@ -520,7 +571,7 @@ export function TreatmentList() {
       ) : (
         <>
           <ul className="divide-y divide-border/60">
-            {options.map((option) => <TreatmentRow key={option.id} option={option} />)}
+            {options.map((option) => <TreatmentRow key={option.id} option={option} dense={dense} />)}
           </ul>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             Barvu počítají pravidla z doporučených postupů, ne AI. Ukazuje soulad se stavem pacienta, nejde o doporučení. Rozhoduje komise.
@@ -633,8 +684,9 @@ export function QuestionStrip({
 // ── Kompozice ───────────────────────────────────────────────────────────────
 
 /**
- * Úzký přehled (okno projektoru 420 px, boční panel kalendáře): jeden sloupec, anamnéza nahoře,
- * otázka přilepená dole. Rodič určuje výšku (flex).
+ * Úzký přehled (okno projektoru 420 px, boční panel kalendáře) jako na ukázce z přihlášení (T-514):
+ * klíčové údaje ve dvou sloupcích, postupy s jedním rozhodujícím důvodem, pak sbalená anamnéza
+ * a šablona; otázka přilepená dole. Rodič určuje výšku (flex).
  */
 export function CaseQuickViewNarrow({
   sources,
@@ -652,19 +704,26 @@ export function CaseQuickViewNarrow({
   return (
     <QuickViewRoot sources={sources} caseId={caseId}>
       <article className={cn('flex h-full min-h-0 flex-col bg-background', className)} aria-label="Rychlý přehled případu">
-        <header className="flex shrink-0 items-start gap-3 border-b border-border bg-card px-4 py-3">
-          <QuickIdentity as={titleAs} />
+        <header className="flex shrink-0 items-start gap-3 border-b border-border bg-card px-4 py-3.5">
+          <QuickIdentity as={titleAs} size="large" icd={false} />
           <QuickMetrics />
         </header>
-        <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="flex flex-col gap-6 px-4 py-4">
-            <AnamnesisPanel />
-            <KeyFactsList />
-            <TemplateSummary />
-            <TreatmentList />
+        <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain bg-muted/40">
+          <div className="flex flex-col px-4">
+            <div className="border-b border-border py-4">
+              <KeyFactsList layout="tiles" legend={false} />
+            </div>
+            <div className="border-b border-border py-1">
+              <TreatmentList dense />
+            </div>
+            <div className="flex flex-col gap-5 py-4">
+              <AnamnesisPanel defaultOpen={false} />
+              <TemplateSummary />
+              <FactLegend />
+            </div>
           </div>
         </div>
-        <QuestionStrip className="shrink-0" />
+        <QuestionStrip className="shrink-0 border-t-2 border-t-primary/40" />
         {footer}
       </article>
     </QuickViewRoot>

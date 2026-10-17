@@ -30,9 +30,33 @@ LOINC = {"ecog": ("89247-1", "ECOG Performance Status score")}
 ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 PROMPT = """Z lékařské zprávy vytěž strukturované hodnoty pro onkologickou komisi: laboratoř, nádorové markery,
-biomarkery (ER, PR, HER2, Ki-67, KRAS, BRAF, MMR/MSI, EGFR, ALK, PD-L1…), ECOG, TNM a hmotnost. Ke každé hodnotě
-uveď číslo odstavce z hranatých závorek, odkud pochází, datum vyšetření (YYYY-MM-DD, jen pokud je ve zprávě)
-a hodnotu přesně jako ve zprávě. Nic nedomýšlej a nepřepočítávej; co ve zprávě není, nevracej."""
+biomarkery (ER, PR, HER2, Ki-67, KRAS, BRAF, MMR/MSI, EGFR, ALK, PD-L1…), funkční vyšetření (FEV1, FVC, DLCO, LVEF),
+ECOG, TNM a hmotnost. Ke každé hodnotě uveď číslo odstavce z hranatých závorek, odkud pochází, datum vyšetření
+(YYYY-MM-DD, jen pokud je ve zprávě), hodnotu přesně jako ve zprávě (value_text) a u číselných hodnot i číslo
+(value_number, desetinná tečka) a jednotku. Řádek tabulky „název | hodnota | jednotka | rozmezí“ je jedna hodnota.
+Nic nedomýšlej a nepřepočítávej; co ve zprávě není, nevracej."""
+
+# Název hodnoty → LOINC, jaký používají pravidla a dataset (red_flags.LOINC); jen jednoznačné názvy, jinak bez kódu
+LABEL_LOINC = [(re.compile(pattern, re.IGNORECASE), code, display) for pattern, code, display in (
+    (r"^(hemoglobin|hb)\b", "718-7", "Hemoglobin"), (r"^(sodík|natrium|na)\b", "2951-2", "Sodík"),
+    (r"^(glykémie|glukóza|glu)\b", "15074-8", "Glukóza"), (r"^albumin\b", "1751-7", "Albumin"),
+    (r"^cea\b", "2039-6", "CEA"), (r"^ca ?19-9\b", "24108-3", "CA 19-9"), (r"^ca ?15-3\b", "6875-3", "CA 15-3"),
+    (r"^neutrofil", "751-8", "Neutrofily"), (r"^(trombocyt|plt\b)", "777-3", "Trombocyty"),
+    (r"^(kreatinin|krea\b)", "14682-9", "Kreatinin"), (r"^bilirubin", "14631-6", "Bilirubin"),
+    (r"^(hmotnost|váha)\b", "29463-7", "Hmotnost"),
+)]
+LEADING_NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*(\S[^(]*)?")              # „8,4 10^9/l“, „1,9 l (68 %)“
+
+
+def _with_number(value: dict) -> dict:
+    """Číslo a jednotka z `value_text` („8,4 10^9/l“), když je model nevyplnil; „<5“ zůstane textem."""
+    if value.get("value_number") is not None or value["kind"] not in ("lab", "vital", "biomarker"):
+        return value
+    match = LEADING_NUMBER.match(value.get("value_text") or "")
+    if not match:
+        return value
+    return {**value, "value_number": float(match.group(1).replace(",", ".")),
+            "unit": value.get("unit") or (match.group(2) or "").strip() or None}
 TEXT_PROMPT = "Přepiš text lékařské zprávy doslova, odstavce odděl prázdným řádkem. Nic nevynechávej a nic nepřidávej."
 
 
@@ -140,6 +164,8 @@ def _observation(patient_id: str, doc_id: str, index: int, value: dict, doc_date
     if value["kind"] in LOINC:
         code, display = LOINC[value["kind"]]
         obs["code"]["coding"] = [{"system": "http://loinc.org", "code": code, "display": display}]
+    elif loinc := next(((c, d) for pattern, c, d in LABEL_LOINC if pattern.match(value["label"].strip())), None):
+        obs["code"]["coding"] = [{"system": "http://loinc.org", "code": loinc[0], "display": loinc[1]}]
     date = value.get("date") or doc_date
     if date and ISO.match(date):
         obs["effectiveDateTime"] = date
@@ -165,7 +191,7 @@ def propose(patient_id: str, doc_id: str, text: str, provider: BaseAIProvider,
     if not data:
         raise ValueError(f"Hodnoty se nepodařilo vytěžit: {result.get('error') or 'prázdná odpověď'}")
     accepted, rejected = [], []
-    for value in data.get("values") or []:
+    for value in map(_with_number, data.get("values") or []):
         reasons = _check(value, paragraphs)
         target = rejected if reasons else accepted
         # `source` = znění odstavce, ať ho lékař vidí před potvrzením (dokument ještě v IRIS není)

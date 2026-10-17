@@ -1,0 +1,137 @@
+udaj	dg	kdy	uroven	nazev	fhir	vzor	max_dni	fakt	proc	zdroj
+obc.otazka	*	-	P	Otázka pro MDT	S	.	-	-	bez otázky je případ neúplný	OBC-1.1
+obc.histologie	*	-	P	Histologie a grade	R,S	histolog|biopsi|karcinom|adenokarcinom	-	-	typ nádoru určuje možnosti léčby	OBC-1.1
+obc.tnm	*	-	P	Staging TNM	O	TNM	-	tnm.m1	stadium určuje záměr léčby	OBC-1.1
+obc.zobrazeni	*	-	P	Zobrazení ≤6 týdnů k datu MDT	R	\bCT\b|\bMR\b|PET|scintigraf|mamograf	42	staging.age_days	rozhodnutí nad aktuálním stagingem	OBC-1.2
+obc.ecog	*	-	P	ECOG podle lékaře	O	ECOG	-	ecog.physician	intenzita léčby	OBC-1.3
+obc.proms	*	-	P	PROMs: ECOG podle pacienta a symptomy	Q	Jak zvládáte|Bolest	-	ecog.patient	rozdíl lékař vs. pacient, symptom ≥7	OBC-1.3
+obc.komorbidity	*	-	P	Komorbidity	K	.	-	-	kontraindikace léčby	OBC-1.1
+obc.lecba	*	-	P	Dosavadní onkologická léčba	M,P,S	.	-	-	linie a toxicita	OBC-1.1
+obc.preference	*	-	P	Preference pacienta	Q,S	nejdůležitější|postoj|přeje|preferenc|obav	-	-	volba mezi rovnocennými postupy	OBC-1.1
+obc.alergie	*	-	P	Alergie	Q,D,A	alergi	-	allergy	volba léku, premedikace	OBC-1.1
+obc.medikace	*	-	P	Medikace vč. bylin a doplňků	M,Q	.	-	med.cyp3a	interakce	OBC-1.1
+obc.hmotnost	*	-	P	Hmotnost a trend za 6 měsíců	O	Hmotnost|Body weight	-	wt.loss6m	nutriční riziko	OBC-2.3
+obc.albumin	*	-	P	Albumin	O	Albumin	-	lab.alb	nutriční riziko před výkonem	OBC-2.3
+obc.lab	*	-	P	Krevní obraz, kreatinin, bilirubin, ALT/AST	O	Hemoglobin|Kreatinin|Bilirubin	-	lab.crcl	orgánové funkce pro dávkování	OBC-1.1
+obc.predchozi_vykony	*	-	P	Předchozí výkony, implantáty, radioterapie	P,D	operac|resekc|implant|\bport\b|stent|radioterap|ozař	-	prior.local	plán chirurga a radiačního onkologa	OBC-1.1
+obc.rodinna_anamneza	*	-	P	Rodinná anamnéza nádorů	D	\bRA:|rodinn[áé] anamn|matka|otec|sestra|bratr	-	gen.indication	indikace ke genetickému poradenství	OBC-2.4
+obc.g8	*	age>=70	P	Geriatrický screening G8	*	\bG8\b|geriatri	-	geri.g8	≤14 → komplexní geriatrické hodnocení	OBC-2.2
+obc.paliativni	*	tnm.m1=ano;prom.symptom_max>=7	P	Zapojení paliativní péče	D,P,C	paliativní (tým|péč|ambulanc|konzil|medicín)	-	-	včasná paliativní péče souběžně s léčbou	OBC-2.1
+obc.kortikoidy	*	med.steroid=ano	P	Plán snižování kortikoidů	D,M,C	snižov|postupn[ěé]|vysazen|tapering	-	-	nejnižší účinná dávka, co nejkratší doba	OBC-3.1
+obc.mozek	*	brain.mets=ano	P	Mozkové metastázy: počet, symptomy, dávka kortikoidů	R	MR mozku|MR hlavy	-	brain.mets_n	SRS vs. WBRT, plán kortikoidů	PRS-3.3,OBC-3.1
+obc.histologie_loziska	*	dg.multiple=ano	P	Původ nejasného ložiska nebo druhého nádoru (histologie + IHC)	O,R	TTF-1|GATA3|napsin|PAX8|CK7|CK20|imunohistoch	-	lesion.unverified	priorita léčby u duplicity	OBC-1.4
+obc.genetika	*	gen.indication=ano	D	Genetické poradenství	D,C,O	genetick(é|ou|ého) poraden|klinick(ý|ého|ým) genetik	-	-	dědičný syndrom mění léčbu i péči o rodinu	OBC-2.4
+obc.nutrice	*	wt.loss6m>=5	D	Nutriční vyšetření a intervence	D,C,P	nutri|výživ|sipping|\bONS\b	-	-	úbytek ≥5 % → intervence, studie RKT-05	OBC-2.3,RKT-05/Z2
+obc.hbv	*	-	D	Screening HBV (HBsAg, anti-HBc)	O,D	HBsAg|anti-HBc|hepatitid[ay] B	-	inf.hbv	riziko reaktivace HBV při systémové léčbě	EXT-ASCO-HBV-2020
+obc.koureni	*	tnm.m1=ne	D	Kouření (stav, balíčkoroky)	O,D,S	kouř|kuřá|balíčkoro|cigaret	-	smoking	odvykání snižuje komplikace operace i RT	PLI-3.3
+obc.fertilita	*	age<40	D	Poradenství k fertilitě	D	fertilit|kryokonzerv|oocyt|spermi	-	fert.counsel	před gonadotoxickou léčbou	EXT-ESMO-FERT-2020
+obc.zuby	*	bone.mets=ano	D	Stomatologické vyšetření	D,P	stomatolog|zubní|dentáln	-	dental.exam	osteonekróza čelisti při antiresorpční léčbě	PRS-4.1
+obc.kalcium	*	bone.mets=ano	P	Kalcium (korigované)	O	Kalcium|Calcium|vápník	-	lab.ca_corr	hyperkalcémie; denosumab jen při korigované kalcémii	PRS-4.1,EXT-XGEVA-SMPC
+obc.sins	*	bone.mets=ano&prom.symptom_max>=7	D	Stabilita páteře (SINS), riziko fraktury	R,D	SINS|instabil|patologick[áé] frakt|Mirels	-	spine.sins	stabilizace před RT	EXT-SINS-2010
+pli.ct	C34	-	P	CT hrudníku a horního břicha	R	CT hrudníku	-	-	staging	PLI-1.1
+pli.pet	C34	tnm.m1=ne	P	PET-CT	R	PET	-	-	staging před radikální léčbou	PLI-1.1
+pli.mr_mozku	C34	tnm.m1=ne	P	MR mozku (st. II–III)	R	MR mozku|MR hlavy	-	staging.brain_mr	okultní mozkové metastázy mění záměr	PLI-1.1
+pli.ebus	C34	tnm.m1=ne	P	Invazivní staging mediastina (EBUS-TBNA)	R,P	EBUS|mediastinoskop	-	staging.ebus	N2 mění strategii	PLI-1.1
+pli.lozisko	C34	lesion.unverified=ano	P	Ověření ložiska měnícího stadium (MR nadledvin, biopsie)	R,P	MR nadledvin|biopsi[ea] (ložiska )?nadledvin	-	lesion.unverified	bez ověření nelze stanovit M	PLI-1.2
+pli.egfr	C34	-	P	EGFR	O	EGFR	-	bm.egfr	imunoterapie bez přínosu u EGFR+, adjuvantní osimertinib	PLI-1.3
+pli.alk	C34	-	P	ALK	O	\bALK\b	-	bm.alk	cílená léčba, IO bez přínosu	PLI-1.3
+pli.ros1	C34	-	P	ROS1	O	ROS1	-	bm.ros1	cílená léčba	PLI-1.3
+pli.pdl1	C34	-	P	PD-L1 TPS	O	PD-L1|TPS	-	bm.pdl1	indikace IO; durvalumab ≥1 %	PLI-1.3,PLI-2.4
+pli.spirometrie	C34	-	P	FEV1 a DLCO	O	FEV1|DLCO	-	spiro.fev1	funkční operabilita	PLI-3.1
+pli.ppo	C34	tnm.m1=ne	P	ppoFEV1 a ppoDLCO	O	ppoFEV1|ppoDLCO	-	spiro.ppo_min	<60 % → zátěžový test	PLI-3.1
+pli.vo2max	C34	spiro.ppo_min<60	P	Zátěžový test (spiroergometrie VO2max, schodový test)	O,R,P,D	VO2\s?max|spiroergometri|schodov	-	spiro.vo2max	riziko resekce	PLI-3.1,EXT-VO2MAX-2016
+pli.dusnost	C34	-	P	Dušnost (PROMs) a chůze	Q	Dušnost	-	prom.dyspnea	subjektivní tíže dušnosti	PLI-3.1
+pli.sodik	C34	-	P	Sodík	O	Sodík|Natrium	-	lab.na	hyponatrémie, SIADH	PLI-3.2
+pli.siadh	C34	lab.na<136	P	Osmolalita séra a moči, natriurie	O,D	osmolalit|natriuri|SIADH	-	-	vyloučit SIADH a upravit před léčbou	PLI-3.2
+pli.koureni	C34	-	P	Kouření, balíčkoroky	O,D,S	kouř|kuřá|balíčkoro	-	smoking	odvykání před operací i RT	PLI-3.3
+pli.ngs	C34	tnm.m1=ano	D	Rozšířené NGS (KRAS G12C, BRAF, MET, RET, NTRK, HER2)	O,R	NGS|KRAS|BRAF|\bMET\b|\bRET\b|NTRK	-	bm.kras	cílená léčba u M1 neskvamózního NSCLC	EXT-ESMO-NSCLC-2023
+pli.chirurg	C34	tnm.m1=ne	D	Stanovisko hrudního chirurga	D,C	hrudn[íě]\w* chirurg|chirurgické konzil	-	-	o resekabilitě rozhoduje MDT s hrudním chirurgem	PLI-2.1
+pli.radioterapeut	C34	tnm.m1=ne	D	Stanovisko radiačního onkologa	D,C	radiační onkolog|radioterapeut	-	-	CHRT u neresekabilního st. III; práh plicních funkcí pro RT	PLI-2.1,PLI-2.4
+pli.ekg	C34	bm.egfr=mut	D	EKG (QTc) před osimertinibem	O,D	QTc|EKG	-	ecg.qtc	QTc >500 ms → přerušit	EXT-TAGRISSO-SMPC
+prs.receptory	C50	-	P	ER, PR, HER2, Ki-67	O	HER2|Estrogen|\bER\b	-	bm.her2	volba léčby	PRS-1.1,PRS-1.2
+prs.receptory_mts	C50	tnm.m1=ano	P	Receptory z metastázy (rebiopsie)	O,R	\(metastáza\)|biopsi\w* (jaterního )?ložisk	-	bm.her2_discordant	receptory metastázy se mohou lišit	PRS-1.1
+prs.esr1	C50	tnm.m1=ano&bm.hr=pos&bm.her2=0|ultralow|low	P	ESR1 (ctDNA)	O	ESR1	-	bm.esr1	elacestrant, studie RKT-01	PRS-1.3
+prs.pik3ca	C50	tnm.m1=ano&bm.hr=pos&bm.her2=0|ultralow|low	P	PIK3CA / AKT1 / PTEN	O	PIK3CA|AKT1|PTEN	-	bm.pik3ca	inhibitor PI3K nebo AKT	PRS-1.3
+prs.gbrca	C50	tnm.m1=ano&bm.her2=0|ultralow|low	P	Zárodečná BRCA1/2	O	BRCA	-	bm.brca	PARP inhibitor	PRS-1.3
+prs.cps	C50	tnm.m1=ano&bm.hr=neg	P	PD-L1 CPS (TNBC)	O,R	CPS|PD-L1	-	bm.cps	pembrolizumab při CPS ≥10	EXT-ESMO-MBC-LG
+prs.lvef	C50	bm.her2=pos	P	LVEF (echo á 3 měsíce)	O,R	LVEF|ejekční frakc	92	lvef	kardiotoxicita anti-HER2	PRS-3.4
+prs.menopauza	C50	sex=Z&age<60	P	Menopauzální stav	D,S,K	menopauz|klimakter|menstruac	-	meno	inhibitor aromatázy vs. ovariální suprese	PRS-2.1
+prs.qtc	C50	bm.hr=pos&bm.her2=0|ultralow|low	P	EKG – QTc (před ribociklibem)	O,D	QTc|EKG	-	ecg.qtc	ribociklib při QTcF ≥450 ms nezahajovat	EXT-KISQALI-SMPC-UK
+prs.hba1c	C50	bm.hr=pos&bm.pik3ca=mut	D	Glykémie nebo HbA1c (před inhibitorem PI3K/AKT)	O	HbA1c|Glukóza|glykém	-	lab.hba1c	hyperglykémie	EXT-PIQRAY-TGA-2020
+prs.ild	C50	tnm.m1=ano&bm.her2=pos|low|ultralow	D	Riziko ILD (před T-DXd)	D,R	\bILD\b|intersticiální|pneumonitid|HRCT	-	lung.ild	T-DXd: riziko ILD hodnotit před léčbou	PRS-2.3
+prs.mtb	C50	bm.ngs=ano	D	Molekulární tumor board (výsledky NGS)	D,C	molekulární\w* (tumor )?(board|komis)|\bMTB\b	-	-	NGS interpretuje molekulární komise	PRS-1.4
+prs.dxa	C50	bm.hr=pos	D	Denzitometrie (DXA)	D,R	DXA|denzitometri|osteopor|T-sk[oó]re	-	bone.dxa_t	inhibitor aromatázy a ovariální suprese snižují kostní hustotu	EXT-ESMO-BONE-2020
+krc.ras	C18-C20	-	P	RAS (KRAS, NRAS ex. 2–4)	O,R	\bRAS\b|KRAS|NRAS	-	bm.ras	anti-EGFR jen u RAS wt	KRC-1.1
+krc.braf	C18-C20	-	P	BRAF V600E	O,R	BRAF	-	bm.braf	enkorafenib + cetuximab, prognóza	KRC-1.1
+krc.mmr	C18-C20	-	P	MMR / MSI	O,R	\bMMR\b|\bMSI\b|mismatch	-	bm.mmr	imunoterapie, Lynchův syndrom	KRC-1.1,KRC-1.2
+krc.her2	C18-C20	bm.ras=wt	P	HER2 (u RAS/BRAF wt)	O,R	HER2	-	-	trastuzumab + tukatinib	KRC-1.1
+krc.restaging	C18-C20	tnm.m1=ano	P	CT hrudníku, břicha a pánve (≤6 týdnů)	R	CT hrudníku	42	staging.liver_complete	extrahepatální onemocnění	KRC-2.4,KRC-2.1
+krc.mr_jater	C18-C20	tnm.m1=ano	P	MR jater s hepatospecifickou k. l. (≤6 týdnů)	R	MR jater	42	-	resekční plán, vymizelá ložiska	KRC-2.4
+krc.flr	C18-C20	tnm.m1=ano	P	FLR (%) a cévní vztahy	O,R,D	FLR|remnant|volumetri|objemu jater	-	liver.flr	resekabilita	KRC-2.1
+krc.neuropatie	C18-C20	-	P	Neuropatie podle lékaře i pacienta	O,Q	neuropat|Brnění	-	tox.neuropathy	stop-and-go oxaliplatiny	KRC-3.2
+krc.proteinurie	C18-C20	-	P	Krevní tlak a proteinurie (bevacizumab)	O,D	proteinuri|bílkovin\w* v moči|moč chemicky	-	urine.prot_g24	bevacizumab: proteinurie ≥2 g/24 h přerušit	EXT-AVASTIN-FDA-2020
+krc.dpd	C18-C20	-	P	Deficit DPD (DPYD)	O,D	\bDPD\b|DPYD|dihydropyrimidin	-	bm.dpd	toxicita fluoropyrimidinů	EXT-EMA-DPD-2020
+krc.markery	C18-C20	-	D	Trend CEA a CA 19-9	O	CEA|CA 19-9	-	lab.cea	odpověď na léčbu	EXT-ESMO-MCRC-2023
+krc.strana	C18-C20	tnm.m1=ano	D	Strana primárního nádoru (levá/pravá)	K,R,S	sigm|rekt|sestupn|cék|vzestupn|transverz|pravostrann|levostrann	-	tumor.side	anti-EGFR v 1. linii jen levostranný	EXT-ESMO-MCRC-2023
+krc.hpb	C18-C20	tnm.m1=ano	D	Stanovisko hepatobiliárního chirurga	D,C	hepatobiliár|\bHPB\b|jaterní chirurg	-	-	o resekabilitě rozhoduje MDT s HPB chirurgem	KRC-2.1
+krc.kolonoskopie	C18,C20	tnm.m1=ne	P	Kompletní kolonoskopie	P,R,D	kolonoskop	-	-	synchronní nádor	EXT-ESMO-COLON-2020
+krc.mr_panve	C20	tnm.m1=ne	P	MR pánve (mrT, CRM, EMVI)	R	MR pánve|MR rekta	-	-	indikace neoadjuvance	EXT-ESMO-RECTUM-2017
+ren.ct	C64,D41	-	P	CT hrudníku a břicha s k. l.	R	\bCT\b	-	-	staging	EXT-EAU-RCC-2025
+ren.funkce	C64,D41	-	P	Funkce ledvin (eGFR, kreatinin)	O	Kreatinin|eGFR	-	lab.egfr	nefron šetřící výkon	EXT-EAU-RCC-2025
+ren.biopsie	C64,D41	-	D	Biopsie renální masy	R,P	biopsi\w*.{0,30}ledvin|renáln\w*.{0,20}biopsi	-	-	histologie mění postup (sledování, ablace, systémová léčba)	EXT-EAU-RCC-2025
+ren.imdc	C64	tnm.m1=ano	P	IMDC faktory (KPS, Hb, Ca, neutrofily, trombocyty)	O	Kalcium|Hemoglobin	-	rcc.imdc_score	volba 1. linie	EXT-EAU-RCC-2025
+ren.scintigrafie	C64,D41	lab.egfr<60	D	Dělená funkce ledvin (scintigrafie)	R	scintigraf\w*.{0,30}ledvin|DTPA|MAG3	-	ren.solitary	CKD → parciální nefrektomie	EXT-EAU-RCC-2025
+pro.psa	C61	-	P	PSA a kinetika (PSADT)	O	\bPSA\b	-	lab.psa	riziko a odpověď	EXT-EAU-PROSTATE-2025
+pro.isup	C61	-	P	Gleason / ISUP	R,S	Gleason|ISUP	-	pros.risk	riziková skupina	EXT-EAU-PROSTATE-2025
+pro.mri	C61	tnm.m1=ne	P	Multiparametrická MR prostaty	R	MR prostaty|mpMR	-	-	lokální staging	EXT-EAU-PROSTATE-2025
+pro.psma	C61	-	D	PSMA PET	R	PSMA	-	bm.psma	staging; indikace Lu-PSMA	EXT-EAU-PROSTATE-2025
+pro.testosteron	C61	tnm.m1=ano	P	Testosteron (kastrační hladina)	O	Testosteron	-	-	definice kastrační rezistence	EXT-EAU-PROSTATE-2025
+pro.hrr	C61	tnm.m1=ano	D	HRR / BRCA (NGS)	O	BRCA|HRR|\bATM\b|NGS	-	bm.hrr	PARP inhibitor	EXT-EAU-PROSTATE-2025
+pro.dxa	C61	-	D	Denzitometrie (DXA) při ADT	R,D	DXA|denzitometri|osteopor	-	bone.dxa_t	ADT snižuje kostní hustotu	EXT-ESMO-BONE-2020
+mm.turbt	C67	-	P	Histologie TURBT se svalovinou (detruzor)	R	TURB|detruzor|svalovin	-	-	invaze do svaloviny	EXT-EAU-MIBC-2025
+mm.ct_urografie	C67	-	P	CT urografie a CT hrudníku	R	urografi|\bCT\b	-	-	staging, horní cesty močové	EXT-EAU-MIBC-2025
+mm.cis_fit	C67	-	P	Způsobilost k cisplatině (CrCl, sluch, neuropatie, NYHA)	O,D	Kreatinin|audiometri|sluch	-	lab.crcl	neoadjuvance a 1. linie cisplatinou	EXT-GALSKY-2011
+mm.fgfr	C67	tnm.m1=ano	D	FGFR3 (NGS)	O,R	FGFR	-	bm.fgfr	erdafitinib	EXT-EAU-MIBC-2025
+gas.endoskopie	C15,C16	-	P	Endoskopie s biopsií	P,R	gastroskop|ezofagoskop|endoskop	-	-	histologie a lokalizace	EXT-ESMO-GASTRIC-2022
+gas.eus	C15,C16	tnm.m1=ne	P	EUS (lokální staging)	R,P	\bEUS\b|endosonograf	-	-	T a N staging	EXT-ESMO-OESO-2022
+gas.her2	C15,C16	-	P	HER2	O,R	HER2	-	bm.her2	trastuzumab	EXT-ESMO-GASTRIC-2022
+gas.cps	C15,C16	-	P	PD-L1 CPS	O,R	CPS|PD-L1	-	bm.cps	imunoterapie	EXT-ESMO-GASTRIC-2022
+gas.mmr	C15,C16	-	P	MMR / MSI	O,R	\bMMR\b|\bMSI\b	-	bm.mmr	prognóza, imunoterapie	EXT-ESMO-GASTRIC-2022
+gas.cldn	C15,C16	tnm.m1=ano	D	CLDN18.2	O,R	CLDN|claudin	-	bm.cldn18	zolbetuximab	EXT-ESMO-GASTRIC-2022
+gas.laparoskopie	C16	tnm.m1=ne	D	Stagingová laparoskopie (≥cT3)	P,R	laparoskop	-	-	okultní peritoneální diseminace	EXT-ESMO-GASTRIC-2022
+gas.nutrice	C15,C16	-	P	Nutriční stav a podpora	D	nutri|výživ|\bPEG\b|sond	-	wt.loss6m	vysoké riziko podvýživy	EXT-ESPEN-SURG-2021
+pan.ct_protokol	C25	-	P	CT pankreatického protokolu (vztah k cévám)	R	\bCT\b	-	pan.arterial_deg	resekabilita	EXT-ESMO-PANC-2023
+pan.ca199	C25	-	P	CA 19-9 (s bilirubinem)	O	CA 19-9	-	lab.ca199	biologická resekabilita	EXT-IAP-2017
+pan.drenaz	C25	lab.bili_xuln>1.5	D	Biliární drenáž při ikteru	P,D	stent|drenáž|ERCP	-	-	před CHT bilirubin ≤1,5× ULN	EXT-ESMO-PANC-2023
+pan.gbrca	C25	-	D	Zárodečné BRCA1/2, PALB2	O	BRCA|PALB2	-	bm.brca	olaparib; testovat rodinu	EXT-ESMO-PANC-2023
+pan.enzymy	C25	-	D	Exokrinní insuficience (pankreatin)	M,D	pankreatin|Kreon|enzym	-	-	výživa	EXT-ESMO-PANC-2023
+hcc.childpugh	C22	-	P	Child-Pugh (bilirubin, albumin, INR, ascites, encefalopatie)	O,D	Child|\bINR\b|Albumin	-	liver.child_score	výběr léčby	EXT-EASL-HCC-2018
+hcc.afp	C22	-	P	AFP	O	\bAFP\b|alfa-fetoprotein	-	bm.afp	prognóza; ramucirumab při AFP ≥400	EXT-EASL-HCC-2018
+hcc.zobrazeni	C22	-	P	Multifázové CT nebo MR jater	R	\bCT\b|MR jater	42	-	BCLC	EXT-EASL-HCC-2018
+hcc.etiologie	C22	-	P	Etiologie (HBV, HCV, alkohol, MASLD)	O,D,K	HBV|HCV|hepatitid|alkohol|steató	-	-	antivirotika, prognóza	EXT-EASL-HCC-2018
+hcc.varixy	C22	-	D	Gastroskopie – varixy (≤6 měsíců)	P,R	gastroskop|varix	183	liver.varices	před atezolizumab + bevacizumab	EXT-IMBRAVE150-2020
+ova.ca125	C56	-	P	CA-125	O	CA[- ]?125	-	-	odpověď na léčbu	EXT-ESMO-OVARY-2023
+ova.brca	C56	-	P	BRCA1/2 (zárodečné i somatické) a HRD	O,R	BRCA|HRD	-	bm.brca	PARP inhibitor	EXT-ESMO-OVARY-2023
+ova.genetika	C56	-	P	Genetické poradenství	D	genetick	-	-	indikováno u každého ovariálního karcinomu	OBC-2.4
+ova.resekabilita	C56	tnm.m1=ne	D	Hodnocení resekability (PCI, laparoskopie)	P,R,D	laparoskop|\bPCI\b|Fagott	-	-	primární vs. intervalová cytoredukce	EXT-ESMO-OVARY-2023
+ova.fra	C56	-	D	FRα (platina-rezistentní relaps)	O,R	FR[αa]|folátov	-	bm.fra	mirvetuximab	EXT-ESMO-OVARY-2023
+cer.mr	C53	-	P	MR pánve	R	MR pánve|MR malé pánve	-	-	lokální rozsah	EXT-ESGO-CERVIX-2023
+cer.pet	C53	tnm.m1=ne	D	PET-CT (lokálně pokročilý)	R	PET	-	-	uzliny a vzdálené metastázy	EXT-ESGO-CERVIX-2023
+cer.cps	C53	tnm.m1=ano	P	PD-L1 CPS	O,R	CPS|PD-L1	-	bm.cps	pembrolizumab	EXT-ESGO-CERVIX-2023
+end.molekular	C54	-	P	Molekulární klasifikace (POLE, MMR, p53)	O,R	POLE|p53|\bMMR\b|\bMSI\b	-	bm.mmr	adjuvance podle rizika	EXT-ESGO-ENDOMETRIUM-2021
+end.receptory	C54	-	D	ER a PR	O,R	estrogen|\bER\b|progesteron	-	bm.hr	hormonální léčba	EXT-ESMO-ENDOMETRIUM-2022
+end.lynch	C54	bm.mmr=dmmr	D	Lynchův syndrom – genetické poradenství	D	Lynch|genetick	-	-	dMMR → genetické poradenství	OBC-2.4
+mel.breslow	C43	-	P	Breslow, ulcerace	R	Breslow|ulcer	-	-	stadium	EXT-ESMO-MELANOMA-2019
+mel.slnb	C43	tnm.m1=ne	P	Sentinelová uzlina	R,P	sentinel|SLNB	-	-	stadium, adjuvance	EXT-ESMO-MELANOMA-2019
+mel.braf	C43	-	P	BRAF V600	O,R	BRAF	-	bm.braf	BRAF/MEK inhibitory	EXT-ESMO-MELANOMA-2019
+mel.ld	C43	tnm.m1=ano	P	LD	O	\bLD\b|laktátdehydrogen	-	lab.ld	M1c/d, prognóza	EXT-ESMO-MELANOMA-2019
+mel.mr_mozku	C43	-	D	MR mozku (st. III–IV)	R	MR mozku	-	brain.mets_n	asymptomatické mozkové metastázy	EXT-ESMO-MELANOMA-2019
+hn.p16	C00-C14,C32	-	P	p16 / HPV (orofarynx)	O,R	p16|HPV	-	-	TNM8 a prognóza	EXT-ESMO-HN-2020
+hn.zobrazeni	C00-C14,C32	-	P	CT nebo MR krku, CT hrudníku (PET-CT)	R	\bCT\b|\bMR\b|PET	42	-	staging	EXT-ESMO-HN-2020
+hn.cps	C00-C14,C32	tnm.m1=ano	P	PD-L1 CPS (R/M)	O,R	CPS|PD-L1	-	bm.cps	pembrolizumab	EXT-ESMO-HN-2020
+hn.zuby	C00-C14,C32	-	P	Stomatologické vyšetření před RT	D,P	stomatolog|zubní|extrakc	-	dental.exam	osteoradionekróza	EXT-ESMO-HN-2020
+hn.nutrice	C00-C14,C32	-	D	Nutrice, PEG	D,P	\bPEG\b|gastrostom|nutri	-	wt.loss6m	mukozitida při CHRT	EXT-ESMO-HN-2020
+gbm.mr	C71	-	P	MR mozku s k. l. (pooperační ≤72 h)	R	\bMR\b	-	-	reziduum nádoru	EXT-EANO-GLIOMA-2021
+gbm.idh_mgmt	C71	-	P	IDH, MGMT, 1p/19q	O,R	IDH|MGMT|1p/19q	-	bm.idh	klasifikace WHO 2021; TMZ u starších podle MGMT	EXT-EANO-GLIOMA-2021
+gbm.kps	C71	-	P	KPS	O,D	KPS|Karnofsk	-	kps	frakcionace RT	EXT-EANO-GLIOMA-2021
+gbm.epilepsie	C71	-	D	Epileptické záchvaty a antiepileptika	D,M	epilep|záchvat|levetiracetam	-	neuro.seizure	interakce, řízení vozidla	EXT-EANO-GLIOMA-2021

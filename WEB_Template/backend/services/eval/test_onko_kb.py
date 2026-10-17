@@ -85,6 +85,60 @@ def test_reirradiation_depends_on_interval_and_intent(q):
     assert never['VS-RT-01'] == never['VS-RT-02'] == 'green'
 
 
+TEMPLATES = {'P01': 'sab-prs-hr', 'P02': 'sab-prs-her2', 'P03': 'sab-krc-jatra', 'P04': 'sab-pli-radikalni',
+             'P05': 'sab-prs-hr', 'P06': 'sab-duplicita'}
+
+
+def _warnings(q, pid):
+    dg, facts, docs, mdt, _ = q._source(pid, {})
+    return {i['warning']['id']: i for i in q.recommend(dg, facts, docs, mdt) if 'warning' in i}
+
+
+@pytest.fixture(scope='module')
+def dataset_ok(q):
+    if not (q.DATASET_DIR / 'pacienti' / 'P01').is_dir():
+        pytest.skip('dataset není v checkoutu')
+
+
+@pytest.mark.parametrize('pid', sorted(TEMPLATES))
+def test_projector_template_per_patient(q, dataset_ok, pid):
+    dg, facts, _, _, _ = q._source(pid, {})
+    assert q.pick_template(dg, facts)['sablona'] == TEMPLATES[pid]
+
+
+def test_templates_are_valid_brief_configs(q):
+    pytest.importorskip('django')
+    from apps.mdt.config import ROLE_IDS, SECTION_ORDER
+    for t in q.kb()['sablony']:
+        config = q.template_config(t)
+        assert [s['id'] for s in sorted(config['sections'], key=lambda s: s['order'])] != []
+        assert {s['id'] for s in config['sections']} == set(SECTION_ORDER), t['sablona']
+        assert set(config['roles_present']) <= ROLE_IDS, t['sablona']
+
+
+def test_recommended_data_match_pozadavky_dataset_findings(q, dataset_ok):
+    """docs/POZADAVKY_LEKARE.md §4: co v podkladech chybí (sloupec Dataset)."""
+    p03, p04 = _warnings(q, 'P03'), _warnings(q, 'P04')
+    assert p03['CHYBI:krc.mmr']['status'] == 'mention'                  # MMR nevyšetřeno
+    assert p03['CHYBI:krc.restaging']['status'] == 'stale'              # CT hrudníku jen ze stagingu
+    assert 'CHYBI:krc.dpd' in p03 and 'CHYBI:krc.her2' not in p03       # KRAS G12D → HER2 netřeba
+    assert {'CHYBI:obc.g8', 'CHYBI:pli.siadh', 'CHYBI:pli.egfr'} <= set(p04)
+    assert 'P04-doc06' in p04['CHYBI:pli.vo2max']['ids']                # „doporučena spiroergometrie“ = jen zmínka
+    assert 'CHYBI:obc.kortikoidy' in _warnings(q, 'P02')                # dexametazon bez plánu
+    assert 'CHYBI:obc.g8' in _warnings(q, 'P06')
+    assert _warnings(q, 'P01')['CHYBI:obc.zobrazeni']['age'] == 50     # staging 50 dní
+    assert 'CHYBI:prs.esr1' not in _warnings(q, 'P02')                  # ESR1 jen u HR+/HER2−
+    assert all(w['warning']['severity'] == 'low' for k, w in p04.items() if k.startswith('DOP:'))
+
+
+def test_role_view_puts_specialty_first(q, dataset_ok):
+    dg, facts, docs, mdt, _ = q._source('P03', {})
+    view = q.role_view('surgeon', dg, facts, q.recommend(dg, facts, docs, mdt))
+    assert view['sekce'][:2] == ['summary', 'role_views']
+    assert view['udaje'][0]['udaj'] == 'krc.flr'
+    assert view['postupy'][0]['postup'] == 'krc-resekce-jater'
+
+
 def test_unknown_biomarker_is_not_a_negative(q):
     trial = q.screen_trial('RKT-03', {'bm.mmr': 'nezn'})
     assert next(c for c in trial['kriteria'] if c['id'] == 'RKT-03/V2')['status'] == 'chybí údaj'

@@ -13,8 +13,34 @@ python3 data/onko/q.py studie C50 | KEYNOTE-189 | RKT-03 [k=v …]   # studie, s
 python3 data/onko/q.py pravidlo VS-RT-02         # pravidlo + na které postupy se vztahuje
 python3 data/onko/q.py norma hemoglobin          # normální hodnota, jednotka, převod, onko prahy
 python3 data/onko/q.py ctcae neutro              # stupně toxicity G1–G4
+python3 data/onko/q.py sablona P04 [--json]      # doporučená šablona projektoru = BriefConfig + klíčové údaje
+python3 data/onko/q.py doporuc P04 [--json]      # co v podkladech chybí → varování (IntakeWarning)
+python3 data/onko/q.py pohled chirurg [P03]      # co jde lékaři nahoru; bez pacienta = všichni P01–P06
+python3 data/onko/q.py odbornosti C50 kardiolog  # koho co zajímá a proč
 python3 data/onko/q.py check                     # integrita (test: services/eval/test_onko_kb.py)
 ```
+
+`Pxx` čte bundle z datasetu jen pro vývoj a testy. Aplikace má za běhu data jen z IRIS.
+
+## Šablony, doporučené údaje a odbornosti (T-317)
+
+- **`sablony.tsv`:** šablona podkladu pro projektor podle diagnózy a situace (`kdy`, např. `tnm.m1=ano&bm.her2=pos`).
+  - `sekce` (pořadí, `:detail`), `role` a `detail` dávají platný `BriefConfig` (§8.5). Výstup `q.py sablona --json` jde rovnou do presetů.
+  - `zobrazit` = klíčové údaje velkým písmem na projektor.
+  - Výběr šablony: `prio` (jen když `kdy` platí) > konkrétní diagnóza > splněné `kdy` > počet shod. `sab-duplicita` (OBC-1.4) má přednost.
+- **`udaje.tsv`:** katalog údajů podle diagnózy.
+  - `P` = povinné (POZADAVKY §4 a standard péče) → „Chybí: …“, severity `moderate`.
+  - `D` = doporučené → „Doporučeno: … (mohlo by se hodit)“, severity `low`. Ukáže se jen tehdy, když jeho `kdy` jistě platí, aby nevznikal šum.
+  - Vyhledání: `fhir` (O Observation, R DiagnosticReport, D DocumentReference, C Composition, S ServiceRequest, Q PROMs, P Procedure, M léky, K Condition, A alergie) + `vzor` (regex).
+  - Název zprávy nebo pozorování platí přímo. Hodnota „nevyšetřeno/probíhá“ nebo věta s „doporučeno/doplnit/?“ je jen **zmínka**: varování zůstane, ale cituje ten dokument.
+  - `max_dni` = starší výsledek se hlásí jako zastaralý.
+  - Položka konkrétní diagnózy (`pli.koureni`) přebíjí obecnou se stejným názvem (`obc.koureni`).
+  - Varování mají tvar `IntakeWarning` (§8.6, `kind: "missing"`, id `DOP:…` / `CHYBI:…`), kontrakt se nemění.
+- **`odbornosti.tsv`:** co kterého lékaře zajímá u diagnózy a léčby a proč.
+  - `plati` = modality, o kterých rozhoduje (tagy postupů).
+  - `sekce` = bloky, které mu jdou nahoru (souhrn zůstává první, ARCH §7.3).
+  - `udaje` = jeho údaje a varování nahoru.
+  - `role` = `RoleId` z `UserProfile.specialty`. `-` = odbornost mimo `RoleId`, jen informativně.
 
 Fakta: `k=v` nebo `@fakta.json`. Hodnoty: číslo, `ano`/`ne`, kategorie. `ne` u „dní/měsíců od události“ znamená, že událost nebyla. `nezn` znamená nevyšetřeno nebo probíhá (= chybí údaj, pokud pravidlo na `nezn` výslovně nečeká).
 
@@ -30,6 +56,9 @@ Fakta: `k=v` nebo `@fakta.json`. Hodnoty: číslo, `ano`/`ne`, kategorie. `ne` u
 | `normy.tsv` | `param` | normální hodnoty + jednotky, onko prahy, převody US → SI (`ds` = referenceRange datasetu) |
 | `ctcae.tsv` | `param` | CTCAE v5 stupně G1–G4 |
 | `zdroje.tsv` | `id` | nové externí zdroje `EXT-…` (k 13 v `services/iris/data/external_sources.json`) |
+| `sablony.tsv` | `sablona` | šablony podkladu pro projektor podle diagnózy (BriefConfig + klíčové údaje) |
+| `udaje.tsv` | `udaj` | povinné a doporučené údaje podle diagnózy + jak je najít ve FHIR |
+| `odbornosti.tsv` | `role` | co kterého lékaře zajímá u diagnózy a léčby a proč |
 
 ## Diagnózy
 

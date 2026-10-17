@@ -1,0 +1,54 @@
+role	odbornost	dg	plati	sekce	zajima	udaje	proc	zdroj
+oncologist	klinický onkolog	*	CHT,IO,TT,HT,ADC,STUDIE	decision_support,trials,red_flags	výkonnostní stav, orgánové funkce, biomarkery, předchozí linie a toxicita, interakce, studie	obc.ecog,obc.proms,obc.lab,obc.lecba,obc.medikace,obc.hbv	volí systémovou léčbu a její intenzitu	OBC-1.1,OBC-1.3
+surgeon	chirurg	*	CHIR,ABL	role_views,decision_support,red_flags	resekabilita, operační riziko (kardiální, výživa, věk), antikoagulace, předchozí výkony	obc.hmotnost,obc.albumin,obc.g8,obc.ecog,obc.predchozi_vykony,obc.koureni	rozhoduje o operabilitě a načasování výkonu	OBC-2.3,EXT-ESC-NCS-2022
+radiation_oncologist	radiační onkolog	*	RT,NUK	role_views,decision_support,red_flags	předchozí RT (oblast, dávka, interval), implantáty a kardiostimulátor, onemocnění pojiva	obc.predchozi_vykony,obc.zobrazeni,obc.ecog	re-iradiace a toxicita RT	EXT-ESTRO-REIRRAD-2022,EXT-AAPM-TG203-2019
+radiologist	radiolog	*	DG	timeline,role_views,red_flags	aktuálnost zobrazení, RECIST, nejasná ložiska, srovnání s předchozími	obc.zobrazeni,obc.tnm,obc.histologie_loziska	zobrazovací staging je základ rozhodnutí	OBC-1.2,OBC-1.4
+pathologist	patolog	*	DG	role_views,red_flags	histologie, grade, IHC, prediktivní biomarkery, dostatek materiálu, diskordance	obc.histologie,obc.histologie_loziska	bez histologie a biomarkerů nelze volit léčbu	OBC-1.1,OBC-1.4
+pulmonologist	pneumolog	*	DG.EBUS,DG.biopsie.tt	role_views,red_flags	plicní funkce, kouření, bronchologie	obc.koureni	funkční rezerva a invazivní diagnostika	PLI-3.1,PLI-3.3
+cardiologist	kardiolog	*	CHT.antra,TT.HER2,ADC.HER2,CHIR	role_views,red_flags	kardiální riziko výkonu, kardiotoxicita (LVEF), QTc	obc.komorbidity	kardiotoxická léčba a operace u kardiaka	EXT-ESC-CARDIOONC-2022,EXT-ESC-NCS-2022
+patient	pacient	*	*	summary,questions,mdt_question	symptomy, výkonnost podle sebe, preference a obavy	obc.proms,obc.preference	preference není kontraindikace, ale mění volbu	OBC-1.1,OBC-1.3
+-	paliativní tým	*	SUP.paliat	-	symptomová zátěž, trend ECOG, progrese	obc.paliativni,obc.proms	včasná paliativní péče souběžně s léčbou	OBC-2.1
+-	nutriční terapeut	*	SUP.nutri	-	úbytek hmotnosti, albumin	obc.nutrice,obc.hmotnost,obc.albumin	nutriční intervence před výkonem a během léčby	OBC-2.3
+-	geriatr	*	SUP.geri	-	G8, křehkost	obc.g8	intenzivní léčba ve vyšším věku	OBC-2.2
+-	klinický genetik	*	SUP.genet	-	rodinná anamnéza, dMMR, BRCA	obc.rodinna_anamneza,obc.genetika	dědičný syndrom mění léčbu i péči o rodinu	OBC-2.4
+-	stomatolog	*	SYS.BMA,RT.hn	-	stav chrupu před antiresorpční léčbou a RT hlavy a krku	obc.zuby,hn.zuby	osteonekróza čelisti	PRS-4.1,EXT-ESMO-HN-2020
+surgeon	hrudní chirurg	C34	CHIR.plice	-	funkční operabilita, resekabilita, N2 jedné stanice, ověření M, kouření	pli.ppo,pli.vo2max,pli.dusnost,pli.ebus,pli.pet,pli.lozisko,pli.koureni	lobektomie jen při dostatečné plicní rezervě a bez M1	PLI-2.2,PLI-3.1,PLI-1.2
+radiation_oncologist	radiační onkolog	C34	RT.hrudnik,RT.SBRT.plice	-	plicní funkce pro RT, ozařovaný objem (PET), ILD, PD-L1 pro konsolidaci	pli.spirometrie,pli.pet,pli.pdl1,pli.radioterapeut	CHRT + durvalumab u neresekabilního st. III; SBRT u inoperabilního st. I	PLI-2.4,EXT-ESMO-NSCLC-EARLY-2017
+oncologist	klinický onkolog	C34	CHT,IO,TT	-	EGFR, ALK, ROS1, PD-L1, NGS, způsobilost k cisplatině	pli.egfr,pli.alk,pli.ros1,pli.pdl1,pli.ngs	perioperační imunoterapie jen bez EGFR/ALK; cílená léčba podle driveru	PLI-1.3,PLI-2.2,EXT-GALSKY-2011
+pulmonologist	pneumolog	C34	DG,CHIR.plice	-	FEV1, DLCO, ppo hodnoty, zátěžový test, CHOPN, EBUS, sodík	pli.spirometrie,pli.ppo,pli.vo2max,pli.ebus,pli.sodik,pli.siadh	funkční hodnocení a invazivní staging	PLI-3.1,PLI-1.1,PLI-3.2
+radiologist	radiolog	C34	DG	-	PET-CT, MR mozku, ložisko měnící stadium (nadledvina)	pli.pet,pli.mr_mozku,pli.lozisko,pli.ct	M-kategorie rozhoduje o záměru léčby	PLI-1.1,PLI-1.2
+pathologist	patolog	C34	DG	-	histologie, dostatek tkáně pro EGFR, ALK, ROS1, PD-L1	pli.egfr,pli.alk,pli.ros1,pli.pdl1	při nedostatku tkáně rebiopsie nebo tekutá biopsie	PLI-1.3
+surgeon	mamární chirurg	C50	CHIR.prs	-	velikost a multicentricita, axila, receptory	prs.receptory,obc.tnm	záchovná operace vs. mastektomie	EXT-ESMO-EBC-2024
+oncologist	klinický onkolog	C50	HT,TT,ADC,CHT	-	ER/PR/HER2/Ki-67 z primáru i metastázy, ESR1, PIK3CA, gBRCA, viscerální krize, QTc, menopauza	prs.receptory,prs.receptory_mts,prs.esr1,prs.pik3ca,prs.gbrca,prs.menopauza,prs.qtc	linie podle biomarkerů a předchozí léčby	PRS-1.1,PRS-1.3,PRS-2.2,PRS-2.4
+radiation_oncologist	radiační onkolog	C50	RT.SRS,RT.WBRT,RT.prs,RT.kost	-	počet a velikost mozkových metastáz, symptomy, kortikoidy, předchozí RT hrudní stěny	obc.mozek,obc.kortikoidy,obc.predchozi_vykony	SRS při omezeném počtu ložisek, WBRT se odkládá	PRS-3.3,OBC-3.1
+cardiologist	kardiolog	C50	TT.HER2,ADC.HER2,CHT.antra	-	trend LVEF á 3 měsíce, kumulativní dávka antracyklinů	prs.lvef	pokles LVEF → přerušení anti-HER2 léčby	PRS-3.4,EXT-ESC-CARDIOONC-2022
+pathologist	patolog	C50	DG	-	HER2 IHC/ISH (HER2-low), diskordance primár vs. metastáza	prs.receptory,prs.receptory_mts	HER2-low určuje indikaci T-DXd	PRS-1.1,PRS-1.2
+radiologist	radiolog	C50	DG	-	viscerální metastázy, mozek, kosti, RECIST	obc.zobrazeni,obc.mozek	viscerální krize a odpověď na léčbu	PRS-2.4,PRS-4.2
+surgeon	hepatobiliární a kolorektální chirurg	C18-C20	CHIR.jatra,CHIR.kolorekt,ABL.RFA	-	FLR, rozsah a laloky, vymizelá ložiska, cévní vztahy, interval od bevacizumabu, restaging	krc.flr,krc.mr_jater,krc.restaging,krc.hpb	R0 resekce s dostatečným remnantem	KRC-2.1,KRC-2.3,KRC-2.4,KRC-2.5
+oncologist	klinický onkolog	C18-C20	CHT,TT,IO	-	RAS, BRAF, MMR, HER2, strana nádoru, DPD, neuropatie, počet cyklů	krc.ras,krc.braf,krc.mmr,krc.her2,krc.strana,krc.dpd,krc.neuropatie	biologická léčba podle RAS a strany; konverzi neprodlužovat	KRC-1.1,KRC-2.2,KRC-3.1,KRC-3.2
+radiologist	radiolog	C18-C20	DG	-	MR jater, CT hrudníku, vymizelá ložiska, RECIST	krc.mr_jater,krc.restaging	kompletní restaging před resekcí	KRC-2.4
+radiation_oncologist	radiační onkolog	C20	RT.panev	-	MR pánve (CRM, EMVI), předchozí RT pánve	krc.mr_panve,obc.predchozi_vykony	totální neoadjuvance u rekta	EXT-ESMO-RECTUM-2017
+pathologist	patolog	C18-C20	DG	-	MMR/MSI, RAS/BRAF, regresní skóre	krc.mmr,krc.ras,krc.braf	dMMR mění léčbu i genetiku	KRC-1.1,KRC-1.2
+surgeon	urolog	C64,D41,C61,C67	CHIR.ledvina,CHIR.prostata,CHIR.mechyr	-	funkce ledvin, solitární ledvina, biopsie masy, PSA a ISUP, histologie TURBT	ren.funkce,ren.biopsie,pro.psa,pro.isup,mm.turbt	nefron šetřící nebo radikální výkon vs. sledování	EXT-EAU-RCC-2025,EXT-EAU-PROSTATE-2025,EXT-EAU-MIBC-2025
+oncologist	klinický onkolog	C64	IO,TT	-	IMDC, funkce ledvin	ren.imdc,ren.funkce	kombinace IO podle rizika	EXT-EAU-RCC-2025
+oncologist	klinický onkolog	C61	HT,CHT,NUK,TT.PARP	-	PSA kinetika, testosteron, HRR, PSMA PET, kostní metastázy	pro.psa,pro.testosteron,pro.hrr,pro.psma	ARPI, docetaxel, PARP inhibitor, Lu-PSMA	EXT-EAU-PROSTATE-2025
+radiation_oncologist	radiační onkolog	C61	RT.panev,RT.brachy.prostata,NUK	-	mpMR, IPSS, předchozí TURP a RT pánve, PSMA PET	pro.mri,pro.psma,obc.predchozi_vykony	radikální RT ± ADT, brachyterapie	EXT-EAU-PROSTATE-2025,EXT-ABS-LDR-2012
+oncologist	klinický onkolog	C67	CHT,IO,ADC,TT	-	způsobilost k cisplatině, FGFR3	mm.cis_fit,mm.fgfr	neoadjuvance cisplatinou, enfortumab vedotin + pembrolizumab	EXT-EAU-MIBC-2025,EXT-GALSKY-2011
+surgeon	chirurg horního GIT	C15,C16	CHIR.jicen,CHIR.zaludek	-	EUS, stagingová laparoskopie, výživa	gas.eus,gas.laparoskopie,gas.nutrice	perioperační léčba a resekce	EXT-ESMO-GASTRIC-2022
+oncologist	klinický onkolog	C15,C16	CHT,IO,TT	-	HER2, PD-L1 CPS, MMR, CLDN18.2	gas.her2,gas.cps,gas.mmr,gas.cldn	1. linie podle biomarkerů	EXT-ESMO-GASTRIC-2022
+surgeon	pankreatický chirurg	C25	CHIR.pankreas	-	kontakt tepen, CA 19-9, biliární drenáž, výživa	pan.ct_protokol,pan.ca199,pan.drenaz	resekabilita anatomická i biologická	EXT-ESMO-PANC-2023,EXT-IAP-2017
+oncologist	klinický onkolog	C25	CHT,TT.PARP	-	ECOG a bilirubin pro FOLFIRINOX, gBRCA	pan.gbrca,pan.drenaz	intenzita CHT, udržovací olaparib	EXT-PRODIGE4-2011,EXT-ESMO-PANC-2023
+surgeon	hepatobiliární chirurg	C22	CHIR.jatra,CHIR.jatra.tx	-	Child-Pugh, portální hypertenze, Milánská kritéria	hcc.childpugh,hcc.zobrazeni	resekce nebo transplantace	EXT-EASL-HCC-2018
+radiologist	intervenční radiolog	C22	ABL	-	velikost a počet ložisek, trombóza v. portae, Child-Pugh	hcc.zobrazeni,hcc.childpugh	ablace, TACE, SIRT	EXT-EASL-HCC-2018
+oncologist	klinický onkolog	C22	IO,TT	-	Child-Pugh, varixy, AFP	hcc.childpugh,hcc.varixy,hcc.afp	atezolizumab + bevacizumab až po ošetření varixů	EXT-IMBRAVE150-2020
+surgeon	gynekolog-onkolog	C56,C53,C54	CHIR.gyn	-	resekabilita (PCI), MR pánve, molekulární klasifikace	ova.resekabilita,cer.mr,end.molekular	cytoredukce, radikální hysterektomie	EXT-ESMO-OVARY-2023,EXT-ESGO-CERVIX-2023
+oncologist	klinický onkolog	C56	CHT,TT.PARP,TT.antiVEGF	-	BRCA, HRD, CA-125, citlivost na platinu	ova.brca,ova.ca125,ova.fra	udržovací PARP inhibitor, bevacizumab	EXT-ESMO-OVARY-2023
+radiation_oncologist	radiační onkolog	C53,C54	RT.panev,RT.brachy	-	MR pánve, PET-CT, molekulární riziko	cer.mr,cer.pet,end.molekular	CHRT + brachyterapie, adjuvantní RT	EXT-ESGO-CERVIX-2023,EXT-ESGO-ENDOMETRIUM-2021
+surgeon	dermatoonkolog nebo chirurg	C43	CHIR.kuze	-	Breslow, ulcerace, sentinelová uzlina	mel.breslow,mel.slnb	okraje excize a SLNB	EXT-ESMO-MELANOMA-2019
+oncologist	klinický onkolog	C43	IO,TT.BRAF	-	BRAF V600, LD, mozkové metastázy	mel.braf,mel.ld,mel.mr_mozku	imunoterapie vs. BRAF/MEK	EXT-ESMO-MELANOMA-2019
+surgeon	ORL nebo maxilofaciální chirurg	C00-C14,C32	CHIR.hn	-	resekabilita, funkční výsledek, stav chrupu	hn.zobrazeni,hn.zuby	operace vs. CHRT	EXT-ESMO-HN-2020
+radiation_oncologist	radiační onkolog	C00-C14,C32	RT.hn	-	p16/HPV, stomatologie, nutrice, způsobilost k cisplatině	hn.p16,hn.zuby,hn.nutrice	CHRT a prevence osteoradionekrózy	EXT-ESMO-HN-2020
+surgeon	neurochirurg	C71,C79.3	CHIR.mozek	-	MR, velikost a lokalizace ložiska, KPS, záchvaty	gbm.mr,gbm.kps,gbm.epilepsie,obc.mozek	maximální bezpečná resekce	EXT-EANO-GLIOMA-2021,EXT-EANO-ESMO-BM-2021
+radiation_oncologist	radiační onkolog	C71	RT.mozek	-	IDH, MGMT, KPS, věk	gbm.idh_mgmt,gbm.kps	frakcionace RT a temozolomid	EXT-EANO-GLIOMA-2021
+radiation_oncologist	radiační onkolog	C79.5	RT.kost,RT.pater	-	SINS, komprese míchy, Mirels, předchozí RT	obc.sins,obc.predchozi_vykony	frakcionace, re-iradiace, stabilizace před RT	EXT-SINS-2010,EXT-CHOW-SC20-2014
+surgeon	ortoped nebo spondylochirurg	C79.5	CHIR.orto,CHIR.pater	-	SINS, Mirels, neurologický deficit	obc.sins	stabilizace a dekomprese	EXT-SINS-2010,EXT-PATCHELL-2005

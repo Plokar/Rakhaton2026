@@ -1,5 +1,7 @@
 fakt	typ	jedn	zdroj	popis
 dg	k	MKN-10	Condition.code	hlavní diagnóza (filtr pravidel podle dg)
+dg.multiple	b	-	odvoz. Condition	víc nádorů (≥2 primární nebo nejistého chování; OBC-1.4)
+hist.sclc	b	-	Condition / histologie	malobuněčný karcinom plic
 age	n	roky	Patient.birthDate	věk k datu MDT
 sex	k:M|Z	-	Patient.gender	pohlaví
 meno	k:pre|post	-	text (LLM + citace)	menopauzální stav
@@ -70,6 +72,7 @@ med.antiplatelet	b	-	MedicationStatement ATC B01AC	antiagregace
 med.dapt	b	-	MedicationStatement	duální antiagregace
 med.brafi	b	-	MedicationStatement	BRAF/MEK inhibitor
 med.pred_mg	n	mg/den	MedicationStatement	ekvivalent prednisonu
+med.steroid	b	-	MedicationRequest H02 / text	probíhající léčba kortikoidy
 neuro.stroke_months	d	měsíce / ne	odvoz. Condition I63, I64, G45	měsíce od CMP/TIA; ne = nebyla
 neuro.seizure	b	-	Condition G40 / text	epileptický záchvat nebo predispozice
 smoking	b	-	form smoking	aktivní kuřák
@@ -98,6 +101,8 @@ staging.brain_mr	b	-	form staging.brain_mr	MR mozku provedena
 staging.ebus	b	-	form staging.ebus	invazivní staging mediastina provedený
 staging.liver_complete	b	-	form staging.chest_ct + staging.liver_mr	CT hrudníku + břicha a MR jater ≤6 týdnů
 tnm.m1	b	-	form staging.tnm	vzdálené metastázy
+brain.mets	b	-	odvoz. Condition C79.3	mozkové metastázy
+bone.mets	b	-	odvoz. Condition C79.5	kostní metastázy
 lesion.unverified	b	-	text (radiolog)	nejasné ložisko měnící stadium nebo 2. nádor bez histologie
 lesion.max_mm	n	mm	text (radiolog)	největší ložisko k ablaci
 extrahep.disease	b	-	text (radiolog)	extrahepatální onemocnění
@@ -163,6 +168,7 @@ fert.counsel	b	-	text	poradenství k fertilitě provedeno
 gen.indication	b	-	odvoz. (OBC-2.4)	indikace ke genetickému poradenství
 eye.exam	b	-	text	oftalmologické vyšetření provedeno
 ofs	b	-	MedicationStatement (GnRH)	ovariální suprese
+bm.ngs	b	-	Observation (NGS)	proběhlo rozšířené sekvenování nádoru (NGS)
 bm.ras	k:wt|mut|nezn	-	form bm.ras	KRAS/NRAS ex. 2–4
 bm.braf	k:wt|v600e|v600|nezn	-	form bm.braf	BRAF
 bm.kras	k:wt|g12c|mut|nezn	-	NGS	KRAS (G12C)

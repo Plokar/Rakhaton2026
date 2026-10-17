@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/shadcn/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
+import { Input } from '@/components/shadcn/input';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage, queryKeys, useUsersQuery } from '@/lib/queries';
@@ -14,6 +15,7 @@ import { shortPatient } from './patient';
 import { ROLE_META } from './roles';
 
 const ROLE_LABEL = { mdt_admin: 'předseda', mdt_doctor: 'lékař', mdt_viewer: 'člen komise' } as const;
+const plain = (text: string) => text.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
 
 /**
  * Přizvání ke spolupráci na případu (T-326): přizvaný smí případ upravovat jako zadávající lékař
@@ -25,12 +27,17 @@ export function CollaboratorsDialog({ item, open, onOpenChange }: { item: MdtCas
   const users = useUsersQuery(open);
   const [selected, setSelected] = React.useState<Set<number>>(() => new Set(item.collaborators?.map((u) => u.user_id)));
   const [saving, setSaving] = React.useState(false);
+  const [query, setQuery] = React.useState('');
   const creatorId = item.created_by?.user_id;
   // Předseda smí vše bez přizvání; zadávající lékař právo má.
   // Lékaři s odborností nahoře (účty bez odbornosti jsou z registrace před T-319 nebo z ukázkových dat šablony)
-  const candidates = (users.data ?? [])
+  const team = (users.data ?? [])
     .filter((u) => u.role !== 'mdt_admin' && u.user_id !== creatorId && u.user_id !== me?.user_id)
     .toSorted((a, b) => Number(!a.specialty) - Number(!b.specialty) || a.name.localeCompare(b.name, 'cs'));
+  // T-328: vyhledávání jako ve výběru lékaře (bez diakritiky); vybraní zůstávají vidět i mimo hledání
+  const words = plain(query).split(/\s+/).filter(Boolean);
+  const candidates = team.filter((u) => selected.has(u.user_id) || words.every((w) =>
+    plain(`${u.name} ${u.username} ${u.specialty ? ROLE_META[u.specialty].label : ''}`).includes(w)));
 
   const toggle = (id: number) =>
     setSelected((prev) => {
@@ -73,9 +80,19 @@ export function CollaboratorsDialog({ item, open, onOpenChange }: { item: MdtCas
           </div>
         ) : users.isError ? (
           <p role="alert" className="text-sm text-destructive">Seznam lékařů se nepodařilo načíst.</p>
-        ) : candidates.length === 0 ? (
+        ) : team.length === 0 ? (
           <p className="text-sm text-muted-foreground">V týmu není nikdo další, koho přizvat.</p>
         ) : (
+          <>
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Hledat lékaře: jméno, odbornost…"
+            aria-label="Hledat lékaře"
+            autoFocus
+          />
+          {candidates.length === 0 && <p className="text-sm text-muted-foreground">Žádný lékař neodpovídá hledání.</p>}
           <fieldset className="flex max-h-80 flex-col overflow-y-auto rounded-lg border border-border">
             <legend className="sr-only">Lékaři týmu</legend>
             {candidates.map((user) => {
@@ -103,6 +120,7 @@ export function CollaboratorsDialog({ item, open, onOpenChange }: { item: MdtCas
               );
             })}
           </fieldset>
+          </>
         )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Zrušit</Button>

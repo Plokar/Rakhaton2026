@@ -78,6 +78,7 @@ class UserProfile(models.Model):
     """Odbornost uživatele (hodnoty `RoleId`, ARCH §8.1). Role = Django `Group` (D-014)."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')
     specialty = models.CharField(max_length=30, blank=True)     # "oncologist" | "surgeon" | "pulmonologist"…
+    practitioner_fhir_id = models.CharField(max_length=64, blank=True)   # lékař v IRIS „LEK-…“ (T-328)
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'

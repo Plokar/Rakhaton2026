@@ -4,39 +4,36 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useQueryClient } from '@tanstack/react-query';
 import { ListChecks } from 'lucide-react';
-import { toast } from 'sonner';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
 import { formatDate } from '@/components/mdt/format';
-import { can, useMe } from '@/components/mdt/me';
+import { useMe } from '@/components/mdt/me';
 import { todayPrague } from '@/components/mdt/dates';
 import { EmptyState } from '@/components/ui/empty-state';
-import { mdtApi } from '@/lib/mdt-api';
-import { apiErrorMessage, queryKeys, useTasksQuery } from '@/lib/queries';
+import { isOverdue, TASK_STATUS_LABEL as STATUS_LABEL, useCanChangeTask, useChangeTaskStatus } from '@/components/mdt/MyTasks';
+import { apiErrorMessage, useMyTasksQuery, useTasksQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import type { MdtTask, TaskStatus } from '@/types/mdt';
-
-const STATUS_LABEL: Record<TaskStatus, string> = {
-  requested: 'Zadáno',
-  'in-progress': 'Probíhá',
-  completed: 'Hotovo',
-};
+import type { TaskStatus } from '@/types/mdt';
 
 type Filter = 'open' | 'all' | TaskStatus;
-
-const isOverdue = (t: MdtTask, today: string) => t.status !== 'completed' && !!t.due_date && t.due_date.slice(0, 10) < today;
+type Whose = 'mine' | 'all';
 
 /** Úkoly po zasedání (FR-P3): úkoly z potvrzených závěrů (FHIR Task v IRIS), stav, termíny a re-MDT. */
 export default function MdtTasksPage() {
   const me = useMe();
-  const client = useQueryClient();
-  const tasks = useTasksQuery();
+  const everyone = useTasksQuery();
+  const mine = useMyTasksQuery(null, Boolean(me?.practitioner_id));
   const [filter, setFilter] = React.useState<Filter>('open');
+  // T-328: lékař začíná u svých úkolů (i z návrhu závěru), předseda u všech
+  const [whoseChoice, setWhose] = React.useState<Whose | null>(null);
+  const whose: Whose = whoseChoice ?? (me?.role === 'mdt_admin' || !me?.practitioner_id ? 'all' : 'mine');
+  const tasks = whose === 'mine' ? mine : everyone;
   const [patient, setPatient] = React.useState('');
   const today = todayPrague();
+  const canChange = useCanChangeTask();
+  const changeStatus = useChangeTaskStatus();
 
   const all = tasks.data ?? [];
   const patients = [...new Set(all.map((t) => t.patient_id))].sort();
@@ -45,17 +42,7 @@ export default function MdtTasksPage() {
     .toSorted((a, b) => (a.due_date ?? '9999').localeCompare(b.due_date ?? '9999'));
   const overdue = all.filter((t) => isOverdue(t, today)).length;
   // Re-MDT po pacientech (z CarePlanu), jen jedno datum na záznam MDT.
-  const reMdt = [...new Map(all.filter((t) => t.re_mdt?.date).map((t) => [t.mdt_record, t])).values()];
-
-  const changeStatus = async (task: MdtTask, status: TaskStatus) => {
-    try {
-      await mdtApi.updateTask(task.id, status);
-      await client.invalidateQueries({ queryKey: queryKeys.tasks });
-      toast(`Úkol: ${STATUS_LABEL[status].toLowerCase()}`, { description: task.description });
-    } catch (err) {
-      toast.error(apiErrorMessage(err, 'Stav úkolu se nepodařilo uložit.'));
-    }
-  };
+  const reMdt = [...new Map(all.filter((t) => t.re_mdt?.date && t.mdt_record).map((t) => [t.mdt_record, t])).values()];
 
   return (
     <Page className="max-w-5xl">
@@ -70,6 +57,12 @@ export default function MdtTasksPage() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
+        {me?.practitioner_id && (
+          <ToggleGroup value={[whose]} onValueChange={(v) => v[0] && setWhose(v[0] as Whose)} variant="outline" spacing={0} aria-label="Čí úkoly">
+            <ToggleGroupItem value="mine">Moje</ToggleGroupItem>
+            <ToggleGroupItem value="all">Všech</ToggleGroupItem>
+          </ToggleGroup>
+        )}
         <ToggleGroup value={[filter]} onValueChange={(v) => v[0] && setFilter(v[0] as Filter)} variant="outline" spacing={0} aria-label="Stav úkolů">
           <ToggleGroupItem value="open">Nedokončené</ToggleGroupItem>
           <ToggleGroupItem value="completed">Hotové</ToggleGroupItem>
@@ -93,7 +86,9 @@ export default function MdtTasksPage() {
         <EmptyState
           icon={<ListChecks aria-hidden />}
           title={all.length === 0 ? 'Zatím žádné úkoly' : 'Filtru neodpovídá žádný úkol'}
-          description="Úkoly vzniknou po potvrzení závěru komise a zapíšou se do IRIS."
+          description={whose === 'mine'
+            ? 'Úkoly, které vám komise přidělí v závěru, se tu objeví hned (návrh) a po potvrzení se zapíšou do IRIS.'
+            : 'Úkoly vzniknou po potvrzení závěru komise a zapíšou se do IRIS.'}
         />
       )}
 
@@ -119,14 +114,15 @@ export default function MdtTasksPage() {
                     {' · '}
                     {t.case_id ? (
                       <Link className="underline underline-offset-4 hover:text-foreground" href={`/dashboard/cases/${t.case_id}/record`}>
-                        záznam {t.mdt_record}
+                        {t.mdt_record ? `záznam ${t.mdt_record}` : 'návrh záznamu'}
                       </Link>
                     ) : (
                       `záznam ${t.mdt_record}`
                     )}
+                    {t.draft && <span> · návrh závěru, čeká na potvrzení</span>}
                   </p>
                 </div>
-                {can.generateBrief(me) ? (
+                {canChange(t) ? (
                   <select
                     aria-label={`Stav úkolu: ${t.description}`}
                     className="h-8 w-fit rounded-lg border border-input bg-card px-2 text-sm"

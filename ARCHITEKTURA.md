@@ -1108,6 +1108,7 @@ Nové závislosti v `requirements.txt`:
 | `Decision` | `case` FK, `content` JSON (schéma [§8.4](#84-decision-závěr-komise)), `status` (draft/confirmed), `confirmed_by`, `confirmed_at`, `fhir_ids` JSON, `fhir_bundle` JSON |
 | `LlmCallLog` | `purpose`, `provider`, `model`, `prompt_hash`, `tokens_in`, `tokens_out`, `latency_ms`, `ok` |
 | `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
+| `SessionMessage` | chat lékařů u zasedání (T-334): `session` FK, `author` (User), `case` FK nullable (štítek pacienta na řadě), `text` (max 2000), `created_at`; neupravuje se ani nemaže |
 
 `seed_mdt` vytvoří zasedání a případy **z nominací v IRIS**: `ServiceRequest.category` (zaměření komise) + `Task.restriction.period.start` (datum MDT). Vzniknou 4 zasedání:
 
@@ -1142,6 +1143,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
 | PUT | `/api/mdt/sessions/{sid}/order/` | pořadí pacientů v agendě (T-324), jen `mdt_admin`: `{cases: [cid, …]}` = všechny případy boardu v novém pořadí (jinak 400) → agenda; přesun případu na jiný board ho zařadí na konec |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
+| GET, POST | `/api/mdt/sessions/{sid}/messages/` | chat lékařů u zasedání (T-334), čte a píše každý přihlášený člen komise: GET → `SessionMessage[]` od nejstarší (`?after=<id>` jen novější, jinak posledních 200); POST `{text, case_id?}` → 201 `SessionMessage`; `case_id` = případ z agendy tohoto boardu (jinak 400), prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení) |
+| GET | `/api/mdt/sessions/{sid}/stream/` | **Server-Sent Events** (`text/event-stream`, bez websocketů a bez pollingu): každá nová zpráva boardu jako `id: <ID>` + `data: SessionMessage`, komentář `: ping` každých 15 s, `retry: 3000`. `Last-Event-ID` (reconnect `EventSource`) nebo `?after=<id>` nejdřív doplní zmeškané. JWT z cookie (`EventSource` posílá cookies, ne hlavičky), jinak 401; neexistující board 404. Mezi procesy rozesílá channel layer (Redis) po commitu zprávy |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného |
 | GET | `/api/mdt/practitioners/?q=&with_user=&limit=` | lékaři nemocnice z IRIS (FHIR `Practitioner`) pro popup výběru lékaře (T-328): přítomní, vlastník úkolu, spolupráce. `{id, name, specialty, role, user}`; hledání bez diakritiky ve jménu, odbornosti a ID, lékaři s účtem v aplikaci první |
 | POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
@@ -1704,6 +1707,16 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
   status: "planned" | "in_progress" | "closed";
   chair: { user_id: number; name: string } | null;
   config_id: number | null;                     // výchozí BriefConfig boardu
+}
+
+interface SessionMessage {                      // GET/POST /api/mdt/sessions/{sid}/messages/, SSE …/stream/ (T-334)
+  id: number;
+  session: number;
+  author: { user_id: number; name: string } | null;
+  specialty: RoleId | null;                     // odbornost autora (UserProfile)
+  case: { id: number; patient_id: string } | null;  // štítek pacienta na řadě ("P03", D-018); null = k celému zasedání
+  text: string;
+  created_at: string;                           // místní čas ISO 8601
 }
 
 ```

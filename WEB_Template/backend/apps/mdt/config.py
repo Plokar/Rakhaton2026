@@ -61,6 +61,9 @@ def validated(data: dict) -> dict:
 
 
 def ensure_presets(owner) -> None:
-    for preset in PRESETS:
+    """Presety „Standardní podklad“, „Stručně (30 s)“ a šablony projektoru z báze `data/onko/sablony.tsv` (T-318)."""
+    from services.rules.templates import template_presets
+
+    for preset in PRESETS + [validated(t) for t in template_presets()]:
         BriefConfig.objects.get_or_create(name=preset['name'], is_preset=True,
                                           defaults={**preset, 'owner': owner})

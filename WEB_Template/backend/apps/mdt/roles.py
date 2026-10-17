@@ -33,9 +33,23 @@ def role(user) -> str | None:
     return next((r for r in ROLES if r in names), VIEWER)
 
 
+# odbornost lékaře = RoleId (ARCH §8.1) bez „hlasu pacienta“
+SPECIALTIES = ('oncologist', 'surgeon', 'radiation_oncologist', 'radiologist', 'pathologist', 'pulmonologist',
+               'cardiologist')
+
+
 def specialty(user) -> str | None:
     profile = UserProfile.objects.filter(user=user).first()
     return profile.specialty if profile and profile.specialty else None
+
+
+def assign(user, *, role: str | None = None, specialty: str | None = None) -> None:
+    """Role (právě jedna skupina MDT) a odbornost uživatele (T-319). `None` = beze změny."""
+    if role is not None:
+        user.groups.remove(*Group.objects.filter(name__in=ROLES))
+        user.groups.add(Group.objects.get_or_create(name=role)[0])
+    if specialty is not None:
+        UserProfile.objects.update_or_create(user=user, defaults={'specialty': specialty})
 
 
 def ensure_demo_users() -> dict:

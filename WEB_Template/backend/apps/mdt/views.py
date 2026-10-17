@@ -3,6 +3,7 @@ import base64
 import json
 import re
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -49,6 +50,12 @@ def _user(u) -> dict | None:
     return u and {'user_id': u.pk, 'name': u.get_full_name() or u.username}
 
 
+def _member(u) -> dict:
+    """`Me` (§8.6): role a odbornost uživatele."""
+    return {'user_id': u.pk, 'username': u.username, 'name': u.get_full_name() or u.username,
+            'role': roles.role(u), 'specialty': roles.specialty(u)}
+
+
 def _session(s: MdtSession) -> dict:
     return {'id': s.pk, 'date': timezone.localtime(s.date).isoformat(), 'title': s.title, 'status': s.status,
             'chair': _user(s.chair), 'config_id': s.config_id}
@@ -86,9 +93,35 @@ def _config(data, case: MdtCase) -> dict:
 @permission_classes([IsAuthenticated])
 def me(request):
     """Role a odbornost přihlášeného (FR-U1)."""
-    u = request.user
-    return Response({'user_id': u.pk, 'username': u.username, 'name': u.get_full_name() or u.username,
-                     'role': roles.role(u), 'specialty': roles.specialty(u)})
+    return Response(_member(request.user))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_list(request):
+    """Uživatelé s rolí a odborností (`Me[]`, T-319), jen předseda."""
+    _require(request, roles.ADMIN)
+    users = get_user_model().objects.filter(is_active=True).order_by('username')
+    return Response([_member(u) for u in users])
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def user_detail(request, uid):
+    """Předseda mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele (T-319)."""
+    _require(request, roles.ADMIN)
+    user = get_object_or_404(get_user_model(), pk=uid)
+    role, specialty = request.data.get('role'), request.data.get('specialty')
+    if role is not None and role not in roles.ROLES:
+        raise ValidationError({'role': f'Jen {", ".join(roles.ROLES)}.'})
+    if specialty is not None and specialty not in roles.SPECIALTIES:
+        raise ValidationError({'specialty': f'Jen {", ".join(roles.SPECIALTIES)}.'})
+    if user.pk == request.user.pk and role not in (None, roles.ADMIN):
+        raise ValidationError({'role': 'Sám sobě roli předsedy odebrat nejde.'})
+    roles.assign(user, role=role, specialty=specialty)
+    return Response(_member(user))
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -227,6 +260,42 @@ def case_compatibility(request, cid):
     resources = _patient_resources(case.patient_fhir_id)
     # T-316: katalog (barvy P03/P04 beze změny) + další postupy pro diagnózu ze znalostní báze data/onko
     return Response(evaluate_compatibility(resources, skipped_fields=case.skipped_fields) + kb_for_patient(resources))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_template(request, cid):
+    """Doporučená šablona projektoru podle diagnózy (T-318, `CaseTemplate` §6.3): `BriefConfig` + preset,
+    klíčové údaje na projektor se stavem a citací, studie a varování z katalogu údajů `data/onko`."""
+    from services.rules.templates import case_template as template_for
+
+    case = get_object_or_404(MdtCase, pk=cid)
+    template = template_for(_patient_resources(case.patient_fhir_id))
+    if template is None:
+        return Response({'detail': 'Pro diagnózu pacienta není šablona (chybí báze data/onko nebo diagnóza).'},
+                        status=404)
+    preset = BriefConfig.objects.filter(name=template['config']['name'], is_preset=True).first()
+    return Response({**template, 'config_id': str(preset.pk) if preset else None})
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_for_me(request, cid):
+    """„Pro mě nahoře“ (T-319, `SpecialtyView` §6.3): sekce, údaje, varování a postupy podle odbornosti
+    přihlášeného (`UserProfile.specialty`) nebo `?specialty=` (RoleId). Pořadí předsedy se nemění."""
+    from services.rules.templates import view_for
+
+    specialty = request.query_params.get('specialty') or roles.specialty(request.user)
+    if specialty not in cfg.ROLE_IDS:
+        raise ValidationError({'specialty': f'Odbornost jen z RoleId: {sorted(cfg.ROLE_IDS)} (doplňte v profilu).'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    view = view_for(specialty, _patient_resources(case.patient_fhir_id))
+    if view is None:
+        return Response({'detail': 'Pro diagnózu pacienta není pohled (chybí báze data/onko nebo diagnóza).'},
+                        status=404)
+    return Response(view)
 
 
 def _patient_resources(pid: str) -> list[dict]:

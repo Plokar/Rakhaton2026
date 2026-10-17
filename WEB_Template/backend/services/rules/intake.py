@@ -9,7 +9,9 @@ Kontrola úplnosti a varování při zařazení pacienta do boardu (ARCHITEKTURA
   (`ai_uncertain`). Varování z red flags mají stejné `id` jako flag (`RF-ECOG:P03-ecog03`), takže
   odkliknutí jde dohledat a flag v podkladu zůstane (D-019);
 - přeskočený údaj (`skipped_fields`) má stav `skipped` a nevyvolá varování. Otázku pro MDT přeskočit
-  nelze (OBC-1.1).
+  nelze (OBC-1.1);
+- doporučené údaje z báze `data/onko` (`DOP:*`, T-318) a povinné údaje báze, které pole formuláře ani red
+  flags nehlídají (`CHYBI:*`); přeskočit jdou ID údaje báze (`pli.ros1`).
 
 Všechno je deterministické; LLM se tu nevolá.
 """
@@ -21,6 +23,7 @@ from typing import Iterable
 
 from services.ai.abbreviations import uncertainty_warnings
 from services.rules.red_flags import STALE_DAYS, PatientData, RedFlag, _cc_text, _code, _date, _num, evaluate
+from services.rules.templates import recommended_warnings
 
 UNSKIPPABLE = {"mdt.question"}     # OBC-1.1: bez otázky je případ neúplný
 
@@ -378,6 +381,9 @@ def intake_prefill(resources: Iterable[dict], skipped_fields: Iterable[str] = ()
     warnings += _range_warnings(data)
     warnings += [IntakeWarning(**w) for w in uncertainty_warnings(resources)]     # nejednoznačné zkratky (FR-R5)
     warnings += _lab_warnings(data, {c for f in flags if f.rule == "RF-LAB" for c in f.citations})
+    # T-318: doporučené údaje z báze `data/onko` (`DOP:*`) a povinné, které formulář ani red flags nehlídají (`CHYBI:*`)
+    warnings += [IntakeWarning(**w) for w in recommended_warnings(
+        resources, fields=[f.id for f in fields], skipped=skipped)]
 
     severity = {"high": 0, "moderate": 1, "low": 2}
     kind = {"missing": 0, "conflict": 1, "out_of_range": 2, "ai_uncertain": 3}

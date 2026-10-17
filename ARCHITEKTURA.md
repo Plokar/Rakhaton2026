@@ -955,7 +955,13 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 5. Lékař varování může odkliknout (stačí klik, bez důvodu). Komise v podkladu dál vidí problém, ale ne to, kdo ho odklikl (D-019). Odkliknutí jde do auditu (`DetectedIssue.mitigation`).
 6. Lékař zadá nebo potvrdí ECOG (velká číslice) a záměr **C/P** a zaškrtne připomínku „Snímek mladší než 3 měsíce“. Záměr se předvyplní z poslední MDT; když minulá MDT rozhodnutí odložila, nepředvyplní se.
 
-**Doporučené údaje a šablony (T-317 → T-318):** `data/onko/udaje.tsv` doplňuje povinná pole o doporučené údaje podle diagnózy. Chybějící se hlásí jako `IntakeWarning` s `kind: "missing"`, `severity: "low"`, id `DOP:<údaj>`, titulkem „Doporučeno: …“ a citací zmínky v podkladech. Do readiness se nepočítají. `data/onko/sablony.tsv` dává doporučený `BriefConfig` pro projektor podle diagnózy.
+**Doporučené údaje a šablony (T-317 → T-318):** `services/rules/templates.py` nad bází `data/onko` (referenční logika `q.py`), dokumenty a fakta bere z FHIR resources pacienta (za běhu z IRIS).
+
+- `data/onko/udaje.tsv` doplňuje povinná pole o doporučené údaje podle diagnózy. Chybějící se hlásí jako `IntakeWarning` s `kind: "missing"`, `severity: "low"`, id `DOP:<údaj>`, titulkem „Doporučeno: …“ a citací zmínky v podkladech.
+- Povinný údaj báze (`CHYBI:<údaj>`, `severity: "moderate"`) se hlásí jen tam, kde ho nehlídá pole formuláře (`INTAKE_FIELDS`) ani red flag (`RED_FLAG_ITEMS`), aby lékař neviděl dvě varování o tomtéž (P04: „Chybí: Osmolalita séra a moči“).
+- Přeskočit jde i údaj báze (`skipped_fields: ["pli.radioterapeut"]`). Do readiness se tato varování nepočítají.
+- `data/onko/sablony.tsv` dává doporučený `BriefConfig` pro projektor podle diagnózy a situace (`GET /api/mdt/cases/{cid}/template/`, `CaseTemplate` §8.6). Všech 31 šablon zakládá `seed_mdt` jako presety „Šablona: …“.
+- `data/onko/odbornosti.tsv` řadí podklad „pro mě“ podle odbornosti přihlášeného (`GET /api/mdt/cases/{cid}/for-me/`, `SpecialtyView` §8.6, T-319). Hlavička a souhrn zůstávají první (§7.3).
 
 **Zkratky (T-509, FR-R5):** `services/ai/abbreviations.py` a pravidla jako data v `services/ai/data/abbreviations.yaml` (docs/POZADAVKY_LEKARE.md §7.2).
 
@@ -1107,6 +1113,9 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
+| POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
+| GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), jen `mdt_admin` (T-319) |
+| PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319) |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem. Nic se nezapisuje (předseda, lékař) |
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
@@ -1114,6 +1123,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; zápis do IRIS stejně jako u POST |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
+| GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
+| GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}` |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
@@ -1526,6 +1537,38 @@ interface Me {                                  // GET /api/mdt/me/
   name: string;
   role: "mdt_admin" | "mdt_doctor" | "mdt_viewer";   // superuser = mdt_admin, bez skupiny = mdt_viewer
   specialty: RoleId | null;
+}
+
+type KbItemStatus = "present" | "mention" | "stale" | "missing" | "not_applicable";   // mention = jen zmínka („doporučeno“, „probíhá“)
+
+interface KbItem {                              // údaj z katalogu data/onko/udaje.tsv u pacienta
+  id: string;                                   // "pli.vo2max" (ID báze; jde i do skipped_fields)
+  label: string;                                // "Zátěžový test (spiroergometrie VO2max, schodový test)"
+  status: KbItemStatus;
+  citations: EvidenceId[];                      // kde je údaj (nebo zmínka) v podkladech
+  age_days?: number;                            // u "stale": stáří posledního výsledku
+  warning?: IntakeWarning;                      // jen ve SpecialtyView: "Chybí: …" / "Doporučeno: …"
+}
+
+interface CaseTemplate {                        // GET /api/mdt/cases/{cid}/template/ (T-318)
+  template_id: string;                          // "sab-pli-radikalni"
+  name: string;                                 // "NSCLC I–III: operabilita vs. chemoradioterapie"
+  specialties: string;                          // kdo má být u stolu (text pro konfigurátor)
+  sources: EvidenceId[];                        // "PLI-2.1", "PLI-1.1", "PLI-3.1"
+  config: BriefConfig;                          // name "Šablona: …", is_preset
+  config_id: string | null;                     // preset se stejným názvem (seed_mdt), pro POST …/brief/ {config_id}
+  projector: KbItem[];                          // klíčové údaje velkým písmem na projektor (T-310)
+  trials: EvidenceId[];                         // "RKT-04"
+  warnings: IntakeWarning[];                    // všechna varování katalogu údajů (CHYBI:* i DOP:*)
+}
+
+interface SpecialtyView {                       // GET /api/mdt/cases/{cid}/for-me/ (T-319)
+  role: RoleId;
+  template_id: string;
+  sections: SectionId[];                        // "summary" první, pak sekce odbornosti, pak ostatní ze šablony
+  items: KbItem[];                              // údaje odbornosti v pořadí podle odbornosti, s varováním
+  procedures: { id: string; title: string; sources: EvidenceId[] }[];   // postupy modalit, o kterých odbornost rozhoduje
+  interests: { specialty: string; what: string; why: string; sources: EvidenceId[] }[];
 }
 
 interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTask[] (FR-P3)

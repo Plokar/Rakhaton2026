@@ -11,7 +11,8 @@ import { DEMO_CASE } from '@/components/mdt/detail/CaseDetail';
 import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
-import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
+import { PatientSummaryPanel, ScribePanel } from '@/components/mdt/DecisionAi';
+import { DecisionEditor } from '@/components/mdt/DecisionEditor';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
@@ -126,6 +127,18 @@ function DecisionContent({ caseId }: { caseId: string }) {
     }
   };
 
+  /** Draft od zapisovatele je už uložený na serveru, jen ho načíst. */
+  const reloadDraft = React.useCallback(() => {
+    mdtApi
+      .getDecision(caseId)
+      .then((fresh) => {
+        setDraft(fresh);
+        setSavedAt(nowLabel());
+        setMessage({ kind: 'info', text: 'Draft připravil AI zapisovatel z přepisu diskuse. Zkontrolujte ho a upravte.' });
+      })
+      .catch((err: unknown) => setMessage({ kind: 'error', text: err instanceof Error ? err.message : 'Draft se nepodařilo načíst.' }));
+  }, [caseId]);
+
   const confirm = async () => {
     if (!current?.sections.question.text.trim() || !current.sections.conclusion.text.trim()) {
       throw new Error('Před potvrzením vyplňte projednanou otázku a závěr MDT.');
@@ -232,8 +245,11 @@ function DecisionContent({ caseId }: { caseId: string }) {
           <Skeleton className="h-64 w-full" />
         </div>
       )}
+      {current && canEdit && !isDemo && <ScribePanel caseId={caseId} onDraft={reloadDraft} />}
+
       {current && (
         <CitationProvider order={order} activeId={openId} onOpen={setOpenId}>
+          {confirmed && !isDemo && <PatientSummaryPanel caseId={caseId} canGenerate={can.generateBrief(me)} />}
           <section className="rounded-xl border border-border bg-card p-5">
             <DecisionEditor
               decision={current}

@@ -140,6 +140,35 @@ def session_list(request):
     return Response([{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions])
 
 
+def _next_order(session: MdtSession) -> int:
+    last = session.cases.order_by('-order').values_list('order', flat=True).first()
+    return 0 if last is None else last + 1
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def session_order(request, sid):
+    """Pořadí pacientů v agendě boardu (T-324), jen předseda: `{cases: [cid, …]}` = všechny případy boardu."""
+    _require(request, roles.ADMIN)
+    session = get_object_or_404(MdtSession, pk=sid)
+    order = request.data.get('cases')
+    current = set(session.cases.values_list('pk', flat=True))
+    if not isinstance(order, list) or len(order) != len(set(order)) or set(order) != current:
+        raise ValidationError({'cases': 'Pošlete ID všech případů boardu, každé jednou, v novém pořadí.'})
+    with transaction.atomic():
+        for position, cid in enumerate(order):
+            MdtCase.objects.filter(pk=cid, session=session).update(order=position)
+    return _agenda_response(session)
+
+
+def _agenda_response(s: MdtSession) -> Response:
+    """Board + agenda v pořadí `MdtCase.order` (hlavička pacienta z IRIS)."""
+    cases = list(s.cases.select_related('created_by'))
+    by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
+    return Response({**_session(s), 'cases': [_case(c, by_id.get(c.patient_fhir_id)) for c in cases]})
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
@@ -165,9 +194,7 @@ def session_detail(request, sid):
                 writeback.set_mdt_date(c.patient_fhir_id, c.service_request_fhir_id, timezone.localtime(s.date))
         s.full_clean(exclude=['chair', 'config'])
         s.save()
-    cases = list(s.cases.select_related('created_by'))
-    by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
-    return Response({**_session(s), 'cases': [_case(c, by_id.get(c.patient_fhir_id)) for c in cases]})
+    return _agenda_response(s)
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -207,6 +234,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
         target = get_object_or_404(MdtSession, pk=data['session'])
         writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
         case.session = target
+        case.order = _next_order(target)               # T-324: na konec agendy nového boardu
     for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status'):
         if field in data:
             setattr(case, field, data[field])
@@ -334,7 +362,7 @@ def case_create(request):
         if created:
             case = MdtCase.objects.create(session=session, patient_fhir_id=pid, service_request_fhir_id=sr_id,
                                           question=question.get('value') or '', created_by=request.user,
-                                          order=session.cases.count())
+                                          order=_next_order(session))
             writeback.set_mdt_date(pid, sr_id, timezone.localtime(session.date))
         else:
             _require_case_edit(request, case)
@@ -396,11 +424,10 @@ def patient_import(request, pid):
     """BON-7: vložený text (`{text}`) nebo multipart `pdf` → návrh hodnot s citací odstavce. Nic se nezapisuje."""
     from services.ai import report_import
     from services.ai.brief import _llm_call_log
-    from services.ai_service import get_ai_provider
+    from services.ai_service import provider_for_patient
 
     _require(request, roles.ADMIN, roles.DOCTOR)
-    _patient_resources(pid)
-    provider = get_ai_provider()
+    provider = provider_for_patient(_patient_resources(pid))      # D-021
     pdf = request.FILES.get('pdf')
     if pdf:
         if pdf.size > AUDIO_MAX_BYTES:

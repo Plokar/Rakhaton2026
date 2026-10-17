@@ -13,6 +13,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from services import rc
+
 _RC_SLASH = re.compile(r"(?<![\d/])\d{6}\s?/\s?\d{3,4}(?![\d/])")
 _RC_PLAIN = re.compile(r"(?<!\d)\d{10}(?!\d)")
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
@@ -22,10 +24,8 @@ MIN_NAME_LENGTH = 5     # kratší „jména“ by nahrazovala běžná slova
 
 
 def _valid_rc(digits: str) -> bool:
-    """Desetimístné RČ: dělitelné 11 a platný měsíc (ženy +50, rezervní řady +20)."""
-    month = int(digits[2:4]) % 50
-    month = month - 20 if month > 20 else month
-    return int(digits) % 11 == 0 and 1 <= month <= 12 and 1 <= int(digits[4:6]) <= 31
+    """Desetimístné číslo je platné RČ (kontrolní číslice, datum, ženy +50, řady +20; `services/rc.py`)."""
+    return rc.is_valid(digits)
 
 
 @dataclass

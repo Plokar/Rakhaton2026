@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from apps.copilot.schemas import Decision as DecisionSchema
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
-from services.ai_service import BaseAIProvider, get_ai_provider
+from services.ai_service import BaseAIProvider, provider_for_patient_id
 
 log = logging.getLogger(__name__)
 
@@ -200,7 +200,7 @@ def generate_scribe(case, params: dict, progress: Callable[[int], None], *, prov
     from services.ai.brief import _llm_call_log
     from services.fhir import writeback
 
-    provider = provider or get_ai_provider()
+    provider = provider or provider_for_patient_id(case.patient_fhir_id)     # D-021
     log_call = log_call or _llm_call_log
     progress(5)
     segments = params.get("segments") or parse_transcript(params.get("transcript", ""))

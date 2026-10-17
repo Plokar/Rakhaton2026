@@ -30,7 +30,7 @@ from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.red_flags_llm import detect_llm_red_flags
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import load_roles, role_section
-from services.ai_service import BaseAIProvider, get_ai_provider
+from services.ai_service import BaseAIProvider, provider_for_patient
 from services.fhir.values import cc_text, fhir_code, ref_id
 from services.rules import red_flags as rules
 from services.rules.alerts import header_alerts
@@ -100,7 +100,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
                 log_call: Callable[[str, dict], Any] = lambda purpose, result: None) -> dict:
     """Čisté jádro: FHIR resources → `Brief` (§8.2)."""
     config = _merge_config(config)
-    provider = provider or get_ai_provider()
+    provider = provider or provider_for_patient(resources)        # D-021
     flags = rules.evaluate(resources, config.get("roles_present"))
     context = context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines, red_flags=flags)
     data = PatientData(resources)

@@ -162,6 +162,8 @@ class BriefSection(BaseModel):
     ai_generated: Literal[True] = True
     items: list[Claim]
     assessment: RoleAssessment | None = Field(default=None, description="Jen u role_views (FR-B7)")
+    verbatim: list[Claim] | None = Field(
+        default=None, description="Jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5)")
 
 
 class RedFlag(BaseModel):

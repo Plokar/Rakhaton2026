@@ -62,8 +62,23 @@ const queryOptions = {
   session: (id: number | string) => ({ queryKey: queryKeys.session(id), queryFn: () => mdtApi.getSession(String(id)) }),
 };
 
+/**
+ * Zasedání jedním dotazem (`expand=cases`, T-518): odpověď naplní i cache agend a připraveností, takže kalendář,
+ * sidebar, jednání a odznaky připravenosti nepošlou dotaz na každé zasedání a každého pacienta.
+ */
 export function useSessionsQuery() {
-  return useQuery({ queryKey: queryKeys.sessions, queryFn: () => mdtApi.getSessions() });
+  const client = useQueryClient();
+  return useQuery({
+    queryKey: queryKeys.sessions,
+    queryFn: async () => {
+      const list = await mdtApi.getSessions();
+      for (const session of list) {
+        client.setQueryData<MdtSessionDetail>(queryKeys.session(session.id), session);
+        for (const c of session.cases) if (c.id != null && c.readiness) client.setQueryData(queryKeys.readiness(c.id), c.readiness);
+      }
+      return list;
+    },
+  });
 }
 
 export function useSessionQuery(id: number | string | null | undefined) {
@@ -185,8 +200,8 @@ export function prefetchQuickView(client: QueryClient, target: { sessionId: numb
 }
 
 /**
- * Zasedání i s případy: seznam + detail každého boardu souběžně (bez waterfallu).
- * Až API umí `sessions?expand=cases` (NAVRH_UI §10.2, T-518), stačí jeden dotaz.
+ * Zasedání i s případy. Detaily boardů naplnil už seznam (`expand=cases`), dotazy na ně jsou čerstvé z cache;
+ * znovu se načte jen board, který se změnil (přesun, zařazení).
  */
 export function useSessionsWithCases(filter: (session: MdtSessionListItem) => boolean) {
   const sessions = useSessionsQuery();

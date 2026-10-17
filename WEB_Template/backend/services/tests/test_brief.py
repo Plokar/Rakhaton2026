@@ -305,14 +305,18 @@ def test_short_anamnesis_is_verbatim_with_citations():
     assert "Rodinná anamnéza: otec karcinom tlustého střeva v 72 letech." in texts
     assert "Alergie: neudává." in texts
     assert all(i["verification"] == "verified" and i["citations"][0].startswith("P03-doc02#") for i in items)
+    assert "verbatim" not in section(brief_for("P03"), "anamnesis")             # krátká = items už doslovně
 
 
 def test_long_anamnesis_is_ai_summary_with_citations(monkeypatch):
     monkeypatch.setenv("INTAKE_ANAMNESIS_MAX_CHARS", "300")          # P06 má ~570 znaků → shrnutí
     llm = {"items": [{"text": "Žije sama, chodí s holí, dříve dlouhodobě kouřila.", "citations": ["P06-doc05#3"]},
                      {"text": "Vymyšlený bod bez platné citace.", "citations": ["P06-doc99#1"]}]}
-    items = section(brief_for("P06", MockAIProvider(responses={"AnamnesisOutput": llm})), "anamnesis")["items"]
-    assert [i["text"] for i in items] == ["Žije sama, chodí s holí, dříve dlouhodobě kouřila."]
+    long = section(brief_for("P06", MockAIProvider(responses={"AnamnesisOutput": llm})), "anamnesis")
+    assert [i["text"] for i in long["items"]] == ["Žije sama, chodí s holí, dříve dlouhodobě kouřila."]
+    # FR-A5: lékař přepne na doslovné znění; to je celé, s citací odstavce a ověřené
+    assert long["verbatim"][0]["text"].startswith("Nynější onemocnění: Pravidelně chodila")
+    assert not long["verbatim"][0]["text"].endswith("…") and all(i["verification"] == "verified" for i in long["verbatim"])
     fallback = section(brief_for("P06"), "anamnesis")["items"]               # mock bez odpovědi: první věty
     assert fallback[0]["text"].startswith("Nynější onemocnění: Pravidelně chodila") and fallback[0]["text"].endswith("…")
     assert all(i["verification"] == "verified" for i in fallback)

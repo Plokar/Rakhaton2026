@@ -23,7 +23,7 @@ import type {
   TaskStatus,
   MdtSession,
   MdtSessionDetail,
-  MdtSessionListItem,
+  MdtSessionWithCases,
   ObservationSeries,
   TimelineEvent,
 } from '@/types/mdt';
@@ -105,8 +105,8 @@ export const mdtApi = {
   getForMe: (caseId: number, specialty?: RoleId) =>
     apiFetch<SpecialtyView>(`/api/mdt/cases/${caseId}/for-me/${specialty ? `?specialty=${specialty}` : ''}`),
 
-  /** Boardy (zasedání) s pacienty v pořadí agendy. */
-  getSessions: () => apiFetch<MdtSessionListItem[]>('/api/mdt/sessions/'),
+  /** Boardy (zasedání) s pacienty v pořadí agendy, s agendami a připraveností (`expand=cases`, T-518). */
+  getSessions: () => apiFetch<MdtSessionWithCases[]>('/api/mdt/sessions/?expand=cases'),
 
   /** Board + agenda: případy s hlavičkou pacienta z IRIS. */
   getSession: (sessionId: string) =>

@@ -1,6 +1,7 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
 import base64
 import json
+import logging
 import re
 
 from django.contrib.auth import get_user_model
@@ -30,6 +31,8 @@ from . import config as cfg
 from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
 from .models import BriefConfig, Decision, MdtCase, MdtSession
+
+logger = logging.getLogger(__name__)
 
 
 # ── oprávnění ────────────────────────────────────────────────────────────────

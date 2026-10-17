@@ -12,7 +12,7 @@ import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
 import { GpReportPanel, PatientSummaryPanel, ScribePanel } from '@/components/mdt/DecisionAi';
-import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
+import { decisionChecklist, DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
@@ -351,6 +351,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
           decision={current}
           patientId={brief?.patient_id ?? 'Pxx'}
           confirmer={me?.name ?? 'předseda'}
+          remaining={decisionChecklist(current, (brief?.red_flags ?? []).map((f) => f.id))}
           onClose={() => setConfirming(false)}
           onConfirm={confirm}
         />

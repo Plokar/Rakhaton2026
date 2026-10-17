@@ -14,6 +14,7 @@ export function ConfirmDialog({
   decision,
   patientId,
   confirmer,
+  remaining = [],
   onClose,
   onConfirm,
 }: {
@@ -21,6 +22,8 @@ export function ConfirmDialog({
   decision: Decision;
   patientId: string;
   confirmer: string;
+  /** Co ještě chybí (`decisionChecklist`); dokud něco zbývá, potvrdit nejde. */
+  remaining?: string[];
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
@@ -75,13 +78,21 @@ export function ConfirmDialog({
             <li key={r}>{r}</li>
           ))}
         </ul>
+        {remaining.length > 0 && (
+          <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[13px] dark:border-amber-500/40 dark:bg-amber-400/10">
+            <p className="font-medium">Před potvrzením zbývá:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-5">
+              {remaining.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+        )}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
           Zpět k úpravám
         </Button>
-        <Button type="button" onClick={confirm} isLoading={busy}>
+        <Button type="button" onClick={confirm} isLoading={busy} disabled={remaining.length > 0}>
           Potvrdit a zapsat
         </Button>
       </DialogFooter>

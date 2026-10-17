@@ -1,0 +1,124 @@
+{
+  "P07": {
+    "dx": [
+      "C20",
+      "C78.7"
+    ],
+    "sets": [
+      "KRC",
+      "OBC"
+    ],
+    "trials": [
+      "RKT-03",
+      "RKT-05",
+      "RKT-06"
+    ],
+    "role_question": true,
+    "options_include": [
+      "Totální neoadjuvance"
+    ],
+    "tests": "C20 (konečník) musí spadnout do KRC stejně jako C18 a C19."
+  },
+  "P08": {
+    "dx": [
+      "C61",
+      "C79.5"
+    ],
+    "sets": [
+      "OBC"
+    ],
+    "trials": [
+      "RKT-05",
+      "RKT-06"
+    ],
+    "role_question": false,
+    "options_include": [
+      "ADT + ARPI",
+      "ADT + docetaxel"
+    ],
+    "options_exclude": [
+      "Radium-223"
+    ],
+    "tests": "C61 nemá v datasetu sadu guidelines: AI dostane jen OBC, semafor jede z báze data/onko."
+  },
+  "P09": {
+    "dx": [
+      "C34.3",
+      "C77.1"
+    ],
+    "sets": [
+      "PLI",
+      "OBC"
+    ],
+    "trials": [
+      "RKT-04",
+      "RKT-05",
+      "RKT-06"
+    ],
+    "role_question": true,
+    "options_include": [
+      "cisplatina + etoposid"
+    ],
+    "options_exclude": [
+      "Neoadjuvantní chemoimunoterapie"
+    ],
+    "tests": "C34 vede na PLI, i když PLI je výtah pro NEmalobuněčný karcinom (mezera mapy).",
+    "gap": "AI dostane guidelines PLI a studii RKT-04, obojí pro nemalobuněčný karcinom (semafor už SCLC rozlišuje, výběr guidelines podle MKN-10 ne)."
+  },
+  "P10": {
+    "dx": [
+      "C50.4",
+      "C79.5",
+      "C34.1"
+    ],
+    "sets": [
+      "PRS",
+      "PLI",
+      "OBC"
+    ],
+    "trials": [
+      "RKT-01",
+      "RKT-02",
+      "RKT-04",
+      "RKT-05",
+      "RKT-06"
+    ],
+    "role_question": true,
+    "tests": "Dva primární nádory (C50 + C34) = dvě sady guidelines najednou."
+  },
+  "P11": {
+    "dx": [
+      "C21.1"
+    ],
+    "sets": [
+      "OBC"
+    ],
+    "trials": [
+      "RKT-05",
+      "RKT-06"
+    ],
+    "role_question": false,
+    "tests": "C21 (anus) NESMÍ spadnout do KRC: jiná nemoc, jiná léčba."
+  },
+  "P12": {
+    "dx": [
+      "C18.7",
+      "C78.7"
+    ],
+    "sets": [
+      "KRC",
+      "OBC"
+    ],
+    "trials": [
+      "RKT-03",
+      "RKT-05",
+      "RKT-06"
+    ],
+    "role_question": true,
+    "options_include": [
+      "FOLFOX"
+    ],
+    "header_dx": "C18.7",
+    "tests": "Diagnóza s kategorií „hlavní diagnóza“ místo „onkologická diagnóza“ (jiný zdrojový systém). Kolorektum musí dostat KRC."
+  }
+}

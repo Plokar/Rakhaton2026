@@ -30,6 +30,7 @@ def test_propose_verifies_every_value_against_its_paragraph():
                                      lambda *a: None)
     assert [v['label'] for v in proposal['values']] == ['CEA', 'Hemoglobin']
     assert proposal['values'][0]['citation'] == 'P03-imp01#2'
+    assert proposal['values'][0]['source'] == 'CEA 15,2 µg/l, CA 19-9 40 kU/l.'      # znění odstavce pro lékaře
     assert proposal['rejected'][0]['label'] == 'Albumin' and 'číslo 30 není v odstavci' in proposal['rejected'][0]['reasons']
 
 

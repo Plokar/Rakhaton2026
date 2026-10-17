@@ -218,7 +218,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | **FR-D1** | Možnosti léčby z **dodaných** guidelines s citací **ID pasáže** (`KRC-2.4`); AI nevybírá, předkládá alternativy. Patří k nim i podpůrná péče z OBC-2.x (včasná paliativní péče, geriatrické a nutriční vyšetření, genetické poradenství), když ji pacient splňuje. | MUST | AI, STD |
 | **FR-D2** | Screening studií `RKT-01…06`: pro každé kritérium `met` / `not_met` / `unknown` + citace (`RKT-03/V3` ↔ fakt pacienta); celkový stav | MUST | AI |
 | **FR-D3** | 2–3 klíčové otázky k diskusi | MUST | UX |
-| **FR-D4** | **Semafor souladu léčebného postupu se stavem pacienta** (🟢 nevylučuje · 🟠 pozor · 🔴 vylučuje · ⚪ nelze posoudit) po pravidlech s citací faktu pacienta i pravidla ([§5.9](#59-semafor-souladu-léčebných-postupů-se-stavem-pacienta)). Vždy se zobrazí všechny možnosti, barvu počítá kód, ne LLM (D-015). *(lékař)* | MUST | AI, UX |
+| **FR-D4** | **Semafor souladu léčebného postupu se stavem pacienta** (🟢 dobrý = stav postup nevylučuje · 🟠 pozor · 🔴 vylučuje · ⚪ nelze posoudit; štítek v UI „dobrý“) po pravidlech s citací faktu pacienta i pravidla ([§5.9](#59-semafor-souladu-léčebných-postupů-se-stavem-pacienta)). Vždy se zobrazí všechny možnosti, barvu počítá kód, ne LLM (D-015). *(lékař)* | MUST | AI, UX |
 | **FR-D5** | Katalog léčebných metod pro diagnózu: u každé metody odborník, který se k ní musí vyjádřit, a data, která má mít u sebe. *(lékař)* | SHOULD | UX |
 | **FR-C1** | Strukturovaný zápis rozhodnutí ve struktuře datasetu (Projednaná otázka, Klinické zhodnocení, Léčebný záměr, Doporučený postup, Doplňující diagnostika, Klinická studie, Plánované re-MDT, Závěr MDT) + přítomní. U neúplného případu příznak **podmíněné doporučení** (OBC-1.1), u duplicity malignit **priorita léčby a plán druhého nádoru** (OBC-1.4). | MUST | PROC, STD |
 | **FR-C2** | Úkoly (kdo, co, do kdy), kontrola, termín opětovného posouzení | MUST | PROC |
@@ -916,7 +916,7 @@ Oficiální ground truth zatím **není** (organizátor ho zveřejní po odevzd�
 Požadavek lékaře (FR-D4, D-015). Barva **není doporučení**. Říká, jestli stav pacienta postup nevylučuje (např. pacientovi se špatnou spirometrií nelze odebrat plíci).
 
 - **Stavy:**
-  - 🟢 nevylučuje;
+  - 🟢 nevylučuje (štítek v UI „dobrý“);
   - 🟠 pozor: hraniční hodnota, relativní kontraindikace, nutné další vyšetření nebo rozpor;
   - 🔴 vylučuje (podle zdroje);
   - ⚪ nelze posoudit: chybí údaj nebo práh;

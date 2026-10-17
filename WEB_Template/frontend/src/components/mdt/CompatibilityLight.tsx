@@ -9,7 +9,7 @@ import type { Light } from '@/types/mdt';
  */
 export const LIGHT_META: Record<Light, { label: string; icon: LucideIcon; tone: string; pill: string }> = {
   green: {
-    label: 'nevylučuje',
+    label: 'dobrý',
     icon: CircleCheck,
     tone: 'text-emerald-700 dark:text-emerald-400',
     pill: 'bg-emerald-50 text-emerald-900 ring-emerald-700/20 dark:bg-emerald-400/10 dark:text-emerald-200 dark:ring-emerald-400/25',

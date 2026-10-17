@@ -9,6 +9,8 @@ from __future__ import annotations
 import copy
 import re
 
+from services.rules.guideline_sets import is_oncologic
+
 MCODE = "http://hl7.org/fhir/us/mcode/StructureDefinition"
 LOINC = "http://loinc.org"
 # ponytail: jen kódy s jistým významem; Ki-67, KRAS, BRAF, MMR/MSI, EGFR, ALK, PD-L1 doplnit po ověření v LOINC
@@ -52,7 +54,7 @@ def apply_profiles(resource: dict) -> dict:
     out = copy.deepcopy(resource)
     if rtype == "Patient":
         _profile(out, "mcode-cancer-patient")
-    elif rtype == "Condition" and "onkolog" in _category_text(resource):
+    elif rtype == "Condition" and is_oncologic(resource):
         _profile(out, "mcode-secondary-cancer-condition" if SECONDARY_ICD.match(_icd10(resource))
                  else "mcode-primary-cancer-condition")
     elif rtype == "Observation" and any(c.get("code") == "89247-1" for c in (resource.get("code") or {}).get("coding", [])):

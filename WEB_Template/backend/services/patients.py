@@ -3,6 +3,7 @@ import re
 from collections import defaultdict
 
 from services.fhir import client as fhir
+from services.rules.guideline_sets import is_oncologic
 
 LOINC_ECOG = '89247-1'
 SEX_CS = {'male': 'muž', 'female': 'žena', 'other': 'jiné', 'unknown': 'neuvedeno'}
@@ -54,10 +55,6 @@ def _ext(r: dict, name: str):
     return None
 
 
-def _is_oncologic(c: dict) -> bool:
-    return 'onkolog' in _category_text(c)
-
-
 def _nomination(rs: list[dict]) -> tuple[dict, dict]:
     """Nominace na MDT (`ServiceRequest` s `mdt-typ-projednani`) a její `Task` se stavem a termínem."""
     req = next((r for r in rs if r['resourceType'] == 'ServiceRequest' and _code(r.get('code'), 'mdt-typ-projednani')),
@@ -75,7 +72,7 @@ def summary(pid: str, rs: list[dict]) -> dict:
     if age is None and patient.get('birthDate') and mdt_date:
         age = int(mdt_date[:4]) - int(patient['birthDate'][:4])
     sex = patient.get('gender', 'unknown')
-    dg = next((c for c in rs if c['resourceType'] == 'Condition' and _is_oncologic(c)), None)
+    dg = next((c for c in rs if c['resourceType'] == 'Condition' and is_oncologic(c)), None)
     return {
         'id': pid,
         'display_name': f'{pid} · {SEX_CS.get(sex, sex)} · {age} let' if age is not None else f'{pid} · {SEX_CS.get(sex, sex)}',
@@ -104,11 +101,11 @@ def detail(pid: str, rs: list[dict]) -> dict:
              'verification': _code(c.get('verificationStatus'), 'ver-status'),
              'stage': next((s['summary']['text'] for s in c.get('stage', []) if s.get('summary', {}).get('text')), None),
              'citation': c['id']}
-            for c in conditions if _is_oncologic(c)
+            for c in conditions if is_oncologic(c)
         ],
         'comorbidities': [
             {'text': _text(c.get('code')), 'icd10': _code(c.get('code'), 'icd-10') or None, 'citation': c['id']}
-            for c in conditions if not _is_oncologic(c)
+            for c in conditions if not is_oncologic(c)
         ],
         'tnm': [
             {'text': o.get('valueString', ''), 'kind': _text(o.get('code')), 'date': _date(o), 'citation': o['id']}
@@ -134,7 +131,7 @@ _REPORT_TYPES = {'RAD': 'imaging', 'SP': 'pathology', 'LAB': 'lab'}
 def _event(r: dict) -> tuple[str, str] | None:
     t = r['resourceType']
     if t == 'Condition':
-        suffix = '' if _is_oncologic(r) else ' (komorbidita)'
+        suffix = '' if is_oncologic(r) else ' (komorbidita)'
         return 'diagnosis', _text(r.get('code')) + suffix
     if t == 'Procedure':
         return 'procedure', _text(r.get('code'))

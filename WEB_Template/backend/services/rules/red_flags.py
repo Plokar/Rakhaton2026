@@ -19,7 +19,7 @@ from datetime import date
 from typing import Callable, Iterable
 
 from services.ai.text import resource_paragraphs, resource_text
-from services.rules.guideline_sets import guideline_sets_for
+from services.rules.guideline_sets import guideline_sets_for, is_oncologic
 
 SEVERITY_ORDER = {"high": 0, "moderate": 1, "low": 2}
 
@@ -171,7 +171,7 @@ class PatientData:
         self.age = next((e.get("valueInteger") for e in patient.get("extension", [])
                          if e.get("url", "").endswith("/vek-k-datu-mdt")), None)
         self.conditions = self.by_type.get("Condition", [])
-        self.oncologic = [c for c in self.conditions if "onkolog" in _cc_text((c.get("category") or [{}])[0]).lower()]
+        self.oncologic = [c for c in self.conditions if is_oncologic(c)]
         self.icd10 = [_code(c.get("code"), "icd-10") for c in self.oncologic]
         self.sets = guideline_sets_for(self.icd10)
         self.observations = [self._obs(o) for o in self.by_type.get("Observation", [])]

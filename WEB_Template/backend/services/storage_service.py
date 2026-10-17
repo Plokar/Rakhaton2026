@@ -6,7 +6,7 @@ import os
 import uuid
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,6 @@ class LocalStorageProvider(StorageProvider):
         os.makedirs(target_dir, exist_ok=True)
 
         original_name = getattr(file_obj, 'name', 'unnamed')
-        ext = os.path.splitext(original_name)[1]
         unique_filename = f"{uuid.uuid4().hex[:12]}_{original_name}"
         full_path = os.path.join(target_dir, unique_filename)
 

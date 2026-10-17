@@ -22,6 +22,8 @@ from typing import Any, Callable, Iterable, Sequence
 from services.ai.guidelines import GuidelinePassage, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
 from services.ai.text import resource_paragraphs
+from services.fhir.ids import derived_from_ids
+from services.fhir.values import ext_value, ref_id
 from services.rules import red_flags as rules
 from services.rules.guideline_sets import guideline_sets_for, is_oncologic, trial_is_relevant
 
@@ -276,10 +278,10 @@ def _facts(patient_id: str, resources: list[dict]) -> dict[str, Any]:
     patient = next((r for r in resources if r["resourceType"] == "Patient"), {})
     request = next((r for r in resources if r["resourceType"] == "ServiceRequest"), {})
     task = next((r for r in resources if r["resourceType"] == "Task"
-                 and _ref_id(r.get("focus")) == request.get("id")), None) \
+                 and ref_id(r.get("focus")) == request.get("id")), None) \
         or next((r for r in resources if r["resourceType"] == "Task"), {})
     mdt_start = task.get("restriction", {}).get("period", {}).get("start", "")
-    age = _ext(patient, "vek-k-datu-mdt")
+    age = ext_value(patient, "vek-k-datu-mdt")
     if age is None and patient.get("birthDate") and mdt_start:
         age = int(mdt_start[:4]) - int(patient["birthDate"][:4])
     diagnoses = [
@@ -313,13 +315,8 @@ def _sort_key(group: str, r: dict, date: str, text: str) -> tuple:
     return _GROUP_ORDER.get(group, 99), within
 
 
-def _ref_id(ref: dict | None) -> str:
-    value = (ref or {}).get("reference", "")
-    return value.rsplit("/", 1)[-1] if value else ""
-
-
 def _ref_ids(refs: Iterable[dict] | None) -> str:
-    return ", ".join(i for i in (_ref_id(r) for r in refs or []) if i)
+    return ", ".join(i for i in (ref_id(r) for r in refs or []) if i)
 
 
 def _cc(cc: dict | None) -> str:
@@ -396,18 +393,9 @@ def _value_text(container: dict) -> str:
         if key in ("valueCodeableConcept", "valueCoding"):
             return _cc(value) if key == "valueCodeableConcept" else (value.get("display") or value.get("code", ""))
         if key == "valueReference":
-            return _ref_id(value)
+            return ref_id(value)
         return _num(value) if isinstance(value, (int, float, bool)) else str(value)
     return ""
-
-
-def _ext(r: dict, name: str) -> Any:
-    for ext in r.get("extension", []):
-        if ext.get("url", "").endswith("/" + name):
-            for key, value in ext.items():
-                if key.startswith("value"):
-                    return value
-    return None
 
 
 def _ext_text(r: dict, name: str) -> str:
@@ -427,13 +415,13 @@ def _patient(r: dict, facts: dict) -> tuple[str, str, str]:
 
 def _service_request(r: dict, facts: dict) -> tuple[str, str, str]:
     question_types = _coding_display((r.get("reasonCode") or [{}])[0])
-    informed = _ext(r, "mdt-pacient-informovan")
+    informed = ext_value(r, "mdt-pacient-informovan")
     text = _join([
         f"Nominace na MDT ({_cc((r.get('category') or [{}])[0])})",
         f"typ projednání: {_coding_display(r.get('code'))}" if r.get("code") else "",
         f"typ otázky: {question_types}" if question_types else "",
         f"priorita: {r['priority']}" if r.get("priority") else "",
-        f"zadal: {_ref_id(r.get('requester'))}" if r.get("requester") else "",
+        f"zadal: {ref_id(r.get('requester'))}" if r.get("requester") else "",
         f"zadávající pracoviště: {_ext_text(r, 'mdt-zadajici-pracoviste')}",
         f"pacient informován: {_num(informed)}" if informed is not None else "",
         f"nejzazší termín: {r['occurrenceDateTime'][:10]}" if r.get("occurrenceDateTime") else "",
@@ -446,7 +434,7 @@ def _service_request(r: dict, facts: dict) -> tuple[str, str, str]:
 def _task(r: dict, facts: dict) -> tuple[str, str, str]:
     start = r.get("restriction", {}).get("period", {}).get("start")
     return "patient", (r.get("authoredOn") or "")[:10], _join([
-        f"Stav nominace {_ref_id(r.get('focus'))}: {_coding_display(r.get('businessStatus')) or r.get('status', '')}",
+        f"Stav nominace {ref_id(r.get('focus'))}: {_coding_display(r.get('businessStatus')) or r.get('status', '')}",
         f"termín zasedání MDT: {_datetime(start)}" if start else "termín zasedání MDT neuveden",
     ])
 
@@ -455,8 +443,8 @@ def _condition(r: dict, facts: dict) -> tuple[str, str, str]:
     category = _cc((r.get("category") or [{}])[0]) or "diagnóza"
     icd = _coding_code(r.get("code"), "icd-10")
     verification = _coding_code(r.get("verificationStatus"), "")
-    morphology = _ext(r, "icd-o-3-morfologie")
-    topography = _ext(r, "icd-o-3-topografie")
+    morphology = ext_value(r, "icd-o-3-morfologie")
+    topography = ext_value(r, "icd-o-3-topografie")
     return "diagnosis", (r.get("onsetDateTime") or r.get("recordedDate") or "")[:10], _join([
         f"{category[:1].upper()}{category[1:]}: {icd} {_cc(r.get('code'))}".replace("  ", " "),
         "lokalizace: " + "; ".join(_cc(b) for b in r["bodySite"]) if r.get("bodySite") else "",
@@ -499,13 +487,13 @@ def _observation(r: dict, facts: dict) -> tuple[str, str, str]:
         elif rr.get("text"):
             reference = f" (ref {rr['text']})"
     flags = [c.get("code") for i in r.get("interpretation", []) for c in i.get("coding", []) if c.get("code")]
-    practitioners = [_ref_id(p) for p in r.get("performer", []) if p.get("reference", "").startswith("Practitioner/")]
+    practitioners = [ref_id(p) for p in r.get("performer", []) if p.get("reference", "").startswith("Practitioner/")]
     return group, (r.get("effectiveDateTime") or r.get("effectivePeriod", {}).get("start") or "")[:10], _join([
         f"{label}: {value}{reference}" + (f" {' '.join(flags)}" if flags else ""),
         f"hodnotil: {', '.join(practitioners)}" if practitioners else "",
         f"vzorek: {r['specimen'].get('display')}" if r.get("specimen", {}).get("display") else "",
         f"týká se: {_ref_ids(r.get('focus'))}" if r.get("focus") else "",
-        f"zdroj: {', '.join(rules.derived_from(r))}" if rules.derived_from(r) else "",
+        f"zdroj: {', '.join(derived_from_ids(r))}" if derived_from_ids(r) else "",
         _notes(r),
     ])
 
@@ -518,7 +506,7 @@ def _medication_request(r: dict, facts: dict) -> tuple[str, str, str]:
         f"Medikace ({_category_label(r) or 'předpis'}): {_cc(med)}" + (f" (ATC {atc})" if atc else ""),
         f"dávkování: {dosage}" if dosage else "",
         f"stav: {r['status']}" if r.get("status") else "",
-        f"předepsal: {_ref_id(r.get('requester'))}" if r.get("requester") else "",
+        f"předepsal: {ref_id(r.get('requester'))}" if r.get("requester") else "",
         _notes(r),
     ])
 
@@ -561,7 +549,7 @@ def _diagnostic_report(r: dict, facts: dict) -> tuple[str, str, str]:
     department = categories[1].get("text", "") if len(categories) > 1 else ""
     date = (r.get("effectiveDateTime") or r.get("issued") or "")[:10]
     if section == "LAB":
-        results = [_ref_id(x) for x in r.get("result", [])]
+        results = [ref_id(x) for x in r.get("result", [])]
         return "lab", date, f"Laboratorní odběr: {len(results)} výsledků (řádky {r['id']}-…)"
     kinds = {"RAD": ("imaging", "Zobrazení"), "SP": ("pathology", "Patologie")}
     group, kind = kinds.get(section, ("document", "Nález"))
@@ -606,7 +594,7 @@ def _questionnaire_response(r: dict, facts: dict) -> tuple[str, str, str]:
             unit = PROMS_UNITS.get(link)
             answers.append(f"{label}: {', '.join(values)}" + (f" {unit}" if unit else ""))
     questionnaire = (r.get("questionnaire") or "").rsplit("/", 1)[-1]
-    source = _ref_id(r.get("source"))
+    source = ref_id(r.get("source"))
     head = f"Dotazník pacienta {questionnaire}" + (f" (vyplnil {source})" if source else "")
     return "performance", (r.get("authored") or "")[:10], (
         f"{head}, symptomy 0–10 (0 = žádné potíže, 10 = nejhorší): " + "; ".join(answers))
@@ -616,15 +604,15 @@ def _composition(r: dict, facts: dict) -> tuple[str, str, str]:
     kind = _coding_code(r.get("type"), "mdt-typ-zaznamu")
     categories = _category_label(r)
     details = [_ref_ids(e.get("detail")) for e in r.get("event", [])]
-    appends = [_ref_id(x.get("targetReference")) for x in r.get("relatesTo", [])]
+    appends = [ref_id(x.get("targetReference")) for x in r.get("relatesTo", [])]
     extensions = [("forma zasedání", "mdt-forma-zasedani"), ("ošetřující lékař", "mdt-osetrujici-lekar"),
                   ("účast pacienta", "mdt-ucast-pacienta")]
     author_label = "předsedající" if kind == "mdt-zaznam" else "autor"
     return "mdt", (r.get("date") or "")[:10], _join([
         f"{r.get('title') or _coding_display(r.get('type'))}" + (f" ({categories})" if categories else ""),
         f"{author_label}: {_ref_ids(r.get('author'))}" if r.get("author") else "",
-        f"ověřil: {', '.join(_ref_id(a.get('party')) for a in r['attester'])}" if r.get("attester") else "",
-        *(f"{label}: {_ext_text(r, name)}" for label, name in extensions if _ext(r, name) is not None),
+        f"ověřil: {', '.join(ref_id(a.get('party')) for a in r['attester'])}" if r.get("attester") else "",
+        *(f"{label}: {_ext_text(r, name)}" for label, name in extensions if ext_value(r, name) is not None),
         f"navazuje: {', '.join(d for d in details if d)}" if any(details) else "",
         f"doplňuje: {', '.join(a for a in appends if a)}" if any(appends) else "",
     ])
@@ -649,7 +637,7 @@ def _care_team(r: dict, facts: dict) -> tuple[str, str, str]:
     members = []
     for participant in r.get("participant", []):
         role = ", ".join(_cc(x) for x in participant.get("role", []))
-        member = _ref_id(participant.get("member"))
+        member = ref_id(participant.get("member"))
         members.append(f"{role} ({member})" if member else role)
     return "mdt", (r.get("period", {}).get("start") or "")[:10], _join([
         f"Tým: {r.get('name', '')}",
@@ -706,7 +694,7 @@ def _trials(resources: Iterable[dict], guideline_sets: list[str]) -> list[Trial]
             continue
         criteria = []
         for ref in study.get("enrollment", []):
-            for ch in groups.get(_ref_id(ref), {}).get("characteristic", []):
+            for ch in groups.get(ref_id(ref), {}).get("characteristic", []):
                 code = _cc(ch.get("code"))
                 criteria.append(TrialCriterion(
                     evidence_id=f"{study['id']}/{code}",

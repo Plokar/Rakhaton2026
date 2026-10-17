@@ -3,6 +3,7 @@ import re
 from collections import defaultdict
 
 from services.fhir import client as fhir
+from services.fhir.values import ext_value, fhir_code, ref_id
 from services.rules.guideline_sets import is_oncologic
 
 LOINC_ECOG = '89247-1'
@@ -17,16 +18,8 @@ def _text(cc: dict | None) -> str:
     return cc.get('text') or next((c.get('display') for c in cc.get('coding', []) if c.get('display')), '')
 
 
-def _code(cc: dict | None, system_part: str) -> str:
-    return next((c['code'] for c in (cc or {}).get('coding', []) if system_part in c.get('system', '')), '')
-
-
-def _ref_id(ref: dict | None) -> str:
-    return ((ref or {}).get('reference') or '').rsplit('/', 1)[-1]
-
-
 def _subject(r: dict) -> str:
-    return _ref_id(r.get('subject') or r.get('patient') or r.get('for'))
+    return ref_id(r.get('subject') or r.get('patient') or r.get('for'))
 
 
 def _categories(r: dict) -> list[dict]:
@@ -48,18 +41,11 @@ def _date(r: dict) -> str:
     return ''
 
 
-def _ext(r: dict, name: str):
-    for e in r.get('extension', []):
-        if e.get('url', '').endswith('/' + name):
-            return next((v for k, v in e.items() if k.startswith('value')), None)
-    return None
-
-
 def _nomination(rs: list[dict]) -> tuple[dict, dict]:
     """Nominace na MDT (`ServiceRequest` s `mdt-typ-projednani`) a její `Task` se stavem a termínem."""
-    req = next((r for r in rs if r['resourceType'] == 'ServiceRequest' and _code(r.get('code'), 'mdt-typ-projednani')),
+    req = next((r for r in rs if r['resourceType'] == 'ServiceRequest' and fhir_code(r.get('code'), 'mdt-typ-projednani')),
                next((r for r in rs if r['resourceType'] == 'ServiceRequest'), {}))
-    task = next((r for r in rs if r['resourceType'] == 'Task' and _ref_id(r.get('focus')) == req.get('id')), {})
+    task = next((r for r in rs if r['resourceType'] == 'Task' and ref_id(r.get('focus')) == req.get('id')), {})
     return req, task
 
 
@@ -68,7 +54,7 @@ def summary(pid: str, rs: list[dict]) -> dict:
     patient = next(r for r in rs if r['resourceType'] == 'Patient' and r['id'] == pid)
     req, task = _nomination(rs)
     mdt_date = task.get('restriction', {}).get('period', {}).get('start')
-    age = _ext(patient, 'vek-k-datu-mdt')
+    age = ext_value(patient, 'vek-k-datu-mdt')
     if age is None and patient.get('birthDate') and mdt_date:
         age = int(mdt_date[:4]) - int(patient['birthDate'][:4])
     sex = patient.get('gender', 'unknown')
@@ -78,7 +64,7 @@ def summary(pid: str, rs: list[dict]) -> dict:
         'display_name': f'{pid} · {SEX_CS.get(sex, sex)} · {age} let' if age is not None else f'{pid} · {SEX_CS.get(sex, sex)}',
         'sex': sex,
         'age': age,
-        'diagnosis': dg and {'text': _text(dg.get('code')), 'icd10': _code(dg.get('code'), 'icd-10'), 'citation': dg['id']},
+        'diagnosis': dg and {'text': _text(dg.get('code')), 'icd10': fhir_code(dg.get('code'), 'icd-10'), 'citation': dg['id']},
         'mdt_question': ((req.get('reasonCode') or [{}])[0].get('text')),
         'mdt_question_citation': req.get('id'),
         'mdt_date': mdt_date,
@@ -88,7 +74,7 @@ def summary(pid: str, rs: list[dict]) -> dict:
 def detail(pid: str, rs: list[dict]) -> dict:
     conditions = [r for r in rs if r['resourceType'] == 'Condition']
     obs = [r for r in rs if r['resourceType'] == 'Observation']
-    ecog = sorted((o for o in obs if _code(o.get('code'), 'loinc') == LOINC_ECOG), key=_date)
+    ecog = sorted((o for o in obs if fhir_code(o.get('code'), 'loinc') == LOINC_ECOG), key=_date)
     samostatnost = sorted(
         ((qr, it) for qr in rs if qr['resourceType'] == 'QuestionnaireResponse'
          for it in qr.get('item', []) if it.get('linkId') == 'samostatnost' and it.get('answer')),
@@ -97,14 +83,14 @@ def detail(pid: str, rs: list[dict]) -> dict:
     out = summary(pid, rs)
     out.update({
         'diagnoses': [
-            {'text': _text(c.get('code')), 'icd10': _code(c.get('code'), 'icd-10'), 'onset': c.get('onsetDateTime'),
-             'verification': _code(c.get('verificationStatus'), 'ver-status'),
+            {'text': _text(c.get('code')), 'icd10': fhir_code(c.get('code'), 'icd-10'), 'onset': c.get('onsetDateTime'),
+             'verification': fhir_code(c.get('verificationStatus'), 'ver-status'),
              'stage': next((s['summary']['text'] for s in c.get('stage', []) if s.get('summary', {}).get('text')), None),
              'citation': c['id']}
             for c in conditions if is_oncologic(c)
         ],
         'comorbidities': [
-            {'text': _text(c.get('code')), 'icd10': _code(c.get('code'), 'icd-10') or None, 'citation': c['id']}
+            {'text': _text(c.get('code')), 'icd10': fhir_code(c.get('code'), 'icd-10') or None, 'citation': c['id']}
             for c in conditions if not is_oncologic(c)
         ],
         'tnm': [
@@ -139,7 +125,7 @@ def _event(r: dict) -> tuple[str, str] | None:
         note = ' · '.join(n['text'] for n in r.get('note', []) if n.get('text'))
         return 'medication', _text(r.get('medicationCodeableConcept')) + (f' ({note})' if note else '')
     if t == 'DiagnosticReport':
-        kind = next((_REPORT_TYPES[c] for cat in _categories(r) if (c := _code(cat, 'v2-0074')) in _REPORT_TYPES), 'document')
+        kind = next((_REPORT_TYPES[c] for cat in _categories(r) if (c := fhir_code(cat, 'v2-0074')) in _REPORT_TYPES), 'document')
         return kind, _text(r.get('code'))
     if t == 'QuestionnaireResponse':
         return 'proms', 'Dotazník pacienta (PROMs)'
@@ -147,7 +133,7 @@ def _event(r: dict) -> tuple[str, str] | None:
         return 'mdt', r.get('title') or _text(r.get('type'))
     if t == 'DocumentReference':
         return 'document', _text(r.get('type')) or r.get('description', '')
-    if t == 'ServiceRequest' and _code(r.get('code'), 'mdt-typ-projednani'):
+    if t == 'ServiceRequest' and fhir_code(r.get('code'), 'mdt-typ-projednani'):
         return 'mdt', 'Nominace na MDT: ' + (r.get('reasonCode') or [{}])[0].get('text', '')
     return None     # ponytail: Observation, ImagingStudy, CarePlan… jsou v detailu a grafech, osa by se zahltila
 
@@ -173,7 +159,7 @@ def observations(rs: list[dict], codes: set[str] | None = None) -> list[dict]:
         value = q.get('value', o.get('valueInteger'))
         if value is None:
             continue
-        key = _code(o.get('code'), 'loinc') or (m.group(1) if (m := _KIND.match(o['id'])) else o['id'])
+        key = fhir_code(o.get('code'), 'loinc') or (m.group(1) if (m := _KIND.match(o['id'])) else o['id'])
         s = series[key]
         s.setdefault('label', _text(o.get('code')))
         s.setdefault('unit', q.get('unit'))
@@ -181,7 +167,7 @@ def observations(rs: list[dict], codes: set[str] | None = None) -> list[dict]:
         point = {'date': _date(o), 'value': value, 'citation': o['id']}
         if rng:
             point.update(ref_low=rng.get('low', {}).get('value'), ref_high=rng.get('high', {}).get('value'))
-        if (interp := _code((o.get('interpretation') or [{}])[0], 'ObservationInterpretation')):
+        if (interp := fhir_code((o.get('interpretation') or [{}])[0], 'ObservationInterpretation')):
             point['interpretation'] = interp
         s['points'].append(point)
     for qr in (r for r in rs if r['resourceType'] == 'QuestionnaireResponse'):

@@ -31,13 +31,14 @@ from services.ai.red_flags_llm import detect_llm_red_flags
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import load_roles, role_section
 from services.ai_service import BaseAIProvider, get_ai_provider
+from services.fhir.values import cc_text, fhir_code, ref_id
 from services.rules import red_flags as rules
 from services.rules.alerts import header_alerts
 from services.rules.compatibility import evaluate_compatibility
 from services.rules.onko_kb import kb_for_patient
 from services.rules.guideline_sets import guideline_sets_for
 from services.rules.intake import intake_prefill
-from services.rules.red_flags import PatientData, _cc_text, _code, _ref_id
+from services.rules.red_flags import PatientData
 
 log = logging.getLogger(__name__)
 
@@ -296,25 +297,25 @@ def _timeline_items(data: PatientData, context: PatientContext) -> list[dict]:
     for c in data.oncologic:
         onset = c.get("onsetDateTime", "")
         if onset:
-            events.append((onset[:10], f"Diagnóza: {_code(c.get('code'), 'icd-10')} {_cc_text(c.get('code'))}",
+            events.append((onset[:10], f"Diagnóza: {fhir_code(c.get('code'), 'icd-10')} {cc_text(c.get('code'))}",
                            [c["id"]]))
     for p in data.by_type.get("Procedure", []):
         when = p.get("performedDateTime") or p.get("performedPeriod", {}).get("start", "")
         if when:
-            events.append((when[:10], f"{_cc_text(p.get('category')).capitalize()}: {_cc_text(p.get('code'))}",
+            events.append((when[:10], f"{cc_text(p.get('category')).capitalize()}: {cc_text(p.get('code'))}",
                            [p["id"]]))
     for r in data.by_type.get("DiagnosticReport", []):
-        section = _code((r.get("category") or [{}])[0], "v2-0074")
+        section = fhir_code((r.get("category") or [{}])[0], "v2-0074")
         if section not in ("RAD", "SP"):
             continue
         conclusion = _paragraph_starting(context, r["id"], "Závěr")
-        label = _cc_text(r.get("code"))
+        label = cc_text(r.get("code"))
         text = f"{label}: {conclusion.text.split(':', 1)[1].strip()}" if conclusion else label
         citations = [r["id"]] + ([conclusion.id] if conclusion else [])     # název zprávy je v řádku resource
         events.append((r.get("effectiveDateTime", "")[:10], _short(text), citations))
     regimens: dict[str, list[dict]] = {}
     for m in data.by_type.get("MedicationAdministration", []):
-        regimens.setdefault(_cc_text(m.get("category")) or _cc_text(m.get("medicationCodeableConcept")), []).append(m)
+        regimens.setdefault(cc_text(m.get("category")) or cc_text(m.get("medicationCodeableConcept")), []).append(m)
     for regimen, doses in regimens.items():
         doses.sort(key=lambda m: m.get("effectiveDateTime", ""))
         first, last = doses[0], doses[-1]
@@ -322,10 +323,10 @@ def _timeline_items(data: PatientData, context: PatientContext) -> list[dict]:
         span = f"{dates[0]} až {dates[-1]}" if len(dates) > 1 else dates[0]     # počet podání ve zdroji není
         events.append((dates[0], f"{regimen}: podání {span}", [first["id"], last["id"]]))
     for comp in data.by_type.get("Composition", []):
-        if _code(comp.get("type"), "mdt-typ-zaznamu") != "mdt-zaznam":
+        if fhir_code(comp.get("type"), "mdt-typ-zaznamu") != "mdt-zaznam":
             continue
         conclusion = _paragraph_starting(context, comp["id"], "Závěr MDT")
-        text = conclusion.text.split(":", 1)[1].strip() if conclusion else _cc_text(comp.get("type"))
+        text = conclusion.text.split(":", 1)[1].strip() if conclusion else cc_text(comp.get("type"))
         citation = conclusion.id if conclusion else comp["id"]
         events.append((comp.get("date", "")[:10], _short(f"MDT: {text}"), [citation]))
     for qr in data.proms:
@@ -338,10 +339,10 @@ def _timeline_items(data: PatientData, context: PatientContext) -> list[dict]:
 def _header(data: PatientData, context: PatientContext, intent_letter: str | None) -> dict:
     """Hlavička D-018: `Pxx · pohlaví · věk`, diagnóza + TNM, ECOG lékař i pacient, záměr C/P, otázka."""
     facts = context.facts
-    nominated = [_ref_id(r) for r in data.request.get("reasonReference", [])]
+    nominated = [ref_id(r) for r in data.request.get("reasonReference", [])]
     primary = next((c for c in data.oncologic if c["id"] in nominated and not re.match(
-        r"C7[789]", _code(c.get("code"), "icd-10"))), None) or (data.oncologic or [{}])[0]
-    tnm_obs = [o for o in data.by_category("Staging") if any(_ref_id(f) == primary.get("id")
+        r"C7[789]", fhir_code(c.get("code"), "icd-10"))), None) or (data.oncologic or [{}])[0]
+    tnm_obs = [o for o in data.by_category("Staging") if any(ref_id(f) == primary.get("id")
                                                              for f in o.resource.get("focus", []))]
     tnm_obs = tnm_obs or data.by_category("Staging")
     tnm = None
@@ -355,7 +356,7 @@ def _header(data: PatientData, context: PatientContext, intent_letter: str | Non
     physician = data.by_loinc("ecog")
     if physician:
         last = physician[-1]
-        performer = [_ref_id(p) for p in last.resource.get("performer", [])]
+        performer = [ref_id(p) for p in last.resource.get("performer", [])]
         ecog["physician"] = {"value": int(last.value), "date": str(last.date), "citation": last.id,
                              **({"entered_by": performer[0]} if performer else {})}
     qr = next((q for q in reversed(data.proms) if str(data.answers(q).get("samostatnost", "")).isdigit()), None)
@@ -370,19 +371,19 @@ def _header(data: PatientData, context: PatientContext, intent_letter: str | Non
         intent = {"letter": intent_letter, "code": INTENT_CODE[intent_letter], "source": "physician"}
     else:
         plans = sorted(data.by_type.get("CarePlan", []), key=lambda c: c.get("created", ""))
-        code = _code((plans[-1].get("category") or [{}])[0], "mdt-lecebny-zamer") if plans else ""
+        code = fhir_code((plans[-1].get("category") or [{}])[0], "mdt-lecebny-zamer") if plans else ""
         if code in INTENT:
             intent = {"letter": INTENT[code], "code": code, "source": "previous_mdt"}
 
     question_id = f"{data.request.get('id')}#1"
-    comorbidities = [{"text": _cc_text(c.get("code")), "icd10": _code(c.get("code"), "icd-10") or None,
+    comorbidities = [{"text": cc_text(c.get("code")), "icd10": fhir_code(c.get("code"), "icd-10") or None,
                       "citation": c["id"]}
-                     for c in data.conditions if "komorbid" in _cc_text((c.get("category") or [{}])[0]).lower()]
+                     for c in data.conditions if "komorbid" in cc_text((c.get("category") or [{}])[0]).lower()]
     return {
         "display_name": f"{data.patient_id} · {SEX_CS.get(facts.get('sex'), 'neuvedeno')} · {facts.get('age')} let",
         "age": facts.get("age") or 0,
         "sex": facts.get("sex") or "unknown",
-        "diagnosis": {"text": _cc_text(primary.get("code")), "icd10": _code(primary.get("code"), "icd-10"),
+        "diagnosis": {"text": cc_text(primary.get("code")), "icd10": fhir_code(primary.get("code"), "icd-10"),
                       "citation": primary.get("id", data.patient_id)},
         "tnm": tnm,
         "ecog": ecog,

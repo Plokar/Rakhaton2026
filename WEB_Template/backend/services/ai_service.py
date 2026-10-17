@@ -588,3 +588,40 @@ def get_ai_provider(provider_name: str | None = None) -> BaseAIProvider:
             return MockAIProvider()
         return GeminiProvider()
     raise ValueError(f"Neznámý AI provider {chosen!r}, podporované: {', '.join(SUPPORTED_PROVIDERS)}")
+
+
+# ── D-021: data skutečných pacientů jen s placeným tierem ─────────────────────
+REAL_DATA_ENV = "AI_REAL_PATIENT_DATA"
+FICTIONAL_TAG_CODE = "fiktivni-data"
+
+
+def real_patient_data_allowed() -> bool:
+    """`AI_REAL_PATIENT_DATA=True` = placený tier / Vertex AI EU (D-021); jinak jen syntetická data."""
+    return os.environ.get(REAL_DATA_ENV, "").strip().lower() in ("1", "true", "yes")
+
+
+def is_synthetic_patient(resources) -> bool:
+    """Pacient datasetu (a testovací pacient založený se `synthetic`) má v `Patient.meta.tag` `fiktivni-data`."""
+    return any(tag.get("code") == FICTIONAL_TAG_CODE for r in resources if r.get("resourceType") == "Patient"
+               for tag in (r.get("meta") or {}).get("tag", []))
+
+
+def provider_for_patient(resources) -> BaseAIProvider:
+    """Provider pro data konkrétního pacienta. U skutečného pacienta (bez tagu `fiktivni-data`) bez
+    `AI_REAL_PATIENT_DATA=True` vrátí `MockAIProvider`: nic z jeho dat neodejde do LLM ani do embeddingů,
+    aplikace jede dál deterministicky (pravidla, citace, „údaj chybí“)."""
+    provider = get_ai_provider()
+    if provider.is_mock or is_synthetic_patient(resources) or real_patient_data_allowed():
+        return provider
+    logger.warning("Pacient nemá syntetická data a %s není zapnuté: LLM se nevolá (D-021)", REAL_DATA_ENV)
+    return MockAIProvider()
+
+
+def provider_for_patient_id(patient_id: str) -> BaseAIProvider:
+    """Jako `provider_for_patient`, `Patient` přečte z IRIS; když ho nenajde, bere ho jako skutečného."""
+    from services.fhir import client as fhir
+    try:
+        resources = [fhir.read("Patient", patient_id)]
+    except Exception:
+        resources = []
+    return provider_for_patient(resources)

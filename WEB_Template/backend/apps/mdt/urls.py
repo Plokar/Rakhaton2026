@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import drafts, views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
@@ -8,10 +8,15 @@ urlpatterns = [
     path('users/<int:uid>/', views.user_detail, name='user-detail'),
     path('sessions/', views.session_list, name='session-list'),
     path('sessions/<int:sid>/', views.session_detail, name='session-detail'),
+    path('sessions/<int:sid>/order/', views.session_order, name='session-order'),
     path('configs/', views.config_list, name='config-list'),
     path('configs/<int:cfg_id>/', views.config_detail, name='config-detail'),
     path('tasks/', views.task_list, name='task-list'),
     path('tasks/<str:tid>/', views.task_detail, name='task-detail'),
+    path('patient-drafts/', drafts.draft_list, name='patient-draft-list'),
+    path('patient-drafts/<int:draft_id>/', drafts.draft_detail, name='patient-draft-detail'),
+    path('patient-drafts/<int:draft_id>/documents/', drafts.draft_documents, name='patient-draft-documents'),
+    path('patient-drafts/<int:draft_id>/confirm/', drafts.draft_confirm, name='patient-draft-confirm'),
     path('patients/<str:pid>/intake/', views.patient_intake, name='patient-intake'),
     path('patients/<str:pid>/import/', views.patient_import, name='patient-import'),
     path('patients/<str:pid>/import/confirm/', views.patient_import_confirm, name='patient-import-confirm'),

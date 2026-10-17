@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
 from services.ai.grounding import verify_claims
-from services.ai_service import BaseAIProvider, get_ai_provider
+from services.ai_service import BaseAIProvider, provider_for_patient
 from services.rules.red_flags import PatientData
 
 PROMPT = """Napiš shrnutí výsledku onkologické komise pro pacienta: česky, laicky, vlídně, bez latinských
@@ -130,7 +130,7 @@ def generate_patient_summary(case, params: dict, progress: Callable[[int], None]
     progress(10)
     resources, studies = load_resources(case.patient_fhir_id)
     progress(40)
-    items = build_patient_summary(decision.content, resources, studies, provider or get_ai_provider(),
+    items = build_patient_summary(decision.content, resources, studies, provider or provider_for_patient(resources),
                                   log_call or _llm_call_log)
     composition_id = decision.content["fhir_ids"]["composition"]
     rid = store_summary(case.patient_fhir_id, composition_id, items)

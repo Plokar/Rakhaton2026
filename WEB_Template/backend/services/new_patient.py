@@ -307,7 +307,7 @@ def patient_with_rc(patients: Iterable[dict], rc_value: str) -> str | None:
 # ── náhled (bez LLM: z neschváleného návrhu nic neodchází ven) ────────────────
 def preview(draft: dict, now: datetime, *, detail_config: dict, narrow_config: dict) -> dict:
     """Detailní náhled (celý podklad) a náhled úzkého pásu (šablona projektoru pro diagnózu, jinak `narrow_config`)."""
-    from services.ai.brief import build_brief
+    from services.ai.brief import build_brief, guideline_notices
     from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
     from services.ai_service import MockAIProvider
     from services.fhir import client as fhir
@@ -317,13 +317,14 @@ def preview(draft: dict, now: datetime, *, detail_config: dict, narrow_config: d
     from services.rules.templates import case_template
 
     resources = build_resources(draft, now)
+    sets = guideline_sets_for(PatientData(resources).icd10)
     try:
-        passages = load_guidelines(guideline_sets_for(PatientData(resources).icd10))
+        passages = load_guidelines(sets)
     except GuidelinesUnavailable:
         passages = []
     template = case_template(resources)
     common = {"studies": fhir.search("ResearchStudy") + fhir.search("Group"), "guidelines": passages,
-              "provider": MockAIProvider()}
+              "provider": MockAIProvider(), "notices": guideline_notices(sets, passages, resources)}
     roles = (template or {}).get("config", {}).get("roles_present") or detail_config.get("roles_present")
     pid = draft["patient_id"]
     return {

@@ -84,25 +84,50 @@ def generate_brief(case, config: dict, progress: Callable[[int], None], *,
     except GuidelinesUnavailable as exc:          # blok A guidelines nutně nepotřebuje
         log.warning("Guidelines nejsou k dispozici: %s", exc)
         passages = []
+    notices = guideline_notices(sets, passages, resources)
     if log_call is None:
         log_call = _llm_call_log
     return build_brief(
         case.patient_fhir_id, resources, studies=studies, guidelines=passages, config=config,
         provider=provider, case_id=str(case.pk), skipped_fields=getattr(case, "skipped_fields", None) or [],
-        intent_letter=getattr(case, "intent", None), progress=progress, log_call=log_call,
+        intent_letter=getattr(case, "intent", None), progress=progress, log_call=log_call, notices=notices,
     )
+
+
+def guideline_notices(sets: Iterable[str], passages: Iterable, resources: list[dict]) -> list[dict]:
+    """„Údaj chybí“ o guidelines (T-325): sada v IRIS chybí, nebo dodané guidelines na diagnózu nesedí.
+    Jde do souhrnu podkladu i do kontextu AI, aby se z nich nic nedomýšlelo."""
+    from services.rules.compatibility import lung_histology
+
+    present = {p.guideline_set for p in passages}
+    missing = [s for s in sets if s not in present]
+    out = []
+    if missing:
+        out.append({"id": "miss-guidelines", "kind": "missing", "citations": [],
+                    "text": f"Guidelines nejsou v IRIS (sady {', '.join(missing)}): podklad je bez jejich pasáží, "
+                            "možnosti léčby jen z katalogu aplikace",
+                    "expected_source": "MDT.GuidelineChunk (ingest_dataset)"})
+    if "PLI" in sets and lung_histology(PatientData(resources)) == "SCLC":
+        out.append({"id": "miss-guidelines-sclc", "kind": "missing", "citations": [],
+                    "text": "Guidelines pro malobuněčný karcinom plic (SCLC) v dodaných podkladech nejsou; sada PLI "
+                            "je výtah pro nemalobuněčný karcinom",
+                    "expected_source": "guidelines pro SCLC"})
+    return out
 
 
 def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dict] = (), guidelines: Iterable = (),
                 config: dict | None = None, provider: BaseAIProvider | None = None, case_id: str = "",
                 skipped_fields: Iterable[str] = (), intent_letter: str | None = None,
                 progress: Callable[[int], None] = lambda _: None,
-                log_call: Callable[[str, dict], Any] = lambda purpose, result: None) -> dict:
-    """Čisté jádro: FHIR resources → `Brief` (§8.2)."""
+                log_call: Callable[[str, dict], Any] = lambda purpose, result: None,
+                notices: Iterable[dict] = ()) -> dict:
+    """Čisté jádro: FHIR resources → `Brief` (§8.2). `notices` = „údaj chybí“ o guidelines (`guideline_notices`)."""
+    notices = list(notices)
     config = _merge_config(config)
     provider = provider or provider_for_patient(resources)        # D-021
     flags = rules.evaluate(resources, config.get("roles_present"))
-    context = context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines, red_flags=flags)
+    context = context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines, red_flags=flags,
+                                     rule_results=[n["text"] for n in notices])
     data = PatientData(resources)
     progress(35)
 
@@ -140,7 +165,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         if section["id"] not in TITLES:
             continue
         if section["id"] == "summary":
-            items = summary_items + _missing_items(resources, skipped_fields)
+            items = summary_items + _missing_items(resources, skipped_fields) + notices
         elif section["id"] == "anamnesis":            # FR-A5 (T-507)
             items = anamnesis
         elif section["id"] == "modalities":           # FR-D5 (T-506)

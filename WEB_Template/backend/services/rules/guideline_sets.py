@@ -44,8 +44,16 @@ def guideline_sets_for(icd10_codes: Iterable[str]) -> list[str]:
     return [s for s in GUIDELINE_SET_ORDER if s in sets]
 
 
-def trial_is_relevant(condition_texts: Iterable[str], guideline_sets: Iterable[str]) -> bool:
+NSCLC_TRIAL = re.compile(r"nemalobun|\bnsclc\b")
+
+
+def trial_is_relevant(condition_texts: Iterable[str], guideline_sets: Iterable[str],
+                      lung_histology: str | None = None) -> bool:
+    """Studie pro diagnózu pacienta. Studie jen pro nemalobuněčný karcinom (RKT-04) ne u SCLC (T-325);
+    neuvedená histologie nic nevyřadí (nehádá se)."""
     texts = " ".join(condition_texts).lower()
+    if lung_histology == "SCLC" and NSCLC_TRIAL.search(texts):
+        return False
     if any(keyword in texts for keyword in TRIAL_ALWAYS_KEYWORDS):
         return True
     return any(keyword in texts for s in guideline_sets for keyword in TRIAL_CONDITION_KEYWORDS.get(s, ()))

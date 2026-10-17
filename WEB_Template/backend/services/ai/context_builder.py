@@ -231,7 +231,7 @@ def context_from_resources(patient_id: str, resources: Iterable[dict], *, studie
         evidence=[line for _, lines in blocks for line in lines],
         guideline_sets=sets,
         guidelines=sorted((g for g in guidelines if g.guideline_set in sets), key=lambda g: g.sort_key),
-        trials=_trials(studies, sets),
+        trials=_trials(studies, sets, _lung_histology(resources) if "PLI" in sets else None),
         facts=facts,
         rule_results=[f.render_line() for f in red_flags] + list(rule_results),
         red_flags=red_flags,
@@ -681,16 +681,21 @@ _FORMATTERS: dict[str, Callable[[dict, dict], tuple[str, str, str]]] = {
 
 
 # ── Studie ────────────────────────────────────────────────────────────────────
+def _lung_histology(resources: list[dict]) -> str | None:
+    from services.rules.compatibility import lung_histology
+    return lung_histology(rules.PatientData(resources))
+
+
 _CRITERION_LINE = re.compile(r"^[ZV]\d+:")
 
 
-def _trials(resources: Iterable[dict], guideline_sets: list[str]) -> list[Trial]:
+def _trials(resources: Iterable[dict], guideline_sets: list[str], lung_histology: str | None = None) -> list[Trial]:
     resources = list(resources)
     groups = {r["id"]: r for r in resources if r.get("resourceType") == "Group"}
     trials = []
     for study in sorted((r for r in resources if r.get("resourceType") == "ResearchStudy"), key=lambda r: r["id"]):
         conditions = tuple(_cc(c) for c in study.get("condition", []))
-        if not trial_is_relevant(conditions, guideline_sets):
+        if not trial_is_relevant(conditions, guideline_sets, lung_histology):
             continue
         criteria = []
         for ref in study.get("enrollment", []):

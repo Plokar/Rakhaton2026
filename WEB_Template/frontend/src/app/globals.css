@@ -156,6 +156,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* místo pod lištou cookies, dokud je vidět (CookieConsentBanner, T-329) */
+    padding-bottom: var(--cookie-banner-space, 0px);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     line-height: 1.5;

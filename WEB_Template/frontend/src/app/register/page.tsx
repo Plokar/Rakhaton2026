@@ -77,7 +77,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background px-5 py-4 sm:px-10">
+    <div
+      className="flex min-h-dvh flex-col bg-background px-5 py-4 sm:px-10"
+      style={{ paddingBottom: 'calc(1rem + var(--cookie-banner-space, 0px))' }}
+    >
       <div className="flex items-center justify-between gap-3">
         <Link href="/login" className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">

@@ -41,20 +41,21 @@ const fetchOptions = (cid: string): Promise<ProcedureCompatibility[]> =>
 
 const nowLabel = () => new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
 
-/** Výchozí draft, když závěr ještě není: otázka z nominace, záměr, přítomní podle rolí podkladu. */
-function initialDraft(caseId: string, brief: Brief | null, me: Me | null): Decision {
+/** Výchozí draft, když závěr ještě není: otázka z nominace, záměr, přítomní podle rolí podkladu
+ * (předseda jako lékař v IRIS, u ostatních rolí se lékař vybere v popupu, T-328/T-329). */
+function initialDraft(caseId: string, brief: Brief | null, me: Me | null, nominationQuestion?: string | null): Decision {
   const roles = (brief?.config.roles_present ?? []).filter((r) => r !== 'patient');
   return {
     case_id: caseId,
     status: 'draft',
     mdt_type: 'primarni',
     attendees: [
-      ...(me ? [{ user_id: String(me.user_id), name: me.name, role: 'chair' as const }] : []),
+      ...(me ? [{ user_id: me.practitioner_id ?? String(me.user_id), name: me.name, role: 'chair' as const }] : []),
       ...roles.map((r) => ({ user_id: '', name: ROLE_META[r].label, role: r })),
     ],
     patient_present: false,
     sections: {
-      question: { text: brief?.header.mdt_question.text ?? '', source: 'human' },
+      question: { text: brief?.header.mdt_question.text || nominationQuestion || '', source: 'human' },
       assessment: { text: '', source: 'human', citations: [] },
       intent: brief?.header.intent?.code ?? 'odlozeno',
       recommendation: [],
@@ -92,7 +93,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
 
   const loading = decisionData.loading || briefData.loading;
   const brief = briefData.data ?? null;
-  const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me));
+  const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me, location.item?.question));
   const confirmed = current?.status === 'confirmed';
   // T-326: upravuje zadávající lékař, přizvaný lékař nebo předseda (backend to ověří znovu)
   const canEdit = !confirmed && (isDemo || (location.item ? can.editCase(me, location.item) : can.manageBoards(me)));

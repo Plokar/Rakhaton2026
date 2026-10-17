@@ -329,7 +329,7 @@ export interface Decision {
   status: 'draft' | 'confirmed';
   /** mdt-typ-projednani */
   mdt_type: 'primarni' | 'progrese' | 'restaging';
-  /** → CareTeam */
+  /** → CareTeam; `user_id` = lékař v IRIS „LEK-…“ z výběru (T-328) */
   attendees: { user_id: string; name: string; role: RoleId | 'chair' }[];
   /** Extension mdt-ucast-pacienta. */
   patient_present: boolean;
@@ -366,8 +366,10 @@ export interface Decision {
   tasks: {
     id: string;
     description: string;
-    /** LEK-… / role */
+    /** Lékař v IRIS „LEK-…“ z výběru (T-328), u starších záznamů role */
     owner: string;
+    /** Jméno lékaře pro zobrazení (T-328) */
+    owner_name?: string | null;
     /** YYYY-MM-DD */
     due_date: string;
     status: 'requested' | 'in-progress' | 'completed';
@@ -537,6 +539,21 @@ export interface Me {
   /** Superuser = mdt_admin, bez skupiny = mdt_viewer. */
   role: MdtRole;
   specialty: RoleId | null;
+  /** Lékař v IRIS „LEK-…“, se kterým je účet propojený; podle něj „moje úkoly“ (T-328). */
+  practitioner_id?: string | null;
+}
+
+/** GET /api/mdt/practitioners/ — lékař nemocnice z IRIS (FHIR Practitioner, T-328). */
+export interface Practitioner {
+  /** "LEK-P03-01" (dataset) | "LEK-APP-onkolog" (účet aplikace) */
+  id: string;
+  name: string;
+  /** Text kvalifikace: „klinický onkolog (ošetřující lékař)“ */
+  specialty: string;
+  /** Odbornost odvozená z kvalifikace, `null` = neznámá */
+  role: RoleId | null;
+  /** Účet v aplikaci, když je s lékařem propojený */
+  user: { user_id: number; username: string } | null;
 }
 
 /** Board = zasedání MDT (D-014). */
@@ -575,9 +592,9 @@ export interface MdtTask {
   /** "P03-mdt02-task01" (FHIR Task) */
   id: string;
   patient_id: string;
-  /** "P03-mdt02" (Composition) */
-  mdt_record: string;
-  /** MdtCase s potvrzeným závěrem. */
+  /** "P03-mdt02" (Composition); `null` u úkolu z nepotvrzeného závěru */
+  mdt_record: string | null;
+  /** MdtCase se závěrem. */
   case_id: number | null;
   description: string;
   /** LEK-… / role */
@@ -588,4 +605,6 @@ export interface MdtTask {
   authored_on: string | null;
   /** Z CarePlan (activity „Plánované re-MDT“, scheduledPeriod.start). */
   re_mdt: { date: string | null; reason: string } | null;
+  /** Úkol z nepotvrzeného závěru (`?drafts=1`, T-328): ještě není v IRIS, stav nejde měnit. */
+  draft?: boolean;
 }

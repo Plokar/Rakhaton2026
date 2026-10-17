@@ -60,8 +60,10 @@ def _ref(rtype: str, rid: str) -> dict:
 
 
 def _person(user_id: str, name: str) -> dict:
-    """Lékař z datasetu (`LEK-…`) jako reference, jinak jen jméno (uživatel aplikace není Practitioner v IRIS)."""
-    return _ref('Practitioner', user_id) if str(user_id).startswith('LEK-') else {'display': name}
+    """Lékař v IRIS (`LEK-…`, i účty aplikace `LEK-APP-…`, T-328) jako reference se jménem, jinak jen jméno."""
+    if str(user_id).startswith('LEK-'):
+        return {**_ref('Practitioner', user_id), **({'display': name} if name and name != user_id else {})}
+    return {'display': name}
 
 
 def _div(text: str) -> dict:
@@ -175,7 +177,7 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
         resources.append({
             'resourceType': 'Task', 'id': tid, 'status': t['status'], 'intent': 'order', 'description': t['description'],
             'basedOn': [_ref('CarePlan', ids['careplan'])], 'for': patient, 'authoredOn': now.isoformat(),
-            'owner': _person(t['owner'], t['owner']), 'restriction': {'period': {'end': t['due_date']}}, **_ai(t['source']),
+            'owner': _person(t['owner'], t.get('owner_name') or t['owner']), 'restriction': {'period': {'end': t['due_date']}}, **_ai(t['source']),
         })
 
     for i, flag_id in enumerate(decision.get('red_flags_acknowledged', []), 1):

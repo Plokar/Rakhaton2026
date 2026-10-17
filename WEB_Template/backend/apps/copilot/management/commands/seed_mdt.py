@@ -12,6 +12,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         users = roles.ensure_demo_users()
+        for user in users.values():                    # T-328: účet ↔ lékař v IRIS („moje úkoly“, výběr lékaře)
+            roles.ensure_practitioner(user)
         ensure_presets(users['predseda'])
         created_sessions = created_cases = 0
         for order, n in enumerate(load_nominations()):

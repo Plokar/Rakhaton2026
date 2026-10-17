@@ -30,6 +30,7 @@ import { TreatmentOptions } from '../TreatmentOptions';
 import { TrialScreening } from '../TrialScreening';
 import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './DetailSection';
 import { ForMePanel } from './ForMePanel';
+import { MyTasks } from '../MyTasks';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -184,6 +185,7 @@ function DetailLayout({
       def: { id: 'prehled', label: 'Rychlý přehled' },
       node: (
         <DetailSection id="prehled" title="Rychlý přehled">
+          <MyTasks patientId={item?.patient_id ?? brief?.patient_id} />
           <CaseQuickViewBody sources={sources} caseId={item?.id ?? null} anamnesisEmpty={missingBrief || undefined} />
         </DetailSection>
       ),

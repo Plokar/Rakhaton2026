@@ -1131,10 +1131,11 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
 | PUT | `/api/mdt/sessions/{sid}/order/` | pořadí pacientů v agendě (T-324), jen `mdt_admin`: `{cases: [cid, …]}` = všechny případy boardu v novém pořadí (jinak 400) → agenda; přesun případu na jiný board ho zařadí na konec |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
-| GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
+| GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného |
+| GET | `/api/mdt/practitioners/?q=&with_user=&limit=` | lékaři nemocnice z IRIS (FHIR `Practitioner`) pro popup výběru lékaře (T-328): přítomní, vlastník úkolu, spolupráce. `{id, name, specialty, role, user}`; hledání bez diakritiky ve jménu, odbornosti a ID, lékaři s účtem v aplikaci první |
 | POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
 | GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), `mdt_admin` a `mdt_doctor` (lékař vybírá, koho přizvat ke spolupráci, T-326) |
-| PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319) |
+| PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?, practitioner_id?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319). `practitioner_id` propojí účet s existujícím lékařem v IRIS (T-328), jinak má účet vlastního `LEK-APP-<účet>` (zakládá `seed_mdt` a registrace) |
 | GET, POST | `/api/mdt/patient-drafts/` | nový pacient (T-323, předseda, lékař): GET = rozpracované návrhy (lékař své, předseda všechny); POST JSON nebo multipart `{rc, text?, files[]?, synthetic?, session?}` → 201 `PatientDraft` (§8.6) s předvyplněnou nominací a náhledy; 400 neplatné RČ / soubor; 409 `{patient_id}` = RČ už v IRIS, 409 `{draft_id}` = rozpracovaný návrh se stejným RČ |
 | GET, PATCH, DELETE | `/api/mdt/patient-drafts/{id}/` | návrh + náhledy (autor a předseda); PATCH `{fields?, values?, remove_documents?, synthetic?, session?}` → nové náhledy; DELETE zahodí návrh |
 | POST | `/api/mdt/patient-drafts/{id}/documents/` | další podklady (`text`, `files[]`), prázdná pole nominace se z nich doplní |
@@ -1158,8 +1159,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids`. Kontrola souladu s guidelines (zadání B2, T-326): zvolená možnost s „pozor“ / „vylučuje“ nebo `guideline_compliance.compliant = false` bez `reason` → 400 `{detail, field: "guideline_compliance"}` |
 | GET | `/api/mdt/cases/{cid}/export.pdf` | PDF |
 | GET | `/api/mdt/cases/{cid}/export.fhir.json` | FHIR document Bundle |
-| GET | `/api/mdt/tasks/?status=…&patient=…` | úkoly po zasedání (z FHIR `Task/Pxx-mdtNN-taskNN`, `MdtTask[]` §8.6), seřazené podle stavu a termínu |
-| PATCH | `/api/mdt/tasks/{tid}/` | `{status}` → `Task.status` v IRIS (předseda, lékař) |
+| GET | `/api/mdt/tasks/?status=…&patient=…&mine=1&drafts=1` | úkoly po zasedání (z FHIR `Task/Pxx-mdtNN-taskNN`, `MdtTask[]` §8.6), seřazené podle stavu a termínu; `mine` = přiřazené přihlášenému (jeho lékař v IRIS), `drafts` přidá úkoly z nepotvrzených závěrů (`draft: true`) (T-328) |
+| PATCH | `/api/mdt/tasks/{tid}/` | `{status}` → `Task.status` v IRIS (předseda, lékař a ten, komu je úkol přiřazený, T-328) |
 
 ---
 
@@ -1629,6 +1630,17 @@ interface PatientDraft {                        // /api/mdt/patient-drafts/ (T-3
 // PATCH …/{id}/ přijímá { fields?: { question?, histology?, history?, comorbidities?, preferences?: string | null,
 //   diagnoses?: { code, text? }[], tnm?: string | null, ecog?: 0–4 | null, nomination_type? },
 //   values?: (podmnožina values), remove_documents?: string[], synthetic?, session? }
+
+interface Practitioner {                        // GET /api/mdt/practitioners/ (T-328), lékař nemocnice z IRIS
+  id: string;                                   // "LEK-P03-01" (dataset) | "LEK-APP-onkolog" (účet aplikace)
+  name: string;
+  specialty: string;                            // text kvalifikace
+  role: RoleId | null;                          // odbornost odvozená z kvalifikace
+  user: { user_id: number; username: string } | null;   // propojený účet v aplikaci
+}
+// Decision.attendees[].user_id a Decision.tasks[].owner = Practitioner.id z popupu; tasks[].owner_name = jméno.
+// Zápis: CareTeam.participant.member a Task.owner = { reference: "Practitioner/LEK-…", display: jméno }.
+// Me.practitioner_id = lékař přihlášeného; MdtTask.draft = úkol z nepotvrzeného závěru (mdt_record null).
 
 interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTask[] (FR-P3)
   id: string;                                   // "P03-mdt02-task01" (FHIR Task)

@@ -1,6 +1,8 @@
 """
 JWT Authentication – Serializers
 """
+import logging
+
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
@@ -76,6 +78,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
             roles.assign(user, role=roles.VIEWER, specialty=specialty)
+        try:                                           # T-328: lékař v IRIS pro výběr přítomných a úkoly
+            roles.ensure_practitioner(user)
+        except Exception:                              # registrace na IRIS nečeká
+            logging.getLogger(__name__).warning('Lékaře pro %s se nepodařilo založit v IRIS', user.username)
         return user
 
 

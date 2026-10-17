@@ -5,6 +5,7 @@ from . import drafts, views
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
     path('users/', views.user_list, name='user-list'),
+    path('practitioners/', views.practitioner_list, name='practitioner-list'),
     path('users/<int:uid>/', views.user_detail, name='user-detail'),
     path('sessions/', views.session_list, name='session-list'),
     path('sessions/<int:sid>/', views.session_detail, name='session-detail'),

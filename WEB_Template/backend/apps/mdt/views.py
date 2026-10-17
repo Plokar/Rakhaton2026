@@ -60,7 +60,7 @@ def _user(u) -> dict | None:
 def _member(u) -> dict:
     """`Me` (§8.6): role a odbornost uživatele."""
     return {'user_id': u.pk, 'username': u.username, 'name': u.get_full_name() or u.username,
-            'role': roles.role(u), 'specialty': roles.specialty(u)}
+            'role': roles.role(u), 'specialty': roles.specialty(u), 'practitioner_id': roles.practitioner_id(u)}
 
 
 def _session(s: MdtSession) -> dict:
@@ -115,14 +115,45 @@ def user_list(request):
     return Response([_member(u) for u in users])
 
 
+def _link_practitioner(user, pid: str) -> None:
+    from services import practitioners
+    from .models import UserProfile
+    if not practitioners.exists(pid):
+        raise ValidationError({'practitioner_id': f'Lékař {pid} v IRIS není.'})
+    if UserProfile.objects.filter(practitioner_fhir_id=pid).exclude(user=user).exists():
+        raise ValidationError({'practitioner_id': f'Lékař {pid} už je propojený s jiným účtem.'})
+    UserProfile.objects.update_or_create(user=user, defaults={'practitioner_fhir_id': pid})
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def practitioner_list(request):
+    """Lékaři nemocnice z IRIS pro výběr (T-328): `?q=` (jméno, odbornost, ID; bez diakritiky), `?with_user=1` jen
+    s účtem v aplikaci, `?limit=` (výchozí 50). Nejdřív lékaři s účtem."""
+    from services import practitioners
+    users = roles.users_by_practitioner()
+    try:
+        limit = min(int(request.query_params.get('limit') or 50), 500)
+    except ValueError:
+        raise ValidationError({'limit': 'Číslo.'}) from None
+    items = practitioners.search(request.query_params.get('q', ''), users, limit=500)
+    if request.query_params.get('with_user') in ('1', 'true'):
+        items = [i for i in items if i['user']]
+    return Response(items[:limit])
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def user_detail(request, uid):
-    """Předseda mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele (T-319)."""
+    """Předseda mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele (T-319)
+    a propojení s lékařem v IRIS `practitioner_id` (T-328)."""
     _require(request, roles.ADMIN)
     user = get_object_or_404(get_user_model(), pk=uid)
     role, specialty = request.data.get('role'), request.data.get('specialty')
+    if request.data.get('practitioner_id'):
+        _link_practitioner(user, str(request.data['practitioner_id']))
     if role is not None and role not in roles.ROLES:
         raise ValidationError({'role': f'Jen {", ".join(roles.ROLES)}.'})
     if specialty is not None and specialty not in roles.SPECIALTIES:
@@ -130,6 +161,11 @@ def user_detail(request, uid):
     if user.pk == request.user.pk and role not in (None, roles.ADMIN):
         raise ValidationError({'role': 'Sám sobě roli předsedy odebrat nejde.'})
     roles.assign(user, role=role, specialty=specialty)
+    if specialty is not None:
+        try:                                     # odbornost i u lékaře účtu v IRIS (LEK-APP-…, T-328)
+            roles.ensure_practitioner(user)
+        except FhirError:
+            pass
     return Response(_member(user))
 
 
@@ -691,19 +727,52 @@ def _with_case(items: list[dict]) -> list[dict]:
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def task_list(request):
-    """Úkoly po zasedání z IRIS (FR-P3): `?status=requested|in-progress|completed&patient=P03`."""
+    """Úkoly po zasedání z IRIS (FR-P3): `?status=requested|in-progress|completed&patient=P03`.
+    `?mine=1` jen úkoly přiřazené přihlášenému (jeho lékař v IRIS, T-328), `?drafts=1` přidá úkoly z dosud
+    nepotvrzených závěrů (`draft: true`, stav jde měnit až po potvrzení)."""
     status = request.query_params.get('status') or None
     if status and status not in tasks.STATUSES:
         raise ValidationError({'status': f'Jen {", ".join(tasks.STATUSES)}.'})
-    return Response(_with_case(tasks.list_tasks(status, request.query_params.get('patient') or None)))
+    patient = request.query_params.get('patient') or None
+    owner = None
+    if request.query_params.get('mine') in ('1', 'true'):
+        owner = roles.practitioner_id(request.user)
+        if owner is None:
+            return Response([])
+    items = _with_case(tasks.list_tasks(status, patient, owner))
+    if request.query_params.get('drafts') in ('1', 'true'):
+        items += _draft_tasks(status, patient, owner)
+    return Response(items)
+
+
+def _draft_tasks(status: str | None, patient: str | None, owner: str | None) -> list[dict]:
+    """Úkoly z návrhů závěru (ještě nejsou v IRIS): lékař vidí, co mu komise přiděluje, ještě před potvrzením."""
+    out = []
+    for d in Decision.objects.filter(status='draft').select_related('case'):
+        if patient and d.case.patient_fhir_id != patient:
+            continue
+        for t in d.content.get('tasks') or []:
+            if (owner and t.get('owner') != owner) or (status and t.get('status') != status):
+                continue
+            out.append({'id': f"draft-{d.case_id}-{t['id']}", 'patient_id': d.case.patient_fhir_id, 'mdt_record': None,
+                        'case_id': d.case_id, 'description': t.get('description', ''),
+                        'owner': {'id': t.get('owner') if str(t.get('owner', '')).startswith('LEK-') else None,
+                                  'name': t.get('owner_name') or t.get('owner', '')},
+                        'due_date': t.get('due_date') or None, 'status': t.get('status', 'requested'),
+                        'authored_on': None, 're_mdt': None, 'draft': True})
+    return out
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def task_detail(request, tid):
-    """Změna stavu úkolu `{status}` (předseda, lékař) → `Task.status` v IRIS."""
-    _require(request, roles.ADMIN, roles.DOCTOR)
+    """Změna stavu úkolu `{status}` → `Task.status` v IRIS. Smí předseda, lékař a ten, komu je úkol přiřazený
+    (T-328: i prohlížející člen komise si svůj úkol odškrtne)."""
+    if roles.role(request.user) not in (roles.ADMIN, roles.DOCTOR):
+        mine = roles.practitioner_id(request.user)
+        if not mine or not any(t['id'] == tid for t in tasks.list_tasks(owner=mine)):
+            raise PermissionDenied('Stav úkolu mění předseda, lékař, nebo ten, komu je úkol přiřazený.')
     try:
         item = tasks.set_status(tid, request.data.get('status'))
     except ValueError:

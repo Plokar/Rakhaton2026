@@ -26,7 +26,7 @@ def _item(t: dict, plans: dict, names: dict) -> dict:
         'owner': {'id': oid, 'name': names.get(oid) or owner.get('display') or oid},
         'due_date': t.get('restriction', {}).get('period', {}).get('end'), 'status': t['status'],
         'authored_on': t.get('authoredOn'),
-        're_mdt': _re_mdt(plans.get(ref_id((t.get('basedOn') or [{}])[0]))),
+        're_mdt': _re_mdt(plans.get(ref_id((t.get('basedOn') or [{}])[0]))), 'draft': False,
     }
 
 
@@ -41,9 +41,11 @@ def _context(tasks: list[dict]) -> tuple[dict, dict]:
     return plans, names
 
 
-def list_tasks(status: str | None = None, patient_id: str | None = None) -> list[dict]:
+def list_tasks(status: str | None = None, patient_id: str | None = None, owner: str | None = None) -> list[dict]:
+    """Úkoly ze záznamů MDT; `owner` = ID lékaře v IRIS („moje úkoly“, T-328)."""
     tasks = [t for t in fhir.search('Task') if TASK_ID.match(t['id'])
-             and (not status or t['status'] == status) and (not patient_id or t['id'].startswith(f'{patient_id}-'))]
+             and (not status or t['status'] == status) and (not patient_id or t['id'].startswith(f'{patient_id}-'))
+             and (not owner or ref_id(t.get('owner')) == owner)]
     plans, names = _context(tasks)
     order = {s: i for i, s in enumerate(STATUSES)}
     return sorted((_item(t, plans, names) for t in tasks),

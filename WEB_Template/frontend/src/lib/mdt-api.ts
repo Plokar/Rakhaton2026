@@ -16,6 +16,7 @@ import type {
   MdtCase,
   MdtTask,
   PatientListItem,
+  Practitioner,
   ProcedureCompatibility,
   Readiness,
   TaskStatus,
@@ -49,8 +50,17 @@ export const mdtApi = {
   /** Uživatelé s rolí a odborností (`Me[]`), jen předseda (T-319). */
   getUsers: () => apiFetch<Me[]>('/api/mdt/users/'),
 
-  /** Změna role a odbornosti uživatele (jen předseda; sám sobě roli předsedy odebrat nejde). */
-  updateUser: (userId: number, input: { role?: MdtRole; specialty?: RoleId }) =>
+  /** Lékaři nemocnice z IRIS pro výběr přítomných, vlastníků úkolů a spolupracovníků (T-328). */
+  getPractitioners: (filter: { q?: string; withUser?: boolean; limit?: number } = {}) => {
+    const params = new URLSearchParams();
+    if (filter.q) params.set('q', filter.q);
+    if (filter.withUser) params.set('with_user', '1');
+    params.set('limit', String(filter.limit ?? 500));
+    return apiFetch<Practitioner[]>(`/api/mdt/practitioners/?${params}`);
+  },
+
+  /** Změna role, odbornosti a propojení s lékařem v IRIS (jen předseda; sám sobě roli předsedy odebrat nejde). */
+  updateUser: (userId: number, input: { role?: MdtRole; specialty?: RoleId; practitioner_id?: string }) =>
     apiFetch<Me>(`/api/mdt/users/${userId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   /** Doporučená šablona projektoru podle diagnózy (T-318); 404 bez báze nebo diagnózy. */
@@ -134,9 +144,11 @@ export const mdtApi = {
   getCompatibility: (caseId: number) =>
     apiFetch<ProcedureCompatibility[]>(`/api/mdt/cases/${caseId}/compatibility/`),
 
-  /** Úkoly po zasedání z IRIS (FR-P3), filtr `status` a `patient`. */
-  getTasks: (filter: { status?: TaskStatus; patient?: string } = {}) => {
-    const query = new URLSearchParams(Object.entries(filter).filter(([, v]) => v) as [string, string][]).toString();
+  /** Úkoly po zasedání z IRIS (FR-P3), filtr `status` a `patient`; `mine` jen moje, `drafts` i z nepotvrzených závěrů (T-328). */
+  getTasks: (filter: { status?: TaskStatus; patient?: string; mine?: boolean; drafts?: boolean } = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(filter).filter(([, v]) => v).map(([k, v]) => [k, v === true ? '1' : String(v)]),
+    ).toString();
     return apiFetch<MdtTask[]>(`/api/mdt/tasks/${query ? `?${query}` : ''}`);
   },
 

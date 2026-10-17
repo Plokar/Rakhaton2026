@@ -6,10 +6,12 @@ import iris
 from django.core.management.base import BaseCommand, CommandError
 
 from services.fhir import client as fhir
-from services.iris.db import connect
+from services.iris.db import DEFAULT_PASSWORD, connect
 
 NAMESPACE = 'FHIRSERVER'
 ENDPOINT = '/fhir/r4'
+# předdefinované účty s výchozím heslem SYS; CSPSystem ne (používá ho web gateway portálu)
+PREDEFINED_USERS = ('SuperUser', 'Admin', '_SYSTEM')
 
 
 class Command(BaseCommand):
@@ -20,6 +22,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, wait, **options):
         self._wait_for_iris(wait)
+        self._rotate_default_password()
 
         with connect('HSLIB') as conn:
             irispy = iris.createIRIS(conn)
@@ -49,15 +52,35 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('IRIS FHIR server je připravený.'))
 
     def _wait_for_iris(self, timeout):
+        """Čeká na IRIS s heslem z env, nebo s výchozím SYS (čerstvý kontejner před změnou hesla, T-005)."""
         deadline = time.monotonic() + timeout
         while True:
-            try:
-                with connect('%SYS'):
-                    return
-            except Exception as e:
-                if time.monotonic() > deadline:
-                    raise CommandError(f'IRIS nedostupný po {timeout} s: {e}')
-                time.sleep(2)
+            for password in dict.fromkeys((None, DEFAULT_PASSWORD)):
+                try:
+                    with connect('%SYS', password=password):
+                        return
+                except Exception as e:
+                    error = e
+            if time.monotonic() > deadline:
+                raise CommandError(f'IRIS nedostupný po {timeout} s: {error}')
+            time.sleep(2)
+
+    def _rotate_default_password(self):
+        """Produkce (ARCH §3.4): výchozí heslo SYS → IRIS_PASSWORD u předdefinovaných účtů. Idempotentní."""
+        password = os.environ.get('IRIS_PASSWORD', DEFAULT_PASSWORD)
+        if password == DEFAULT_PASSWORD:
+            return
+        try:
+            with connect('%SYS'):
+                return                              # heslo už platí
+        except Exception:
+            pass
+        with connect('%SYS', password=DEFAULT_PASSWORD) as conn:
+            irispy = iris.createIRIS(conn)
+            for user in PREDEFINED_USERS:
+                if not irispy.classMethodValue('%SYSTEM.Security', 'ChangePassword', user, password, DEFAULT_PASSWORD):
+                    raise CommandError(f'IRIS: heslo účtu {user} se nepodařilo změnit.')
+        self.stdout.write(f'Výchozí heslo IRIS změněno ({", ".join(PREDEFINED_USERS)}).')
 
     def _put_device(self):
         fhir.put({

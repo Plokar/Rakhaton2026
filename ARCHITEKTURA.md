@@ -355,7 +355,12 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 #### Backend — VPS
 
 - VPS **min. 4 vCPU / 8 GB RAM** (IRIS si vezme 2–3 GB), Ubuntu + Docker, DNS `A api.<doména>`.
-- Použít `WEB_Template/docker-compose.yml` (Traefik, backend, db, redis) a **přidat službu `iris`**:
+- **Postup (T-005, ověřeno lokálně jako projekt `rkprod`):**
+  1. `git clone` repa na VPS, `cd WEB_Template`, `cp .env.prod.example .env` a vyplnit: `API_DOMAIN`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` (URL Vercelu), `DJANGO_SECRET_KEY`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD` (2×), **`IRIS_PASSWORD`**, `MDT_DEMO_PASSWORD`, `GEMINI_API_KEY` (nebo `AI_PROVIDER=mock` a `MDT_DEMO_OFFLINE=True`);
+  2. e-mail pro Let's Encrypt v `traefik/traefik.yml` (`certificatesResolvers.letsencrypt.acme.email`);
+  3. `docker compose up -d --build` (frontend se nestaví, je v profilu `frontend`). První start backendu trvá ~3 min: `iris_init` změní výchozí heslo IRIS `SYS` na `IRIS_PASSWORD` (SuperUser, Admin, _SYSTEM), `ingest_dataset --if-empty` nahraje 1 091 resources + vektory, `collectstatic`, `seed_mdt` (demo účty, boardy, presety);
+  4. kontrola: `curl https://api.<doména>/api/health/` → 200; zvenku nesmí odpovídat 1972 ani 52773 (portál jen `ssh -L 52773:127.0.0.1:52773 <vps>`).
+- `WEB_Template/docker-compose.yml` už službu `iris` má (od T-005, níže pro přehled):
 
   ```yaml
   iris:
@@ -370,7 +375,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
       - "127.0.0.1:52773:52773"   # Management Portal / FHIR jen přes SSH tunel
     # 1972 nepublikovat; backend se připojuje interně na iris:1972
   ```
-- **Dataset** se do backend kontejneru dostane přes volume. Repo na VPS, `DATASET_DIR=/data/dataset`, mount `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro`.
+- **Dataset a data aplikace** se do backend kontejneru dostanou přes volume z checkoutu repa na VPS: dataset (`/data/dataset:ro`), báze `data/onko` (`/data/onko:ro`, T-318), `data/audio` (zapisovatel) a `data/demo_cache` (offline demo). `demo save` do `data/demo_cache` zapisuje jako `appuser`, na VPS tedy `chmod o+w data/demo_cache`, nebo cache uložit lokálně a commitnout.
 - **Bezpečnost serveru:**
   - **změnit výchozí heslo IRIS `SYS`**;
   - IRIS ani Postgres nepublikovat ven;

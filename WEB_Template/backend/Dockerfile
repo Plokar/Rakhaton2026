@@ -17,8 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+# --prefix, ne --user: balíčky v /root/.local by appuser (non-root níže) nepřečetl
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --user -r requirements.txt
+    pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 
 # ── Stage 2: Production ───────────────────────────────────────────────────────
@@ -26,7 +27,6 @@ FROM python:3.11-slim AS production
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PATH=/root/.local/bin:$PATH
 
 WORKDIR /code
 
@@ -39,16 +39,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Zkopírovat nainstalované packages z builderu
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /install /usr/local
 
 # Zkopírovat zdrojový kód
 COPY . .
 
 RUN chmod +x /code/entrypoint.sh
 
-# Non-root uživatel pro bezpečnost
+# Non-root uživatel pro bezpečnost; staticfiles/media/logs založit předem, ať je pojmenované volumy převezmou
+# s vlastníkem appuser (jinak collectstatic skončí na Permission denied)
 RUN addgroup --system appgroup && \
     adduser --system --ingroup appgroup appuser && \
+    mkdir -p /code/staticfiles /code/media /code/logs && \
     chown -R appuser:appgroup /code
 
 USER appuser

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("mdt", "0007_case_projector_layout"),
+        ("mdt", "0008_mdtcase_projector_layout"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

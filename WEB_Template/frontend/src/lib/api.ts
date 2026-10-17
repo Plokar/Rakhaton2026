@@ -46,7 +46,7 @@ async function loggedInAfterAll(): Promise<boolean> {
 /** Obnoví access cookie z refresh cookie; souběžná volání sdílí jeden požadavek. `false` = přihlášení vypršelo. */
 function refreshSession(): Promise<boolean> {
   refreshing ??= fetch(`${API_BASE}${REFRESH_ENDPOINT}`, { method: 'POST', credentials: 'include' })
-    .then((response) => response.ok || loggedInAfterAll())
+    .then((response) => response.ok || (response.status === 401 && loggedInAfterAll()))
     .catch(() => false)
     .finally(() => {
       refreshing = null;

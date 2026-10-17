@@ -362,6 +362,22 @@ class BriefStats(BaseModel):
     missing_total: int
 
 
+class VerifierIssue(BaseModel):
+    claim_id: str
+    verdict: Literal["unsupported", "uncertain"]
+    issue: str = Field(description="Co nesedí podle druhé AI, česky")
+
+
+class BriefVerifier(BaseModel):
+    """Kontrola druhou AI (T-331, ARCH §5.3 bod 7): jen tvrzení psaná LLM, která prošla groundingem."""
+    status: Literal["ok", "partial", "error", "off"]
+    model: str | None = Field(default=None, description='"gpt-6-astra"')
+    checked: int
+    rejected: int = Field(description="Tvrzení, která druhá AI nepotvrdila → unverified")
+    unchecked: int = Field(description="Tvrzení bez verdiktu (vypnuto, selhání volání)")
+    issues: list[VerifierIssue]
+
+
 class Brief(BaseModel):
     case_id: str
     patient_id: str = Field(description='"P03"')
@@ -373,6 +389,7 @@ class Brief(BaseModel):
     sections: list[BriefSection] = Field(description="V pořadí podle config")
     red_flags: list[RedFlag]
     decision_support: DecisionSupport | None = None
+    verifier: BriefVerifier | None = None
     stats: BriefStats
 
 

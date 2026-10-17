@@ -4,6 +4,8 @@ AI služba MDT Copilot: abstrakce providerů (ARCHITEKTURA §5.7, D-008).
 Providery:
 - ``GeminiProvider``: Google AI Studio (Gemini API, **jen placený tier**) přes SDK ``google-genai``.
 - ``MockAIProvider``: deterministický a bez sítě. Výchozí pro vývoj, testy a CI (``AI_PROVIDER=mock``).
+- ``OpenAICompatProvider``: OpenAI v1 API (Azure APIM gateway hackathonu, hlavička ``api-key``). Jen ``generate``;
+  slouží druhé AI, která kontroluje tvrzení první (``services/ai/verifier.py``, ``VERIFIER_*``).
 
 Rozhraní je u obou providerů stejné:
 
@@ -41,6 +43,8 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "gemini-3.8-flash"
 DEFAULT_EMBEDDING_MODEL = "gemini-embedding-001"
 DEFAULT_EMBEDDING_DIM = 1536
+DEFAULT_VERIFIER_MODEL = "gpt-6-astra"
+DEFAULT_OPENAI_BASE_URL = "https://apim-rakathon-q7146n.azure-api.net/openai/v1"
 DEFAULT_TEMPERATURE = 0.2          # ARCHITEKTURA §5.1: teplota 0–0.2
 DEFAULT_TIMEOUT_S = 90
 RETRY_ATTEMPTS = 3                 # včetně prvního pokusu; SDK opakuje 408, 429 a 5xx
@@ -93,6 +97,11 @@ def embedding_dim() -> int:
 
 def transcribe_model() -> str:
     return _env("TRANSCRIBE_MODEL", ai_model())
+
+
+def verifier_model() -> str:
+    """Druhá AI, která kontroluje tvrzení první (název deploymentu v APIM gateway)."""
+    return _env("VERIFIER_MODEL", DEFAULT_VERIFIER_MODEL)
 
 
 class AIProviderError(RuntimeError):
@@ -490,6 +499,143 @@ class GeminiProvider(BaseAIProvider):
                              started=started, p_hash=p_hash)
 
 
+class OpenAICompatProvider(BaseAIProvider):
+    """OpenAI v1 ``/chat/completions`` přes stdlib (Azure APIM gateway: klíč v hlavičce ``api-key``).
+
+    Umí jen ``generate``; embeddingy a přepis zůstávají na Gemini. Model = název deploymentu (``VERIFIER_MODEL``).
+    Když deployment odmítne ``temperature`` nebo ``json_schema`` (HTTP 400), pošle požadavek znovu bez nich.
+    """
+
+    def __init__(self, api_key: str | None = None, base_url: str | None = None, model: str | None = None,
+                 opener: Any = None):
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+        self.base_url = (base_url or _env("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL)).rstrip("/")
+        self.model_name = model or verifier_model()
+        self._opener = opener          # testy: callable(url, body, headers, timeout) -> dict
+
+    @property
+    def provider_name(self) -> str:
+        return "openai"
+
+    def generate(self, prompt, system_prompt="", model=None, temperature=None, max_tokens=None,
+                 response_schema=None):
+        started = time.monotonic()
+        model_name = model or self.model_name
+        p_hash = prompt_hash(prompt, system_prompt)
+        if not self.api_key:
+            return self._error("OPENAI_API_KEY není nastaven", model=model_name, started=started, p_hash=p_hash)
+        messages = ([{"role": "system", "content": system_prompt}] if system_prompt else []) + [
+            {"role": "user", "content": prompt}]
+        body: dict[str, Any] = {"model": model_name, "messages": messages,
+                                "temperature": DEFAULT_TEMPERATURE if temperature is None else temperature}
+        if max_tokens:
+            body["max_completion_tokens"] = max_tokens
+        if response_schema is not None:
+            body["response_format"] = {"type": "json_schema", "json_schema": {
+                "name": response_schema.__name__, "schema": response_schema.model_json_schema(), "strict": False}}
+        try:
+            resp = self._post_adaptive(body)
+        except AIProviderError as exc:
+            logger.error("OpenAI API error (model %s): %s", model_name, exc)
+            return self._error(str(exc), model=model_name, started=started, p_hash=p_hash)
+
+        choice = (resp.get("choices") or [{}])[0]
+        text = ((choice.get("message") or {}).get("content") or "").strip()
+        if choice.get("finish_reason") == "length":
+            return self._error("Výstup modelu byl uříznut (length)", model=model_name, started=started, p_hash=p_hash)
+        if not text:
+            return self._error(f"Model nevrátil text (důvod: {choice.get('finish_reason')})",
+                               model=model_name, started=started, p_hash=p_hash)
+        data = None
+        if response_schema is not None:
+            try:
+                data = _validate(response_schema, json.loads(_strip_fence(text)))
+            except (json.JSONDecodeError, ValidationError) as exc:
+                return self._error(f"Výstup neodpovídá schématu {response_schema.__name__}: {_short(exc)}",
+                                   model=model_name, started=started, p_hash=p_hash)
+        usage = resp.get("usage") or {}
+        return self._success(text=text, data=data, model=resp.get("model") or model_name,
+                             tokens_in=usage.get("prompt_tokens") or 0, tokens_out=usage.get("completion_tokens") or 0,
+                             tokens_total=usage.get("total_tokens"), started=started, p_hash=p_hash)
+
+    def embed(self, texts, task_type=TASK_RETRIEVAL_DOCUMENT, model=None, dim=None):
+        raise AIProviderError("OpenAICompatProvider embeddingy nepodporuje (vektory počítá Gemini, ARCH §4.5)")
+
+    def transcribe(self, audio, mime_type, prompt=TRANSCRIBE_PROMPT, model=None, response_schema=Transcript):
+        started = time.monotonic()
+        return self._error("OpenAICompatProvider přepis nepodporuje", model=model or self.model_name,
+                           started=started, p_hash=hashlib.sha256(audio).hexdigest())
+
+    def _post_adaptive(self, body: dict[str, Any]) -> dict[str, Any]:
+        """Některé deploymenty (reasoning modely) neberou ``temperature`` nebo ``json_schema`` → bez nich znovu."""
+        for _ in range(3):
+            try:
+                return self._post(body)
+            except _BadRequest as exc:
+                message = str(exc).lower()
+                if "temperature" in message and "temperature" in body:
+                    body = {k: v for k, v in body.items() if k != "temperature"}
+                elif "response_format" in message or "json_schema" in message:
+                    if body.get("response_format", {}).get("type") != "json_schema":
+                        raise AIProviderError(f"OpenAI HTTP 400: {_short(exc)}") from None
+                    schema = body["response_format"]["json_schema"]["schema"]
+                    body = {**body, "response_format": {"type": "json_object"}, "messages": body["messages"] + [{
+                        "role": "system",
+                        "content": "Odpověz jen JSON objektem podle schématu:\n" + json.dumps(schema, ensure_ascii=False)}]}
+                else:
+                    raise AIProviderError(f"OpenAI HTTP 400: {_short(exc)}") from None
+        raise AIProviderError("OpenAI HTTP 400: požadavek se nepodařilo přizpůsobit deploymentu")
+
+    def _post(self, body: dict[str, Any]) -> dict[str, Any]:
+        import urllib.error
+        import urllib.request
+
+        url = f"{self.base_url}/chat/completions"
+        headers = {"Content-Type": "application/json", "api-key": self.api_key}
+        timeout = float(_env("AI_TIMEOUT_S", str(DEFAULT_TIMEOUT_S)))
+        for attempt in range(RETRY_ATTEMPTS):
+            if self._opener is not None:
+                status, payload = self._opener(url, body, headers, timeout)
+            else:
+                req = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method="POST")
+                try:
+                    with urllib.request.urlopen(req, timeout=timeout) as resp:
+                        status, payload = resp.status, json.loads(resp.read() or b"{}")
+                except urllib.error.HTTPError as exc:
+                    raw = exc.read()
+                    try:
+                        payload = json.loads(raw)
+                    except ValueError:
+                        payload = {"error": {"message": raw.decode("utf-8", "replace")[:500]}}
+                    status = exc.code
+                except (urllib.error.URLError, TimeoutError, OSError) as exc:
+                    if attempt == RETRY_ATTEMPTS - 1:
+                        raise AIProviderError(f"OpenAI request failed: {_short(exc)}") from None
+                    time.sleep(2 ** attempt)
+                    continue
+            if status == 200:
+                return payload
+            message = (payload.get("error") or {}).get("message") if isinstance(payload.get("error"), dict) \
+                else payload.get("error") or payload.get("message") or ""
+            if status == 400:
+                raise _BadRequest(message)
+            if status in (408, 429, 500, 502, 503, 504) and attempt < RETRY_ATTEMPTS - 1:
+                time.sleep(2 ** attempt)
+                continue
+            raise AIProviderError(f"OpenAI HTTP {status}: {_short(Exception(message))}")
+        raise AIProviderError("OpenAI: vyčerpány pokusy")
+
+
+class _BadRequest(Exception):
+    pass
+
+
+def _strip_fence(text: str) -> str:
+    """```json … ``` kolem odpovědi (json_object režim to občas přidá)."""
+    match = re.fullmatch(r"\s*```(?:json)?\s*(.*?)\s*```\s*", text, re.DOTALL)
+    return match.group(1) if match else text
+
+
 # ── Mock: generování dat podle schématu a hashované embeddingy ────────────────
 def mock_instance(schema: type[BaseModel]) -> Any:
     """Minimální data, která projdou validací schématu (jen povinná pole)."""
@@ -625,3 +771,34 @@ def provider_for_patient_id(patient_id: str) -> BaseAIProvider:
     except Exception:
         resources = []
     return provider_for_patient(resources)
+
+
+# ── Druhá AI: ověřovatel tvrzení (services/ai/verifier.py) ────────────────────
+VERIFIER_PROVIDERS = ("off", "mock", "openai", "gemini")
+
+
+def get_verifier_provider(resources=None) -> BaseAIProvider | None:
+    """Provider druhé AI podle ``VERIFIER_PROVIDER`` (výchozí ``openai``, když je ``OPENAI_API_KEY``, jinak ``off``).
+
+    ``None`` = kontrola se nespustí: vypnuto, chybí klíč, nebo by šla data skutečného pacienta bez
+    ``AI_REAL_PATIENT_DATA=True`` (D-021; ``gpt-6-astra`` je Global deployment, ne EU Data Zone).
+    """
+    chosen = (os.environ.get("VERIFIER_PROVIDER") or ("openai" if os.environ.get("OPENAI_API_KEY") else "off")).lower()
+    if chosen not in VERIFIER_PROVIDERS:
+        raise ValueError(f"Neznámý VERIFIER_PROVIDER {chosen!r}, podporované: {', '.join(VERIFIER_PROVIDERS)}")
+    if chosen == "off":
+        return None
+    if chosen == "mock":
+        return MockAIProvider()
+    if resources is not None and not (is_synthetic_patient(resources) or real_patient_data_allowed()):
+        logger.warning("Ověřovatel: pacient nemá syntetická data a %s není zapnuté, kontrola se přeskočí (D-021)",
+                       REAL_DATA_ENV)
+        return None
+    if chosen == "openai":
+        if not os.environ.get("OPENAI_API_KEY"):
+            logger.warning("VERIFIER_PROVIDER=openai, ale OPENAI_API_KEY není nastaven: ověřovatel je vypnutý")
+            return None
+        return OpenAICompatProvider()
+    if not os.environ.get("GEMINI_API_KEY"):
+        return None
+    return GeminiProvider()

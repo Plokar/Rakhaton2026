@@ -30,7 +30,8 @@ from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.red_flags_llm import detect_llm_red_flags
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import load_roles, role_section
-from services.ai_service import BaseAIProvider, provider_for_patient
+from services.ai.verifier import cross_check
+from services.ai_service import BaseAIProvider, get_verifier_provider, provider_for_patient
 from services.fhir.values import cc_text, fhir_code, ref_id
 from services.rules import red_flags as rules
 from services.rules.alerts import header_alerts
@@ -57,6 +58,7 @@ DEFAULT_CONFIG = {
     "language": "cs",
     "hide_unverified": False,
 }
+LLM_SECTIONS = {"summary", "anamnesis", "role_views"}       # sekce, jejichž tvrzení píše LLM (kontroluje druhá AI)
 TITLES = {"summary": "Souhrn případu", "timeline": "Časová osa", "anamnesis": "Anamnéza",
           "modalities": "Léčebné metody a odborníci"}
 
@@ -120,8 +122,9 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
                 skipped_fields: Iterable[str] = (), intent_letter: str | None = None,
                 progress: Callable[[int], None] = lambda _: None,
                 log_call: Callable[[str, dict], Any] = lambda purpose, result: None,
-                notices: Iterable[dict] = ()) -> dict:
-    """Čisté jádro: FHIR resources → `Brief` (§8.2). `notices` = „údaj chybí“ o guidelines (`guideline_notices`)."""
+                notices: Iterable[dict] = (), verifier: BaseAIProvider | None = None) -> dict:
+    """Čisté jádro: FHIR resources → `Brief` (§8.2). `notices` = „údaj chybí“ o guidelines (`guideline_notices`).
+    `verifier` = provider druhé AI; bez něj `get_verifier_provider()` podle `VERIFIER_PROVIDER` (T-331)."""
     notices = list(notices)
     config = _merge_config(config)
     provider = provider or provider_for_patient(resources)        # D-021
@@ -159,8 +162,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         if not section.get("enabled", True):
             continue
         if section["id"] == "role_views":
-            sections += [{**rs, "items": [_public(c) for c in verify_claims(rs["items"], context)]}
-                         for rs in role_sections]
+            sections += [{**rs, "items": verify_claims(rs["items"], context)} for rs in role_sections]
             continue
         if section["id"] not in TITLES:
             continue
@@ -173,7 +175,19 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         else:
             items = _timeline_items(data, context)
         sections.append({"id": section["id"], "title": TITLES[section["id"]], "ai_generated": True,
-                         "items": [_public(c) for c in verify_claims(items, context)]})
+                         "items": verify_claims(items, context)})
+    progress(85)
+
+    # Druhá AI (T-331): tvrzení psaná LLM znovu proti citovaným zdrojům; časová osa, metody a hlavička jsou z FHIR
+    llm_claims = [c for s in sections if s["id"] in LLM_SECTIONS for c in s["items"]]
+    if decision_support:
+        llm_claims += [c for option in decision_support["treatment_options"] for c in option["rationale"]]
+    verifier = cross_check(llm_claims, context, verifier if verifier is not None else get_verifier_provider(resources),
+                           log_call)
+    sections = [{**s, "items": [_public(c) for c in s["items"]]} for s in sections]
+    if decision_support:
+        for option in decision_support["treatment_options"]:
+            option["rationale"] = [_public(c) for c in option["rationale"]]
     progress(90)
 
     header = _header(data, context, intent_letter)
@@ -194,6 +208,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         "sections": sections,
         "red_flags": red_flags,
         "decision_support": decision_support,
+        "verifier": verifier,
         "stats": {
             "claims_total": sum(1 for c in claims if c["kind"] == "claim"),
             "claims_unverified": sum(1 for c in claims if c["kind"] == "claim" and c["verification"] == "unverified"),

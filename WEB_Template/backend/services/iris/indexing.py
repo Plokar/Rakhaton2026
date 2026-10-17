@@ -107,7 +107,9 @@ def index_patient(patient_id: str, resources: Iterable[dict] | None = None, prov
 
     Do embedding API jde pseudonymizovaný text, v IRIS zůstává originál.
     """
+    from services.ai_service import provider_for_patient
     resources = list(resources) if resources is not None else patient_resources_from_fhir(patient_id)
+    provider = provider or provider_for_patient(resources)          # D-021: embeddingy skutečných dat jen s placeným tierem
     return vs.replace_evidence(patient_id, evidence_chunks(patient_id, resources), provider,
                                pseudonymizer_for(resources))
 

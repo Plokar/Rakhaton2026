@@ -8,7 +8,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError as SchemaError
@@ -128,7 +128,8 @@ def user_detail(request, uid):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def session_list(request):
-    """GET: boardy s pacienty v pořadí agendy. POST (jen předseda): `{date, title, config_id?}`."""
+    """GET: boardy s pacienty v pořadí agendy; `?from=&to=` (YYYY-MM-DD, včetně) omezí rozsah, `?expand=cases`
+    přidá `cases: MdtCaseSummary[]` pro kalendář (T-518). POST (jen předseda): `{date, title, config_id?}`."""
     if request.method == 'POST':
         _require(request, roles.ADMIN)
         if not request.data.get('title'):
@@ -137,7 +138,72 @@ def session_list(request):
                                       chair=request.user, config_id=request.data.get('config_id'))
         return Response(_session(s), status=201)
     sessions = MdtSession.objects.select_related('chair').prefetch_related('cases')
-    return Response([{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions])
+    for param, lookup in (('from', 'date__date__gte'), ('to', 'date__date__lte')):
+        if request.query_params.get(param):
+            day = parse_date(request.query_params[param])
+            if day is None:
+                raise ValidationError({param: 'Datum YYYY-MM-DD.'})
+            sessions = sessions.filter(**{lookup: day})
+    sessions = list(sessions)
+    out = [{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions]
+    if 'cases' in request.query_params.get('expand', '').split(','):
+        summaries = _case_summaries([c for s in sessions for c in s.cases.all()])
+        for item, s in zip(out, sessions):
+            item['cases'] = [summaries[c.pk] for c in s.cases.all()]
+    return Response(out)
+
+
+def _case_summaries(cases: list[MdtCase]) -> dict[int, dict]:
+    """`MdtCaseSummary` (ARCH §8.6): hlavička z IRIS jedním seznamem pacientů, připravenost (T-303) jednou na pacienta."""
+    if not cases:
+        return {}
+    by_id = {p['id']: p for p in patients.list_patients()}
+    scores: dict[tuple[str, tuple], float | None] = {}
+    out = {}
+    for c in cases:
+        key = (c.patient_fhir_id, tuple(c.skipped_fields))
+        if key not in scores:
+            try:
+                score = readiness.evaluate_readiness(patients.load_patient(c.patient_fhir_id), c.skipped_fields)['score']
+                scores[key] = round(score['present'] / score['total'], 2) if score['total'] else None
+            except FhirError:
+                scores[key] = None                      # pacient v IRIS není: nespočteno
+        p = by_id.get(c.patient_fhir_id) or {}
+        dg = p.get('diagnosis')
+        out[c.pk] = {'id': c.pk, 'order': c.order, 'status': c.status, 'patient_id': c.patient_fhir_id,
+                     'display_name': p.get('display_name') or c.patient_fhir_id,
+                     'diagnosis': {'icd10': dg['icd10'], 'text': dg['text']} if dg else None,
+                     'ecog': c.ecog, 'intent': c.intent, 'readiness': scores[key]}
+    return out
+
+
+def _next_order(session: MdtSession) -> int:
+    last = session.cases.order_by('-order').values_list('order', flat=True).first()
+    return 0 if last is None else last + 1
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def session_order(request, sid):
+    """Pořadí pacientů v agendě boardu (T-324), jen předseda: `{cases: [cid, …]}` = všechny případy boardu."""
+    _require(request, roles.ADMIN)
+    session = get_object_or_404(MdtSession, pk=sid)
+    order = request.data.get('cases')
+    current = set(session.cases.values_list('pk', flat=True))
+    if not isinstance(order, list) or len(order) != len(set(order)) or set(order) != current:
+        raise ValidationError({'cases': 'Pošlete ID všech případů boardu, každé jednou, v novém pořadí.'})
+    with transaction.atomic():
+        for position, cid in enumerate(order):
+            MdtCase.objects.filter(pk=cid, session=session).update(order=position)
+    return _agenda_response(session)
+
+
+def _agenda_response(s: MdtSession) -> Response:
+    """Board + agenda v pořadí `MdtCase.order` (hlavička pacienta z IRIS)."""
+    cases = list(s.cases.select_related('created_by'))
+    by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
+    return Response({**_session(s), 'cases': [_case(c, by_id.get(c.patient_fhir_id)) for c in cases]})
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -165,9 +231,7 @@ def session_detail(request, sid):
                 writeback.set_mdt_date(c.patient_fhir_id, c.service_request_fhir_id, timezone.localtime(s.date))
         s.full_clean(exclude=['chair', 'config'])
         s.save()
-    cases = list(s.cases.select_related('created_by'))
-    by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
-    return Response({**_session(s), 'cases': [_case(c, by_id.get(c.patient_fhir_id)) for c in cases]})
+    return _agenda_response(s)
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -207,6 +271,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
         target = get_object_or_404(MdtSession, pk=data['session'])
         writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
         case.session = target
+        case.order = _next_order(target)               # T-324: na konec agendy nového boardu
     for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status'):
         if field in data:
             setattr(case, field, data[field])
@@ -334,7 +399,7 @@ def case_create(request):
         if created:
             case = MdtCase.objects.create(session=session, patient_fhir_id=pid, service_request_fhir_id=sr_id,
                                           question=question.get('value') or '', created_by=request.user,
-                                          order=session.cases.count())
+                                          order=_next_order(session))
             writeback.set_mdt_date(pid, sr_id, timezone.localtime(session.date))
         else:
             _require_case_edit(request, case)
@@ -396,11 +461,10 @@ def patient_import(request, pid):
     """BON-7: vložený text (`{text}`) nebo multipart `pdf` → návrh hodnot s citací odstavce. Nic se nezapisuje."""
     from services.ai import report_import
     from services.ai.brief import _llm_call_log
-    from services.ai_service import get_ai_provider
+    from services.ai_service import provider_for_patient
 
     _require(request, roles.ADMIN, roles.DOCTOR)
-    _patient_resources(pid)
-    provider = get_ai_provider()
+    provider = provider_for_patient(_patient_resources(pid))      # D-021
     pdf = request.FILES.get('pdf')
     if pdf:
         if pdf.size > AUDIO_MAX_BYTES:

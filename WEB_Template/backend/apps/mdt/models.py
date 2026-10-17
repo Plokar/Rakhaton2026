@@ -91,3 +91,28 @@ class Decision(models.Model):
     confirmed_at = models.DateTimeField(null=True, blank=True)
     fhir_ids = models.JSONField(default=dict, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class PatientDraft(models.Model):
+    """Návrh nového pacienta (T-323): RČ, podklady a nominace před potvrzením do IRIS.
+
+    Po potvrzení jsou data v IRIS; z návrhu se RČ a texty podkladů smažou (zůstane jen ID pacienta a případu).
+    """
+    STATUS = [('draft', 'návrh'), ('confirmed', 'potvrzeno')]
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                                   related_name='patient_drafts')
+    patient_fhir_id = models.CharField(max_length=16)            # přidělené „P07“
+    rc = models.CharField(max_length=11, blank=True)             # „RRMMDD/XXXX“; po potvrzení prázdné
+    synthetic = models.BooleanField(default=False)               # testovací pacient (D-021: smí do free tieru)
+    session = models.ForeignKey(MdtSession, null=True, blank=True, on_delete=models.SET_NULL)
+    content = models.JSONField(default=dict, blank=True)         # documents, fields, edited, values, rejected, ai
+    status = models.CharField(max_length=10, choices=STATUS, default='draft')
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.patient_fhir_id} ({self.get_status_display()})'

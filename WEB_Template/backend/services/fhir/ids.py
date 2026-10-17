@@ -41,6 +41,10 @@ _GLOBAL_RULES = (
 _PATIENT_RULES = (  # část ID za `Pxx-`
     (r'(dg|kom|ae)\d+', 'Condition'),                     # ae = nežádoucí účinek léčby (P05-ae1)
     (r'doc\d+', 'DocumentReference'),
+    (r'imp\d+', 'DocumentReference'),                     # vložená zpráva / podklad nového pacienta (BON-7, T-323)
+    (r'imp\d+-obs\d+', 'Observation'),
+    (r'imp\d+-prov', 'Provenance'),
+    (r'zad\d+-prov', 'Provenance'),                      # založení nového pacienta (T-323)
     (r'img\d+-study', 'ImagingStudy'),
     (r'(img|pat|lab)\d+', 'DiagnosticReport'),
     (r'lab\d+-[a-z0-9-]+', 'Observation'),

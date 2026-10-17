@@ -112,3 +112,37 @@ def test_metastatic_prostate_hspc_vs_crpc():
     crpc = prostate + [document("P03", "Progrese PSA na ADT, onemocnění je kastračně rezistentní.")]
     kb = {p["id"] for p in onko_kb.kb_for_patient(crpc)}
     assert {"pro-mcrpc-taxan", "pro-ra223"} <= kb and not any(p.startswith("pro-mhspc") for p in kb)
+
+
+# ── T-325: guidelines, které chybí nebo na diagnózu nesedí ───────────────────
+def test_nsclc_trial_not_offered_for_sclc():
+    from services.rules.guideline_sets import trial_is_relevant
+    rkt04 = ["Nemalobuněčný karcinom plic, stadium II–IIIB, resekabilní"]
+    assert trial_is_relevant(rkt04, ["PLI", "OBC"])                          # histologie neuvedená: nehádá se
+    assert trial_is_relevant(rkt04, ["PLI", "OBC"], "NSCLC")
+    assert not trial_is_relevant(rkt04, ["PLI", "OBC"], "SCLC")
+    assert trial_is_relevant(["Solidní nádory"], ["PLI", "OBC"], "SCLC")
+
+
+def test_sclc_context_without_rkt04_and_with_notice():
+    from services.ai.brief import guideline_notices
+    from services.tests.dataset import load_studies
+    p04 = with_dg1("P04", morphology="8041/3")                              # P04 jako malobuněčný karcinom
+    assert lung_histology(rules.PatientData(p04)) == "SCLC"
+    ctx = context_from_resources("P04", p04, studies=load_studies())
+    assert "RKT-04" not in {t.study_id for t in ctx.trials}
+    passages = [p for md in load_guideline_markdowns().values() for p in parse_guidelines(md)]
+    notices = guideline_notices(["PLI", "OBC"], passages, p04)
+    assert [n["id"] for n in notices] == ["miss-guidelines-sclc"] and "nemalobuněčný" in notices[0]["text"]
+    assert guideline_notices(["PLI", "OBC"], passages, load_patient("P04")) == []      # NSCLC: guidelines sedí
+
+
+def test_missing_guidelines_are_visible_in_brief():
+    from services.ai.brief import build_brief, guideline_notices
+    from services.ai_service import MockAIProvider
+    p03 = load_patient("P03")
+    notices = guideline_notices(["KRC", "OBC"], [], p03)
+    assert notices[0]["text"].startswith("Guidelines nejsou v IRIS (sady KRC, OBC)")
+    brief = build_brief("P03", p03, provider=MockAIProvider(), notices=notices)
+    summary = next(s for s in brief["sections"] if s["id"] == "summary")
+    assert any(i["id"] == "miss-guidelines" and i["kind"] == "missing" for i in summary["items"])

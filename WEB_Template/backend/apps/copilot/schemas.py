@@ -627,9 +627,23 @@ class MdtSession(BaseModel):
     config_id: int | None = Field(description="Výchozí BriefConfig boardu")
 
 
+class MdtCaseSummary(BaseModel):
+    """Případ v kalendáři zasedání (`GET /api/mdt/sessions/?expand=cases`, T-518)."""
+    id: int
+    order: int
+    status: Literal["nominated", "ready", "in_discussion", "decided", "confirmed", "returned"]
+    patient_id: str
+    display_name: str
+    diagnosis: dict | None = Field(description="{icd10, text} první onkologické diagnózy")
+    ecog: int | None
+    intent: Literal["C", "P"] | None
+    readiness: float | None = Field(description="Podíl přítomných údajů checklistu 0–1 (T-303), null = nespočteno")
+
+
 class MdtSessionListItem(MdtSession):
-    """GET /api/mdt/sessions/"""
+    """GET /api/mdt/sessions/[?from=&to=&expand=cases]"""
     patients: list[str]
+    cases: list[MdtCaseSummary] | None = Field(default=None, description="Jen s `expand=cases`")
 
 
 class MdtSessionDetail(MdtSession):
@@ -685,6 +699,79 @@ class SpecialtyView(BaseModel):
     items: list[KbItem]
     procedures: list[SpecialtyProcedure]
     interests: list[SpecialtyInterest]
+
+
+# ── Nový pacient z RČ (T-323, §8.6) ──────────────────────────────────────────
+class DraftDocument(BaseModel):
+    id: str = Field(description='"P07-imp01"')
+    title: str
+    date: str | None = None
+    text: str | None = Field(default=None, description="Po potvrzení se z návrhu maže")
+    source: str | None = Field(default=None, description='"vložený text" | "soubor zprava.pdf"')
+
+
+class DraftText(BaseModel):
+    text: str
+    citation: EvidenceId | None = Field(description="Odstavec dokumentu; null = napsal lékař (cituje se nominace)")
+
+
+class DraftDiagnosis(DraftText):
+    code: str = Field(description="MKN-10, jen onkologický (C00–C97, D00–D09, D37–D48)")
+
+
+class DraftTnm(DraftText):
+    date: str | None = None
+
+
+class DraftEcog(BaseModel):
+    value: int = Field(ge=0, le=4)
+    citation: EvidenceId | None
+    date: str | None = None
+
+
+class DraftFields(BaseModel):
+    nomination_type: Literal["primarni", "restaging", "progrese"]
+    question: DraftText | None = None
+    histology: DraftText | None = None
+    history: DraftText | None = None
+    comorbidities: DraftText | None = None
+    preferences: DraftText | None = None
+    diagnoses: list[DraftDiagnosis]
+    tnm: DraftTnm | None = None
+    ecog: DraftEcog | None = None
+
+
+class DraftPatient(BaseModel):
+    rc_masked: str = Field(description='"******/1234" (RČ se nevrací, D-018)')
+    sex: Literal["male", "female"]
+    birth_year: int
+    age: int
+
+
+class DraftPreview(BaseModel):
+    detail: Brief = Field(description="Celý podklad, podrobně, bez LLM")
+    narrow: Brief = Field(description="Úzký pás: šablona projektoru pro diagnózu, bez LLM")
+    template: CaseTemplate | None
+    intake: IntakePrefill
+
+
+class PatientDraft(BaseModel):
+    """POST /api/mdt/patient-drafts/, GET/PATCH …/{id}/, POST …/{id}/documents/"""
+    id: int
+    status: Literal["draft", "confirmed"]
+    patient_id: str
+    synthetic: bool
+    session: dict | None = Field(description="{id, title, date} boardu, kam pacient po potvrzení přibude")
+    case_id: int | None
+    documents: list[DraftDocument]
+    fields: DraftFields | None = None
+    edited: list[str] | None = None
+    values: list[dict] | None = Field(default=None, description="Hodnoty z LLM (BON-7), ověřené proti odstavci")
+    rejected: list[dict] | None = None
+    ai: dict | None = Field(default=None, description="{used, reason}: proč LLM (ne)běželo (D-021)")
+    patient: DraftPatient | None = None
+    missing_for_confirm: list[str] | None = None
+    preview: DraftPreview | None = None
 
 
 # ── Pomocné funkce ────────────────────────────────────────────────────────────

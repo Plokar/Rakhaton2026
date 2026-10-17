@@ -41,6 +41,7 @@ gunicorn>=21.0.0
 
 # PDF export závěru MDT (T-210)
 reportlab>=4.0
+pypdf>=4.0               # text z PDF lokálně, bez LLM (nový pacient, T-323)
 
 # InterSystems IRIS (DB-API + native API)
 intersystems-irispython>=5.0

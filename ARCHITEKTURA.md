@@ -797,6 +797,8 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   Sada se pošle celá (≤ 23 pasáží). IRIS Vector Search ji seřadí podle relevance k otázce komise.
 
   **Co je onkologická diagnóza** (T-320): kategorie „onkologická diagnóza“, nebo kód novotvaru (C00–C97, D00–D09, D37–D48) u `Condition` bez kategorie komorbidita / nežádoucí účinek léčby (data z jiného systému). Jediné pravidlo `services/rules/guideline_sets.py:is_oncologic` platí pro výběr guidelines, kontext AI, hlavičku, seznam pacientů, semafor i mCODE export. Diagnóza bez sady (např. C61, C21) dostane jen OBC. Hrany ověřují testovací pacienti P07–P12 v `data/dataset_test` (`run_checks.py`).
+
+  **Guidelines, které chybí nebo nesedí** (T-325, `brief.guideline_notices`): když sada pacienta v IRIS chybí, nebo jde o malobuněčný karcinom plic (SCLC) a dodaná sada PLI je výtah pro nemalobuněčný, dostane souhrn podkladu položku „údaj chybí“ a kontext AI stejný řádek (nic se z guidelines nedomýšlí). Studie jen pro NSCLC (RKT-04) se u SCLC nenabízí (`trial_is_relevant(…, lung_histology)`); neuvedená histologie nic nevyřadí.
 - **Možnosti léčby:**
   1. LLM vrátí **2–4 možnosti**, každou s citací pasáže (`PRS-3.3`) a s vazbou na fakta pacienta (citace);
   2. u každé možnosti uvede, co pro ni chybí (např. „EGFR neznámý, viz PLI-1.3“);
@@ -876,6 +878,7 @@ Model ID se mohou měnit. Před použitím ověřit na [ai.google.dev/gemini-api
 **Podmínky Gemini API, které nás přímo ovlivňují:**
 
 - **V EHP (tedy i v ČR) smí aplikace používat jen placené služby.** Bezplatný tier smí data používat ke zlepšování produktů a k lidské revizi a výslovně se do něj nemají posílat osobní údaje. Proto je nutné **zapnout billing v AI Studio** (Q9). **Výjimka týmu (D-021):** pro vývoj a demo nad syntetickým, veřejným datasetem hackathonu (žádné osobní údaje) smí běžet i free tier. Skutečná data pacientů nikdy, ta jen placený tier / Vertex AI EU.
+- **Pojistka v kódu (T-323):** `ai_service.provider_for_patient(resources)` dává LLM jen pacientovi s tagem `fiktivni-data` (dataset, testovací pacient založený se `synthetic`), jinak jen s `AI_REAL_PATIENT_DATA=True` (placený tier / Vertex AI EU). Bez toho vrátí `MockAIProvider`: z dat skutečného pacienta neodejde nic do LLM ani do embeddingů a aplikace jede deterministicky. Používá ji podklad (`build_brief`), zapisovatel, shrnutí pro pacienta, vložení zprávy (BON-7), vektory (`index_patient`) i nový pacient.
 - V placeném tieru Google prompty k trénování nepoužívá, loguje je ale omezenou dobu kvůli zneužití. Data mohou být dočasně uložena v jakékoli zemi.
 - Podmínky **zakazují použití v klinické praxi a pro lékařské rady** a tam, kde je nutné schválení jako zdravotnický prostředek. Prototyp na fiktivních datech je v pořádku. **Cesta do produkce vede přes Vertex AI v EU regionu** (data residency, DPA) + certifikaci podle MDR. Tohle říct v pitchi.
 
@@ -968,6 +971,16 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 - `data/onko/sablony.tsv` dává doporučený `BriefConfig` pro projektor podle diagnózy a situace (`GET /api/mdt/cases/{cid}/template/`, `CaseTemplate` §8.6). Všech 31 šablon zakládá `seed_mdt` jako presety „Šablona: …“.
 - `data/onko/odbornosti.tsv` řadí podklad „pro mě“ podle odbornosti přihlášeného (`GET /api/mdt/cases/{cid}/for-me/`, `SpecialtyView` §8.6, T-319). Hlavička a souhrn zůstávají první (§7.3).
 
+**Nový pacient z rodného čísla (T-323):** `services/new_patient.py`, `services/rc.py`, endpointy `apps/mdt/drafts.py`.
+
+1. Lékař zadá **RČ** (kontrola formátu, kontrolní číslice a data; odvodí se datum narození, pohlaví a věk) a vloží **text** nebo **soubory** (PDF, TXT, MD). Textové PDF čte `pypdf` lokálně, sken jen Gemini a jen podle D-021. Pacient se stejným RČ v IRIS → 409 s jeho ID (další zprávy přes BON-7).
+2. Vznikne **návrh** (`PatientDraft` v Postgresu, v IRIS zatím nic) s ID `Pnn` a dokumenty `Pnn-impNN`. Pravidla z textu předvyplní nominaci, každý údaj s citací odstavce: otázka pro MDT, histologie, předchozí léčba, komorbidity, preference (podle nadpisů jako v datasetu), diagnózy jen z kódů MKN-10 (onkologické), TNM, ECOG (rozmezí „0–1“ se nepředvyplní). S povoleným LLM přibudou hodnoty jako u BON-7 (ověřené proti odstavci).
+3. **Náhledy bez LLM:** `preview.detail` = celý podklad podrobně, `preview.narrow` = úzký pás podle šablony projektoru pro diagnózu (T-318), `preview.template` (klíčové údaje na projektor) a `preview.intake` (pole a varování kontroly úplnosti).
+4. Lékař návrh **upraví** (`PATCH`: pole nominace, diagnózy, TNM, ECOG, výběr hodnot, odebrání dokumentu, board, `synthetic`) nebo přidá podklady. Upravený údaj nemá citaci dokumentu; jde do textu nominace (`Pnn-zad01#n`), a cituje se ten.
+5. **Potvrzení:** bez otázky pro MDT (OBC-1.1) nebo diagnózy 400. Jinak jedna transakce do IRIS: `Patient` (RČ v `identifier`, systém ÚZIS), `DocumentReference[]`, `ServiceRequest/Pnn-zad01` + `Task`, `Condition[]`, TNM, ECOG, hodnoty, `Provenance/Pnn-zad01-prov`; pak vektory a `MdtCase` na zvoleném boardu (na konec agendy). Z návrhu se smaže RČ i texty. Dál běží běžné zařazení (ECOG, C/P, varování) a generování podkladu.
+
+RČ se nevrací v žádné odpovědi API (jen `******/1234`), context builder identifikátory nečte a pseudonymizace RČ ve volném textu nahradí (`services/rc.py`).
+
 **Zkratky (T-509, FR-R5):** `services/ai/abbreviations.py` a pravidla jako data v `services/ai/data/abbreviations.yaml` (docs/POZADAVKY_LEKARE.md §7.2).
 
 - Výklad je deterministický: sekce („OA:“), pak nejbližší kontextové slovo v odstavci, pak název zprávy a oddělení. Když se výklady přetahují nebo kontext chybí, je výsledek NEJISTOTA AI, nikdy odhad.
@@ -977,7 +990,7 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 
 **Implementace (T-502):** `services/rules/intake.py`, `intake_prefill(resources, skipped_fields=[])` vrátí `IntakePrefill` (§8.6).
 
-- **Pole:** obecná (OBC-1.1: otázka, histologie a grade, TNM, zobrazení ≤ 6 týdnů, ECOG lékař i pacient, komorbidity, léčba, preference, alergie, hmotnost, G8 od 70 let) a podle diagnózy (plíce, prs, kolorektum, docs/POZADAVKY_LEKARE.md §4). Každé pole má citaci a `required_by`.
+- **Pole:** obecná (OBC-1.1: otázka, histologie a grade, TNM, zobrazení ≤ 6 týdnů, ECOG lékař i pacient, komorbidity, léčba, preference, alergie, hmotnost, G8 od 70 let) a podle diagnózy (plíce, prs, kolorektum; prostata C61 a ledvina C64 / D41.0 se zdrojem `EXT-EAU-…`, T-513; docs/POZADAVKY_LEKARE.md §4). Každé pole má citaci a `required_by`.
 - **Varování:** red flags mají stejné `id` jako flag (`RF-TOX:P03-neuro01`), takže odkliknutí jde spárovat s podkladem (D-019). K nim se přidá:
   - CHYBÍ pro pole, které žádný flag nehlásí;
   - MIMO NORMU pro poslední laboratorní hodnotu s příznakem H/L;
@@ -1114,13 +1127,18 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/patients/{pid}/timeline/` | události časové osy s Evidence ID |
 | GET | `/api/patients/{pid}/observations/?code=…[&source=sql]` | časové řady (labs, hmotnost, ECOG, PROMs skóre) pro grafy; `source=sql` čte kódované číselné `Observation` ze SQL pohledu `MDT.ObservationSeries` (T-309) |
 | GET | `/api/evidence/?id={EvidenceId}` | zdroj citace (text + zvýraznění / hodnota / pasáž guidelines / kritérium studie) |
-| GET, POST | `/api/mdt/sessions/` | zasedání |
+| GET, POST | `/api/mdt/sessions/` | zasedání; GET `?from=&to=` (YYYY-MM-DD včetně) omezí rozsah, `?expand=cases` přidá `cases: MdtCaseSummary[]` pro kalendář (§8.6, T-518): hlavička z IRIS jedním seznamem pacientů, připravenost jednou na pacienta |
 | GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
+| PUT | `/api/mdt/sessions/{sid}/order/` | pořadí pacientů v agendě (T-324), jen `mdt_admin`: `{cases: [cid, …]}` = všechny případy boardu v novém pořadí (jinak 400) → agenda; přesun případu na jiný board ho zařadí na konec |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost přihlášeného |
 | POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
 | GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), jen `mdt_admin` (T-319) |
 | PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319) |
+| GET, POST | `/api/mdt/patient-drafts/` | nový pacient (T-323, předseda, lékař): GET = rozpracované návrhy (lékař své, předseda všechny); POST JSON nebo multipart `{rc, text?, files[]?, synthetic?, session?}` → 201 `PatientDraft` (§8.6) s předvyplněnou nominací a náhledy; 400 neplatné RČ / soubor; 409 `{patient_id}` = RČ už v IRIS, 409 `{draft_id}` = rozpracovaný návrh se stejným RČ |
+| GET, PATCH, DELETE | `/api/mdt/patient-drafts/{id}/` | návrh + náhledy (autor a předseda); PATCH `{fields?, values?, remove_documents?, synthetic?, session?}` → nové náhledy; DELETE zahodí návrh |
+| POST | `/api/mdt/patient-drafts/{id}/documents/` | další podklady (`text`, `files[]`), prázdná pole nominace se z nich doplní |
+| POST | `/api/mdt/patient-drafts/{id}/confirm/` | zápis do IRIS jednou transakcí + `Provenance`, vektory, `MdtCase` na boardu návrhu → 201 `{patient_id, case_id, synthetic, fhir_written}`; 400 `{missing}` bez otázky nebo diagnózy |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
 | POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem. Nic se nezapisuje (předseda, lékař) |
 | POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
@@ -1579,6 +1597,35 @@ interface SpecialtyView {                       // GET /api/mdt/cases/{cid}/for-
   interests: { specialty: string; what: string; why: string; sources: EvidenceId[] }[];
 }
 
+interface DraftText { text: string; citation: EvidenceId | null }   // null = napsal lékař → cituje se nominace Pnn-zad01#n
+
+interface PatientDraft {                        // /api/mdt/patient-drafts/ (T-323); RČ se nevrací nikdy
+  id: number;
+  status: "draft" | "confirmed";
+  patient_id: string;                           // přidělené "P07"
+  synthetic: boolean;                           // testovací pacient → tag fiktivni-data (D-021)
+  session: { id: number; title: string; date: string } | null;   // board, kam pacient po potvrzení přibude
+  case_id: number | null;                       // po potvrzení
+  documents: { id: string; title: string; date: string | null; text?: string; source?: string }[];   // "P07-imp01"
+  fields?: {
+    nomination_type: "primarni" | "restaging" | "progrese";
+    question?: DraftText | null; histology?: DraftText | null; history?: DraftText | null;
+    comorbidities?: DraftText | null; preferences?: DraftText | null;
+    diagnoses: (DraftText & { code: string })[];  // jen onkologické MKN-10
+    tnm?: (DraftText & { date?: string | null }) | null;
+    ecog?: { value: number; citation: EvidenceId | null; date?: string | null } | null;
+  };
+  edited?: string[];                            // pole upravená lékařem (nové podklady je nepřepíšou)
+  values?: object[]; rejected?: object[];       // hodnoty z LLM jako u BON-7 (jen podle D-021)
+  ai?: { used: boolean; reason: string | null };
+  patient?: { rc_masked: string; sex: "male" | "female"; birth_year: number; age: number };
+  missing_for_confirm?: string[];               // ["Otázka pro MDT (OBC-1.1)", "Diagnóza s kódem MKN-10"]
+  preview?: { detail: Brief; narrow: Brief; template: CaseTemplate | null; intake: IntakePrefill };   // bez LLM
+}
+// PATCH …/{id}/ přijímá { fields?: { question?, histology?, history?, comorbidities?, preferences?: string | null,
+//   diagnoses?: { code, text? }[], tnm?: string | null, ecog?: 0–4 | null, nomination_type? },
+//   values?: (podmnožina values), remove_documents?: string[], synthetic?, session? }
+
 interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTask[] (FR-P3)
   id: string;                                   // "P03-mdt02-task01" (FHIR Task)
   patient_id: string;
@@ -1590,6 +1637,14 @@ interface MdtTask {                             // GET /api/mdt/tasks/ → MdtTa
   status: "requested" | "in-progress" | "completed";
   authored_on: string | null;
   re_mdt: { date: string | null; reason: string } | null;   // z CarePlan (activity „Plánované re-MDT“, scheduledPeriod.start)
+}
+
+interface MdtCaseSummary {                      // GET /api/mdt/sessions/?expand=cases → sessions[].cases (T-518)
+  id: number; order: number; status: MdtCase["status"];
+  patient_id: string; display_name: string;     // "P03 · muž · 67 let"
+  diagnosis: { icd10: string; text: string } | null;
+  ecog: number | null; intent: "C" | "P" | null;   // ze zařazení (MdtCase)
+  readiness: number | null;                     // podíl přítomných údajů checklistu 0–1 (T-303), null = nespočteno
 }
 
 interface MdtSession {                          // GET /api/mdt/sessions/ → (MdtSession & { patients: string[] })[]
@@ -1618,6 +1673,7 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 | `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1`; bez proměnné ho `ingest.dataset_dir()` najde v checkoutu repa (CI, testy) |
 | `AI_PROVIDER` | backend | `gemini` (prod) / `mock` (testy, CI) |
 | `GEMINI_API_KEY` | backend | Google AI Studio (free tier jen nad syntetickým datasetem, D-021; jinak placený tier); nikdy do gitu ani do frontendu |
+| `AI_REAL_PATIENT_DATA` | backend | `False` (výchozí): data pacientů bez tagu `fiktivni-data` do LLM ani embeddingů nejdou (D-021, `provider_for_patient`). `True` jen s placeným tierem / Vertex AI EU |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_MODEL_STRONG` | backend | `gemini-4-argon` (volitelně, pro porovnání a těžké sekce) |
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |

@@ -76,6 +76,24 @@ class MdtCase(models.Model):
         return f'{self.patient_fhir_id} @ {self.session}'
 
 
+class SessionMessage(models.Model):
+    """Zpráva v chatu lékařů u zasedání (T-334). Neupravuje se ani nemaže: je to diskuse ke klinickému rozhodnutí."""
+    MAX_LENGTH = 2000
+    session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='messages')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                               related_name='mdt_messages')
+    # štítek pacienta, který byl při psaní na řadě (null = zpráva k celému zasedání)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='messages')
+    text = models.TextField(max_length=MAX_LENGTH)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.author} @ {self.session}: {self.text[:40]}'
+
+
 class UserProfile(models.Model):
     """Odbornost uživatele (hodnoty `RoleId`, ARCH §8.1). Role = Django `Group` (D-014)."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')

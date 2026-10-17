@@ -290,7 +290,8 @@ def case_detail(request, cid):
     přeskočené údaje, `acknowledge: [warning_id]` (odkliknutí se jen přidává, D-019), `status` (jen předseda)."""
     case = get_object_or_404(MdtCase.objects.select_related('session', 'created_by'), pk=cid)
     _require_case_edit(request, case)
-    _validate_case_input(request, request.data)
+    _validate_case_input(request, request.data, case)
+    _validate_collaborators(request, request.data, case)
     if request.data.get('session', case.session_id) != case.session_id and \
             MdtSession.objects.filter(pk=request.data['session'], status='closed').exists():
         return Response(CLOSED_BOARD, status=409)

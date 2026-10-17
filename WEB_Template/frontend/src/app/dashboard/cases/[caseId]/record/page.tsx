@@ -12,7 +12,7 @@ import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
 import { fixtureDataSource, apiDataSource } from '@/components/mdt/data-source';
 import { PatientSummaryPanel, ScribePanel } from '@/components/mdt/DecisionAi';
-import { DecisionEditor } from '@/components/mdt/DecisionEditor';
+import { DecisionEditor, guidelineDeviation } from '@/components/mdt/DecisionEditor';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';

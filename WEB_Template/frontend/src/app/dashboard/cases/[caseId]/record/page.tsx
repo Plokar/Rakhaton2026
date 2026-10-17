@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, CircleCheck, FileDown, FileJson, Save, ShieldCheck } from 'lucide-react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { DEMO_CASE } from '@/components/mdt/CaseBriefScreen';
 import { CitationProvider, collectCitations } from '@/components/mdt/citations';
 import { ConfirmDialog } from '@/components/mdt/ConfirmDialog';
@@ -63,9 +63,9 @@ function initialDraft(caseId: string, brief: Brief | null, me: Me | null): Decis
 export default function DecisionPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = React.use(params);
   return (
-    <DashboardLayout>
+    <Page>
       <DecisionContent caseId={caseId} />
-    </DashboardLayout>
+    </Page>
   );
 }
 

@@ -1,61 +1,70 @@
+import { CircleAlert, CircleCheck, CircleHelp, CircleMinus, CircleX, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Light } from '@/types/mdt';
 
 /**
  * Semafor souladu postupu se stavem pacienta (FR-D4, D-015, §5.9). Barva není doporučení
- * a nikdy nenese informaci sama: vždy je u ní značka a text (POZADAVKY §3.4).
+ * a nikdy nenese informaci sama: vždy je u ní tvar ikony a text (POZADAVKY §3.4). Ikony jsou
+ * ze stejné kruhové rodiny jako normalita hodnot (`FactIcon`), aby se lékař učil jeden jazyk.
  */
-export const LIGHT_META: Record<Light, { label: string; mark: string; className: string; dotClass: string }> = {
+export const LIGHT_META: Record<Light, { label: string; icon: LucideIcon; tone: string; pill: string }> = {
   green: {
     label: 'nevylučuje',
-    mark: '✓',
-    className: 'border-emerald-600/50 bg-emerald-50 text-emerald-900 dark:border-emerald-500/50 dark:bg-emerald-950/70 dark:text-emerald-200',
-    dotClass: 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950',
+    icon: CircleCheck,
+    tone: 'text-emerald-700 dark:text-emerald-400',
+    pill: 'bg-emerald-50 text-emerald-900 ring-emerald-700/20 dark:bg-emerald-400/10 dark:text-emerald-200 dark:ring-emerald-400/25',
   },
   orange: {
     label: 'pozor',
-    mark: '!',
-    className: 'border-amber-600/60 bg-amber-50 text-amber-950 dark:border-amber-500/50 dark:bg-amber-950/70 dark:text-amber-200',
-    dotClass: 'bg-amber-600 text-white dark:bg-amber-500 dark:text-amber-950',
+    icon: CircleAlert,
+    tone: 'text-amber-700 dark:text-amber-400',
+    pill: 'bg-amber-50 text-amber-950 ring-amber-700/25 dark:bg-amber-400/10 dark:text-amber-200 dark:ring-amber-400/25',
   },
   red: {
     label: 'vylučuje',
-    mark: '✕',
-    className: 'border-red-600/60 bg-red-50 text-red-950 dark:border-red-500/50 dark:bg-red-950/70 dark:text-red-200',
-    dotClass: 'bg-red-600 text-white dark:bg-red-500 dark:text-red-950',
+    icon: CircleX,
+    tone: 'text-red-700 dark:text-red-400',
+    pill: 'bg-red-50 text-red-950 ring-red-700/20 dark:bg-red-400/10 dark:text-red-200 dark:ring-red-400/25',
   },
   grey: {
     label: 'nelze posoudit',
-    mark: '?',
-    className: 'border-slate-400/70 bg-slate-100 text-slate-800 dark:border-slate-600 dark:bg-slate-800/80 dark:text-slate-200',
-    dotClass: 'bg-slate-600 text-white dark:bg-slate-500 dark:text-slate-950',
+    icon: CircleHelp,
+    tone: 'text-slate-600 dark:text-slate-400',
+    pill: 'bg-slate-100 text-slate-800 ring-slate-500/20 dark:bg-slate-400/10 dark:text-slate-300 dark:ring-slate-400/20',
   },
   skipped: {
     label: 'neposuzováno',
-    mark: '–',
-    className: 'border-dashed border-slate-400 bg-transparent text-muted-foreground',
-    dotClass: 'bg-slate-300 text-slate-800 dark:bg-slate-700 dark:text-slate-200',
+    icon: CircleMinus,
+    tone: 'text-muted-foreground',
+    pill: 'bg-transparent text-muted-foreground ring-border',
   },
 };
 
 export function CompatibilityLight({ light, className }: { light: Light; className?: string }) {
   const meta = LIGHT_META[light];
+  const Icon = meta.icon;
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-semibold tracking-tight',
-        meta.className,
+        'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset',
+        meta.pill,
         className,
       )}
     >
-      <span
-        aria-hidden
-        className={cn('inline-flex h-4 w-4 items-center justify-center rounded-xs text-[10px] font-extrabold leading-none', meta.dotClass)}
-      >
-        {meta.mark}
-      </span>
+      <Icon className={cn('size-3.5', meta.tone)} strokeWidth={2.25} aria-hidden />
       {meta.label}
     </span>
   );
 }
 
+/** Jen ikona semaforu s textem pro čtečky (kompaktní řádky „nelze posoudit“). */
+export function LightIcon({ light, className }: { light: Light; className?: string }) {
+  const meta = LIGHT_META[light];
+  const Icon = meta.icon;
+  return (
+    <>
+      <Icon className={cn('size-4 shrink-0', meta.tone, className)} strokeWidth={2.25} aria-hidden />
+      <span className="sr-only">{meta.label}</span>
+    </>
+  );
+}

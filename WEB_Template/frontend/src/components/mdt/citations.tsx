@@ -66,6 +66,10 @@ export function useCitationOpen(): ((id: EvidenceId) => void) | undefined {
   return React.useContext(CitationContext)?.open;
 }
 
+/**
+ * Citace: číslo faktu pacienta, nebo ID pasáže („KRC-2.4“). Běžné písmo, ne monospace (NAVRH_UI §3.1);
+ * ID je `translate="no"`, aby ho překladač prohlížeče nezměnil.
+ */
 export function CitationChip({ id }: { id: EvidenceId }) {
   const ctx = React.useContext(CitationContext);
   const number = ctx?.numbers.get(id);
@@ -74,16 +78,17 @@ export function CitationChip({ id }: { id: EvidenceId }) {
     <button
       type="button"
       onClick={() => ctx?.open(id)}
-      title={`Otevřít zdroj: ${id}`}
+      title={`Otevřít zdroj ${id}`}
       aria-label={`Otevřít zdroj ${id}`}
+      translate="no"
       className={cn(
-        'inline-flex h-5 min-w-5 items-center justify-center rounded-sm border px-1.5 align-baseline font-mono text-[11px] font-bold leading-none tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'inline-flex h-4.5 min-w-4.5 items-center justify-center rounded px-1 align-[0.08em] text-xs font-medium leading-none tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         active
-          ? 'border-primary bg-primary text-primary-foreground shadow-2xs'
-          : 'border-border bg-muted/90 text-foreground hover:border-primary hover:bg-primary/10 hover:text-primary',
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary',
       )}
     >
-      {number !== undefined ? `[${number}]` : id}
+      {number !== undefined ? number : id}
     </button>
   );
 }
@@ -91,11 +96,10 @@ export function CitationChip({ id }: { id: EvidenceId }) {
 export function Citations({ ids, className }: { ids: EvidenceId[]; className?: string }) {
   if (!ids.length) return null;
   return (
-    <span className={cn('ml-1.5 inline-flex flex-wrap gap-1 align-baseline', className)}>
+    <span className={cn('ml-1 inline-flex flex-wrap gap-0.5 align-baseline', className)}>
       {ids.map((id) => (
         <CitationChip key={id} id={id} />
       ))}
     </span>
   );
 }
-

@@ -18,7 +18,7 @@ import {
 import { useSessionsWithCases } from '@/lib/queries';
 import type { MdtSessionListItem } from '@/types/mdt';
 
-const ALL_SESSIONS = (_s: MdtSessionListItem) => true;
+const ALL_SESSIONS = () => true;
 
 /** Ctrl K: pacienti (rovnou na případ), zasedání, navigace a akce (NAVRH_UI §5.2). */
 export function CommandMenu({

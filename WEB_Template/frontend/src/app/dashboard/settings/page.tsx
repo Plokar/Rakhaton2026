@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,7 +111,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <Page>
       <div className="space-y-6 max-w-4xl">
         {/* Header */}
         <div>
@@ -265,6 +265,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </Page>
   );
 }

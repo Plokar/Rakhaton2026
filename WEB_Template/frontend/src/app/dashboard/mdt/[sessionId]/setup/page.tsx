@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, RefreshCw, Save } from 'lucide-react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { CitationProvider } from '@/components/mdt/citations';
 import { apiDataSource } from '@/components/mdt/data-source';
 import { formatDate } from '@/components/mdt/format';
@@ -29,9 +29,9 @@ const fetchSetup = async (key: string) => {
 export default function SetupPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = React.use(params);
   return (
-    <DashboardLayout>
+    <Page>
       <SetupContent sessionId={sessionId} />
-    </DashboardLayout>
+    </Page>
   );
 }
 

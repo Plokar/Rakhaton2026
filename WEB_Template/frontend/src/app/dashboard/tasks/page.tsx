@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import Link from 'next/link';
 import { ListChecks } from 'lucide-react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { formatDate } from '@/components/mdt/format';
 import { can, useMe } from '@/components/mdt/me';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -28,9 +28,9 @@ const isOverdue = (t: MdtTask, today: string) => t.status !== 'completed' && !!t
 /** Úkoly po zasedání (FR-P3): úkoly z potvrzených závěrů (FHIR Task v IRIS), stav, termíny a re-MDT. */
 export default function MdtTasksPage() {
   return (
-    <DashboardLayout>
+    <Page>
       <TasksContent />
-    </DashboardLayout>
+    </Page>
   );
 }
 

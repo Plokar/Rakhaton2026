@@ -6,7 +6,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { Page } from '@/components/layout/Page';
 import { CitationProvider } from '@/components/mdt/citations';
 import { apiDataSource } from '@/components/mdt/data-source';
 import { IntakeForm, type IntakeResult } from '@/components/mdt/IntakeForm';
@@ -25,9 +25,9 @@ const fetchIntake = (pid: string): Promise<IntakePrefill | null> => (pid ? mdtAp
 export default function AddCasePage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = React.use(params);
   return (
-    <DashboardLayout>
+    <Page>
       <AddCaseContent sessionId={sessionId} />
-    </DashboardLayout>
+    </Page>
   );
 }
 

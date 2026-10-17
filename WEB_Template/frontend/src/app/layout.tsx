@@ -5,15 +5,16 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { CookieProvider } from '@/contexts/CookieContext';
 import { CookieConsentBanner, CookieSettingsModal } from '@/components/cookies';
+import { Providers } from './providers';
 
 const inter = Inter({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   variable: '--font-inter',
   display: 'swap',
 });
 
-const appName = process.env.NEXT_PUBLIC_APP_NAME || 'MDT Copilot';
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+// Značka MedTeam (NAVRH_UI Q5); env NEXT_PUBLIC_APP_NAME je ze šablony („Hackathon Template“), proto se nepoužívá.
+const appName = 'MedTeam';
 
 export const metadata: Metadata = {
   title: {
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     template: `%s | ${appName}`,
   },
   description:
-    'Podklady pro multidisciplinární onkologickou komisi (MDT) s citacemi zdrojů. AI připravuje, rozhoduje lékař.',
+    'MedTeam (MDT Copilot): podklady pro multidisciplinární onkologickou komisi s citacemi zdrojů. AI připravuje, rozhoduje lékař.',
 };
 
 export default function RootLayout({
@@ -32,12 +33,14 @@ export default function RootLayout({
   return (
     <html lang="cs" className={inter.variable} suppressHydrationWarning>
       <body
-        className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary"
+        className="min-h-dvh bg-background text-foreground antialiased"
         suppressHydrationWarning
       >
         <ThemeProvider>
           <CookieProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <Providers>{children}</Providers>
+            </AuthProvider>
             <CookieConsentBanner />
             <CookieSettingsModal />
           </CookieProvider>

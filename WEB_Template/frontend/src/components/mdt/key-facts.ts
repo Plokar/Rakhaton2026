@@ -228,6 +228,11 @@ export function buildKeyFacts(intake: IntakePrefill | null | undefined, series: 
   const ecogWarnings: IntakeWarning[] = [];
   const alerts: KeyFact[] = [];
   const attach = (row: KeyFact, warning: IntakeWarning) => {
+    // Chybějící údaj zůstává „chybí“ (ne „mimo normu“); varování jen doplní citace (pravidlo, zdroj).
+    if (warning.kind === 'missing' && (row.status === 'missing' || row.status === 'pending' || row.status === 'skipped')) {
+      row.citations = [...new Set([...row.citations, ...warning.citations])];
+      return;
+    }
     if (warning.severity === 'high') row.status = 'critical';
     else if (row.status !== 'critical') row.status = 'abnormal';
     // Obecné „mimo rozmezí“ (H/L) jen opakuje hodnotu, kterou řádek už ukazuje; přidáme jen rozmezí.

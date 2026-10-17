@@ -101,7 +101,7 @@ def sanitize(resource: dict, tags: Iterable[dict] = (FICTIONAL_TAG,)) -> dict:
     - ``Observation.derivedFrom`` na typ, který R4 nepovoluje (DiagnosticReport), → extension ``derived-from`` (Q15);
     - ``meta.tag`` z bundlu do každého resource (filtr ``_tag=fiktivni-data``).
     """
-    out = _prune(copy.deepcopy(resource))
+    out = prune(copy.deepcopy(resource))
     out['id'] = sanitize_id(out['id'])
     _move_disallowed_derived_from(out)
     meta_tags = out.setdefault('meta', {}).setdefault('tag', [])
@@ -135,18 +135,19 @@ def _is_empty(value) -> bool:
     return value is None or value == '' or value == [] or value == {}
 
 
-def _prune(node):
+def prune(node):
+    """Bez prázdných hodnot (`''`, `[]`, `{}`, `None`), které FHIR server odmítne; reference sanitizované."""
     if isinstance(node, dict):
         out = {}
         for key, value in node.items():
             if key == 'reference' and isinstance(value, str):
                 value = sanitize_reference(value)
-            value = _prune(value)
+            value = prune(value)
             if not _is_empty(value):
                 out[key] = value
         return out
     if isinstance(node, list):
-        return [v for v in map(_prune, node) if not _is_empty(v)]
+        return [v for v in map(prune, node) if not _is_empty(v)]
     return node
 
 

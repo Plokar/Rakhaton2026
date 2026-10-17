@@ -56,5 +56,4 @@ jobs:
           cache-dependency-path: WEB_Template/frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
-        continue-on-error: true  # 12 chyb react-hooks v template stránkách (Q13, UI lane); po opravě smazat
       - run: npm run build

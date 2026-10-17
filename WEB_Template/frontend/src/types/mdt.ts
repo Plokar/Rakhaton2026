@@ -647,6 +647,22 @@ export interface MdtSession {
   config_id: number | null;
 }
 
+/**
+ * Zpráva v chatu lékařů u zasedání (T-334): GET/POST /api/mdt/sessions/{sid}/messages/, nové zprávy
+ * živě přes Server-Sent Events /api/mdt/sessions/{sid}/stream/. Zpráva se neupravuje ani nemaže.
+ */
+export interface SessionMessage {
+  id: number;
+  session: number;
+  author: { user_id: number; name: string } | null;
+  specialty: RoleId | null;
+  /** Štítek pacienta, který byl při psaní na řadě; `null` = zpráva k celému zasedání. */
+  case: { id: number; patient_id: string } | null;
+  text: string;
+  /** Místní čas "2026-10-21T14:03:12+02:00". */
+  created_at: string;
+}
+
 /** GET /api/mdt/sessions/ */
 export type MdtSessionListItem = MdtSession & { patients: string[] };
 

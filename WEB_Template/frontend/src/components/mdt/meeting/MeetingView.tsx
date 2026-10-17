@@ -11,6 +11,7 @@ import {
   CircleCheck,
   FileText,
   LayoutList,
+  MessagesSquare,
   MonitorUp,
   MoreHorizontal,
   NotebookPen,
@@ -35,6 +36,7 @@ import {
 } from '@/components/shadcn/dropdown-menu';
 import { Kbd } from '@/components/shadcn/kbd';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/shadcn/resizable';
+import { Sheet, SheetContent, SheetTitle } from '@/components/shadcn/sheet';
 import { useSidebar } from '@/components/shadcn/sidebar';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -54,8 +56,10 @@ import { isDiscussed, shortPatient, spokenPatient } from '../patient';
 import { openProjectorWindow, publishSelection } from '../projector';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
+import { SessionChat } from './SessionChat';
 import { formatDuration, useCaseTimer } from './use-case-timer';
 import { DiscussionRecorder } from './DiscussionRecorder';
+import { useSessionChat } from './use-session-chat';
 
 type Case = MdtCase & { id: number };
 
@@ -87,6 +91,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const [adding, setAdding] = React.useState(false);
   const [collaborating, setCollaborating] = React.useState(false);
   const [editingProjector, setEditingProjector] = React.useState(false);
+  const chat = useSessionChat(sessionId, me);
   useFocusLayout();
 
   React.useEffect(() => {
@@ -121,6 +126,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   useHotkeys('z', () => current && router.push(`/dashboard/cases/${current.id}/record`), hk, [current]);
   useHotkeys('p', projector, hk, [current]);
   useHotkeys('h', toggleDiscussed, hk, [current, chair]);
+  useHotkeys('c', () => chat.setOpen(!chat.open), hk, [chat.open, chat.setOpen]);
 
   if (session.isLoading) return <MeetingSkeleton />;
   if (session.isError || !session.data) {
@@ -136,6 +142,14 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
 
   const board = session.data;
   const discussed = cases.filter(isDiscussed).length;
+  // Chat vedle přehledu jen ve třísloupcovém jednání; jinak (úzký displej, prázdná agenda) jako boční panel.
+  const inlineChat = cases.length > 0 && wide;
+  const chatProps = {
+    chat,
+    current,
+    closed: board.status === 'closed',
+    onSelectCase: (caseId: number) => void setParam(caseId),
+  };
 
   const main = current ? (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 lg:px-8">
@@ -206,16 +220,27 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         total={total}
         onProjector={projector}
         onAdd={() => setAdding(true)}
+        chatOpen={chat.open}
+        unread={chat.unread}
+        onChat={() => chat.setOpen(!chat.open)}
       />
-      {cases.length > 0 && wide ? (
+      {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
-          <ResizablePanel defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+          <ResizablePanel id="agenda" defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
             <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} recorder={<DiscussionRecorder cases={cases} current={current} />} />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Šířka agendy" />
-          <ResizablePanel className="min-h-0">
+          <ResizablePanel id="prehled" className="min-h-0">
             <div className="relative h-full overflow-y-auto">{main}</div>
           </ResizablePanel>
+          {chat.open && (
+            <>
+              <ResizableHandle withHandle aria-label="Šířka chatu" />
+              <ResizablePanel id="chat" defaultSize={340} minSize={280} maxSize={480} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+              </ResizablePanel>
+            </>
+          )}
         </ResizablePanelGroup>
       ) : (
         <div className="relative min-h-0 flex-1 overflow-y-auto">
@@ -223,6 +248,13 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           {cases.length > 0 && <DiscussionRecorder cases={cases} current={current} className="border-b bg-card" />}
           {main}
         </div>
+      )}
+      {!inlineChat && (
+        <Sheet open={chat.open} onOpenChange={chat.setOpen}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+            <SessionChat {...chatProps} Title={SheetTitle} />
+          </SheetContent>
+        </Sheet>
       )}
       <AddPatientSheet session={adding ? board : null} onClose={() => setAdding(false)} />
     </div>
@@ -254,6 +286,9 @@ function MeetingHeader({
   total,
   onProjector,
   onAdd,
+  chatOpen,
+  unread,
+  onChat,
 }: {
   board: MdtSessionDetail;
   discussed: number;
@@ -261,6 +296,9 @@ function MeetingHeader({
   total: number;
   onProjector: () => void;
   onAdd: () => void;
+  chatOpen: boolean;
+  unread: number;
+  onChat: () => void;
 }) {
   const router = useRouter();
   const me = useMe();
@@ -288,6 +326,17 @@ function MeetingHeader({
         </p>
       )}
       <div className="ml-auto flex items-center gap-2">
+        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} title="Chat lékařů zasedání (C)">
+          <MessagesSquare aria-hidden /> Chat
+          {unread > 0 && (
+            <>
+              <span aria-hidden className="min-w-5 rounded-full bg-primary px-1.5 text-xs leading-5 tabular-nums text-primary-foreground">
+                {unread > 99 ? '99+' : unread}
+              </span>
+              <span className="sr-only">{unread} nepřečtených</span>
+            </>
+          )}
+        </Button>
         <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
           <MonitorUp aria-hidden /> Projektor
         </Button>

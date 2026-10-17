@@ -87,7 +87,7 @@ function ImportForm({ patientId, onDone }: { patientId: string; onDone: () => vo
           </p>
         </div>
         {proposal.values.length === 0 ? (
-          <p className="text-sm text-muted-foreground">AI ve zprávě nenašla žádnou ověřitelnou hodnotu.</p>
+          <p className="text-sm text-muted-foreground">AI ve zprávě nenašla žádnou ověřitelnou hodnotu. Zprávu jde zapsat i tak: text bude v podkladu citovatelný po odstavcích.</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {proposal.values.map((v, i) => (
@@ -129,8 +129,8 @@ function ImportForm({ patientId, onDone }: { patientId: string; onDone: () => vo
         )}
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <div className="flex flex-wrap gap-2">
-          <Button onClick={confirm} disabled={selected.size === 0} isLoading={busy === 'confirm'}>
-            Zapsat {selected.size} do IRIS
+          <Button onClick={confirm} isLoading={busy === 'confirm'}>
+            {selected.size ? `Zapsat zprávu a ${selected.size} hodnot do IRIS` : 'Zapsat zprávu do IRIS'}
           </Button>
           <Button variant="outline" onClick={() => setProposal(null)} disabled={busy !== null}>
             Zpět ke zprávě

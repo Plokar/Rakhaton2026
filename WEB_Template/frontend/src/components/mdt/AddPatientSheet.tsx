@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, FilePlus2, Search, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shadcn/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/shadcn/sheet';
@@ -13,8 +13,10 @@ import { cn } from '@/lib/utils';
 import type { MdtSession, MdtSessionListItem, PatientListItem } from '@/types/mdt';
 import { CitationProvider } from './citations';
 import { dayLabel, timeLabel } from './dates';
+import { ImportReportSheet } from './ImportReportSheet';
 import { IntakeForm, type IntakeResult } from './IntakeForm';
 import { useMe } from './me';
+import { NewPatientForm } from './NewPatientForm';
 import { SourceDrawer } from './SourceDrawer';
 
 const OPEN_SESSIONS = (s: MdtSessionListItem) => s.status !== 'closed';
@@ -53,6 +55,8 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
   const me = useMe();
   const [patientId, setPatientId] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState('');
+  const [creating, setCreating] = React.useState(false);
+  const [importing, setImporting] = React.useState(false);
   const [sourceId, setSourceId] = React.useState<string | null>(null);
   const patients = usePatientsQuery();
   const board = useSessionQuery(session.id);
@@ -100,8 +104,20 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
 
   return (
     <>
-      {!selected ? (
+      {creating ? (
+        <NewPatientForm
+          sessionId={session.id}
+          onCreated={(pid) => {
+            setCreating(false);
+            setPatientId(pid);
+          }}
+          onCancel={() => setCreating(false)}
+        />
+      ) : !selected ? (
           <div className="flex flex-col gap-3">
+            <Button variant="outline" className="self-start" onClick={() => setCreating(true)}>
+              <UserPlus aria-hidden /> Nový pacient
+            </Button>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -138,13 +154,17 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
               <Button variant="ghost" size="icon-sm" onClick={() => setPatientId(null)} aria-label="Zpět na výběr pacienta">
                 <ArrowLeft aria-hidden />
               </Button>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p translate="no" className="text-sm font-semibold">{selected.display_name}</p>
                 <p className="text-[13px] text-muted-foreground">
                   {selected.diagnosis ? `${selected.diagnosis.icd10} ${selected.diagnosis.text}` : 'Bez onkologické diagnózy'}
                 </p>
               </div>
+              <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
+                <FilePlus2 aria-hidden /> Vložit zprávu
+              </Button>
             </div>
+            <ImportReportSheet patientId={selected.id} open={importing} onClose={() => setImporting(false)} />
             <CitationProvider order={[]} activeId={sourceId} onOpen={setSourceId}>
               {intake.isLoading ? (
                 <div className="flex flex-col gap-2" aria-busy="true">

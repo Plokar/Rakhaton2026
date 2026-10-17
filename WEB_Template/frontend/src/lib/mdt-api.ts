@@ -72,6 +72,19 @@ export interface ImportProposal {
   rejected: ImportValue[];
 }
 
+/** POST /api/mdt/patients/ (T-323): bez jména a RČ, otázka pro MDT povinná (OBC-1.1). */
+export interface NewPatient {
+  sex: 'female' | 'male' | 'other';
+  birth_year: number;
+  /** MKN-10 onkologické diagnózy, např. "C34.1". */
+  icd10: string;
+  diagnosis: string;
+  stage?: string;
+  question: string;
+  /** Board, na který pacient míří (termín nominace). */
+  session?: number;
+}
+
 const fileBody = (name: string, file: Blob) => {
   const data = new FormData();
   data.append(name, file);
@@ -182,6 +195,13 @@ export const mdtApi = {
 
   /** Pacienti z IRIS (hlavička bez jména a RČ). */
   getPatients: () => apiFetch<PatientListItem[]>('/api/patients/'),
+
+  /** Nový pacient do IRIS (pseudonym Pxx, onkologická diagnóza, nominace s otázkou); předseda, lékař. */
+  createPatient: (input: NewPatient) =>
+    apiFetch<{ patient_id: string; fhir_written: string[]; patient: PatientListItem }>('/api/mdt/patients/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   /** Detail pacienta: diagnózy, komorbidity, TNM v čase, ECOG lékař i pacient. */
   getPatient: (patientId: string) => apiFetch<PatientDetail>(`/api/patients/${encodeURIComponent(patientId)}/`),

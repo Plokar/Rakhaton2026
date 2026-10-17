@@ -13,7 +13,7 @@ allowed-tools: Bash(npx shadcn@latest *), Bash(pnpm dlx shadcn@latest *), Bash(b
 > - **Tři barevné systémy jsou záměr (D-017):** semafor (`components/mdt/CompatibilityLight.tsx`), odbornosti (`components/mdt/roles.ts`) a AI (`components/mdt/AiBlock.tsx`) mají vlastní barvy včetně `dark:`. Pravidla „jen sémantické tokeny“ a „žádné ruční `dark:`“ na ně neuplatňuj a nepřebarvuj je na varianty `Badge` ani na `primary`. Barvu semaforu počítá jen kód (D-015).
 > - Obsahová pravidla z `AGENTS.md` platí i pro komponenty: AI text je vizuálně odlišený, každé tvrzení má citaci, nikdy „doporučujeme“, hlavička bez jména a RČ (D-018), použitelné od 360 px (FR-U2).
 >
-> Převzato z [shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn) (commit `d2fba50`, MIT, viz `../LICENSE-shadcn-ui`). Text skillu níže je beze změny, jen načtení kontextu má navíc `--cwd WEB_Template/frontend`.
+> Převzato z [shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn) (commit `d2fba50`, MIT, viz `../LICENSE-shadcn-ui`). Text skillu níže je beze změny, jen načtení kontextu má navíc `--cwd` na `WEB_Template/frontend` odvozené od složky skillu (funguje z kořene repa i z podsložek).
 
 # shadcn/ui
 
@@ -24,7 +24,7 @@ A framework for building ui, components and design systems. Components are added
 ## Current Project Context
 
 ```json
-!`npx shadcn@latest info --json --cwd WEB_Template/frontend`
+!`npx shadcn@latest info --json --cwd "${CLAUDE_SKILL_DIR}/../../../WEB_Template/frontend"`
 ```
 
 The JSON above contains the project config and installed components. Use `npx shadcn@latest docs <component>` to get documentation and example URLs for any component.

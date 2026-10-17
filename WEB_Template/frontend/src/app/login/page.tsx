@@ -4,15 +4,16 @@ import LoginForm from './LoginForm';
 
 export const metadata: Metadata = {
   title: 'Přihlásit se',
-  description: 'Přihlaste se ke svému účtu.',
+  description: 'Přihlášení do MedTeam: podklady pro multidisciplinární onkologickou komisi.',
 };
 
 export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+        <div className="flex min-h-dvh items-center justify-center bg-background" aria-busy="true">
+          <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent motion-reduce:animate-none" />
+          <span className="sr-only">Načítám přihlášení…</span>
         </div>
       }
     >

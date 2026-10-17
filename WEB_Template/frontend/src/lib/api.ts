@@ -22,7 +22,7 @@ async function fetchCsrfToken(): Promise<string> {
   if (match) return match[1];
 
   try {
-    const res = await fetch(`${API_BASE}/api/auth/status/`, { credentials: 'include' });
+    await fetch(`${API_BASE}/api/auth/status/`, { credentials: 'include' });
     const matchAfter = document.cookie.match(/csrftoken=([^;]+)/);
     return matchAfter ? matchAfter[1] : '';
   } catch {
@@ -39,8 +39,9 @@ async function apiFetch<T>(
     options.method?.toUpperCase() ?? '',
   );
 
+  // FormData (audio, PDF): Content-Type s hranicí doplní prohlížeč sám
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers,
   };
 

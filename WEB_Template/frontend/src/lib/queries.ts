@@ -36,6 +36,7 @@ export const queryKeys = {
   compatibility: (caseId: number | string) => ['case', String(caseId), 'compatibility'] as const,
   readiness: (caseId: number | string) => ['case', String(caseId), 'readiness'] as const,
   intake: (patientId: string) => ['patient', patientId, 'intake'] as const,
+  patient: (patientId: string) => ['patient', patientId, 'detail'] as const,
   observations: (patientId: string) => ['patient', patientId, 'observations'] as const,
   timeline: (patientId: string) => ['patient', patientId, 'timeline'] as const,
 };
@@ -90,6 +91,10 @@ export function usePractitionersQuery(enabled = true) {
 
 export function usePatientsQuery(enabled = true) {
   return useQuery({ queryKey: queryKeys.patients, queryFn: () => mdtApi.getPatients(), enabled, staleTime: 5 * 60_000 });
+}
+
+export function usePatientQuery(patientId: string) {
+  return useQuery({ queryKey: queryKeys.patient(patientId), queryFn: () => mdtApi.getPatient(patientId) });
 }
 
 export function useBriefQuery(caseId: number | string | null | undefined) {

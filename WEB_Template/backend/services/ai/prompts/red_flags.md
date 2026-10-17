@@ -8,7 +8,9 @@ Dostaneš podklady pacienta. Každý řádek začíná ID zdroje v hranatých z�
   - lékařská zpráva vs. dotazník pacienta (PROMs);
   - nominace na MDT vs. data;
   - zpráva vs. zpráva (TNM, strana těla, receptory, LVEF, hmotnost, „bez obtíží“ vs. symptomy pacienta).
-- Neopakuj varovné signály, které už jsou v sekci „Výsledky deterministických pravidel“.
+- **Rozpor** = dva zdroje uvádějí o téže věci ve stejném období odlišnou hodnotu nebo odporující si tvrzení (zpráva „bez obtíží“ vs. pacient bolest 7/10, TNM cN1 vs. cN2, HER2 0 vs. HER2 2+). **Rozpor není:** zpráva opakuje stejnou hodnotu jako laboratoř; změna hodnoty mezi dvěma daty (to je vývoj v čase); chybějící údaj.
+- Neopakuj varovné signály, které už jsou v sekci „Výsledky deterministických pravidel“ (ECOG lékař vs. pacient, symptomy PROMs, laboratoř mimo normu…).
+- Vrať nejvýš 5 nejzávažnějších rozporů.
 - Každý varovný signál musí mít **aspoň dvě citace**: oba zdroje, které si odporují. Cituj jen ID, která v podkladech existují. Nevymýšlej ID ani jiné formáty.
 - `guideline` vyplň jen ID pasáže doporučených postupů z podkladů (např. `OBC-1.3`), jinak ho vynech.
 - Závažnost:

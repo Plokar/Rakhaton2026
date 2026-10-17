@@ -8,7 +8,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_date, parse_datetime
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from pydantic import ValidationError as SchemaError
@@ -128,7 +128,8 @@ def user_detail(request, uid):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def session_list(request):
-    """GET: boardy s pacienty v pořadí agendy. POST (jen předseda): `{date, title, config_id?}`."""
+    """GET: boardy s pacienty v pořadí agendy; `?from=&to=` (YYYY-MM-DD, včetně) omezí rozsah, `?expand=cases`
+    přidá `cases: MdtCaseSummary[]` pro kalendář (T-518). POST (jen předseda): `{date, title, config_id?}`."""
     if request.method == 'POST':
         _require(request, roles.ADMIN)
         if not request.data.get('title'):
@@ -137,7 +138,43 @@ def session_list(request):
                                       chair=request.user, config_id=request.data.get('config_id'))
         return Response(_session(s), status=201)
     sessions = MdtSession.objects.select_related('chair').prefetch_related('cases')
-    return Response([{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions])
+    for param, lookup in (('from', 'date__date__gte'), ('to', 'date__date__lte')):
+        if request.query_params.get(param):
+            day = parse_date(request.query_params[param])
+            if day is None:
+                raise ValidationError({param: 'Datum YYYY-MM-DD.'})
+            sessions = sessions.filter(**{lookup: day})
+    sessions = list(sessions)
+    out = [{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions]
+    if 'cases' in request.query_params.get('expand', '').split(','):
+        summaries = _case_summaries([c for s in sessions for c in s.cases.all()])
+        for item, s in zip(out, sessions):
+            item['cases'] = [summaries[c.pk] for c in s.cases.all()]
+    return Response(out)
+
+
+def _case_summaries(cases: list[MdtCase]) -> dict[int, dict]:
+    """`MdtCaseSummary` (ARCH §8.6): hlavička z IRIS jedním seznamem pacientů, připravenost (T-303) jednou na pacienta."""
+    if not cases:
+        return {}
+    by_id = {p['id']: p for p in patients.list_patients()}
+    scores: dict[tuple[str, tuple], float | None] = {}
+    out = {}
+    for c in cases:
+        key = (c.patient_fhir_id, tuple(c.skipped_fields))
+        if key not in scores:
+            try:
+                score = readiness.evaluate_readiness(patients.load_patient(c.patient_fhir_id), c.skipped_fields)['score']
+                scores[key] = round(score['present'] / score['total'], 2) if score['total'] else None
+            except FhirError:
+                scores[key] = None                      # pacient v IRIS není: nespočteno
+        p = by_id.get(c.patient_fhir_id) or {}
+        dg = p.get('diagnosis')
+        out[c.pk] = {'id': c.pk, 'order': c.order, 'status': c.status, 'patient_id': c.patient_fhir_id,
+                     'display_name': p.get('display_name') or c.patient_fhir_id,
+                     'diagnosis': {'icd10': dg['icd10'], 'text': dg['text']} if dg else None,
+                     'ecog': c.ecog, 'intent': c.intent, 'readiness': scores[key]}
+    return out
 
 
 def _next_order(session: MdtSession) -> int:

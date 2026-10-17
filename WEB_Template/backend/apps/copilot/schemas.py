@@ -627,9 +627,23 @@ class MdtSession(BaseModel):
     config_id: int | None = Field(description="Výchozí BriefConfig boardu")
 
 
+class MdtCaseSummary(BaseModel):
+    """Případ v kalendáři zasedání (`GET /api/mdt/sessions/?expand=cases`, T-518)."""
+    id: int
+    order: int
+    status: Literal["nominated", "ready", "in_discussion", "decided", "confirmed", "returned"]
+    patient_id: str
+    display_name: str
+    diagnosis: dict | None = Field(description="{icd10, text} první onkologické diagnózy")
+    ecog: int | None
+    intent: Literal["C", "P"] | None
+    readiness: float | None = Field(description="Podíl přítomných údajů checklistu 0–1 (T-303), null = nespočteno")
+
+
 class MdtSessionListItem(MdtSession):
-    """GET /api/mdt/sessions/"""
+    """GET /api/mdt/sessions/[?from=&to=&expand=cases]"""
     patients: list[str]
+    cases: list[MdtCaseSummary] | None = Field(default=None, description="Jen s `expand=cases`")
 
 
 class MdtSessionDetail(MdtSession):

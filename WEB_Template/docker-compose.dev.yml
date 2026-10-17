@@ -75,6 +75,7 @@ services:
       - ../data/dev_ground_truth:/data/dev_ground_truth:ro    # eval (T-013, T-301)
       - ../data/demo_cache:/data/demo_cache                    # záloha dema (T-311), zapisuje `demo save`
       - ../data/audio:/data/audio:ro                          # AI zapisovatel (T-305), simulovaná diskuse P03
+      - ../data/onko:/data/onko:ro                            # znalostní báze semaforu (T-315, T-316)
     env_file:
       - .env
     environment:
@@ -85,6 +86,11 @@ services:
       FRONTEND_FIXTURES_DIR: /data/frontend-fixtures
       MDT_DEMO_CACHE_DIR: /data/demo_cache
       AUDIO_DIR: /data/audio
+      ONKO_KB_DIR: /data/onko
+      ONKO_EXT_CATALOG: /code/services/iris/data/external_sources.json
+      ONKO_APP_RULES: /code/services/rules/data/compatibility_rules.yaml
+      ONKO_GUIDELINES_DIR: /data/dataset/guidelines
+      ONKO_DATASET_DIR: /data/dataset
       MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
       IRIS_HOST: iris
       IRIS_PORT: "1972"

@@ -34,6 +34,7 @@ from services.ai_service import BaseAIProvider, get_ai_provider
 from services.rules import red_flags as rules
 from services.rules.alerts import header_alerts
 from services.rules.compatibility import evaluate_compatibility
+from services.rules.onko_kb import kb_for_patient
 from services.rules.guideline_sets import guideline_sets_for
 from services.rules.intake import intake_prefill
 from services.rules.red_flags import PatientData, _cc_text, _code, _ref_id
@@ -109,6 +110,8 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     needs_decision_support = bool(enabled & {"decision_support", "trials", "questions"})
     compatibility = (evaluate_compatibility(resources, skipped_fields=skipped_fields)
                      if roles or needs_decision_support or "modalities" in enabled else [])
+    # T-316: další postupy z báze data/onko jen do B2 a bloku metod; pohledy rolí stojí na katalogu
+    kb = kb_for_patient(resources, context.allowed_ids) if needs_decision_support or "modalities" in enabled else []
     with ThreadPoolExecutor(max_workers=4 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
         summary_future = pool.submit(_summary_items, context, provider, log_call, config) if "summary" in enabled else None
         llm_flags_future = pool.submit(_llm_flags, context, provider, log_call, config) if "red_flags" in enabled else None
@@ -116,7 +119,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
                         for role in roles]
         anamnesis_future = (pool.submit(anamnesis_items, context, provider, log_call, config)
                             if "anamnesis" in enabled else None)
-        ds_future = (pool.submit(build_decision_support, context, resources, compatibility, provider, log_call, config)
+        ds_future = (pool.submit(build_decision_support, context, resources, compatibility + kb, provider, log_call, config)
                      if needs_decision_support else None)
         summary_items = summary_future.result() if summary_future else []
         llm_flags = llm_flags_future.result() if llm_flags_future else []
@@ -140,7 +143,7 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         elif section["id"] == "anamnesis":            # FR-A5 (T-507)
             items = anamnesis
         elif section["id"] == "modalities":           # FR-D5 (T-506)
-            items = modality_items(context, compatibility, {r: c["title"] for r, c in load_roles().items()})
+            items = modality_items(context, compatibility + kb, {r: c["title"] for r, c in load_roles().items()})
         else:
             items = _timeline_items(data, context)
         sections.append({"id": section["id"], "title": TITLES[section["id"]], "ai_generated": True,

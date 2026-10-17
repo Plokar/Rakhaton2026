@@ -221,8 +221,12 @@ def case_readiness(request, cid):
 @permission_classes([IsAuthenticated])
 def case_compatibility(request, cid):
     """Semafor souladu postupů se stavem pacienta (FR-D4, §8.3): všechny postupy ze sady guidelines, i červené."""
+    from services.rules.onko_kb import kb_for_patient
+
     case = get_object_or_404(MdtCase, pk=cid)
-    return Response(evaluate_compatibility(_patient_resources(case.patient_fhir_id), skipped_fields=case.skipped_fields))
+    resources = _patient_resources(case.patient_fhir_id)
+    # T-316: katalog (barvy P03/P04 beze změny) + další postupy pro diagnózu ze znalostní báze data/onko
+    return Response(evaluate_compatibility(resources, skipped_fields=case.skipped_fields) + kb_for_patient(resources))
 
 
 def _patient_resources(pid: str) -> list[dict]:

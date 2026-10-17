@@ -24,6 +24,7 @@ referenční vyhodnocovač; v aplikaci je zdrojem pravdy services/rules/compatib
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from functools import lru_cache
@@ -31,11 +32,14 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-DATASET_DIR = REPO / "Dataset_MDT_Copilot_v1.1_pre_timy" / "Dataset_MDT_Copilot_v1.1"
-GUIDELINES_DIR = DATASET_DIR / "guidelines"
-EXT_CATALOG = REPO / "WEB_Template" / "backend" / "services" / "iris" / "data" / "external_sources.json"
-APP_RULES = REPO / "WEB_Template" / "backend" / "services" / "rules" / "data" / "compatibility_rules.yaml"
-ARCH = REPO / "ARCHITEKTURA.md"
+DATASET_DIR = Path(os.environ.get("ONKO_DATASET_DIR") or REPO / "Dataset_MDT_Copilot_v1.1_pre_timy" / "Dataset_MDT_Copilot_v1.1")
+# Cesty pro `check()`; v kontejneru backendu (báze v /data/onko) je nastaví env (docker-compose.dev.yml).
+GUIDELINES_DIR = Path(os.environ.get("ONKO_GUIDELINES_DIR") or DATASET_DIR / "guidelines")
+EXT_CATALOG = Path(os.environ.get("ONKO_EXT_CATALOG")
+                   or REPO / "WEB_Template" / "backend" / "services" / "iris" / "data" / "external_sources.json")
+APP_RULES = Path(os.environ.get("ONKO_APP_RULES")
+                 or REPO / "WEB_Template" / "backend" / "services" / "rules" / "data" / "compatibility_rules.yaml")
+ARCH = Path(os.environ.get("ONKO_ARCH") or REPO / "ARCHITEKTURA.md")
 
 TABLES = ("postupy", "kriteria", "fakta", "studie", "rkt", "normy", "ctcae", "zdroje", "sablony", "udaje", "odbornosti")
 # výchozí pořadí bloků podkladu (ARCH §7.3, apps/mdt/config.py SECTION_ORDER)

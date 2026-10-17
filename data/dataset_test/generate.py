@@ -84,7 +84,8 @@ PATIENTS: dict[str, dict] = {
         "imaging": "PSMA PET/CT: primární tumor prostaty, pánevní uzliny vpravo, osteoblastická ložiska L2–L4 "
                    "a v pánvi (celkem 5 ložisek). Viscerální metastázy nejsou.",
         "consult": "Pacient 72 let, hypertonik s paroxysmální fibrilací síní na apixabanu. Bolesti zad VAS 3. "
-                   "PSA 148 µg/l. ECOG 1. Chce zůstat aktivní, jezdí na kole.",
+                   "PSA 148 µg/l. Nově zjištěné, hormonálně senzitivní onemocnění, dosud bez androgenní "
+                   "deprivace. ECOG 1. Chce zůstat aktivní, jezdí na kole.",
         "expected": {"sets": ["OBC"], "trials": ["RKT-05", "RKT-06"], "role_question": False,
                      "options_include": ["ADT + ARPI", "ADT + docetaxel"], "options_exclude": ["Radium-223"],
                      "tests": "C61 nemá v datasetu sadu guidelines: AI dostane jen OBC, semafor jede z báze data/onko."},

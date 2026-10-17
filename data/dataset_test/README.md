@@ -33,9 +33,10 @@ Všechny kontroly projdou od T-320. Před ní selhalo 8 kontrol, každá byla sk
   `guideline_sets.is_oncologic` (kategorie, nebo kód novotvaru u diagnózy bez kategorie komorbidita / NÚ).
 - **P08:** `onko_kb.M1_CONTEXT` nepoznal `mHSPC` a `mCRPC` jako metastatické. U metastatické prostaty vypadly
   hlavní postupy a zůstalo jen Radium-223 (patří ke kastračně rezistentnímu onemocnění). Oprava: obě zkratky
-  jsou M1 a postupy HSPC / CRPC se dělí podle zmínky o kastrační rezistenci.
+  jsou M1 a postupy HSPC / CRPC se dělí podle výslovné zmínky v dokumentaci; bez ní se ukážou obě skupiny.
 - **P09:** katalog semaforu nabízel malobuněčnému karcinomu neoadjuvantní chemoimunoterapii s lobektomií
-  (NSCLC, PLI-2.x). Oprava: postupy PLI mají `requires: nsclc` (`compatibility.is_sclc`).
+  (NSCLC, PLI-2.x). Oprava: postupy PLI mají `requires: nsclc` (`compatibility.lung_histology`); neznámá
+  histologie nic nevyřadí.
 
 Zbývající známé mezery (runner je vypíše, nejsou to chyby kontrol):
 

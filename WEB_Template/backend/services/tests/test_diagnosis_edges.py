@@ -7,7 +7,7 @@ from services.ai.context_builder import context_from_resources
 from services.ai.guidelines import parse_guidelines
 from services.rules import onko_kb
 from services.rules import red_flags as rules
-from services.rules.compatibility import evaluate_compatibility, is_sclc
+from services.rules.compatibility import evaluate_compatibility, lung_histology
 from services.rules.guideline_sets import is_oncologic
 from services.tests.dataset import load_guideline_markdowns, load_patient
 
@@ -74,9 +74,15 @@ def test_sclc_has_no_nsclc_catalog_procedures():
     """P09: postupy PLI jsou pro nemalobuněčný karcinom; SCLC je dostane z báze data/onko."""
     nsclc = load_patient("P04")
     sclc = with_dg1("P04", morphology="8041/3")
-    assert not is_sclc(rules.PatientData(nsclc)) and is_sclc(rules.PatientData(sclc))
+    assert lung_histology(rules.PatientData(nsclc)) == "NSCLC" and lung_histology(rules.PatientData(sclc)) == "SCLC"
     assert "pli-neoadjuvance-lobektomie" in {p["id"] for p in evaluate_compatibility(nsclc)}
     assert not [p for p in evaluate_compatibility(sclc) if p["id"].startswith("pli-")]
+
+
+def test_unknown_lung_histology_is_not_guessed():
+    """Bez morfologie a bez zmínky v textu histologie neznámá: nic se nevyřadí (zadání, pravidlo 3)."""
+    dg = condition("C34.1", "onkologická diagnóza")
+    assert lung_histology(rules.PatientData([dg])) is None
 
 
 @pytest.mark.skipif(onko_kb.q() is None, reason="data/onko není k dispozici")
@@ -92,12 +98,17 @@ def test_metastatic_prostate_contexts():
 
 @pytest.mark.skipif(onko_kb.q() is None, reason="data/onko není k dispozici")
 def test_metastatic_prostate_hspc_vs_crpc():
-    """P08: u M1 prostaty postupy mHSPC; mCRPC (vč. Radium-223) až při kastrační rezistenci."""
-    hspc = with_dg1("P03", code="C61")
+    """P08: M1 prostata dostane postupy mHSPC i mCRPC; podle kastračního statusu se dělí jen, když je v datech."""
+    prostate = with_dg1("P03", code="C61")
+    unknown = {p["id"] for p in onko_kb.kb_for_patient(prostate)}
+    assert {"pro-mhspc-arpi", "pro-mhspc-triplet", "pro-mcrpc-taxan", "pro-ra223"} <= unknown
+    assert "pro-nmcrpc" not in unknown                                    # nmCRPC je M0
+
+    hspc = prostate + [document("P03", "Nově zjištěné, hormonálně senzitivní onemocnění, dosud bez ADT.")]
     kb = {p["id"] for p in onko_kb.kb_for_patient(hspc)}
     assert {"pro-mhspc-arpi", "pro-mhspc-triplet"} <= kb
-    assert not kb & {"pro-ra223", "pro-mcrpc-taxan", "pro-lu-psma", "pro-nmcrpc"}
+    assert not kb & {"pro-ra223", "pro-mcrpc-taxan", "pro-lu-psma"}
 
-    crpc = hspc + [document("P03", "Progrese PSA na ADT, onemocnění je kastračně rezistentní.")]
+    crpc = prostate + [document("P03", "Progrese PSA na ADT, onemocnění je kastračně rezistentní.")]
     kb = {p["id"] for p in onko_kb.kb_for_patient(crpc)}
     assert {"pro-mcrpc-taxan", "pro-ra223"} <= kb and not any(p.startswith("pro-mhspc") for p in kb)

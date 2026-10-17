@@ -148,6 +148,11 @@ export interface RegisterData {
   last_name?: string;
   /** Povinná odbornost (`RoleId` bez `patient`, T-319); nový uživatel je člen komise. */
   specialty: Exclude<import('@/types/mdt').RoleId, 'patient'>;
+  /** T-338: tituly a šablona klíčových údajů už při registraci. */
+  title_before?: string;
+  title_after?: string;
+  templates?: Partial<Record<import('@/types/mdt').TemplateArea, import('@/types/mdt').ProjectorLayout>>;
+  preset?: string;
 }
 
 export interface AuthResponse {

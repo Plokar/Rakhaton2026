@@ -78,6 +78,14 @@ def test_catalog_lists_categories_and_conditional_fields():
     assert keys['alert:RF-LAB'] == 'alerts' and keys['geri.g8'] == 'function' and 'mdt.question' not in keys
 
 
+def test_catalog_is_public_and_has_area_presets(seeded):
+    from rest_framework.test import APIClient
+    r = APIClient().get('/api/mdt/templates/catalog/?area=PLI')
+    assert r.status_code == 200 and [p['id'] for p in r.json()['presets']] == ['pneumolog-plice', 'vychozi']
+    assert APIClient().get('/api/mdt/templates/catalog/?area=XX').status_code == 400
+    assert APIClient().get('/api/mdt/templates/').status_code in (401, 403)          # moje šablony jen přihlášený
+
+
 def test_template_api_save_reset_and_requester_layout(seeded):
     client = as_user('pneumolog')
     listing = client.get('/api/mdt/templates/').json()
@@ -131,3 +139,9 @@ def test_registration_with_titles_and_template(seeded):
     assert r.status_code == 201, r.json()
     assert as_user('svoboda').get('/api/mdt/me/').json()['name'] == 'MUDr. Jana Svobodová'
     assert FactTemplate.objects.get(user__username='svoboda', area='PRS').layout['categories']['hidden'] == ['alerts']
+
+
+def test_doctor_edits_own_titles(seeded):
+    r = as_user('pneumolog').patch('/api/mdt/me/', {'title_before': 'MUDr.', 'title_after': 'Ph.D.'}, format='json')
+    assert r.status_code == 200 and r.json()['name'] == 'MUDr. Pneumolog, Ph.D.'
+    assert as_user('pneumolog').patch('/api/mdt/me/', {'title_before': 'x' * 41}, format='json').status_code == 400

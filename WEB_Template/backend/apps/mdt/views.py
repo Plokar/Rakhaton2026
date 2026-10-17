@@ -117,10 +117,18 @@ def _config(data, case: MdtCase) -> dict:
 
 # ── endpointy ────────────────────────────────────────────────────────────────
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def me(request):
-    """Role a odbornost přihlášeného (FR-U1)."""
+    """Role a odbornost přihlášeného (FR-U1). PATCH `{title_before?, title_after?}`: tituly si lékař upraví sám (T-338);
+    roli a odbornost mění předseda."""
+    if request.method == 'PATCH':
+        from .models import UserProfile
+        from .templates import clean_titles
+        titles = clean_titles(request.data)
+        if titles:
+            UserProfile.objects.update_or_create(user=request.user, defaults=titles)
+        return Response(_member(get_user_model().objects.get(pk=request.user.pk)))
     return Response(_member(request.user))
 
 

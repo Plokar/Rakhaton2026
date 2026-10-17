@@ -339,6 +339,9 @@ export interface CompatibilityRuleResult {
   rule_citation: EvidenceId;
   /** Např. Cockcroft-Gault. */
   derived?: { formula: string; inputs: EvidenceId[] };
+  /** Opora v Modré knize ČOS (T-340, D-026): práh / téma / neuvádí; chybí = pravidlo mimo mapování. */
+  national_status?: 'prah' | 'tema' | 'neuvadi' | null;
+  national?: { evidence_id: EvidenceId; match: 'prah' | 'tema'; quote: string; note?: string | null }[];
 }
 
 export interface TreatmentCompatibility {
@@ -525,7 +528,15 @@ export interface IntakeField {
   status: 'present' | 'missing' | 'pending' | 'skipped';
   /** Proč je údaj povinný: "KRC-1.1". */
   required_by?: EvidenceId;
+  /** Kategorie klíčového údaje (T-338, D-024). */
+  category?: FactCategory;
 }
+
+/**
+ * Pevné kategorie klíčových údajů (T-338, D-024, docs/SABLONY_LEKARE.md R1): stejný údaj je u každého pacienta
+ * na stejném místě, výstupy dotazníků (`patient`) se nepletou s výsledky vyšetření.
+ */
+export type FactCategory = 'staging' | 'molecular' | 'imaging' | 'function' | 'history' | 'lab' | 'patient' | 'alerts';
 
 export interface IntakeWarning {
   /** Stabilní: pravidlo + citace, např. "RF-TOX:P03-neuro01". */
@@ -535,6 +546,8 @@ export interface IntakeWarning {
   title: string;
   detail: string;
   citations: EvidenceId[];
+  /** `patient` = z dotazníku PROMs, jinak `alerts` (T-338). */
+  category?: FactCategory;
 }
 
 /** GET /api/mdt/patients/{pid}/intake/ */
@@ -561,6 +574,8 @@ export interface MdtCase {
   collaborators?: { user_id: number; name: string }[];
   /** Okno pro projektor upravené zadávajícím lékařem (T-333); skrývá jen v projektoru, podklad zůstává celý. */
   projector_layout?: ProjectorLayout;
+  /** Šablona zadávajícího lékaře pro oblast pacienta (T-338): výchozí okno projektoru bez úpravy u případu. */
+  requester_layout?: ProjectorLayout | null;
   ecog: number | null;
   intent: 'C' | 'P' | null;
   /** „Snímek mladší než 3 měsíce“ */
@@ -641,6 +656,41 @@ export interface Me {
   specialty: RoleId | null;
   /** Lékař v IRIS „LEK-…“, se kterým je účet propojený; podle něj „moje úkoly“ (T-328). */
   practitioner_id?: string | null;
+  /** T-338: `name` už tituly obsahuje („MUDr. Petr Novák, Ph.D.“). */
+  first_name?: string;
+  last_name?: string;
+  title_before?: string;
+  title_after?: string;
+}
+
+/** Oblast šablony lékaře (T-338): plíce C34, prs C50, kolorektum C18–C20, ostatní. */
+export type TemplateArea = 'PLI' | 'PRS' | 'KRC' | 'OBC';
+
+/** GET /api/mdt/templates/ */
+export interface MyTemplates {
+  templates: { area: TemplateArea; area_label: string; layout: ProjectorLayout | null; preset: string | null; updated_at: string | null }[];
+  presets: TemplatePreset[];
+  /** Preset podle mé odbornosti pro každou oblast. */
+  suggested: Record<TemplateArea, string>;
+}
+
+export interface TemplatePreset {
+  id: string;
+  name: string;
+  note?: string;
+  specialties: string[];
+  area: TemplateArea | '*';
+  layout: ProjectorLayout;
+}
+
+/** GET /api/mdt/templates/catalog/?area= — údaje, které se v oblasti mohou objevit (editor šablony). */
+export interface TemplateCatalog {
+  area: TemplateArea;
+  area_label: string;
+  categories: { id: FactCategory; label: string }[];
+  facts: { key: string; label: string; abbr?: string; category: FactCategory }[];
+  /** Presety oblasti (a výchozí); katalog je veřejný kvůli registraci. */
+  presets: TemplatePreset[];
 }
 
 /** GET /api/mdt/practitioners/ — lékař nemocnice z IRIS (FHIR Practitioner, T-328). */
@@ -770,5 +820,8 @@ export type ProjectorBlock = 'anamnesis' | 'facts' | 'treatments';
 /** Rozložení okna pro projektor u případu: pořadí a skrytí karet a klíčových údajů (`KeyFact.id`). */
 export interface ProjectorLayout {
   blocks?: { order: ProjectorBlock[]; hidden: ProjectorBlock[] };
+  /** Pořadí a skrytí kategorií údajů (T-338, D-024). */
+  categories?: { order: FactCategory[]; hidden: FactCategory[] };
+  /** Klíče údajů: ID pole, `lab:<LOINC>`, `alert:<pravidlo>` (šablona) nebo přesné `KeyFact.id` (úprava u případu). */
   facts?: { order: string[]; hidden: string[] };
 }

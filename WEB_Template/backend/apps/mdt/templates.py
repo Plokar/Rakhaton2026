@@ -13,7 +13,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from services.rules import fact_templates as ft
@@ -98,14 +98,18 @@ def template_detail(request, area):
 
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def template_catalog(request):
-    """Kategorie a údaje oblasti (`?area=PLI`) pro editor šablony."""
+    """Kategorie, údaje a presety oblasti (`?area=PLI`) pro editor šablony. Bez přihlášení (registrace):
+    obsahuje jen názvy údajů a kategorií, žádná data pacientů."""
     area = request.query_params.get('area', 'OBC')
     try:
-        return Response(ft.catalog(area))
+        catalog = ft.catalog(area)
     except ValueError as e:
         raise ValidationError({'area': str(e)}) from None
+    presets = [{k: p[k] for k in ('id', 'name', 'note', 'specialties', 'area', 'layout')}
+               for p in ft.presets() if p['area'] in (area, '*')]
+    return Response({**catalog, 'presets': presets})
 
 
 def create_user(request):

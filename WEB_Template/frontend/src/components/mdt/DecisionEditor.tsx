@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import type { Decision, EvidenceId, Light, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
 import { Citations } from './citations';
 import { CompatibilityLight } from './CompatibilityLight';
+import { NationalRuleNote } from './NationalRuleNote';
 import { PractitionerPicker } from './PractitionerPicker';
 import { ROLE_META } from './roles';
 
@@ -231,8 +232,13 @@ function GuidelineCompliance({
         : rest,
     });
   };
+  // T-340: oddíly Modré knihy ČOS u pravidel zvolených postupů (práh / téma) → do souladu s doporučenými postupy
+  const chosenIds = new Set(rows.filter((r) => r.chosen).map((r) => r.id));
+  const chosenRules = options.filter((o) => chosenIds.has(o.id)).flatMap((o) => o.compatibility.rules.map((rule) => ({ option: o, rule })));
+  const national = chosenRules.filter(({ rule }) => rule.national?.length);
+  const nationalIds = [...new Set(national.flatMap(({ rule }) => (rule.national ?? []).map((n) => n.evidence_id)))];
   const setCompliant = (compliant: boolean) => {
-    const chosenCitations = rows.filter((r) => r.chosen).flatMap((r) => r.citations);
+    const chosenCitations = [...rows.filter((r) => r.chosen).flatMap((r) => r.citations), ...nationalIds];
     set({
       guideline_compliance: {
         compliant,
@@ -281,6 +287,29 @@ function GuidelineCompliance({
         <p className="text-sm text-muted-foreground">
           {readOnly ? 'Zvažované možnosti nebyly zapsány.' : 'Možnosti ze semaforu se načítají z podkladu případu.'}
         </p>
+      )}
+
+      {national.length > 0 && (
+        <div className="rounded-lg bg-sky-50/70 px-3 py-2 dark:bg-sky-400/10">
+          <p className="text-[13px] font-medium">Modrá kniha ČOS ke zvoleným postupům</p>
+          <ul className="mt-1 flex flex-col gap-1">
+            {national.map(({ option, rule }) => (
+              <li key={`${option.id}-${rule.rule_id}`} className="text-[13px] leading-snug">
+                <span className="text-muted-foreground">{option.title}: </span>{rule.text}
+                <NationalRuleNote rule={rule} />
+              </li>
+            ))}
+          </ul>
+          {!readOnly && compliance && nationalIds.some((id) => !compliance.citations.includes(id)) && (
+            <button
+              type="button"
+              className="mt-1 text-xs font-medium text-primary hover:underline"
+              onClick={() => set({ guideline_compliance: { ...compliance, citations: [...new Set([...compliance.citations, ...nationalIds])] } })}
+            >
+              Přidat oddíly Modré knihy do souladu
+            </button>
+          )}
+        </div>
       )}
 
       <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-sm">

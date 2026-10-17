@@ -55,6 +55,17 @@ Plný běh nad 6 pacienty se stejnou cestou jako aplikace (T-323): LLM NVIDIA be
 
 **Čas:** 28–51 s na pacienta bez čekání na limit; s limitem hostovaného API (429, 40 požadavků za minutu) až 194 s. Cíl NFR-1 (< 20 s) splní vyhrazený NIM, na demo slouží záloha podkladu (`demo save`, `MDT_DEMO_OFFLINE`).
 
+### Srovnání modelů NVIDIA po opravách (T-301), 17. 10. 2026
+
+Oba běhy už s opravami z prvního běhu (citace bez závorek, citace odstavce dotazníku → celý zdroj, B2 ve dvou krocích, RF-LLM bez šumu). Součty za 6 pacientů:
+
+| Model | Red flags (key) | Red flags (vše) | Klíčová fakta | Údaj chybí | Nejistota AI | Kritéria studií | Studie celkem | RECIST | Semafor (pravidla) | Neověřená tvrzení | Čas |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `nemotron-3-super-120b-a12b` (výchozí) | **45/48 (94%)** | **64/70 (91%)** | **81/81 (100%)** | **18/21 (86%)** | **3/3 (100%)** | **98/105 (93%)** | **19/36 (53%)** | **4/5 (80%)** | **43/50 (86%)** | **48/455 (11%)** | 284 s |
+| `nemotron-3-ultra-550b-a55b` | **45/48 (94%)** | **64/70 (91%)** | **81/81 (100%)** | **18/21 (86%)** | **3/3 (100%)** | **98/105 (93%)** | **19/36 (53%)** | **4/5 (80%)** | **43/50 (86%)** | **17/470 (4%)** | 238 s |
+
+**Závěr:** `ultra` má o dost méně neověřených tvrzení (4 % proti 11 %) při stejných ostatních metrikách a podobném čase, ale hostované API u něj během běhu hlásilo přetížení (503, část volání se opakovala nebo spadla na deterministický záložní výstup). Výchozí proto zůstává `super`; `ultra` se zapne `NVIDIA_MODEL=nvidia/nemotron-3-ultra-550b-a55b` (na vyhrazeném NIM bez přetížení je to lepší volba). Red flags 94 % (proti 90 % deterministicky) přidalo vyladěné RF-LLM (P05 „únava mírná“ vs. 8/10).
+
 ## Gemini (`gemini-3.8-flash`)
 
 **Stav:** plný běh nad 6 pacienty a srovnání s `gemini-4-argon` **neproběhlo**. Free tier (D-021) má limit **5 požadavků za minutu a 20 požadavků za den** na model (embeddingy 1 000 za den). Jeden podklad potřebuje ~9 volání LLM, takže denní limit stačí zhruba na 2 podklady. Běh 17. 10. v 01:22 po vyčerpání denního limitu spadl na fallback a jeho čísla neměří Gemini, proto tu nejsou. **Pro plný eval a srovnání modelů je potřeba placený tier (Q9).**

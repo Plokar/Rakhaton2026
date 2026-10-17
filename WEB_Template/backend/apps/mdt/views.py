@@ -465,6 +465,22 @@ def _patient_resources(pid: str) -> list[dict]:
     return resources
 
 
+def _unresolved_intake(data, prefill: dict) -> list[str]:
+    """Zařazení projde jen s vyřešeným vším (stejná pravidla jako `IntakeForm`): ECOG, záměr C/P, kontrola snímku,
+    každý chybějící údaj přeskočený (doplněný už `prefill` nehlásí) a každé aktivní varování odkliknuté."""
+    todo = []
+    if data.get('ecog') is None:
+        todo.append('ECOG')
+    if data.get('intent') not in ('C', 'P'):
+        todo.append('záměr C/P')
+    if data.get('imaging_recent_checked') is not True:
+        todo.append('kontrola stáří snímku')
+    todo += [f'údaj „{f["label"]}“ (doplnit nebo přeskočit)' for f in prefill['fields'] if f['status'] in ('missing', 'pending')]
+    acked = set(data.get('acknowledge', []))
+    todo += [f'varování {w["id"]} (vzít na vědomí)' for w in prefill['warnings'] if w['id'] not in acked]
+    return todo
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -496,6 +512,8 @@ def case_create(request):
             writeback.set_mdt_date(pid, sr_id, timezone.localtime(session.date))
         else:
             _require_case_edit(request, case)
+        if unresolved := _unresolved_intake(data, prefill):      # po kontrole oprávnění; výjimka zruší i založení případu
+            raise ValidationError({'intake': f'Před zařazením zbývá: {"; ".join(unresolved)}.'})
         written = _apply_case_input(request, case, {**data, 'session': session.pk},
                                     warnings={w['id']: w for w in prefill['warnings']})
         if case.status in ('nominated', 'returned'):

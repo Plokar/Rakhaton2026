@@ -17,6 +17,7 @@ import { SourceDrawer } from './SourceDrawer';
 import { Timeline } from './Timeline';
 import { TreatmentOptions } from './TreatmentOptions';
 import { TrialScreening } from './TrialScreening';
+import { VerifierPanel } from './VerifierPanel';
 
 const TEXT_SECTION_TITLE: Partial<Record<SectionId, string>> = {
   summary: 'Souhrn případu',
@@ -199,6 +200,8 @@ export function BriefView({ brief, dataSource }: { brief: Brief; dataSource: Bri
           {!ds && blocks.includes('decision_support') && (
             <p className="text-sm text-muted-foreground">Možnosti léčby, studie a otázky k diskusi v tomto podkladu zatím nejsou.</p>
           )}
+
+          <VerifierPanel verifier={brief.verifier} />
 
           <p className="border-t border-border pt-4 text-xs text-muted-foreground">
             Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}

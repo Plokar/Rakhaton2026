@@ -15,7 +15,7 @@ function merge(prev: ChatbotMessage[] | undefined, incoming: ChatbotMessage[]): 
 }
 
 /**
- * Chatbot u zasedání (T-338): soukromý rozhovor lékaře s AI. Historie jedním GET až při prvním otevření panelu,
+ * Chatbot u zasedání (T-344): soukromý rozhovor lékaře s AI. Historie jedním GET až při prvním otevření panelu,
  * dotaz POST vrátí dotaz i odpověď. Odpovídá jen AI tomu, kdo se ptá, proto bez streamu; čekající dotaz je v `send.variables`.
  */
 export function useChatbot(sessionId: number) {

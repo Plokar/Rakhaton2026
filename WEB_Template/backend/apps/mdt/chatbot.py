@@ -1,4 +1,4 @@
-"""Chatbot u zasedání (T-338, ARCH §5.12, §6.3): lékař se ptá AI, odpověď nese ke každému tvrzení zdroj.
+"""Chatbot u zasedání (T-344, ARCH §5.12, §6.3): lékař se ptá AI, odpověď nese ke každému tvrzení zdroj.
 
 Vedle chatu lékařů (T-334), ale soukromý: rozhovor patří lékaři a boardu, ostatní ho nevidí. Odpovídá jen AI tomu,
 kdo se ptá, takže stačí jeden POST (otázka i odpověď v těle odpovědi), bez streamu. Logika je v `services/ai/chatbot.py`.
@@ -51,7 +51,7 @@ def session_chatbot(request, sid):
     try:
         result = ai_chatbot.answer(text, case.patient_fhir_id if case else None, history)
     except Exception:          # dotaz zůstane uložený, lékař vidí, že AI neodpověděla
-        log.exception('T-338: chatbot neodpověděl (board %s)', session.pk)
+        log.exception('T-344: chatbot neodpověděl (board %s)', session.pk)
         result = {'text': 'AI se teď nepodařilo odpovědět.', 'claims': [], 'uncertain': [], 'model': None}
     reply = ChatbotMessage.objects.create(session=session, user=request.user, case=case, role='ai',
                                           text=result['text'], claims=result['claims'],

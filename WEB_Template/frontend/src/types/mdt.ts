@@ -774,7 +774,7 @@ export interface SessionMessage {
 }
 
 /**
- * Chatbot u zasedání (T-338): dotaz lékaře (`role: "user"`) nebo odpověď AI (`"ai"`). Rozhovor je soukromý
+ * Chatbot u zasedání (T-344): dotaz lékaře (`role: "user"`) nebo odpověď AI (`"ai"`). Rozhovor je soukromý
  * (lékař + board), GET /api/mdt/sessions/{sid}/chatbot/; POST vrátí `[dotaz, odpověď]`. Odpověď AI není oficiální záznam.
  */
 export interface ChatbotMessage {

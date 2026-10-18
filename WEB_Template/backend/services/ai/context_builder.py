@@ -252,7 +252,7 @@ def pseudonymizer_for(resources: Iterable[dict]) -> Pseudonymizer:
 
 
 def general_context(studies: Iterable[dict] = (), guidelines: Iterable[GuidelinePassage] = ()) -> PatientContext:
-    """Kontext bez pacienta (chatbot bez štítku, T-338): všechny sady guidelines a všechny studie, žádná fakta pacienta."""
+    """Kontext bez pacienta (chatbot bez štítku, T-344): všechny sady guidelines a všechny studie, žádná fakta pacienta."""
     guidelines = sorted(guidelines, key=lambda g: g.sort_key)
     sets = list(dict.fromkeys(g.guideline_set for g in guidelines))
     return PatientContext(patient_id="", evidence=[], guideline_sets=sets, guidelines=guidelines,

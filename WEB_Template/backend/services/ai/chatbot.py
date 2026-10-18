@@ -1,5 +1,5 @@
 """
-Chatbot u zasedání (T-338, ARCHITEKTURA §5.12): lékař se ptá AI, odpověď jsou tvrzení s citacemi.
+Chatbot u zasedání (T-344, ARCHITEKTURA §5.12): lékař se ptá AI, odpověď jsou tvrzení s citacemi.
 
 - Kontext je stejný jako u podkladu (D-010): celý pacient na řadě z IRIS, jeho sada guidelines, studie a výsledky
   deterministických pravidel. Bez pacienta (dotaz bez štítku) jen všechny guidelines a studie.
@@ -36,6 +36,7 @@ from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
 from services.ai_service import (
     BaseAIProvider,
+    SUPPORTED_PROVIDERS,
     MockAIProvider,
     OpenAICompatProvider,
     get_ai_provider,
@@ -90,7 +91,7 @@ def answer(question: str, patient_id: str | None, history: Iterable[dict] = (), 
     try:
         context, pseudo, resources = load_context(patient_id)
     except Exception:
-        log.warning("T-338: podklady pro chatbot (%s) nejdou načíst z IRIS", patient_id or "bez pacienta", exc_info=True)
+        log.warning("T-344: podklady pro chatbot (%s) nejdou načíst z IRIS", patient_id or "bez pacienta", exc_info=True)
         return {"text": "Podklady se nepodařilo načíst z IRIS, AI teď neodpoví.", "claims": [], "uncertain": [],
                 "model": None}
     model = None
@@ -101,22 +102,23 @@ def answer(question: str, patient_id: str | None, history: Iterable[dict] = (), 
 
 def chatbot_provider(resources: list[dict] | None) -> tuple[BaseAIProvider, str | None]:
     """Provider a model pro chatbot. `CHATBOT_PROVIDER` = `openai` (Azure OpenAI gateway týmu, jen generate, jen
-    syntetická data) | `gemini` | `mock`; bez nastavení `openai`, když je `OPENAI_API_KEY`, jinak hlavní `AI_PROVIDER`.
+    syntetická data) | jiný provider z `SUPPORTED_PROVIDERS` (`mock`, `gemini`, `nvidia`…); bez nastavení `openai`,
+    když je `OPENAI_API_KEY`, jinak hlavní `AI_PROVIDER`.
     `CHATBOT_MODEL` přepíše model (u `openai` jinak `DEFAULT_CHATBOT_MODEL`, EU Data Zone).
 
     D-021: `resources` skutečného pacienta (bez tagu `fiktivni-data`) jdou do LLM jen s `AI_REAL_PATIENT_DATA`,
     jinak `MockAIProvider`. `None` = dotaz bez pacienta (jen guidelines a studie)."""
     chosen = (os.environ.get("CHATBOT_PROVIDER") or ("openai" if os.environ.get("OPENAI_API_KEY") else "")).strip().lower()
-    if chosen not in ("", "openai", "gemini", "mock"):
+    if chosen not in ("", "openai", *SUPPORTED_PROVIDERS):
         raise ValueError(f"Neznámý CHATBOT_PROVIDER {chosen!r}")
     if resources is not None and not (is_synthetic_patient(resources) or real_patient_data_allowed()):
-        log.warning("T-338: pacient nemá syntetická data, chatbot nevolá LLM (D-021)")
+        log.warning("T-344: pacient nemá syntetická data, chatbot nevolá LLM (D-021)")
         return MockAIProvider(), None
     model = os.environ.get("CHATBOT_MODEL") or None
     if chosen == "openai":
         if os.environ.get("OPENAI_API_KEY"):
             return OpenAICompatProvider(), model or DEFAULT_CHATBOT_MODEL
-        log.warning("T-338: CHATBOT_PROVIDER=openai, ale OPENAI_API_KEY není nastaven; chatbot jede přes AI_PROVIDER")
+        log.warning("T-344: CHATBOT_PROVIDER=openai, ale OPENAI_API_KEY není nastaven; chatbot jede přes AI_PROVIDER")
         chosen = ""
     return get_ai_provider(chosen or None), model
 
@@ -131,7 +133,7 @@ def load_context(patient_id: str | None) -> tuple[PatientContext, Pseudonymizer,
             try:
                 passages += load_guidelines([guideline_set])
             except GuidelinesUnavailable as exc:
-                log.warning("T-338: %s", exc)
+                log.warning("T-344: %s", exc)
         studies = fhir.search("ResearchStudy") + fhir.search("Group")
         return general_context(studies, passages), Pseudonymizer(), []
 
@@ -142,7 +144,7 @@ def load_context(patient_id: str | None) -> tuple[PatientContext, Pseudonymizer,
     try:
         passages = load_guidelines(sets)
     except GuidelinesUnavailable as exc:
-        log.warning("T-338: %s", exc)
+        log.warning("T-344: %s", exc)
         passages = []
     notices = guideline_notices(sets, passages, resources)
     context = context_from_resources(patient_id, resources, studies=studies, guidelines=passages,
@@ -174,7 +176,7 @@ def answer_from_context(question: str, context: PatientContext, history: Iterabl
                 "model": result.get("model")}
 
     if result.get("status") != "success":
-        log.warning("T-338: chatbot LLM selhal (%s), odpověď z dokumentace", result.get("error"))
+        log.warning("T-344: chatbot LLM selhal (%s), odpověď z dokumentace", result.get("error"))
         reason = "AI se teď nepodařilo odpovědět."
     elif provider.is_mock:
         reason = "Jazykový model není zapnutý (AI_PROVIDER=mock)."

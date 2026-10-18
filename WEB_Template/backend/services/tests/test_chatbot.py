@@ -1,4 +1,4 @@
-"""Chatbot u zasedání (T-338): odpověď s citacemi přes grounding, chybějící údaje, NEJISTOTA AI, odpověď bez LLM,
+"""Chatbot u zasedání (T-344): odpověď s citacemi přes grounding, chybějící údaje, NEJISTOTA AI, odpověď bez LLM,
 výběr provideru (Azure OpenAI gateway, D-021)."""
 import json
 

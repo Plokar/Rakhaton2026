@@ -243,7 +243,7 @@ export const mdtApi = {
   /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
   sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
 
-  /** Chatbot u zasedání (T-338): vlastní rozhovor s AI u boardu, posledních 200 zpráv od nejstarší. */
+  /** Chatbot u zasedání (T-344): vlastní rozhovor s AI u boardu, posledních 200 zpráv od nejstarší. */
   getChatbotMessages: (sessionId: number) => apiFetch<ChatbotMessage[]>(`/api/mdt/sessions/${sessionId}/chatbot/`),
 
   /** Dotaz na AI; `case_id` = pacient z agendy boardu, bez něj jen guidelines a studie. Vrátí `[dotaz, odpověď]`, uzavřený board 409. */

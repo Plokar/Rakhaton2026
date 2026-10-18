@@ -1,4 +1,4 @@
-"""Chatbot u zasedání (T-338): soukromý rozhovor s AI po boardech, odpověď s citacemi, uzavřený board jen ke čtení."""
+"""Chatbot u zasedání (T-344): soukromý rozhovor s AI po boardech, odpověď s citacemi, uzavřený board jen ke čtení."""
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command

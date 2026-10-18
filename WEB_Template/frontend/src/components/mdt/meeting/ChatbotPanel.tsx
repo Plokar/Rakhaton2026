@@ -18,7 +18,7 @@ import type { ChatbotState } from './use-chatbot';
 const MAX_LENGTH = 2000;
 
 /**
- * Chatbot u zasedání (T-338): lékař se ptá AI na pacienta na řadě (bez štítku jen guidelines a studie).
+ * Chatbot u zasedání (T-344): lékař se ptá AI na pacienta na řadě (bez štítku jen guidelines a studie).
  * Každé tvrzení odpovědi má citaci, klik otevře zdroj v bočním panelu; neověřené tvrzení, chybějící údaj
  * a nejistota AI jsou označené. Rozhovor je soukromý, odpověď AI není oficiální záznam. Uzavřený board jen ke čtení.
  */

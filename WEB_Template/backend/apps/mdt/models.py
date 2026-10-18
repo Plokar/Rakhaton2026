@@ -99,7 +99,7 @@ class SessionMessage(models.Model):
 
 
 class ChatbotMessage(models.Model):
-    """Dotaz lékaře a odpověď AI v chatbotu u zasedání (T-338). Rozhovor je soukromý (lékař + board).
+    """Dotaz lékaře a odpověď AI v chatbotu u zasedání (T-344). Rozhovor je soukromý (lékař + board).
     Neupravuje se ani nemaže: audit, co AI komu odpověděla. Odpověď AI není oficiální záznam (zlaté pravidlo)."""
     ROLES = [('user', 'Lékař'), ('ai', 'AI')]
     session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='chatbot_messages')

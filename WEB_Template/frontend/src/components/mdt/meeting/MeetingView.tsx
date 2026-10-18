@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { parseAsInteger, useQueryState } from 'nuqs';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
+  Bot,
   CheckCheck,
   ChevronDown,
   ChevronUp,
@@ -60,8 +61,10 @@ import { openProjectorWindow, publishSelection } from '../projector';
 import { ProjectorLayoutDialog } from '../ProjectorLayoutDialog';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
+import { ChatbotPanel } from './ChatbotPanel';
 import { SessionChat } from './SessionChat';
 import { formatDuration, useCaseTimer } from './use-case-timer';
+import { useChatbot } from './use-chatbot';
 import { useSessionChat } from './use-session-chat';
 
 type Case = MdtCase & { id: number };
@@ -95,6 +98,21 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const [collaborating, setCollaborating] = React.useState(false);
   const [arranging, setArranging] = React.useState(false);
   const chat = useSessionChat(sessionId, me);
+  const bot = useChatbot(sessionId);
+  // Chat a chatbot vedle přehledu jen ve třísloupcovém jednání; jinak (úzký displej, prázdná agenda) jako boční
+  // panel, a pak jen jeden z nich. Oba otevřené vedle sebe až od 1680 px, jinak pod sebou v jednom sloupci,
+  // ať přehledu pacienta zůstane místo.
+  const roomy = useMediaQuery('(min-width: 1680px)');
+  const inlineChat = cases.length > 0 && wide;
+  const stacked = chat.open && bot.open && !roomy;
+  const toggleChat = () => {
+    if (!chat.open && !inlineChat) bot.setOpen(false);
+    chat.setOpen(!chat.open);
+  };
+  const toggleBot = () => {
+    if (!bot.open && !inlineChat) chat.setOpen(false);
+    bot.setOpen(!bot.open);
+  };
   useFocusLayout();
 
   React.useEffect(() => {
@@ -129,7 +147,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   useHotkeys('z', () => current && router.push(`/dashboard/cases/${current.id}/record`), hk, [current]);
   useHotkeys('p', projector, hk, [current]);
   useHotkeys('h', toggleDiscussed, hk, [current, chair]);
-  useHotkeys('c', () => chat.setOpen(!chat.open), hk, [chat.open, chat.setOpen]);
+  useHotkeys('c', toggleChat, hk, [chat.open, bot.open, inlineChat]);
+  useHotkeys('a', toggleBot, hk, [chat.open, bot.open, inlineChat]);
 
   if (session.isLoading) return <MeetingSkeleton />;
   if (session.isError || !session.data) {
@@ -145,14 +164,13 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
 
   const board = session.data;
   const discussed = cases.filter(isDiscussed).length;
-  // Chat vedle přehledu jen ve třísloupcovém jednání; jinak (úzký displej, prázdná agenda) jako boční panel.
-  const inlineChat = cases.length > 0 && wide;
-  const chatProps = {
-    chat,
+  const panelProps = {
     current,
     closed: board.status === 'closed',
     onSelectCase: (caseId: number) => void setParam(caseId),
   };
+  const chatProps = { ...panelProps, chat };
+  const botProps = { ...panelProps, bot };
 
   const main = current ? (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 lg:px-8">
@@ -225,7 +243,9 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         onAdd={() => setAdding(true)}
         chatOpen={chat.open}
         unread={chat.unread}
-        onChat={() => chat.setOpen(!chat.open)}
+        onChat={toggleChat}
+        botOpen={bot.open}
+        onBot={toggleBot}
       />
       {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
@@ -236,12 +256,39 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           <ResizablePanel id="prehled" className="min-h-0">
             <div className="relative h-full overflow-y-auto">{main}</div>
           </ResizablePanel>
-          {chat.open && (
+          {stacked ? (
             <>
-              <ResizableHandle withHandle aria-label="Šířka chatu" />
-              <ResizablePanel id="chat" defaultSize={340} minSize={280} maxSize={480} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
-                <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+              <ResizableHandle withHandle aria-label="Šířka chatu a chatbota" />
+              <ResizablePanel id="chaty" defaultSize={380} minSize={300} maxSize={520} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                <ResizablePanelGroup orientation="vertical">
+                  <ResizablePanel id="chat-nahore" defaultSize="45%" minSize="20%" className="min-h-0">
+                    <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+                  </ResizablePanel>
+                  <ResizableHandle withHandle aria-label="Výška chatu" />
+                  <ResizablePanel id="chatbot-dole" defaultSize="55%" minSize="20%" className="min-h-0">
+                    <ChatbotPanel {...botProps} onClose={() => bot.setOpen(false)} />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
               </ResizablePanel>
+            </>
+          ) : (
+            <>
+              {chat.open && (
+                <>
+                  <ResizableHandle withHandle aria-label="Šířka chatu" />
+                  <ResizablePanel id="chat" defaultSize={340} minSize={280} maxSize={480} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                    <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+                  </ResizablePanel>
+                </>
+              )}
+              {bot.open && (
+                <>
+                  <ResizableHandle withHandle aria-label="Šířka chatbota" />
+                  <ResizablePanel id="chatbot" defaultSize={360} minSize={280} maxSize={520} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                    <ChatbotPanel {...botProps} onClose={() => bot.setOpen(false)} />
+                  </ResizablePanel>
+                </>
+              )}
             </>
           )}
         </ResizablePanelGroup>
@@ -255,6 +302,13 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         <Sheet open={chat.open} onOpenChange={chat.setOpen}>
           <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
             <SessionChat {...chatProps} Title={SheetTitle} />
+          </SheetContent>
+        </Sheet>
+      )}
+      {!inlineChat && (
+        <Sheet open={bot.open} onOpenChange={bot.setOpen}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+            <ChatbotPanel {...botProps} Title={SheetTitle} />
           </SheetContent>
         </Sheet>
       )}
@@ -291,6 +345,8 @@ function MeetingHeader({
   chatOpen,
   unread,
   onChat,
+  botOpen,
+  onBot,
 }: {
   board: MdtSessionDetail;
   discussed: number;
@@ -301,6 +357,8 @@ function MeetingHeader({
   chatOpen: boolean;
   unread: number;
   onChat: () => void;
+  botOpen: boolean;
+  onBot: () => void;
 }) {
   const router = useRouter();
   const me = useMe();
@@ -341,6 +399,9 @@ function MeetingHeader({
               <span className="sr-only">{unread} nepřečtených</span>
             </>
           )}
+        </Button>
+        <Button variant={botOpen ? 'secondary' : 'outline'} size="lg" onClick={onBot} aria-pressed={botOpen} title="Chatbot: dotazy na AI s odpověďmi se zdroji (A)">
+          <Bot aria-hidden /> Chatbot
         </Button>
         <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
           <MonitorUp aria-hidden /> Projektor

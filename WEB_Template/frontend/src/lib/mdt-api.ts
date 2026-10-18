@@ -7,6 +7,7 @@ import type {
   Brief,
   BriefConfig,
   CaseTemplate,
+  ChatbotMessage,
   MdtRole,
   RoleId,
   SpecialtyView,
@@ -145,6 +146,13 @@ export const mdtApi = {
 
   /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
   sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
+
+  /** Chatbot u zasedání (T-338): vlastní rozhovor s AI u boardu, posledních 200 zpráv od nejstarší. */
+  getChatbotMessages: (sessionId: number) => apiFetch<ChatbotMessage[]>(`/api/mdt/sessions/${sessionId}/chatbot/`),
+
+  /** Dotaz na AI; `case_id` = pacient z agendy boardu, bez něj jen guidelines a studie. Vrátí `[dotaz, odpověď]`, uzavřený board 409. */
+  postChatbotMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
+    apiFetch<ChatbotMessage[]>(`/api/mdt/sessions/${sessionId}/chatbot/`, { method: 'POST', body: JSON.stringify(input) }),
 
   /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
   updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>

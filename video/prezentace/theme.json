@@ -1,0 +1,19 @@
+{
+  "name": "MedTeam",
+  "headFontFace": "Segoe UI Semibold",
+  "bodyFontFace": "Segoe UI",
+  "colors": {
+    "dk1": "0B1118",
+    "lt1": "F1F5F9",
+    "dk2": "111A24",
+    "lt2": "94A3B8",
+    "accent1": "2DD4BF",
+    "accent2": "A78BFA",
+    "accent3": "FBBF24",
+    "accent4": "F87171",
+    "accent5": "C8102E",
+    "accent6": "3FB4C0",
+    "hlink": "2DD4BF",
+    "folHlink": "A78BFA"
+  }
+}

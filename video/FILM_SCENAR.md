@@ -199,3 +199,39 @@ npx remotion render src/index.ts MedTeamHook out/medteam-hook-nobgm.mp4 --props=
 - **Nesrovnalost v datech P03** (pro datovou lane, DATASET.md §9): v klíčových údajích je „RAS bez mutace (wild-type)“ (`P03-bm02`), ale léčebný postup anti-EGFR je vyloučený kvůli „KRAS mutace c.35G>A G12D“. Hook ukazuje řádek anti-EGFR tak, jak ho zobrazuje aplikace.
 - **Úpravy zvuku podle zpětné vazby (17. 10.):** odebrán whoosh v 0:05 a úder v 0:07, „switch“ přesunut z razítka (23,5 s) na dosednutí kříže loga (26,0 s).
 - **Riser, obrácený whoosh a sub** jsou syntetické (`scripts/synth_sfx.py`, deterministické), ostatní SFX a hudba jsou z Mixkitu.
+
+---
+
+## 10. Prezentace (13 slidů)
+
+`prezentace/MedTeam_Prezentace.pptx` je ve stejném vizuálním jazyce jako videa: tmavý „sál“, tyrkysová, fialová pro AI, karty jako v aplikaci, ikony lucide (stejné jako v aplikaci) a písmo Segoe UI.
+
+- **Pořadí:** 1 uvítání (logo + QR, svítí před začátkem) → 2 hook (video) → 3–7 problém → 8–11 řešení → 12 tým → 13 závěr. U každého slidu jsou poznámky řečníka.
+- **Video na slidu 2:** v PowerPointu vyberte video → Přehrávání → Spustit: **Automaticky**.
+- **Fotky** (slidy 5, 10 a 12): rámečky jsou zástupné prvky typu obrázek. Klik na ikonu fotky ji vloží a ořízne do rámečku.
+- **Úpravy:** `cd prezentace; npm install; node build_deck.js` a potom téma (`apply_theme.js` ze skillu pptx, `theme.json`). Barvy a písma jsou v tématu, rozvržení jsou TITLE, VIDEO, CONTENT, PHOTO1, PHOTO2 a TEAM4.
+
+---
+
+## 11. Klipy do prezentace (každá scéna = jedno video)
+
+Klipy jsou v `out/klipy/`, bez hudby, se zvukovými efekty. Vyrenderuješ je příkazem `bash scripts/render_klipy.sh`.
+
+| Klip | Délka | Původ |
+|---|---|---|
+| `04_okno_projektoru.mp4` (+ `_svetly`) | 5 s, vertikální 1056 × 1880 | **nová scéna** (kompozice `KlipProjektor` / `KlipProjektorSvetly`, `src/clips/ProjectorPreset.tsx`) |
+| `01, 02, 03, 05, 06, 07, 08, 09` | 8–10 s | výřezy z průchodu podle kapitol (`CHAPTERS` v `src/walk/timeline.ts`) |
+
+### Klip 04 · Okno pro projektor na míru (v2: vertikální, 5 s)
+
+**Sdělení:** každý lékař si nastaví preset okna. Pneumolog má na plátně jen to, co potřebuje, a nic navíc, dokud si to sám nezapne.
+
+Úzký náhled okna projektoru P04 (528 × 940 CSS px jako vyskakovací okno), jen animace, bez titulků:
+
+- **0–2,5 s:** 10 viditelných údajů, které preset pneumologa skrývá (VO2max, ppoFEV1, ppoDLCO, alergie, komorbidity, Na, CRP, CEA, Leu, Neu), postupně vybuchne na skleněné střepy. Výbuchy se zrychlují.
+- **2,9–4,1 s:** zbylé údaje dosednou na svá místa v pořadí pneumologa. Údaje zespodu vyjedou nahoru a objeví se „upraveno u pacienta“.
+- **4,1–5 s:** klid na výsledném okně.
+
+Zvuky jsou stejné jako v předchozí verzi. Klip je ve dvou variantách: tmavá (jako videa) a světlá (jako aplikace ve světlém režimu).
+
+**Data:** výběr skrytých údajů není vymyšlený. Je to seznam pneumologa ze schůzky 17. 10. (preset `pneumolog-plice`, `docs/SABLONY_LEKARE.md`) a na produkci je uložený u P04. Stav „před“ je stejné okno bez úpravy. Úprava se odebrala jen v odpovědích API v prohlížeči při snímání (`scripts/capture_pj_v.mjs dark|light`), na server nic nešlo.

@@ -25,7 +25,10 @@
 | V-16 | Průchod v2: souvislý záběr, kamera za myší, přechody aplikace | ✅ | `src/walk/Stage.tsx` (pružina, náklon, vrstvy) |
 | V-17 | Průchod v2: logo jako v hooku, přirozený klik, QR kód | ✅ | `common/LogoReveal.tsx`, Mixkit 1113/2997, `public/qr.svg` |
 | V-18 | Průchod v2: render s hudbou i bez | ✅ | 90,0 s, bez přebuzení (špička −0,6 dBFS) |
-| V-19 | Průchod v2.1: gramatika kamery (navigace × čtení), pomalejší tempo, závěr 5,5 s | 🔄 | zpětná vazba 18. 10. |
+| V-19 | Průchod v2.1: gramatika kamery (navigace × čtení), pomalejší tempo, závěr 5,5 s | ✅ | render s hudbou hotový; verze bez hudby zůstala z v2 (na přání uživatele nerenderováno) |
+| V-21 | Klip 04: okno projektoru s výbuchem skrytých údajů (preset pneumologa) | ✅ | v2: vertikální úzký náhled, 5 s, tmavá + světlá (`src/clips/ProjectorPreset.tsx`) |
+| V-22 | Klipy po scénách (výřezy z průchodu) | ✅ | `scripts/render_klipy.sh` → `out/klipy/` |
+| V-20 | Prezentace 13 slidů (.pptx) ve stylu videí | ✅ | `prezentace/MedTeam_Prezentace.pptx`, validace prošla, kontrola exportem z PowerPointu |
 
 ## Klíčová rozhodnutí
 
@@ -40,6 +43,10 @@
 - **D6 · VO je volitelný:** soubory `public/audio/vo/A_0x.mp3` se načtou automaticky, když existují (`getStaticFiles`).
 
 ## Deník
+
+- **18. 10. 2026:** klip 04 předělán na vertikální úzký náhled okna projektoru (jako vyskakovací okno), 5 s, jen výbuchy a dosednutí; tmavá a světlá varianta.
+
+- **18. 10. 2026 (odpoledne):** 1:30 video rozděleno na klipy po scénách. Nová scéna 04: okno projektoru P04, 17 údajů vybuchne na skleněné střepy (preset pneumologa ze schůzky 17. 10.), zbylé přeletí na svá místa, končí skutečným stavem aplikace „skryto 17“.
 
 - **18. 10. 2026:** průchod v2.1. Kamera už nemíchá sledování myši se zvýrazněním: buď navigace (za myší), nebo čtení (stojí 2,5–3,5 s, myš zmizí, reflektor až po zastavení). Pomalejší pružina, méně zvýraznění, závěr zkrácen z 11 na 5,5 s.
 

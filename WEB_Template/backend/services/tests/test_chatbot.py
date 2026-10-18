@@ -1,9 +1,12 @@
-"""Chatbot u zasedání (T-338): odpověď s citacemi přes grounding, chybějící údaje, NEJISTOTA AI, odpověď bez LLM."""
+"""Chatbot u zasedání (T-338): odpověď s citacemi přes grounding, chybějící údaje, NEJISTOTA AI, odpověď bez LLM,
+výběr provideru (Azure OpenAI gateway, D-021)."""
+import json
+
 import pytest
 
 from services.ai import chatbot
 from services.ai.context_builder import context_from_resources
-from services.ai_service import MockAIProvider
+from services.ai_service import MockAIProvider, OpenAICompatProvider
 from services.tests.dataset import load_patient, load_studies
 
 # Odpověď, jak by ji napsal LLM: dvě tvrzení sedí na zdroj, jedno má jiné číslo, jedno neexistující citaci
@@ -123,6 +126,72 @@ def test_general_question_uses_guidelines_and_trials(fake_fhir_dataset):
                             log_call=lambda *_: None)
     assert result["claims"] and all(c["citations"][0].startswith(("KRC-", "PLI-", "OBC-", "PRS-", "RKT-"))
                                     for c in result["claims"])
+
+
+class FakeResponse:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self):
+        return json.dumps(self.payload, ensure_ascii=False).encode("utf-8")
+
+
+def test_azure_gateway_answers_with_citations():
+    sent = []
+
+    def opener(req, timeout):
+        sent.append((req.full_url, dict(req.header_items()), json.loads(req.data)))
+        content = "```json\n" + json.dumps(P03_ANSWER, ensure_ascii=False) + "\n```"     # gateway občas obalí JSON
+        return FakeResponse({"choices": [{"finish_reason": "stop", "message": {"content": content}}],
+                             "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}})
+
+    provider = OpenAICompatProvider(api_key="test-key", opener=opener)
+    result = chatbot.answer_from_context("Jaké je poslední CEA?", p03_context(), [], provider, lambda *_: None,
+                                         model="gpt-6-astra")
+    assert result["model"] == "gpt-6-astra"
+    assert [c["verification"] for c in result["claims"]][:2] == ["verified", "verified"]
+    url, headers, body = sent[0]
+    assert url == "https://apim-rakathon-q7146n.azure-api.net/openai/v1/chat/completions"
+    assert headers["Api-key"] == "test-key"
+    assert body["model"] == "gpt-6-astra-global"                         # alias deploymentu gateway týmu
+    assert body["response_format"]["json_schema"]["name"] == "ChatbotOutput"
+    assert body["messages"][0]["role"] == "system" and "## Otázka lékaře" in body["messages"][1]["content"]
+
+
+def test_chatbot_provider_choice(monkeypatch):
+    for name in ("CHATBOT_PROVIDER", "CHATBOT_MODEL", "OPENAI_API_KEY", "VERIFIER_MODEL", "AI_REAL_PATIENT_DATA"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("AI_PROVIDER", "mock")
+    synthetic = load_patient("P03")
+    provider, model = chatbot.chatbot_provider(synthetic)
+    assert provider.is_mock and model is None                            # bez klíče hlavní AI_PROVIDER
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    provider, model = chatbot.chatbot_provider(synthetic)
+    assert isinstance(provider, OpenAICompatProvider) and model == "gpt-6-astra"
+    assert isinstance(chatbot.chatbot_provider(None)[0], OpenAICompatProvider)        # obecný dotaz
+    monkeypatch.setenv("CHATBOT_MODEL", "gpt-6-1-sol-dz-eu")
+    assert chatbot.chatbot_provider(synthetic)[1] == "gpt-6-1-sol-dz-eu"
+
+    # D-021: skutečný pacient (bez tagu fiktivni-data) do gateway nejde
+    real = [{**r, "meta": {}} if r["resourceType"] == "Patient" else r for r in synthetic]
+    provider, model = chatbot.chatbot_provider(real)
+    assert provider.is_mock and model is None
+
+    monkeypatch.setenv("CHATBOT_PROVIDER", "mock")
+    assert chatbot.chatbot_provider(synthetic)[0].is_mock
+    monkeypatch.setenv("CHATBOT_PROVIDER", "openai")
+    monkeypatch.delenv("OPENAI_API_KEY")
+    assert chatbot.chatbot_provider(synthetic)[0].is_mock               # bez klíče zpět na AI_PROVIDER
+    monkeypatch.setenv("CHATBOT_PROVIDER", "azure")
+    with pytest.raises(ValueError):
+        chatbot.chatbot_provider(synthetic)
 
 
 def test_iris_down_returns_note(monkeypatch):

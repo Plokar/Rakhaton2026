@@ -65,6 +65,27 @@ def _after(value) -> int | None:
         raise ValidationError({'after': 'Očekáváno ID zprávy (celé číslo).'}) from None
 
 
+def message_text(data) -> str:
+    """Text zprávy z těla POST: neprázdný, nejvýš `SessionMessage.MAX_LENGTH` znaků (chat i chatbot)."""
+    text = str(data.get('text') or '').strip()
+    if not text:
+        raise ValidationError({'text': 'Zpráva je prázdná.'})
+    if len(text) > SessionMessage.MAX_LENGTH:
+        raise ValidationError({'text': f'Zpráva má nejvýš {SessionMessage.MAX_LENGTH} znaků.'})
+    return text
+
+
+def message_case(data, session: MdtSession) -> MdtCase | None:
+    """Štítek pacienta `case_id` z těla POST: případ z agendy tohoto boardu, jinak 400; bez štítku None."""
+    case, case_id = None, data.get('case_id')
+    if case_id is not None:
+        if isinstance(case_id, int) and not isinstance(case_id, bool):
+            case = MdtCase.objects.filter(pk=case_id, session=session).first()
+        if case is None:
+            raise ValidationError({'case_id': 'Pacient není v agendě tohoto boardu.'})
+    return case
+
+
 def _publish(sid: int, payload: dict) -> None:
     """Rozešle zprávu otevřeným streamům boardu. Výpadek Redisu zprávu neztratí: je v DB a stream ji doplní."""
     try:
@@ -85,17 +106,7 @@ def session_messages(request, sid):
         return Response(_messages(session.pk, _after(request.query_params.get('after'))))
     if session.status == 'closed':
         return Response(CLOSED_CHAT, status=409)
-    text = str(request.data.get('text') or '').strip()
-    if not text:
-        raise ValidationError({'text': 'Zpráva je prázdná.'})
-    if len(text) > SessionMessage.MAX_LENGTH:
-        raise ValidationError({'text': f'Zpráva má nejvýš {SessionMessage.MAX_LENGTH} znaků.'})
-    case, case_id = None, request.data.get('case_id')
-    if case_id is not None:
-        if isinstance(case_id, int) and not isinstance(case_id, bool):
-            case = MdtCase.objects.filter(pk=case_id, session=session).first()
-        if case is None:
-            raise ValidationError({'case_id': 'Pacient není v agendě tohoto boardu.'})
+    text, case = message_text(request.data), message_case(request.data, session)
     m = SessionMessage.objects.create(session=session, author=request.user, case=case, text=text)
     payload = _message(m)
     transaction.on_commit(lambda: _publish(session.pk, payload))

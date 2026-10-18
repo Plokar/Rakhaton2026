@@ -94,6 +94,29 @@ class SessionMessage(models.Model):
         return f'{self.author} @ {self.session}: {self.text[:40]}'
 
 
+class ChatbotMessage(models.Model):
+    """Dotaz lékaře a odpověď AI v chatbotu u zasedání (T-338). Rozhovor je soukromý (lékař + board).
+    Neupravuje se ani nemaže: audit, co AI komu odpověděla. Odpověď AI není oficiální záznam (zlaté pravidlo)."""
+    ROLES = [('user', 'Lékař'), ('ai', 'AI')]
+    session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='chatbot_messages')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                             related_name='mdt_chatbot_messages')
+    # pacient, na kterého se lékař ptal (null = obecný dotaz na guidelines a studie)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='chatbot_messages')
+    role = models.CharField(max_length=4, choices=ROLES)
+    text = models.TextField(blank=True)                          # dotaz; u AI poznámka (např. bez jazykového modelu)
+    claims = models.JSONField(default=list, blank=True)          # AI: Claim[] (§8.1) po grounding validátoru
+    uncertain = models.JSONField(default=list, blank=True)       # AI: NEJISTOTA AI [{text, citations}]
+    model = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.role} {self.user} @ {self.session}: {self.text[:40]}'
+
+
 class UserProfile(models.Model):
     """Odbornost uživatele (hodnoty `RoleId`, ARCH §8.1). Role = Django `Group` (D-014)."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')

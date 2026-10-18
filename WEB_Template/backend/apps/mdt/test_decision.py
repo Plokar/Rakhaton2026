@@ -78,7 +78,9 @@ def test_confirm_writes_mdt02_to_iris(case, decision):
 def test_confirm_minimal_decision_without_empty_arrays(case, decision):
     """Závěr bez doporučených kroků, re-MDT a úkolů (např. draft zapisovatele): IRIS odmítá `activity: []`."""
     s = {k: v for k, v in decision['sections'].items() if k not in ('re_mdt', 'trial', 'extra_diagnostics')}
-    minimal = {**decision, 'sections': {**s, 'recommendation': []}, 'tasks': [], 'red_flags_acknowledged': []}
+    chosen = [{'id': 'resekce', 'title': 'Resekce jaterních metastáz', 'light': 'green', 'chosen': True}]
+    minimal = {**decision, 'sections': {**s, 'recommendation': [], 'options_considered': chosen},
+               'tasks': [], 'red_flags_acknowledged': []}
     as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', minimal, format='json')
     assert as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/').status_code == 200
     assert 'activity' not in client.read('CarePlan', 'P03-mdt02-careplan')
@@ -185,6 +187,35 @@ def test_guideline_deviation_rule():
     assert 'A' in guideline_deviation({'options_considered': [{'id': 'a', 'title': 'A', 'light': 'red', 'chosen': True}]})
     assert guideline_deviation({'guideline_compliance': {'compliant': False, 'reason': ''}})
     assert guideline_deviation({'guideline_compliance': {'compliant': True, 'reason': ''}}) is None
+
+
+def test_decision_gaps_rule(decision):
+    """Server hlídá totéž co UI „Před potvrzením zbývá“: úplný závěr nic nehlásí, každá mezera se vypíše."""
+    from services.fhir.writeback import decision_gaps
+    assert decision_gaps(decision, decision['red_flags_acknowledged']) == []
+    s = decision['sections']
+    empty = {**decision, 'attendees': [{'user_id': '', 'name': 'Chirurg', 'role': 'surgeon'}],
+             'tasks': [{'id': 't1', 'description': ' ', 'owner': '', 'due_date': None}],
+             'sections': {**s, 'question': {**s['question'], 'text': ''}, 'assessment': {**s['assessment'], 'text': ' '},
+                          'conclusion': {**s['conclusion'], 'text': ''}, 'recommendation': [],
+                          'guideline_compliance': None}}
+    gaps = decision_gaps(empty, ['RF-A', *decision['red_flags_acknowledged']])
+    assert gaps == ['Projednaná otázka', 'Klinické zhodnocení',
+                    'Zvolený postup (zvažované možnosti) nebo krok doporučeného postupu',
+                    'V souladu s guidelines? Ano / Ne', 'Závěr MDT', 'Přítomní: vybrat lékaře (Chirurg)',
+                    'Úkol 1: popis, komu, termín', 'Varovné signály vzít na vědomí: 1']
+
+
+def test_incomplete_decision_is_not_confirmed(case, decision):
+    """Neúplný závěr server odmítne (400 + seznam), i když UI obejdeme; nic se nezapíše do IRIS."""
+    s = decision['sections']
+    incomplete = {**decision, 'sections': {**s, 'conclusion': {**s['conclusion'], 'text': ''}}}
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', incomplete, format='json')
+    r = as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
+    assert r.status_code == 400 and r.json()['remaining'] == ['Závěr MDT']
+    assert 'Před potvrzením zbývá' in r.json()['detail']
+    case.refresh_from_db()
+    assert case.status != 'confirmed'
 
 
 def test_board_record_and_zip(case, decision):

@@ -772,6 +772,9 @@ def case_decision_confirm(request, cid):
             return Response({'detail': deviation, 'field': 'guideline_compliance'}, status=400)
         brief = case.briefs.first()
         red_flags = {f['id']: f for f in (brief.content.get('red_flags', []) if brief else [])}
+        if remaining := writeback.decision_gaps(decision.content, red_flags):   # stejně jako UI „Před potvrzením zbývá“
+            return Response({'detail': f'Před potvrzením zbývá: {"; ".join(remaining)}.', 'remaining': remaining},
+                            status=400)
         now = timezone.localtime()
         confirmed_by = {'user_id': str(request.user.pk), 'name': roles.display_name(request.user)}
         try:

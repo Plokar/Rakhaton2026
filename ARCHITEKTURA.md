@@ -1048,6 +1048,17 @@ Guidelines datasetu jsou závazný obsah aplikace (zadání: možnosti léčby z
 | PRS-4.1 | kostní metastázy: denosumab / zoledronát, Ca + D, stomatologie; RT nebo ortopedie | VS-PRS-12, VS-PRS-13 |
 | PRS-4.2 | nový lokalizovaný symptom → cílené zobrazení; vzestup markeru bez zobrazení není progrese | `RF-NEWSYMPTOM`, `RF-LAB` |
 
+### 5.12 Chatbot u zasedání (T-338)
+
+Vedle chatu lékařů (T-334) se lékař v jednání ptá AI. Odpověď je seznam tvrzení s citacemi, stejný `Claim` jako v podkladu (§8.1), takže klik na citaci otevře zdroj (`GET /api/evidence/`).
+
+- **Kontext** je stejný jako u podkladu (D-010): s pacientem na řadě celý pacient z IRIS, jeho sada guidelines, studie a výsledky deterministických pravidel. Bez pacienta (dotaz bez štítku) jen všechny sady guidelines (`KRC`, `PRS`, `PLI`, `OBC`) a všechny studie (`context_builder.general_context`).
+- **LLM:** jeden Gemini call se schématem `ChatbotOutput` (`claims` s citacemi, `missing`, `uncertain` = NEJISTOTA AI), prompt `services/ai/prompts/chatbot.md` + pravidla zkratek. Do LLM jde i posledních 6 zpráv rozhovoru o stejném pacientovi. Dotaz i historie projdou pseudonymizací (§5.7), u pacienta platí `provider_for_patient` (D-021). Volání se loguje jako `LlmCallLog` s účelem `chatbot`.
+- **Validace:** tvrzení i chybějící údaje projdou grounding validátorem (§5.3); citace mimo povolená ID, číslo nebo datum, které ve zdroji není, = `unverified`. Citace u `uncertain` se filtrují na povolená ID. LLM nedoporučuje léčbu ani neurčuje barvu semaforu.
+- **Bez odpovědi LLM** (chyba, prázdný výstup, `AI_PROVIDER=mock`) ukáže odpověď nejbližší místa v dokumentaci doslovně s citací, kterou přiřadil kód (`_computed`): slova dotazu bez diakritiky a koncovek, vzácnější slovo váží víc, při shodě novější záznam první. Poznámka v `text` řekne proč (NFR-5).
+- **Soukromí a audit:** rozhovor patří lékaři a boardu (`ChatbotMessage`), ostatní ho nevidí. Nic se neupravuje ani nemaže a odpověď AI není oficiální záznam. Uzavřený board je jen ke čtení.
+- **Implementace:** `services/ai/chatbot.py` (`answer`, `answer_from_context`, `nearest_sources`), API `apps/mdt/chatbot.py`, UI `components/mdt/meeting/ChatbotPanel.tsx` + `use-chatbot.ts`. V jednání tlačítko Chatbot vedle Chatu (zkratka A), panel vpravo. Když jsou otevřené chat i chatbot, jsou od 1680 px vedle sebe, jinak pod sebou v jednom sloupci; na úzkém displeji boční panel (vždy jen jeden).
+
 ---
 
 ## 6. Backend (Django) — struktura
@@ -1098,6 +1109,7 @@ Nové závislosti v `requirements.txt`:
 | `LlmCallLog` | `purpose`, `provider`, `model`, `prompt_hash`, `tokens_in`, `tokens_out`, `latency_ms`, `ok` |
 | `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
 | `SessionMessage` | chat lékařů u zasedání (T-334): `session` FK, `author` (User), `case` FK nullable (štítek pacienta na řadě), `text` (max 2000), `created_at`; neupravuje se ani nemaže |
+| `ChatbotMessage` | chatbot u zasedání (T-338, §5.12), soukromý rozhovor lékaře s AI: `session` FK, `user` (User), `case` FK nullable (pacient, na kterého se ptal), `role` `user`/`ai`, `text`, `claims` (JSON `Claim[]`), `uncertain` (JSON), `model`, `created_at`; neupravuje se ani nemaže (migrace `mdt/0009` v `dodelat`) |
 
 `seed_mdt` vytvoří zasedání a případy **z nominací v IRIS**: `ServiceRequest.category` (zaměření komise) + `Task.restriction.period.start` (datum MDT). Vzniknou 4 zasedání:
 
@@ -1137,6 +1149,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET, POST | `/api/mdt/sessions/{sid}/messages/` | chat lékařů u zasedání (T-334), čte a píše každý přihlášený člen komise: GET → `SessionMessage[]` od nejstarší (`?after=<id>` jen novější, jinak posledních 200); POST `{text, case_id?}` → 201 `SessionMessage`; `case_id` = případ z agendy tohoto boardu (jinak 400), prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení) |
 | GET | `/api/mdt/sessions/{sid}/stream/` | **Server-Sent Events** (`text/event-stream`, bez websocketů a bez pollingu): každá nová zpráva boardu jako `id: <ID>` + `data: SessionMessage`, komentář `: ping` každých 15 s, `retry: 3000`. Hlavička `Cache-Control: no-cache, no-transform`: proxy s kompresí (rewrite v Next.js při `next start`) by jinak stream zabalila do gzipu a bufferovala. `Last-Event-ID` (reconnect `EventSource`) nebo `?after=<id>` nejdřív doplní zmeškané. JWT z cookie (`EventSource` posílá cookies, ne hlavičky), jinak 401; neexistující board 404. Mezi procesy rozesílá channel layer (Redis) po commitu zprávy |
+| GET, POST | `/api/mdt/sessions/{sid}/chatbot/` | chatbot u zasedání (T-338, §5.12), každý přihlášený lékař, rozhovor je jen jeho: GET → vlastní `ChatbotMessage[]` u boardu od nejstarší (posledních 200); POST `{text, case_id?}` → 201 `[dotaz, odpověď AI]` (synchronně, jeden Gemini call). `case_id` = případ z agendy tohoto boardu (jinak 400), bez něj jen guidelines a studie; prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení). Selhání AI nevrací chybu: odpověď nese poznámku a případně nejbližší místa v dokumentaci |
 | GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného |
 | GET | `/api/mdt/practitioners/?q=&with_user=&limit=` | lékaři nemocnice z IRIS (FHIR `Practitioner`) pro popup výběru lékaře (T-328): přítomní, vlastník úkolu, spolupráce. `{id, name, specialty, role, user}`; hledání bez diakritiky ve jménu, odbornosti a ID, lékaři s účtem v aplikaci první |
 | POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
@@ -1694,6 +1707,18 @@ interface SessionMessage {                      // GET/POST /api/mdt/sessions/{s
   specialty: RoleId | null;                     // odbornost autora (UserProfile)
   case: { id: number; patient_id: string } | null;  // štítek pacienta na řadě ("P03", D-018); null = k celému zasedání
   text: string;
+  created_at: string;                           // místní čas ISO 8601
+}
+
+interface ChatbotMessage {                      // GET/POST /api/mdt/sessions/{sid}/chatbot/ (T-338, §5.12); POST vrací [dotaz, odpověď]
+  id: number;
+  session: number;
+  role: "user" | "ai";
+  case: { id: number; patient_id: string } | null;  // pacient, na kterého se lékař ptal ("P03", D-018); null = jen guidelines a studie
+  text: string;                                 // dotaz; u AI poznámka (např. „Jazykový model není zapnutý…“), jinak ""
+  claims: Claim[];                              // jen AI: tvrzení s citacemi, verification z grounding validátoru; "missing" = údaj chybí
+  uncertain: { text: string; citations: EvidenceId[] }[];   // jen AI: NEJISTOTA AI (rozmezí, zkratka, rozpor)
+  model: string | null;                         // jen AI: model, který odpověděl; null = odpověď bez LLM
   created_at: string;                           // místní čas ISO 8601
 }
 

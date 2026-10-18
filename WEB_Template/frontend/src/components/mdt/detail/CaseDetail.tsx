@@ -21,7 +21,9 @@ import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-sou
 import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
-import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
+import {
+  CaseQuickViewBody, dataNoticesLabel, fixtureQuickViewSources, quickHeader, redFlagsLabel, useQuickViewSources, type QuickViewSources,
+} from '../quick-view';
 import { RedFlagList } from '../RedFlagList';
 import { ROLE_META } from '../roles';
 import { RoleSection } from '../RoleSection';
@@ -234,7 +236,7 @@ function DetailLayout({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Varovné signály z rozporů mezi zdroji vzniknou s podkladem. Varování z kontroly úplnosti jsou v rychlém přehledu.
+              Varovné signály z rozporů mezi zdroji vzniknou s podkladem. Upozornění k údajům z kontroly úplnosti jsou v rychlém přehledu.
             </p>
           )}
         </DetailSection>
@@ -549,7 +551,7 @@ function StickyCaseHeader({
               {header.tnm && <> · <span translate="no">{header.tnm}</span></>}
             </p>
           </div>
-          <dl className="flex items-center gap-4 text-sm">
+          <dl className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <div className="flex items-baseline gap-1.5" title="Performance status (ECOG): lékař, pacient (PROMs)">
               <dt className="text-xs text-muted-foreground">PS</dt>
               <dd className="text-lg font-semibold tabular-nums">{header.physicianPs ?? '–'}</dd>
@@ -562,11 +564,19 @@ function StickyCaseHeader({
               <dt className="text-xs text-muted-foreground">C/P</dt>
               <dd className="text-lg font-semibold">{header.intent ?? '–'}</dd>
             </div>
-            {(flags > 0 || highWarnings > 0) && (
-              <a href="#varovani" className="inline-flex items-center gap-1 text-[13px] font-medium hover:underline hover:underline-offset-4">
-                <TriangleAlert className={cn('size-4', highWarnings || brief?.red_flags.some((f) => f.severity === 'high') ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400')} aria-hidden />
-                <span className="tabular-nums">{flags || header.warnings.length}</span> varování
-              </a>
+            {(flags > 0 || header.warnings.length > 0) && (
+              // dvě čísla, dva názvy (T-343): varovné signály podkladu a upozornění k údajům z kontroly úplnosti
+              // pod sebou, aby se hlavička vešla na jeden řádek
+              <div className="grid basis-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-1.5 text-[13px] font-medium leading-snug sm:basis-auto">
+                <dt className="sr-only">Varování</dt>
+                <TriangleAlert className={cn('row-span-2 size-4', highWarnings || brief?.red_flags.some((f) => f.severity === 'high') ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400')} aria-hidden />
+                {flags > 0 && (
+                  <dd className="col-start-2"><a href="#varovani" className="tabular-nums hover:underline hover:underline-offset-4">{redFlagsLabel(flags)}</a></dd>
+                )}
+                {header.warnings.length > 0 && (
+                  <dd className="col-start-2"><a href="#prehled" title={dataNoticesLabel(header.warnings.length, highWarnings)} className="tabular-nums hover:underline hover:underline-offset-4">{dataNoticesLabel(header.warnings.length)}</a></dd>
+                )}
+              </div>
             )}
           </dl>
           <div className="flex items-center gap-1.5">

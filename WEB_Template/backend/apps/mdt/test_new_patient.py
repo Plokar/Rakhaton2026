@@ -2,6 +2,7 @@
 import io
 import json
 from datetime import date
+from pathlib import Path
 
 import pytest
 from django.core.management import call_command
@@ -14,6 +15,15 @@ from services import rc as rc_module
 from services.fhir import client
 
 pytestmark = pytest.mark.django_db
+_REPO = next((p for p in Path(__file__).resolve().parents if (p / 'WEB_Template').is_dir()), None)
+
+
+def _data_dir(name: str) -> Path:
+    """`data/<name>` z repa; v Docker stacku je připojené jako `/data/<name>` (docker-compose.dev.yml)."""
+    path = _REPO / 'data' / name if _REPO else Path('/data') / name
+    if not path.is_dir():
+        pytest.skip(f'chybí data/{name}')
+    return path
 
 REPORT = """Onkologická ambulance – vstupní vyšetření 2. 10. 2026
 
@@ -226,8 +236,7 @@ def _json_file(data, name='pacient.json'):
 
 
 def _dataset_bundle(pid='P07'):
-    from pathlib import Path
-    root = Path(__file__).resolve().parents[4] / 'data' / 'dataset_test' / 'pacienti'
+    root = _data_dir('dataset_test') / 'pacienti'
     return json.loads((root / pid / f'{pid}_bundle.json').read_text(encoding='utf-8'))
 
 
@@ -329,8 +338,10 @@ def test_json_upload_errors(board):
 
 
 def _dataset_file(pid, kind):
+    import os
     from services.fhir import ingest
-    path = ingest.repo_dataset() / 'pacienti' / pid / f'{pid}_{kind}'
+    root = os.environ.get('DATASET_DIR') or ingest.repo_dataset()       # jako fixture `dataset_root`
+    path = Path(root) / 'pacienti' / pid / f'{pid}_{kind}'
     return path.read_bytes()
 
 
@@ -392,8 +403,7 @@ def test_json_with_more_patients_creates_draft_for_each(board):
 @pytest.mark.parametrize('name, patients', [('dva_pacienti_P10_P11.json', 2), ('obecny_export_uuid.json', 1)])
 def test_import_examples_stay_valid(board, name, patients):
     """Ukázkové soubory v data/import_ukazky jdou naimportovat (README tamtéž)."""
-    from pathlib import Path
-    path = Path(__file__).resolve().parents[4] / 'data' / 'import_ukazky' / name
+    path = _data_dir('import_ukazky') / name
     f = io.BytesIO(path.read_bytes())
     f.name = name
     r = as_user('onkolog').post('/api/mdt/patient-drafts/', {'files': [f]}, format='multipart')

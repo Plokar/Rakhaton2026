@@ -103,9 +103,32 @@ class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')
     specialty = models.CharField(max_length=30, blank=True)     # "oncologist" | "surgeon" | "pulmonologist"…
     practitioner_fhir_id = models.CharField(max_length=64, blank=True)   # lékař v IRIS „LEK-…“ (T-328)
+    title_before = models.CharField(max_length=40, blank=True)   # „MUDr.“, „doc. MUDr.“ (T-338)
+    title_after = models.CharField(max_length=40, blank=True)    # „Ph.D.“
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'
+
+
+class FactTemplate(models.Model):
+    """Šablona klíčových údajů lékaře pro oblast (T-338, D-025, docs/SABLONY_LEKARE.md).
+
+    `layout` = `{categories?: {order, hidden}, facts?: {order, hidden}, blocks?: {order, hidden}}`, klíče údajů
+    stabilní napříč pacienty (`bm.egfr`, `lab:718-7`, `alert:RF-LAB`). Skrývá jen zobrazení, podklad zůstává celý.
+    """
+    AREAS = [('PLI', 'Plíce'), ('PRS', 'Prs'), ('KRC', 'Kolorektum'), ('OBC', 'Ostatní diagnózy')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fact_templates')
+    area = models.CharField(max_length=3, choices=AREAS)
+    layout = models.JSONField(default=dict, blank=True)
+    preset = models.CharField(max_length=40, blank=True)          # z jakého presetu vznikla (jen informace)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'area'], name='fact_template_user_area')]
+        ordering = ['user', 'area']
+
+    def __str__(self):
+        return f'{self.user} {self.area}'
 
 
 class Decision(models.Model):

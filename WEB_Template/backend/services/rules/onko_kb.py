@@ -352,8 +352,9 @@ def kb_for_patient(resources: list[dict], allowed_ids: Iterable[str] = (), comor
     """Postupy z báze mimo katalog `compatibility_rules.yaml` (jeho výběr postupů má přednost)."""
     from services.rules.compatibility import load_catalog
     catalog_ids = [p["id"] for p in load_catalog()["procedures"]]
-    return kb_procedures(resources, existing_ids=catalog_ids, allowed_sources=set(allowed_ids) | ext_ids(),
-                         comorbidities_confirmed=comorbidities_confirmed)
+    from services.rules.national_rules import attach
+    return attach(kb_procedures(resources, existing_ids=catalog_ids, allowed_sources=set(allowed_ids) | ext_ids(),
+                                comorbidities_confirmed=comorbidities_confirmed))
 
 
 def _fmt(value) -> str:

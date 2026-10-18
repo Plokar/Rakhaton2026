@@ -11,8 +11,12 @@ import type {
   RuleInfo,
   SimilarCases,
   MdtRole,
+  MyTemplates,
+  ProjectorLayout,
   RoleId,
   SectionId,
+  TemplateArea,
+  TemplateCatalog,
   SpecialtyView,
   Decision,
   EvidenceSource,
@@ -79,6 +83,21 @@ export interface ImportProposal {
   rejected: ImportValue[];
 }
 
+/** POST /api/mdt/users/ (předseda, T-338): profil a šablony nového lékaře. */
+export interface NewDoctorInput {
+  username: string;
+  password: string;
+  email?: string;
+  first_name: string;
+  last_name: string;
+  title_before?: string;
+  title_after?: string;
+  specialty: RoleId;
+  role: MdtRole;
+  templates?: Partial<Record<TemplateArea, ProjectorLayout>>;
+  preset?: string;
+}
+
 /** Údaj nominace v návrhu nového pacienta s citací odstavce podkladu (`null` = upravil lékař). */
 export type DraftText = { text: string; citation: string | null };
 
@@ -143,9 +162,22 @@ const fileBody = (name: string, file: Blob) => {
 
 export const mdtApi = {
   getMe: () => apiFetch<Me>('/api/mdt/me/'),
+  /** Tituly si lékař upraví sám (T-338); roli a odbornost mění předseda. */
+  updateMyTitles: (input: { title_before?: string; title_after?: string }) =>
+    apiFetch<Me>('/api/mdt/me/', { method: 'PATCH', body: JSON.stringify(input) }),
 
   /** Uživatelé s rolí a odborností (`Me[]`), jen předseda (T-319). */
   getUsers: () => apiFetch<Me[]>('/api/mdt/users/'),
+  /** Předseda založí lékaře s profilem a šablonou (T-338). */
+  createUser: (input: NewDoctorInput) => apiFetch<Me>('/api/mdt/users/', { method: 'POST', body: JSON.stringify(input) }),
+
+  /** Šablony klíčových údajů přihlášeného lékaře po oblastech + presety (T-338). */
+  getTemplates: () => apiFetch<MyTemplates>('/api/mdt/templates/'),
+  saveTemplate: (area: TemplateArea, layout: ProjectorLayout, preset?: string) =>
+    apiFetch<MyTemplates['templates'][number]>(`/api/mdt/templates/${area}/`, { method: 'PUT', body: JSON.stringify({ layout, preset }) }),
+  deleteTemplate: (area: TemplateArea) =>
+    apiFetch<MyTemplates['templates'][number]>(`/api/mdt/templates/${area}/`, { method: 'DELETE' }),
+  getTemplateCatalog: (area: TemplateArea) => apiFetch<TemplateCatalog>(`/api/mdt/templates/catalog/?area=${area}`),
 
   /** Lékaři nemocnice z IRIS pro výběr přítomných, vlastníků úkolů a spolupracovníků (T-328). */
   getPractitioners: (filter: { q?: string; withUser?: boolean; limit?: number } = {}) => {
@@ -157,7 +189,7 @@ export const mdtApi = {
   },
 
   /** Změna role, odbornosti a propojení s lékařem v IRIS (jen předseda; sám sobě roli předsedy odebrat nejde). */
-  updateUser: (userId: number, input: { role?: MdtRole; specialty?: RoleId; practitioner_id?: string }) =>
+  updateUser: (userId: number, input: { role?: MdtRole; specialty?: RoleId; practitioner_id?: string; title_before?: string; title_after?: string; first_name?: string; last_name?: string }) =>
     apiFetch<Me>(`/api/mdt/users/${userId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
   /** Doporučená šablona projektoru podle diagnózy (T-318); 404 bez báze nebo diagnózy. */

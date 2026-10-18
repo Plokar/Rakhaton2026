@@ -27,10 +27,9 @@ function ProjectorWindow({ initial }: { initial: ProjectorSelection | null }) {
     document.title = selection ? `${selection.patient} · projektor · MedTeam` : 'Projektor · MedTeam';
   }, [selection]);
   return (
-    <div className="flex h-dvh justify-center bg-muted/40">
-      <div className="h-full w-full max-w-[420px] border-x border-border bg-background">
-        <ProjectorPanel key={selection ? `${selection.board}:${selection.caseId}` : 'empty'} selection={selection} />
-      </div>
+    // Celá šířka okna (T-343): úzké okno vedle PACS má karty pod sebou, široké okno nebo projektor je skládá do sloupců.
+    <div className="h-dvh bg-background">
+      <ProjectorPanel key={selection ? `${selection.board}:${selection.caseId}` : 'empty'} selection={selection} />
     </div>
   );
 }

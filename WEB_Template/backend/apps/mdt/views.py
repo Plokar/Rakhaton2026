@@ -59,12 +59,15 @@ def _require_case_edit(request, case: MdtCase) -> None:
 
 # ── serializace ──────────────────────────────────────────────────────────────
 def _user(u) -> dict | None:
-    return u and {'user_id': u.pk, 'name': u.get_full_name() or u.username}
+    return u and {'user_id': u.pk, 'name': roles.display_name(u)}
 
 
 def _member(u) -> dict:
-    """`Me` (§8.6): role a odbornost uživatele."""
-    return {'user_id': u.pk, 'username': u.username, 'name': u.get_full_name() or u.username,
+    """`Me` (§8.6): role, odbornost a jméno s tituly (T-338)."""
+    profile = getattr(u, 'mdt_profile', None) if hasattr(u, 'mdt_profile') else None
+    return {'user_id': u.pk, 'username': u.username, 'name': roles.display_name(u),
+            'first_name': u.first_name, 'last_name': u.last_name,
+            'title_before': profile.title_before if profile else '', 'title_after': profile.title_after if profile else '',
             'role': roles.role(u), 'specialty': roles.specialty(u), 'practitioner_id': roles.practitioner_id(u)}
 
 
@@ -79,7 +82,19 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
             'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
-            'projector_layout': c.projector_layout or {}, 'patient': patient}
+            'projector_layout': c.projector_layout or {}, 'requester_layout': _requester_layout(c, patient),
+            'patient': patient}
+
+
+def _requester_layout(c: MdtCase, patient: dict | None) -> dict | None:
+    """Šablona zadávajícího lékaře pro oblast pacienta (T-338, D-025): výchozí rozložení okna projektoru,
+    dokud ho lékař u případu neupraví. Bez hlavičky pacienta (oblast neznámá) `None`."""
+    icd10 = ((patient or {}).get('diagnosis') or {}).get('icd10')
+    if not icd10 or c.created_by_id is None:
+        return None
+    from services.rules.fact_categories import area_for_icd10
+    from services.rules.fact_templates import template_for
+    return template_for(c.created_by, area_for_icd10([icd10]))
 
 
 def _datetime(value) -> timezone.datetime:
@@ -102,19 +117,32 @@ def _config(data, case: MdtCase) -> dict:
 
 # ── endpointy ────────────────────────────────────────────────────────────────
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def me(request):
-    """Role a odbornost přihlášeného (FR-U1)."""
+    """Role a odbornost přihlášeného (FR-U1). PATCH `{title_before?, title_after?}`: tituly si lékař upraví sám (T-338);
+    roli a odbornost mění předseda."""
+    if request.method == 'PATCH':
+        from .models import UserProfile
+        from .templates import clean_titles
+        titles = clean_titles(request.data)
+        if titles:
+            UserProfile.objects.update_or_create(user=request.user, defaults=titles)
+        return Response(_member(get_user_model().objects.get(pk=request.user.pk)))
     return Response(_member(request.user))
 
 
-@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
-@api_view(['GET'])
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def user_list(request):
-    """Uživatelé s rolí a odborností (`Me[]`, T-319). Číst smí předseda a lékař (T-326: zadávající lékař vybírá,
-    koho přizvat ke spolupráci); role a odbornost mění jen předseda (`user_detail`)."""
+    """GET: uživatelé s rolí a odborností (`Me[]`, T-319). Číst smí předseda a lékař (T-326: zadávající lékař vybírá,
+    koho přizvat ke spolupráci); role a odbornost mění jen předseda (`user_detail`). POST (předseda, T-338): založí
+    lékaře s profilem (jméno, tituly, profese, role) a šablonou údajů (`apps.mdt.templates.create_user`)."""
+    if request.method == 'POST':
+        _require(request, roles.ADMIN)
+        from .templates import create_user
+        return Response(_member(create_user(request)), status=201)
     _require(request, roles.ADMIN, roles.DOCTOR)
     users = get_user_model().objects.filter(is_active=True).order_by('username')
     return Response([_member(u) for u in users])
@@ -165,6 +193,16 @@ def user_detail(request, uid):
         raise ValidationError({'specialty': f'Jen {", ".join(roles.SPECIALTIES)}.'})
     if user.pk == request.user.pk and role not in (None, roles.ADMIN):
         raise ValidationError({'role': 'Sám sobě roli předsedy odebrat nejde.'})
+    from .models import UserProfile
+    from .templates import clean_titles
+    titles = clean_titles(request.data)                  # T-338: tituly a jméno upraví předseda
+    names = {k: str(request.data[k]).strip()[:150] for k in ('first_name', 'last_name') if k in request.data}
+    if names:
+        get_user_model().objects.filter(pk=user.pk).update(**names)
+        user.refresh_from_db()
+    if titles:
+        UserProfile.objects.update_or_create(user=user, defaults=titles)
+        user = get_user_model().objects.get(pk=user.pk)
     roles.assign(user, role=role, specialty=specialty)
     if specialty is not None:
         try:                                     # odbornost i u lékaře účtu v IRIS (LEK-APP-…, T-328)
@@ -323,24 +361,13 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
         _validate_projector_layout(data['projector_layout'])
 
 
-PROJECTOR_BLOCKS = ('anamnesis', 'facts', 'treatments')
-
-
 def _validate_projector_layout(layout) -> None:
-    """Okno pro projektor (T-333): `{blocks?: {order, hidden}, facts?: {order, hidden}}`; ID údajů jsou `KeyFact.id`."""
-    def ids(value, allowed=None) -> bool:
-        return (isinstance(value, list) and len(value) <= 300
-                and all(isinstance(x, str) and 0 < len(x) <= 120 and (allowed is None or x in allowed) for x in value))
-    if not isinstance(layout, dict) or set(layout) - {'blocks', 'facts'}:
-        raise ValidationError({'projector_layout': 'Objekt s klíči blocks a facts.'})
-    for key, allowed in (('blocks', PROJECTOR_BLOCKS), ('facts', None)):
-        part = layout.get(key)
-        if part is None:
-            continue
-        if not isinstance(part, dict) or set(part) - {'order', 'hidden'} \
-                or not all(ids(part.get(k, []), allowed) for k in ('order', 'hidden')):
-            raise ValidationError({'projector_layout': f'{key}: {{order: [id], hidden: [id]}}'
-                                                       + (f', jen {", ".join(allowed)}' if allowed else '') + '.'})
+    """Okno pro projektor (T-333) se stejným tvarem jako šablona lékaře (T-338): `{categories?, facts?, blocks?}`."""
+    from services.rules.fact_templates import validate_layout
+    try:
+        validate_layout(layout)
+    except ValueError as e:
+        raise ValidationError({'projector_layout': str(e)}) from None
 
 
 def _validate_collaborators(request, data, case: MdtCase | None) -> None:
@@ -388,7 +415,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
     return writeback.write_intake(
         patient_id=case.patient_fhir_id, case_no=case.pk, service_request_id=case.service_request_fhir_id,
         ecog=ecog, intent=intent, acknowledged=list(enumerate(new_acks, start + 1)), warnings=warnings or {},
-        entered_by=request.user.get_full_name() or request.user.username, now=now)
+        entered_by=roles.display_name(request.user), now=now)
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -540,7 +567,11 @@ def case_brief(request, cid):
         brief = case.briefs.first()
         if brief is None:
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
-        return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
+        content = brief.content
+        if (content.get('decision_support') or {}).get('treatment_options'):
+            from services.rules.national_rules import attach   # i podklad z doby před T-340 ukáže oporu v Modré knize
+            attach(content['decision_support']['treatment_options'])
+        return Response({**content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
     params = {'config': _config(request.data, case)}
     if feedback := _brief_feedback(request):
@@ -565,7 +596,7 @@ def _brief_feedback(request) -> dict | None:
     if not isinstance(sections, list) or any(s not in cfg.SECTION_ORDER for s in sections):
         raise ValidationError({'feedback': 'Neplatná sekce (SectionId §8.1).'})
     return {'text': text, 'sections': list(dict.fromkeys(sections)),
-            'by': request.user.get_full_name() or request.user.username, 'at': timezone.localtime().isoformat()}
+            'by': roles.display_name(request.user), 'at': timezone.localtime().isoformat()}
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -632,7 +663,7 @@ def patient_import_confirm(request, pid):
     if not isinstance(proposal, dict) or proposal.get('patient_id') != pid:
         raise ValidationError({'patient_id': 'Návrh nepatří tomuto pacientovi.'})
     try:
-        resources = report_import.confirm(proposal, user_name=request.user.get_full_name() or request.user.username)
+        resources = report_import.confirm(proposal, user_name=roles.display_name(request.user))
     except (KeyError, ValueError) as e:
         raise ValidationError({'values': str(e)}) from None
     fhir.transaction({'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
@@ -741,8 +772,11 @@ def case_decision_confirm(request, cid):
             return Response({'detail': deviation, 'field': 'guideline_compliance'}, status=400)
         brief = case.briefs.first()
         red_flags = {f['id']: f for f in (brief.content.get('red_flags', []) if brief else [])}
+        if remaining := writeback.decision_gaps(decision.content, red_flags):   # stejně jako UI „Před potvrzením zbývá“
+            return Response({'detail': f'Před potvrzením zbývá: {"; ".join(remaining)}.', 'remaining': remaining},
+                            status=400)
         now = timezone.localtime()
-        confirmed_by = {'user_id': str(request.user.pk), 'name': request.user.get_full_name() or request.user.username}
+        confirmed_by = {'user_id': str(request.user.pk), 'name': roles.display_name(request.user)}
         try:
             ids = writeback.confirm_decision(
                 decision.content, patient_id=case.patient_fhir_id, service_request_id=case.service_request_fhir_id,
@@ -779,7 +813,7 @@ def case_decision_revise(request, cid):
         entry = {'version': version, 'composition': (content.get('fhir_ids') or {}).get('composition'),
                  'confirmed_by': content.get('confirmed_by'), 'confirmed_at': content.get('confirmed_at'),
                  'revised_by': {'user_id': str(request.user.pk),
-                                'name': request.user.get_full_name() or request.user.username},
+                                'name': roles.display_name(request.user)},
                  'revised_at': timezone.localtime().isoformat(), 'reason': reason[:500]}
         decision.content = DecisionSchema.model_validate({
             **content, 'status': 'draft', 'confirmed_by': None, 'confirmed_at': None, 'fhir_ids': None,

@@ -58,10 +58,16 @@ class RegisterSerializer(serializers.ModelSerializer):
     )
     # MDT (T-319): odbornost je povinná, řadí podklad „pro mě“; roli (prohlížející) může předseda změnit
     specialty = serializers.ChoiceField(choices=roles.SPECIALTIES, write_only=True, label='Odbornost')
+    # T-338: tituly a šablona klíčových údajů už při registraci (docs/SABLONY_LEKARE.md R5)
+    title_before = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=40)
+    title_after = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=40)
+    templates = serializers.JSONField(write_only=True, required=False)
+    preset = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=40)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'password2', 'first_name', 'last_name', 'specialty']
+        fields = ['username', 'email', 'password', 'password2', 'first_name', 'last_name', 'specialty',
+                  'title_before', 'title_after', 'templates', 'preset']
         extra_kwargs = {
             'first_name': {'required': False},
             'last_name': {'required': False},
@@ -70,14 +76,23 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Hesla se neshodují."})
+        from apps.mdt.templates import clean_templates
+        attrs['templates'] = clean_templates(attrs.get('templates'))
         return attrs
 
     def create(self, validated_data):
         validated_data.pop('password2')
         specialty = validated_data.pop('specialty')
+        titles = {k: validated_data.pop(k).strip() for k in ('title_before', 'title_after') if k in validated_data}
+        templates, preset = validated_data.pop('templates', {}), validated_data.pop('preset', '')
         with transaction.atomic():
             user = User.objects.create_user(**validated_data)
             roles.assign(user, role=roles.VIEWER, specialty=specialty)
+            if titles:
+                from apps.mdt.models import UserProfile
+                UserProfile.objects.filter(user=user).update(**titles)
+            from apps.mdt.templates import save_templates
+            save_templates(user, templates, preset)
         try:                                           # T-328: lékař v IRIS pro výběr přítomných a úkoly
             roles.ensure_practitioner(user)
         except Exception:                              # registrace na IRIS nečeká

@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Activity, CircleAlert, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { TemplateAreasEditor } from '@/components/mdt/FactLayoutEditor';
 import { ROLE_META } from '@/components/mdt/roles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ApiError, type RegisterData } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import type { ProjectorLayout, TemplateArea } from '@/types/mdt';
 
 type Specialty = RegisterData['specialty'];
 
@@ -30,7 +32,8 @@ function registerError(err: unknown): string {
 }
 
 /**
- * Registrace kolegy (T-319): povinná odbornost, aby podklad mohl dát nahoru, co ho zajímá.
+ * Registrace kolegy (T-319, T-338) ve dvou krocích: 1) profil (jméno, tituly, profese, přihlášení),
+ * 2) šablona klíčových údajů předvyplněná podle profese (pneumolog = výběr pro plíce), jde upravit i přeskočit.
  * Nový účet je člen komise; roli předsedy nebo zadávajícího lékaře nastaví předseda v Týmu komise.
  */
 export default function RegisterPage() {
@@ -41,6 +44,15 @@ export default function RegisterPage() {
   const [email, setEmail] = React.useState('');
   const [firstName, setFirstName] = React.useState('');
   const [lastName, setLastName] = React.useState('');
+  const [titleBefore, setTitleBefore] = React.useState('');
+  const [titleAfter, setTitleAfter] = React.useState('');
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [templates, setTemplates] = React.useState<Partial<Record<TemplateArea, ProjectorLayout>>>({});
+  const [preset, setPreset] = React.useState<string | undefined>();
+  const onTemplates = React.useCallback((next: Partial<Record<TemplateArea, ProjectorLayout>>, presetId?: string) => {
+    setTemplates(next);
+    if (presetId) setPreset(presetId);
+  }, []);
   const [specialty, setSpecialty] = React.useState<Specialty | ''>('');
   const [password, setPassword] = React.useState('');
   const [password2, setPassword2] = React.useState('');
@@ -55,10 +67,19 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!specialty) return setError('Vyberte svou odbornost.');
+    if (!specialty) return setError('Vyberte svou profesi (odbornost).');
+    if (!username.trim() || !email.trim()) return setError('Vyplňte uživatelské jméno a e-mail.');
     if (password !== password2) return setError('Zadaná hesla se neshodují.');
     if (password.length < 8) return setError('Heslo musí mít aspoň 8 znaků.');
+    if (step === 1) return setStep(2);
+    await submit(true);
+  };
+
+  const submit = async (withTemplate: boolean) => {
+    if (!specialty) return;
+    setError('');
     setLoading(true);
+    const chosen = Object.fromEntries(Object.entries(templates).filter(([, l]) => l && Object.keys(l).length));
     try {
       await register({
         username: username.trim(),
@@ -68,6 +89,9 @@ export default function RegisterPage() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         specialty,
+        title_before: titleBefore.trim(),
+        title_after: titleAfter.trim(),
+        ...(withTemplate && Object.keys(chosen).length ? { templates: chosen, preset } : {}),
       });
       router.push('/dashboard');
     } catch (err: unknown) {
@@ -91,10 +115,13 @@ export default function RegisterPage() {
         <ThemeToggle />
       </div>
 
-      <main className="mx-auto my-auto w-full max-w-md py-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Registrace do komise</h1>
+      <main className={cn('mx-auto my-auto w-full py-8', step === 1 ? 'max-w-md' : 'max-w-3xl')}>
+        <p className="text-xs font-medium text-muted-foreground">Krok {step} ze 2 · {step === 1 ? 'profil lékaře' : 'co chcete u pacienta vidět'}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{step === 1 ? 'Registrace do komise' : 'Vaše šablona údajů'}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Odbornost určí, co se vám v podkladu ukáže nahoře. Roli předsedy nebo zadávajícího lékaře nastaví předseda komise.
+          {step === 1
+            ? 'Profese určí, co se vám v podkladu ukáže nahoře, a předvyplní šablonu údajů. Roli předsedy nebo zadávajícího lékaře nastaví předseda komise.'
+            : 'Předvyplněno podle vaší profese. Skryjte nebo seřaďte kategorie a údaje; systém si to pamatuje u všech vašich pacientů dané oblasti. Kdykoli změníte v Nastavení.'}
         </p>
 
         {error && (
@@ -105,6 +132,25 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-4">
+          {step === 2 ? (
+            <>
+              <TemplateAreasEditor value={templates} onChange={onTemplates} specialty={specialty || null} initFromPresets />
+              <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+                <Button type="button" variant="outline" onClick={() => setStep(1)} disabled={loading}>Zpět</Button>
+                <Button type="submit" isLoading={loading}>Zaregistrovat se se šablonou</Button>
+                <Button type="button" variant="ghost" onClick={() => void submit(false)} disabled={loading}>Přeskočit šablonu</Button>
+              </div>
+            </>
+          ) : (
+          <>
+          <div className="grid grid-cols-2 gap-3">
+            <Field id="reg-title-before" label="Titul před jménem">
+              <Input id="reg-title-before" autoComplete="honorific-prefix" placeholder="MUDr." maxLength={40} value={titleBefore} onChange={(e) => setTitleBefore(e.target.value)} />
+            </Field>
+            <Field id="reg-title-after" label="Titul za jménem">
+              <Input id="reg-title-after" autoComplete="honorific-suffix" placeholder="Ph.D." maxLength={40} value={titleAfter} onChange={(e) => setTitleAfter(e.target.value)} />
+            </Field>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field id="reg-first" label="Jméno">
               <Input id="reg-first" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
@@ -115,7 +161,7 @@ export default function RegisterPage() {
           </div>
 
           <fieldset>
-            <legend className="mb-1.5 text-sm font-medium">Odbornost</legend>
+            <legend className="mb-1.5 text-sm font-medium">Profese (odbornost)</legend>
             <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Odbornost">
               {SPECIALTIES.map((r) => (
                 <button
@@ -182,13 +228,15 @@ export default function RegisterPage() {
           </Field>
 
           <Button type="submit" size="lg" className="mt-2 w-full" isLoading={loading}>
-            Zaregistrovat se
+            Pokračovat na šablonu údajů
           </Button>
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
             Registrací souhlasíte s{' '}
             <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">podmínkami užití</Link> a berete na vědomí{' '}
             <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">zásady ochrany soukromí</Link>. Prototyp pracuje jen se syntetickými pacienty.
           </p>
+          </>
+          )}
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

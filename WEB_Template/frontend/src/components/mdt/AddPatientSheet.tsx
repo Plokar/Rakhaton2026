@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage, useCreateCase, useIntakeQuery, usePatientsQuery, useSessionQuery, useSessionsWithCases } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import type { MdtSession, MdtSessionListItem, PatientListItem } from '@/types/mdt';
+import type { MdtCase, MdtSession, MdtSessionListItem, PatientListItem } from '@/types/mdt';
 import { CitationProvider } from './citations';
 import { dayLabel, timeLabel } from './dates';
 import { ImportReportSheet } from './ImportReportSheet';
@@ -21,12 +21,15 @@ import { SourceDrawer } from './SourceDrawer';
 
 const OPEN_SESSIONS = (s: MdtSessionListItem) => s.status !== 'closed';
 
+/** Zařazení čeká na dokončení (T-339): nominace bez kontroly úplnosti, nebo vrácené k doplnění (OBC-1.1). */
+export const intakePending = (c: Pick<MdtCase, 'status'>) => c.status === 'nominated' || c.status === 'returned';
+
 /**
  * Zařazení pacienta z kalendáře nebo z jednání (NAVRH_UI §6.5): výběr pacienta z IRIS, pak formulář
  * s kontrolou úplnosti (`IntakeForm`: Doplnit / Přeskočit, varování, ECOG + C/P). Otázku pro MDT
  * přeskočit nejde (OBC-1.1).
  */
-export function AddPatientSheet({ session, onClose }: { session: MdtSession | null; onClose: () => void }) {
+export function AddPatientSheet({ session, onClose, patientId }: { session: MdtSession | null; onClose: () => void; patientId?: string | null }) {
   const [shown, setShown] = React.useState(session);
   if (session && session !== shown) setShown(session);
   return (
@@ -35,13 +38,13 @@ export function AddPatientSheet({ session, onClose }: { session: MdtSession | nu
         {shown && (
           <>
             <SheetHeader className="border-b border-border px-5 py-4 pr-12">
-              <SheetTitle className="text-base font-semibold">Zařadit pacienta</SheetTitle>
+              <SheetTitle className="text-base font-semibold">{patientId ? `Dokončit zařazení · ${patientId}` : 'Zařadit pacienta'}</SheetTitle>
               <SheetDescription>
                 {shown.title}, {dayLabel(shown.date)} {timeLabel(shown.date)}
               </SheetDescription>
             </SheetHeader>
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-              <AddPatientForm key={shown.id} session={shown} onDone={onClose} />
+              <AddPatientForm key={`${shown.id}:${patientId ?? ''}`} session={shown} onDone={onClose} initialPatientId={patientId ?? null} />
             </div>
           </>
         )}
@@ -51,9 +54,9 @@ export function AddPatientSheet({ session, onClose }: { session: MdtSession | nu
 }
 
 /** Výběr pacienta a formulář zařazení; sdílí ho boční panel i stránka `/dashboard/mdt/[id]/add`. */
-export function AddPatientForm({ session, onDone }: { session: MdtSession; onDone: () => void }) {
+export function AddPatientForm({ session, onDone, initialPatientId = null }: { session: MdtSession; onDone: () => void; initialPatientId?: string | null }) {
   const me = useMe();
-  const [patientId, setPatientId] = React.useState<string | null>(null);
+  const [patientId, setPatientId] = React.useState<string | null>(initialPatientId);
   const [query, setQuery] = React.useState('');
   const [creating, setCreating] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
@@ -65,7 +68,9 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
   const create = useCreateCase();
   const when = `${dayLabel(session.date)} ${timeLabel(session.date)}`;
 
-  const onBoard = new Set((board.data?.cases ?? []).map((c) => c.patient_id));
+  // T-339: pacient na tomto boardu s nedokončeným zařazením (nominace bez kontroly úplnosti) jde vybrat a dokončit
+  const onBoard = new Set((board.data?.cases ?? []).filter((c) => !intakePending(c)).map((c) => c.patient_id));
+  const pending = new Set((board.data?.cases ?? []).filter(intakePending).map((c) => c.patient_id));
   const elsewhere = new Map<string, MdtSessionListItem>();
   for (const s of sessions) {
     if (s.id === session.id) continue;
@@ -139,6 +144,7 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
                     key={p.id}
                     patient={p}
                     onBoard={onBoard.has(p.id)}
+                    pending={pending.has(p.id)}
                     elsewhere={elsewhere.get(p.id)}
                     onSelect={() => setPatientId(p.id)}
                   />
@@ -190,11 +196,13 @@ export function AddPatientForm({ session, onDone }: { session: MdtSession; onDon
 function PatientOption({
   patient,
   onBoard,
+  pending = false,
   elsewhere,
   onSelect,
 }: {
   patient: PatientListItem;
   onBoard: boolean;
+  pending?: boolean;
   elsewhere: MdtSessionListItem | undefined;
   onSelect: () => void;
 }) {
@@ -212,7 +220,8 @@ function PatientOption({
         <span className="flex items-baseline gap-2">
           <span translate="no" className="text-sm font-medium">{patient.display_name}</span>
           {onBoard && <span className="text-xs text-muted-foreground">už je na tomto zasedání</span>}
-          {!onBoard && elsewhere && (
+          {pending && <span className="text-xs font-medium text-amber-700 dark:text-amber-400">nedokončené zařazení · dokončit</span>}
+          {!onBoard && !pending && elsewhere && (
             <span className="text-xs text-muted-foreground">
               zařazen: {elsewhere.title}, {dayLabel(elsewhere.date)}
             </span>

@@ -5,8 +5,11 @@ import os
 import subprocess
 from pathlib import Path
 
+import pytest
 
 SCRIPT = Path(__file__).resolve().parents[3] / "scripts" / "azure_iris.sh"
+# v Docker stacku je připojený jen backend (/code), skript je v repu WEB_Template/scripts (CI ho má)
+pytestmark = pytest.mark.skipif(not SCRIPT.is_file(), reason="scripts/azure_iris.sh je jen v repu, ne v kontejneru")
 
 
 def test_aci_manifest_secrets_bootstrap_and_ports(tmp_path):

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { QueryClient, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api';
 import { mdtApi, type SessionInput, type StoredBrief } from '@/lib/mdt-api';
-import type { Me, MdtCase, MdtRole, MdtSessionDetail, MdtSessionListItem, ProjectorLayout, RoleId } from '@/types/mdt';
+import type { Me, MdtCase, MdtRole, MdtSessionDetail, MdtSessionListItem, ProjectorLayout, RoleId, TemplateArea } from '@/types/mdt';
 
 /**
  * Serverová data pro UI v2 (docs/NAVRH_UI.md §10.3): jedna cache pro sidebar, kalendář, jednání,
@@ -160,6 +160,32 @@ export function useForMeQuery(caseId: number | null | undefined, specialty: Role
 /** Tým komise: uživatelé s rolí a odborností (jen předseda). */
 export function useUsersQuery(enabled: boolean) {
   return useQuery({ queryKey: queryKeys.users, queryFn: () => mdtApi.getUsers(), enabled });
+}
+
+/** Šablony klíčových údajů přihlášeného lékaře (T-338); sdílená cache pro přehledy i nastavení. */
+export function useMyTemplates(enabled = true) {
+  return useQuery({ queryKey: ['templates'], queryFn: () => mdtApi.getTemplates(), enabled, staleTime: 5 * 60_000 });
+}
+
+/** Rozložení mé šablony pro oblast (`undefined` = načítá se, `null` = výchozí pořadí). */
+export function useMyTemplateLayout(area: TemplateArea | null): ProjectorLayout | null | undefined {
+  const templates = useMyTemplates(area !== null);
+  if (area === null) return null;
+  if (!templates.data) return templates.isError ? null : undefined;
+  return templates.data.templates.find((t) => t.area === area)?.layout ?? null;
+}
+
+export function useSaveTemplate() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ area, layout, preset }: { area: TemplateArea; layout: ProjectorLayout | null; preset?: string }) =>
+      layout ? mdtApi.saveTemplate(area, layout, preset) : mdtApi.deleteTemplate(area),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['templates'] }),
+  });
+}
+
+export function useTemplateCatalog(area: TemplateArea | null) {
+  return useQuery({ queryKey: ['template-catalog', area], queryFn: () => mdtApi.getTemplateCatalog(area as TemplateArea), enabled: area !== null, staleTime: Infinity });
 }
 
 export function useUpdateUser() {

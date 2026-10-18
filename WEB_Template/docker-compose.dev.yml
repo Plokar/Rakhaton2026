@@ -76,6 +76,8 @@ services:
       - ../data/demo_cache:/data/demo_cache                    # záloha dema (T-311), zapisuje `demo save`
       - ../data/audio:/data/audio:ro                          # AI zapisovatel (T-305), simulovaná diskuse P03
       - ../data/onko:/data/onko:ro                            # znalostní báze semaforu (T-315, T-316)
+      - ../data/dataset_test:/data/dataset_test:ro            # testovací pacienti P07–P12 (T-320, import JSON T-335)
+      - ../data/import_ukazky:/data/import_ukazky:ro          # ukázky importu FHIR JSON (T-335)
     env_file:
       - .env
     environment:

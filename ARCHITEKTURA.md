@@ -1070,6 +1070,18 @@ Guidelines datasetu jsou závazný obsah aplikace (zadání: možnosti léčby z
 | PRS-4.1 | kostní metastázy: denosumab / zoledronát, Ca + D, stomatologie; RT nebo ortopedie | VS-PRS-12, VS-PRS-13 |
 | PRS-4.2 | nový lokalizovaný symptom → cílené zobrazení; vzestup markeru bez zobrazení není progrese | `RF-NEWSYMPTOM`, `RF-LAB` |
 
+### 5.12 Chatbot u zasedání (T-344)
+
+Vedle chatu lékařů (T-334) se lékař v jednání ptá AI. Odpověď je seznam tvrzení s citacemi, stejný `Claim` jako v podkladu (§8.1), takže klik na citaci otevře zdroj (`GET /api/evidence/`).
+
+- **Kontext** je stejný jako u podkladu (D-010): s pacientem na řadě celý pacient z IRIS, jeho sada guidelines, studie a výsledky deterministických pravidel. Bez pacienta (dotaz bez štítku) jen všechny sady guidelines (`KRC`, `PRS`, `PLI`, `OBC`) a všechny studie (`context_builder.general_context`).
+- **LLM:** jeden call se schématem `ChatbotOutput` (`claims` s citacemi, `missing`, `uncertain` = NEJISTOTA AI), prompt `services/ai/prompts/chatbot.md` + pravidla zkratek. Provider vybírá `chatbot_provider`: s `OPENAI_API_KEY` Azure OpenAI gateway týmu (`OpenAICompatProvider`, T-331) s modelem `gpt-6-1-sol-dz-eu` (EU Data Zone), jinak `AI_PROVIDER` (§9 `CHATBOT_PROVIDER`, `CHATBOT_MODEL`). Do LLM jde i posledních 6 zpráv rozhovoru o stejném pacientovi. Dotaz i historie projdou pseudonymizací (§5.7); skutečný pacient (bez tagu `fiktivni-data`) do LLM nejde bez `AI_REAL_PATIENT_DATA` (D-021). Volání se loguje jako `LlmCallLog` s účelem `chatbot`.
+- **Délka:** odpověď = 1–2 krátké věty (`MAX_CLAIMS = 2`), k tomu nejvýš jeden nejdůležitější chybějící údaj a jedna NEJISTOTA AI podle promptu. Chybějící údaje a nejistota se v kódu nekrátí, aby se varování neztratilo.
+- **Validace:** tvrzení i chybějící údaje projdou grounding validátorem (§5.3); citace mimo povolená ID, číslo nebo datum, které ve zdroji není, = `unverified`. Citace u `uncertain` se filtrují na povolená ID. LLM nedoporučuje léčbu ani neurčuje barvu semaforu.
+- **Bez odpovědi LLM** (chyba, prázdný výstup, `AI_PROVIDER=mock`) ukáže odpověď nejbližší místa v dokumentaci doslovně s citací, kterou přiřadil kód (`_computed`): slova dotazu bez diakritiky a koncovek, vzácnější slovo váží víc, při shodě novější záznam první. Poznámka v `text` řekne proč (NFR-5).
+- **Soukromí a audit:** rozhovor patří lékaři a boardu (`ChatbotMessage`), ostatní ho nevidí. Nic se neupravuje ani nemaže a odpověď AI není oficiální záznam. Uzavřený board je jen ke čtení.
+- **Implementace:** `services/ai/chatbot.py` (`answer`, `answer_from_context`, `chatbot_provider`, `nearest_sources`), API `apps/mdt/chatbot.py`, UI `components/mdt/meeting/ChatbotPanel.tsx` + `use-chatbot.ts`. V jednání tlačítko Chatbot vedle Chatu (zkratka A), panel vpravo. Když jsou otevřené chat i chatbot, jsou od 1680 px vedle sebe, jinak pod sebou v jednom sloupci; na úzkém displeji boční panel (vždy jen jeden).
+
 ---
 
 ## 6. Backend (Django) — struktura
@@ -1121,6 +1133,7 @@ Nové závislosti v `requirements.txt`:
 | `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1), `title_before`, `title_after` (tituly, max 40 znaků, T-338: jméno se všude píše „MUDr. Petr Novák, Ph.D.“); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
 | `FactTemplate` | šablona klíčových údajů lékaře (T-338, D-025): `user` FK, `area` (`PLI` / `PRS` / `KRC` / `OBC`), `layout` JSON (`ProjectorLayout` §8.6), `preset` (ID presetu, ze kterého vznikla), `updated_at`; unikátní `user` + `area` |
 | `SessionMessage` | chat lékařů u zasedání (T-334): `session` FK, `author` (User), `case` FK nullable (štítek pacienta na řadě), `text` (max 2000), `created_at`; neupravuje se ani nemaže |
+| `ChatbotMessage` | chatbot u zasedání (T-344, §5.12), soukromý rozhovor lékaře s AI: `session` FK, `user` (User), `case` FK nullable (pacient, na kterého se ptal), `role` `user`/`ai`, `text`, `claims` (JSON `Claim[]`), `uncertain` (JSON), `model`, `created_at`; neupravuje se ani nemaže (migrace `mdt/0011`) |
 
 `seed_mdt` vytvoří zasedání a případy **z nominací v IRIS**: `ServiceRequest.category` (zaměření komise) + `Task.restriction.period.start` (datum MDT). Vzniknou 4 zasedání:
 
@@ -1160,6 +1173,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
 | GET, POST | `/api/mdt/sessions/{sid}/messages/` | chat lékařů u zasedání (T-334), čte a píše každý přihlášený člen komise: GET → `SessionMessage[]` od nejstarší (`?after=<id>` jen novější, jinak posledních 200); POST `{text, case_id?}` → 201 `SessionMessage`; `case_id` = případ z agendy tohoto boardu (jinak 400), prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení) |
 | GET | `/api/mdt/sessions/{sid}/stream/` | **Server-Sent Events** (`text/event-stream`, bez websocketů a bez pollingu): každá nová zpráva boardu jako `id: <ID>` + `data: SessionMessage`, komentář `: ping` každých 15 s, `retry: 3000`. Hlavička `Cache-Control: no-cache, no-transform`: proxy s kompresí (rewrite v Next.js při `next start`) by jinak stream zabalila do gzipu a bufferovala. `Last-Event-ID` (reconnect `EventSource`) nebo `?after=<id>` nejdřív doplní zmeškané. JWT z cookie (`EventSource` posílá cookies, ne hlavičky), jinak 401; neexistující board 404. Mezi procesy rozesílá channel layer (Redis) po commitu zprávy |
+| GET, POST | `/api/mdt/sessions/{sid}/chatbot/` | chatbot u zasedání (T-344, §5.12), každý přihlášený lékař, rozhovor je jen jeho: GET → vlastní `ChatbotMessage[]` u boardu od nejstarší (posledních 200); POST `{text, case_id?}` → 201 `[dotaz, odpověď AI]` (synchronně, jeden LLM call, 10–25 s). `case_id` = případ z agendy tohoto boardu (jinak 400), bez něj jen guidelines a studie; prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení). Selhání AI nevrací chybu: odpověď nese poznámku a případně nejbližší místa v dokumentaci |
 | GET, PATCH | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného; PATCH `{title_before?, title_after?}` = vlastní tituly (max 40 znaků, jinak 400; T-338) |
 | GET | `/api/mdt/templates/` | moje šablony údajů (T-338, D-025): `{templates: [{area, area_label, layout \| null, preset, updated_at}] (PLI, PRS, KRC, OBC), presets: [{id, name, note, specialties, area, layout}] (presety mé odbornosti první), suggested: {area: preset_id}}`; `layout: null` = výchozí pořadí |
 | PUT, DELETE | `/api/mdt/templates/{area}/` | PUT `{layout: ProjectorLayout, preset?}` uloží mou šablonu oblasti (ověření tvaru jako u `projector_layout`, kategorie jen `FactCategory`, jinak 400); DELETE ji zruší. Neznámá oblast 400 |
@@ -1776,6 +1790,18 @@ interface SessionMessage {                      // GET/POST /api/mdt/sessions/{s
   created_at: string;                           // místní čas ISO 8601
 }
 
+interface ChatbotMessage {                      // GET/POST /api/mdt/sessions/{sid}/chatbot/ (T-344, §5.12); POST vrací [dotaz, odpověď]
+  id: number;
+  session: number;
+  role: "user" | "ai";
+  case: { id: number; patient_id: string } | null;  // pacient, na kterého se lékař ptal ("P03", D-018); null = jen guidelines a studie
+  text: string;                                 // dotaz; u AI poznámka (např. „Jazykový model není zapnutý…“), jinak ""
+  claims: Claim[];                              // jen AI: tvrzení s citacemi, verification z grounding validátoru; "missing" = údaj chybí
+  uncertain: { text: string; citations: EvidenceId[] }[];   // jen AI: NEJISTOTA AI (rozmezí, zkratka, rozpor)
+  model: string | null;                         // jen AI: model, který odpověděl; null = odpověď bez LLM
+  created_at: string;                           // místní čas ISO 8601
+}
+
 ```
 
 ---
@@ -1809,6 +1835,7 @@ interface SessionMessage {                      // GET/POST /api/mdt/sessions/{s
 | `VERIFIER_MODEL` | backend | `gpt-6-astra` (gateway deployment `gpt-6-astra-global`); pro gemini nastavit Gemini model |
 | `OPENAI_BASE_URL` | backend | `https://apim-rakathon-q7146n.azure-api.net/openai/v1` (syntetická data; Global). Alternativní EU deploymenty gateway: `gpt-6-luna`, `gpt-6.1-sol` |
 | `OPENAI_API_KEY` | backend | prázdné v šabloně; klíč týmu pouze lokálně v ignorovaném `WEB_Template/.env`, hlavička `api-key`, nikdy do gitu ani frontendu |
+| `CHATBOT_PROVIDER` / `CHATBOT_MODEL` | backend | chatbot (T-344, §5.12): `openai` nebo jiný provider (`mock`, `gemini`, `nvidia`…); bez nastavení `openai` při `OPENAI_API_KEY`, jinak `AI_PROVIDER`. Model u `openai` výchozí **`gpt-6-1-sol-dz-eu`** (EU Data Zone; na P03 21 s proti 47 s u `gpt-6-astra`, srovnatelná kvalita) |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_MODEL_STRONG` | backend | `gemini-4-argon` (volitelně, pro porovnání a těžké sekce) |
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |

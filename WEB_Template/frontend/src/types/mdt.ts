@@ -773,6 +773,27 @@ export interface SessionMessage {
   created_at: string;
 }
 
+/**
+ * Chatbot u zasedání (T-344): dotaz lékaře (`role: "user"`) nebo odpověď AI (`"ai"`). Rozhovor je soukromý
+ * (lékař + board), GET /api/mdt/sessions/{sid}/chatbot/; POST vrátí `[dotaz, odpověď]`. Odpověď AI není oficiální záznam.
+ */
+export interface ChatbotMessage {
+  id: number;
+  session: number;
+  role: 'user' | 'ai';
+  /** Pacient, na kterého se lékař ptal; `null` = obecný dotaz (jen guidelines a studie). */
+  case: { id: number; patient_id: string } | null;
+  /** Dotaz lékaře; u AI poznámka (např. bez jazykového modelu jen nejbližší místa v dokumentaci), jinak "". */
+  text: string;
+  /** Jen AI: tvrzení s citacemi po grounding validátoru, `"missing"` = údaj chybí. */
+  claims: Claim[];
+  /** Jen AI: NEJISTOTA AI (rozmezí, nejednoznačná zkratka, rozpor zdrojů). */
+  uncertain: { text: string; citations: EvidenceId[] }[];
+  /** Jen AI: model, který odpověděl; `null` = odpověď bez LLM. */
+  model: string | null;
+  created_at: string;
+}
+
 /** GET /api/mdt/sessions/ */
 export type MdtSessionListItem = MdtSession & { patients: string[] };
 

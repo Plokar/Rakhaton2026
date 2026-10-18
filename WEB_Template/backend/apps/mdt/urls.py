@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import chat, drafts, templates, views
+from . import chat, chatbot, drafts, templates, views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
@@ -18,6 +18,7 @@ urlpatterns = [
     path('records/', views.board_records, name='board-records'),
     path('sessions/<int:sid>/messages/', chat.session_messages, name='session-messages'),
     path('sessions/<int:sid>/stream/', chat.session_stream, name='session-stream'),
+    path('sessions/<int:sid>/chatbot/', chatbot.session_chatbot, name='session-chatbot'),
     path('configs/', views.config_list, name='config-list'),
     path('configs/<int:cfg_id>/', views.config_detail, name='config-detail'),
     path('tasks/', views.task_list, name='task-list'),

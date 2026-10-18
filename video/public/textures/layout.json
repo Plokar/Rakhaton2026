@@ -1,0 +1,243 @@
+{
+  "dashboard": {
+    "git": {
+      "x": 968,
+      "y": 438,
+      "w": 212,
+      "h": 39
+    },
+    "p03": {
+      "x": 970,
+      "y": 509,
+      "w": 76,
+      "h": 20
+    },
+    "pageH": 1080
+  },
+  "setup": {
+    "template": {
+      "x": 753,
+      "y": 289,
+      "w": 590,
+      "h": 20
+    },
+    "sections": {
+      "x": 757,
+      "y": 468,
+      "w": 662,
+      "h": 20
+    },
+    "roles": {
+      "x": 757,
+      "y": 1030,
+      "w": 662,
+      "h": 20
+    },
+    "pageH": 1880
+  },
+  "session": {
+    "name": {
+      "x": 669,
+      "y": 149,
+      "w": 761,
+      "h": 28
+    },
+    "ps": {
+      "x": 1675,
+      "y": 156,
+      "w": 15,
+      "h": 16
+    },
+    "warnings": {
+      "x": 1453,
+      "y": 178,
+      "w": 173,
+      "h": 20
+    },
+    "facts": {
+      "x": 665,
+      "y": 317,
+      "w": 498,
+      "h": 20
+    },
+    "options": {
+      "x": 1203,
+      "y": 317,
+      "w": 598,
+      "h": 20
+    },
+    "question": {
+      "x": 682,
+      "y": 987,
+      "w": 1039,
+      "h": 56
+    },
+    "record": {
+      "x": 268,
+      "y": 923,
+      "w": 264,
+      "h": 32
+    },
+    "optResekce": {
+      "x": 1203,
+      "y": 351,
+      "w": 527,
+      "h": 40
+    },
+    "optEgfr": {
+      "x": 1203,
+      "y": 644,
+      "w": 512,
+      "h": 20
+    },
+    "optImuno": {
+      "x": 1203,
+      "y": 721,
+      "w": 476,
+      "h": 20
+    },
+    "aiUncertain": null,
+    "pnp": null,
+    "pageH": 1080,
+    "chip12": {
+      "x": 849,
+      "y": 349,
+      "w": 24,
+      "h": 18
+    }
+  },
+  "opt-resekce": {
+    "x": 1203,
+    "y": 351,
+    "width": 598,
+    "height": 40
+  },
+  "opt-egfr": {
+    "x": 1203,
+    "y": 644,
+    "width": 598,
+    "height": 20
+  },
+  "opt-imuno": {
+    "x": 1203,
+    "y": 721,
+    "width": 598,
+    "height": 20
+  },
+  "btn-record": {
+    "x": 264,
+    "y": 919,
+    "width": 272,
+    "height": 40
+  },
+  "drawer": {
+    "panel": {
+      "x": 1536,
+      "y": 0,
+      "w": 384,
+      "h": 1080,
+      "text": "P03-neuro01\nZáznam pacienta\n5. 10. 2026\n\nPeriferní neuropatie (CTCAE) – hodnocení lékařem\nToxicita léčby\n\ngrade 1\n\nZdrojový dokument\n\nKontrola po restagingu, nominace na re-MDT P03-doc07\n\n5. 10. 2026\n\nPacient 4 týdny po 8. cyklu FOLFOX + bevacizumab, další cyklus odložen do rozhodnutí komise.\n\nSubjektivně: Cítí se lépe než během léčby, chodí na procházky. Neuropatie dle pacienta přetrvává, ale je "
+    },
+    "pageH": 1080
+  },
+  "projector": {
+    "header": {
+      "x": 779,
+      "y": 28,
+      "w": 216,
+      "h": 24
+    },
+    "ps": {
+      "x": 1007,
+      "y": 34,
+      "w": 64,
+      "h": 17
+    },
+    "facts": {
+      "x": 779,
+      "y": 184,
+      "w": 362,
+      "h": 24
+    },
+    "question": {
+      "x": 779,
+      "y": 964,
+      "w": 283,
+      "h": 17
+    }
+  },
+  "panel": {
+    "x": 750,
+    "y": 0,
+    "width": 420,
+    "height": 1080
+  },
+  "intake": {
+    "board": 6,
+    "patient": "P03",
+    "iris": {
+      "x": 736,
+      "y": 216,
+      "w": 704,
+      "h": 20
+    },
+    "warn": [
+      {
+        "x": 737,
+        "y": 1065,
+        "w": 702,
+        "h": 56
+      },
+      {
+        "x": 737,
+        "y": 1121,
+        "w": 702,
+        "h": 75
+      }
+    ],
+    "pageH": 3049
+  },
+  "record": {
+    "confirmed": {
+      "x": 689,
+      "y": 177,
+      "w": 798,
+      "h": 20
+    },
+    "iris": {
+      "x": 689,
+      "y": 201,
+      "w": 798,
+      "h": 16
+    },
+    "pdf": {
+      "x": 889,
+      "y": 229,
+      "w": 119,
+      "h": 36
+    },
+    "fhir": {
+      "x": 1016,
+      "y": 229,
+      "w": 197,
+      "h": 36
+    },
+    "ai": {
+      "x": 840,
+      "y": 598,
+      "w": 60,
+      "h": 20
+    },
+    "assessment": null,
+    "pageH": 1543
+  },
+  "confirmed": {
+    "x": 689,
+    "y": 177,
+    "width": 798,
+    "height": 20
+  },
+  "case": {
+    "pageH": 2847
+  }
+}

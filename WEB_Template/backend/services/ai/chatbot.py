@@ -41,7 +41,6 @@ from services.ai_service import (
     get_ai_provider,
     is_synthetic_patient,
     real_patient_data_allowed,
-    verifier_model,
 )
 from services.rules import red_flags as rules
 from services.rules.guideline_sets import GUIDELINE_SET_ORDER, guideline_sets_for
@@ -49,6 +48,8 @@ from services.rules.guideline_sets import GUIDELINE_SET_ORDER, guideline_sets_fo
 log = logging.getLogger(__name__)
 
 CHATBOT_PROMPT = (Path(__file__).parent / "prompts" / "chatbot.md").read_text(encoding="utf-8")
+# EU Data Zone deployment gateway: změřeno 18. 10. na P03 21 s proti 47 s u `gpt-6-astra`, srovnatelná kvalita
+DEFAULT_CHATBOT_MODEL = "gpt-6-1-sol-dz-eu"
 MAX_CLAIMS = 6
 NEAREST = 3                 # kolik míst z dokumentace ukáže odpověď bez LLM
 QUOTE_LENGTH = 280
@@ -101,7 +102,7 @@ def answer(question: str, patient_id: str | None, history: Iterable[dict] = (), 
 def chatbot_provider(resources: list[dict] | None) -> tuple[BaseAIProvider, str | None]:
     """Provider a model pro chatbot. `CHATBOT_PROVIDER` = `openai` (Azure OpenAI gateway týmu, jen generate, jen
     syntetická data) | `gemini` | `mock`; bez nastavení `openai`, když je `OPENAI_API_KEY`, jinak hlavní `AI_PROVIDER`.
-    `CHATBOT_MODEL` přepíše model (u `openai` jinak `VERIFIER_MODEL`, výchozí `gpt-6-astra`).
+    `CHATBOT_MODEL` přepíše model (u `openai` jinak `DEFAULT_CHATBOT_MODEL`, EU Data Zone).
 
     D-021: `resources` skutečného pacienta (bez tagu `fiktivni-data`) jdou do LLM jen s `AI_REAL_PATIENT_DATA`,
     jinak `MockAIProvider`. `None` = dotaz bez pacienta (jen guidelines a studie)."""
@@ -114,7 +115,7 @@ def chatbot_provider(resources: list[dict] | None) -> tuple[BaseAIProvider, str 
     model = os.environ.get("CHATBOT_MODEL") or None
     if chosen == "openai":
         if os.environ.get("OPENAI_API_KEY"):
-            return OpenAICompatProvider(), model or verifier_model()
+            return OpenAICompatProvider(), model or DEFAULT_CHATBOT_MODEL
         log.warning("T-338: CHATBOT_PROVIDER=openai, ale OPENAI_API_KEY není nastaven; chatbot jede přes AI_PROVIDER")
         chosen = ""
     return get_ai_provider(chosen or None), model

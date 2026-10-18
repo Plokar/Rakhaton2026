@@ -20,8 +20,9 @@ ANSWER = {"claims": [{"text": "Poslední CEA je 13,9 µg/l.", "citations": ["P03
 def seeded(fake_fhir_dataset, fake_iris, db, monkeypatch):
     call_command('seed_mdt')
     provider = MockAIProvider(responses={'ChatbotOutput': ANSWER})
-    monkeypatch.setattr(ai_chatbot, 'provider_for_patient', lambda resources: provider)
-    monkeypatch.setattr(ai_chatbot, 'get_ai_provider', lambda *a, **k: MockAIProvider())
+    # s pacientem odpovídá „LLM“, bez pacienta mock bez odpovědi (poznámka + nejbližší místa)
+    monkeypatch.setattr(ai_chatbot, 'chatbot_provider',
+                        lambda resources: (provider if resources is not None else MockAIProvider(), None))
 
 
 def as_user(username):

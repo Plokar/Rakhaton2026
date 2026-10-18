@@ -3,7 +3,8 @@ Chatbot u zasedání (T-338, ARCHITEKTURA §5.12): lékař se ptá AI, odpověď
 
 - Kontext je stejný jako u podkladu (D-010): celý pacient na řadě z IRIS, jeho sada guidelines, studie a výsledky
   deterministických pravidel. Bez pacienta (dotaz bez štítku) jen všechny guidelines a studie.
-- Gemini vrací strukturovaný výstup (`ChatbotOutput`), každé tvrzení projde grounding validátorem (§5.3):
+- LLM (`chatbot_provider`: Azure OpenAI gateway týmu, když je `OPENAI_API_KEY`, jinak `AI_PROVIDER`) vrací
+  strukturovaný výstup (`ChatbotOutput`), každé tvrzení projde grounding validátorem (§5.3):
   citace mimo povolená ID, číslo nebo datum, které ve zdroji není, = `unverified`.
 - Co v podkladech chybí, je `missing`; rozmezí, rozpor nebo nejasná zkratka je NEJISTOTA AI (`uncertain`).
 - Když LLM selže, nic nevrátí nebo běží mock, odpověď ukáže nejbližší místa v dokumentaci doslovně s citací (NFR-5).
@@ -12,6 +13,7 @@ Chatbot u zasedání (T-338, ARCHITEKTURA §5.12): lékař se ptá AI, odpověď
 from __future__ import annotations
 
 import logging
+import os
 import re
 import unicodedata
 from collections import Counter
@@ -32,7 +34,15 @@ from services.ai.context_builder import (
 from services.ai.grounding import verify_claims
 from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
-from services.ai_service import BaseAIProvider, get_ai_provider, provider_for_patient
+from services.ai_service import (
+    BaseAIProvider,
+    MockAIProvider,
+    OpenAICompatProvider,
+    get_ai_provider,
+    is_synthetic_patient,
+    real_patient_data_allowed,
+    verifier_model,
+)
 from services.rules import red_flags as rules
 from services.rules.guideline_sets import GUIDELINE_SET_ORDER, guideline_sets_for
 
@@ -82,9 +92,32 @@ def answer(question: str, patient_id: str | None, history: Iterable[dict] = (), 
         log.warning("T-338: podklady pro chatbot (%s) nejdou načíst z IRIS", patient_id or "bez pacienta", exc_info=True)
         return {"text": "Podklady se nepodařilo načíst z IRIS, AI teď neodpoví.", "claims": [], "uncertain": [],
                 "model": None}
+    model = None
     if provider is None:
-        provider = provider_for_patient(resources) if patient_id else get_ai_provider()     # D-021
-    return answer_from_context(question, context, history, provider, log_call, pseudo)
+        provider, model = chatbot_provider(resources if patient_id else None)
+    return answer_from_context(question, context, history, provider, log_call, pseudo, model=model)
+
+
+def chatbot_provider(resources: list[dict] | None) -> tuple[BaseAIProvider, str | None]:
+    """Provider a model pro chatbot. `CHATBOT_PROVIDER` = `openai` (Azure OpenAI gateway týmu, jen generate, jen
+    syntetická data) | `gemini` | `mock`; bez nastavení `openai`, když je `OPENAI_API_KEY`, jinak hlavní `AI_PROVIDER`.
+    `CHATBOT_MODEL` přepíše model (u `openai` jinak `VERIFIER_MODEL`, výchozí `gpt-6-astra`).
+
+    D-021: `resources` skutečného pacienta (bez tagu `fiktivni-data`) jdou do LLM jen s `AI_REAL_PATIENT_DATA`,
+    jinak `MockAIProvider`. `None` = dotaz bez pacienta (jen guidelines a studie)."""
+    chosen = (os.environ.get("CHATBOT_PROVIDER") or ("openai" if os.environ.get("OPENAI_API_KEY") else "")).strip().lower()
+    if chosen not in ("", "openai", "gemini", "mock"):
+        raise ValueError(f"Neznámý CHATBOT_PROVIDER {chosen!r}")
+    if resources is not None and not (is_synthetic_patient(resources) or real_patient_data_allowed()):
+        log.warning("T-338: pacient nemá syntetická data, chatbot nevolá LLM (D-021)")
+        return MockAIProvider(), None
+    model = os.environ.get("CHATBOT_MODEL") or None
+    if chosen == "openai":
+        if os.environ.get("OPENAI_API_KEY"):
+            return OpenAICompatProvider(), model or verifier_model()
+        log.warning("T-338: CHATBOT_PROVIDER=openai, ale OPENAI_API_KEY není nastaven; chatbot jede přes AI_PROVIDER")
+        chosen = ""
+    return get_ai_provider(chosen or None), model
 
 
 def load_context(patient_id: str | None) -> tuple[PatientContext, Pseudonymizer, list[dict]]:
@@ -117,12 +150,13 @@ def load_context(patient_id: str | None) -> tuple[PatientContext, Pseudonymizer,
 
 
 def answer_from_context(question: str, context: PatientContext, history: Iterable[dict], provider: BaseAIProvider,
-                        log_call: Callable[[str, dict], Any], pseudo: Pseudonymizer | None = None) -> dict:
+                        log_call: Callable[[str, dict], Any], pseudo: Pseudonymizer | None = None, *,
+                        model: str | None = None) -> dict:
     """Čisté jádro (testy bez IRIS): prompt → LLM → grounding; bez použitelné odpovědi nejbližší místa v dokumentaci."""
     pseudo = pseudo or Pseudonymizer()
     result = provider.generate(_prompt(question, context, list(history), pseudo),
                                system_prompt=f"{CHATBOT_PROMPT}\n\n{prompt_rules()}",
-                               response_schema=ChatbotOutput, temperature=0.1)
+                               response_schema=ChatbotOutput, temperature=0.1, model=model)
     log_call("chatbot", result)
     data = (result.get("data") or {}) if result.get("status") == "success" else {}
     claims = [{"id": f"bot-{i:02d}", "kind": "claim", "text": c["text"].strip(),

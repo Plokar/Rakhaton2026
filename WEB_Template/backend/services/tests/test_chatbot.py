@@ -50,7 +50,17 @@ class FailingProvider(MockAIProvider):
         return self._error("kvóta", model="gemini", started=0, p_hash="x")
 
 
-def test_answer_claims_go_through_grounding():
+def test_answer_is_one_or_two_sentences_but_keeps_missing_and_uncertainty():
+    answer = {**P03_ANSWER, "missing": P03_ANSWER["missing"] * 2, "uncertain": P03_ANSWER["uncertain"] * 2}
+    result = chatbot.answer_from_context("CEA?", p03_context(), [], MockAIProvider(responses={"ChatbotOutput": answer}),
+                                         lambda *_: None)
+    assert [c["id"] for c in result["claims"] if c["kind"] == "claim"] == ["bot-01", "bot-02"]
+    assert sum(c["kind"] == "missing" for c in result["claims"]) == 4 and len(result["uncertain"]) == 2  # nic se neztratí
+    assert "jedna až dvě krátké věty" in chatbot.CHATBOT_PROMPT
+
+
+def test_answer_claims_go_through_grounding(monkeypatch):
+    monkeypatch.setattr(chatbot, "MAX_CLAIMS", 6)
     logged = []
     result = chatbot.answer_from_context("Jaké je poslední CEA a ECOG?", p03_context(), [],
                                          MockAIProvider(responses={"ChatbotOutput": P03_ANSWER}),

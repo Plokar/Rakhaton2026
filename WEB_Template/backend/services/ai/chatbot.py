@@ -50,14 +50,14 @@ log = logging.getLogger(__name__)
 CHATBOT_PROMPT = (Path(__file__).parent / "prompts" / "chatbot.md").read_text(encoding="utf-8")
 # EU Data Zone deployment gateway: změřeno 18. 10. na P03 21 s proti 47 s u `gpt-6-astra`, srovnatelná kvalita
 DEFAULT_CHATBOT_MODEL = "gpt-6-1-sol-dz-eu"
-MAX_CLAIMS = 6
-NEAREST = 3                 # kolik míst z dokumentace ukáže odpověď bez LLM
-QUOTE_LENGTH = 280
+MAX_CLAIMS = 2              # odpověď = 1–2 krátké věty (Mira 18. 10.); chybějící údaje a nejistota se nekrátí
+NEAREST = 2                 # kolik míst z dokumentace ukáže odpověď bez LLM
+QUOTE_LENGTH = 200
 
 
 # ── Výstup LLM (response_schema) ──────────────────────────────────────────────
 class ChatbotClaim(BaseModel):
-    text: str = Field(description="Jedno tvrzení odpovědi, česky; čísla a data přesně podle zdrojů")
+    text: str = Field(description="Jedna krátká věta odpovědi, česky; čísla a data přesně podle zdrojů")
     citations: list[str] = Field(description="ID zdrojů z podkladů, ze kterých tvrzení vychází, např. P03-img03#4, KRC-2.4")
 
 
@@ -72,9 +72,9 @@ class ChatbotUncertainty(BaseModel):
 
 
 class ChatbotOutput(BaseModel):
-    claims: list[ChatbotClaim] = Field(description="Odpověď po tvrzeních, nejvýš 6, každé s citací")
-    missing: list[ChatbotMissing] = Field(description="Co k odpovědi v podkladech chybí; prázdné, když nic")
-    uncertain: list[ChatbotUncertainty] = Field(description="NEJISTOTA AI; prázdné, když nic")
+    claims: list[ChatbotClaim] = Field(description="Odpověď: 1–2 krátké věty, každá s citací")
+    missing: list[ChatbotMissing] = Field(description="Nejvýš 1 nejdůležitější chybějící údaj; prázdné, když nic")
+    uncertain: list[ChatbotUncertainty] = Field(description="NEJISTOTA AI, nejvýš 1, jen když je podstatná; prázdné, když nic")
 
 
 # ── Veřejné API ───────────────────────────────────────────────────────────────

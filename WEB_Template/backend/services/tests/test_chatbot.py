@@ -174,10 +174,10 @@ def test_chatbot_provider_choice(monkeypatch):
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     provider, model = chatbot.chatbot_provider(synthetic)
-    assert isinstance(provider, OpenAICompatProvider) and model == "gpt-6-astra"
+    assert isinstance(provider, OpenAICompatProvider) and model == "gpt-6-1-sol-dz-eu"   # EU Data Zone
     assert isinstance(chatbot.chatbot_provider(None)[0], OpenAICompatProvider)        # obecný dotaz
-    monkeypatch.setenv("CHATBOT_MODEL", "gpt-6-1-sol-dz-eu")
-    assert chatbot.chatbot_provider(synthetic)[1] == "gpt-6-1-sol-dz-eu"
+    monkeypatch.setenv("CHATBOT_MODEL", "gpt-6-astra")
+    assert chatbot.chatbot_provider(synthetic)[1] == "gpt-6-astra"
 
     # D-021: skutečný pacient (bez tagu fiktivni-data) do gateway nejde
     real = [{**r, "meta": {}} if r["resourceType"] == "Patient" else r for r in synthetic]

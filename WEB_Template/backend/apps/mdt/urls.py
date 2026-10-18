@@ -1,11 +1,14 @@
 from django.urls import path
 
-from . import chat, drafts, views
+from . import chat, drafts, templates, views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
     path('users/', views.user_list, name='user-list'),
     path('practitioners/', views.practitioner_list, name='practitioner-list'),
+    path('templates/', templates.template_list, name='template-list'),
+    path('templates/catalog/', templates.template_catalog, name='template-catalog'),
+    path('templates/<str:area>/', templates.template_detail, name='template-detail'),
     path('users/<int:uid>/', views.user_detail, name='user-detail'),
     path('sessions/', views.session_list, name='session-list'),
     path('sessions/<int:sid>/', views.session_detail, name='session-detail'),

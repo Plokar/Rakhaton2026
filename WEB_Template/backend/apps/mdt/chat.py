@@ -24,6 +24,7 @@ from rest_framework.response import Response
 
 from apps.authentication.backends import CookieJWTAuthentication
 
+from . import roles
 from .models import MdtCase, MdtSession, SessionMessage
 
 log = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def _message(m: SessionMessage) -> dict:
     a = m.author
     profile = getattr(a, 'mdt_profile', None) if a else None    # chybějící profil → None (AttributeError)
     return {'id': m.pk, 'session': m.session_id,
-            'author': a and {'user_id': a.pk, 'name': a.get_full_name() or a.username},
+            'author': a and {'user_id': a.pk, 'name': roles.display_name(a)},
             'specialty': (profile.specialty or None) if profile else None,
             'case': m.case and {'id': m.case_id, 'patient_id': m.case.patient_fhir_id},
             'text': m.text, 'created_at': timezone.localtime(m.created_at).isoformat()}

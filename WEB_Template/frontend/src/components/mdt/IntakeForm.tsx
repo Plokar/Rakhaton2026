@@ -92,7 +92,7 @@ export function IntakeForm({
           imaging_recent_checked: imaging,
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
-          ...(layout.blocks || layout.facts ? { projector_layout: layout } : {}),
+          ...(layout.blocks || layout.facts || layout.categories ? { projector_layout: layout } : {}),
         });
       }}
     >

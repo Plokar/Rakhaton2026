@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   CircleCheck,
+  ClipboardCheck,
   FileDown,
   FileText,
   GripVertical,
@@ -49,7 +50,7 @@ import { mdtApi } from '@/lib/mdt-api';
 import { agendaOrder, apiErrorMessage, useAgendaOrder, useCaseStatus, useSaveSession, useSessionQuery, useSessionStatus } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
-import { AddPatientSheet } from '../AddPatientSheet';
+import { AddPatientSheet, intakePending } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
 import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
@@ -94,6 +95,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const wide = useMediaQuery('(min-width: 1024px)');
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
+  const [completing, setCompleting] = React.useState<string | null>(null);
   const [collaborating, setCollaborating] = React.useState(false);
   const [editingProjector, setEditingProjector] = React.useState(false);
   const chat = useSessionChat(sessionId, me);
@@ -178,6 +180,18 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           <Undo2 className="mt-0.5 size-4 shrink-0" aria-hidden />
           Případ je vrácený k doplnění podkladů (OBC-1.1). Zadávající lékař doplní chybějící údaje v dokumentaci.
         </p>
+      )}
+      {intakePending(current) && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/40 dark:bg-amber-400/10 dark:text-amber-200">
+          <ClipboardCheck className="size-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1">
+            Zařazení čeká na dokončení: kontrola úplnosti, ECOG, záměr C/P a varování.
+            {!can.editCase(me, current) && ` Dokončí ho zadávající lékař${current.created_by ? ` (${current.created_by.name})` : ''}.`}
+          </span>
+          {can.editCase(me, current) && board.status !== 'closed' && (
+            <Button size="sm" onClick={() => setCompleting(current.patient_id)}>Dokončit zařazení</Button>
+          )}
+        </div>
       )}
       <CaseQuickViewWide
         key={current.id}
@@ -285,6 +299,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         </Sheet>
       )}
       <AddPatientSheet session={adding ? board : null} onClose={() => setAdding(false)} />
+      <AddPatientSheet session={completing ? board : null} patientId={completing} onClose={() => setCompleting(null)} />
     </div>
   );
 }
@@ -570,6 +585,7 @@ function MeetingRail({
                   <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span translate="no">{item.patient?.diagnosis?.icd10 ?? '–'}</span>
                     <ReadinessMark caseId={item.id} />
+                    {intakePending(item) && <span className="font-medium text-amber-700 dark:text-amber-400">k dokončení</span>}
                   </span>
                 </span>
                 <span className="flex flex-col items-end gap-0.5 pt-px">

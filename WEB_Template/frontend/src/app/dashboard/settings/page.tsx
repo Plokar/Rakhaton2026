@@ -2,6 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
+import { MyTemplateCard } from '@/components/mdt/MyTemplateCard';
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -149,6 +150,8 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <MyTemplateCard />
 
         {/* Personal info */}
         <Card>

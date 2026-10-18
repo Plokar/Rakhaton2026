@@ -311,6 +311,14 @@ class DerivedValue(BaseModel):
     inputs: list[EvidenceId]
 
 
+class NationalRuleRef(BaseModel):
+    """Oddíl Modré knihy ČOS k pravidlu semaforu (T-340, D-026), citace ověřená testem proti textu knihy."""
+    evidence_id: EvidenceId = Field(description='"EXT-MK-8.1.4.2-10"')
+    match: Literal["prah", "tema"] = Field(description="prah = parametr a hodnota / kritérium, tema = bez čísla")
+    quote: str = Field(description="Doslovná citace z oddílu")
+    note: str | None = None
+
+
 class CompatibilityRuleResult(BaseModel):
     rule_id: str = Field(description='"VS-PLI-01" (katalog docs/POZADAVKY_LEKARE.md §5.3)')
     status: Light
@@ -318,6 +326,9 @@ class CompatibilityRuleResult(BaseModel):
     patient_citations: list[EvidenceId]
     rule_citation: EvidenceId = Field(description='"PLI-3.1" | "RKT-06/Z4" | "EXT-…"')
     derived: DerivedValue | None = Field(default=None, description="Např. Cockcroft-Gault")
+    national_status: Literal["prah", "tema", "neuvadi"] | None = Field(
+        default=None, description="Opora pravidla v Modré knize ČOS (T-340); None = pravidlo mimo mapování")
+    national: list[NationalRuleRef] = Field(default_factory=list)
 
 
 class TreatmentCompatibility(BaseModel):
@@ -579,6 +590,9 @@ class Decision(BaseModel):
 WarningKind = Literal["missing", "out_of_range", "conflict", "ai_uncertain"]   # CHYBÍ · MIMO NORMU · ROZPOR · NEJISTOTA AI
 
 
+FactCategory = Literal["staging", "molecular", "imaging", "function", "history", "lab", "patient", "alerts"]
+
+
 class IntakeField(BaseModel):
     id: str = Field(description='"bm.mmr" | "spiro.ppo_dlco" | "ecog.physician"')
     label: str
@@ -586,6 +600,7 @@ class IntakeField(BaseModel):
     citation: EvidenceId | None = None
     status: Literal["present", "missing", "pending", "skipped"]
     required_by: EvidenceId | None = Field(default=None, description='Proč je údaj povinný: "KRC-1.1"')
+    category: FactCategory | None = Field(default=None, description="Kategorie klíčového údaje (T-338, D-024)")
 
 
 class IntakeWarning(BaseModel):
@@ -595,6 +610,7 @@ class IntakeWarning(BaseModel):
     title: str
     detail: str
     citations: list[EvidenceId]
+    category: FactCategory | None = Field(default=None, description="patient = z dotazníku PROMs, jinak alerts")
 
 
 class EcogPrefill(BaseModel):

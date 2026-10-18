@@ -15,6 +15,7 @@ class Command(BaseCommand):
         for user in users.values():                    # T-328: účet ↔ lékař v IRIS („moje úkoly“, výběr lékaře)
             roles.ensure_practitioner(user)
         ensure_presets(users['predseda'])
+        _demo_templates(users)
         created_sessions = created_cases = 0
         for order, n in enumerate(load_nominations()):
             session, new = MdtSession.objects.get_or_create(date=n['date'], title=n['title'],
@@ -36,3 +37,18 @@ class Command(BaseCommand):
             f'Boardy: {MdtSession.objects.count()} (nové {created_sessions}), '
             f'případy: {MdtCase.objects.count()} (nové {created_cases}).'
         ))
+
+
+def _demo_templates(users) -> None:
+    """Demo účtům šablona údajů z presetu jejich profese (T-338: pneumolog = výběr pro plíce); nic nepřepisuje."""
+    from apps.mdt.models import FactTemplate
+    from services.rules.fact_categories import AREAS
+    from services.rules.fact_templates import preset_for
+
+    for user in users.values():
+        specialty = roles.specialty(user)
+        for area in AREAS:
+            preset = preset_for(specialty, area)
+            if preset['id'] != 'vychozi':
+                FactTemplate.objects.get_or_create(user=user, area=area,
+                                                   defaults={'layout': preset['layout'], 'preset': preset['id']})

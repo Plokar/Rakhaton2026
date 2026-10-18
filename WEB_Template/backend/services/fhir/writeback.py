@@ -136,6 +136,37 @@ def guideline_deviation(s: dict) -> str | None:
     return 'Závěr se odchyluje od doporučených postupů. Doplňte krátké zdůvodnění odchylky.'
 
 
+def decision_gaps(decision: dict, red_flag_ids) -> list[str]:
+    """Co před potvrzením závěru zbývá (stejná pravidla jako `decisionChecklist` v UI): nic se nesmí zapomenout.
+    Prázdný seznam = jde potvrdit. Odchylku od guidelines hlídá `guideline_deviation`."""
+    s = decision['sections']
+    todo = []
+    if not s['question']['text'].strip():
+        todo.append('Projednaná otázka')
+    if not s['assessment']['text'].strip():
+        todo.append('Klinické zhodnocení')
+    if not any(o.get('chosen') for o in s.get('options_considered') or []) \
+            and not any(r['text'].strip() for r in s.get('recommendation') or []):
+        todo.append('Zvolený postup (zvažované možnosti) nebo krok doporučeného postupu')
+    if not s.get('guideline_compliance'):
+        todo.append('V souladu s guidelines? Ano / Ne')
+    if not s['conclusion']['text'].strip():
+        todo.append('Závěr MDT')
+    unnamed = [a.get('name') or 'bez role' for a in decision.get('attendees') or []
+               if not a.get('user_id') and a.get('role') != 'chair']
+    if unnamed:
+        todo.append(f'Přítomní: vybrat lékaře ({", ".join(unnamed)})')
+    for i, t in enumerate(decision.get('tasks') or [], 1):
+        gaps = [name for name, ok in (('popis', t.get('description', '').strip()), ('komu', t.get('owner')),
+                                      ('termín', t.get('due_date'))) if not ok]
+        if gaps:
+            todo.append(f'Úkol {i}: {", ".join(gaps)}')
+    acked = set(decision.get('red_flags_acknowledged') or [])
+    if open_flags := [f for f in red_flag_ids if f not in acked]:
+        todo.append(f'Varovné signály vzít na vědomí: {len(open_flags)}')
+    return todo
+
+
 def build_decision_bundle(decision: dict, *, patient_id: str, service_request: dict, task: dict, mdt_id: str,
                           mdt_date: datetime, confirmed_by: dict, red_flags: dict[str, dict], now: datetime) -> tuple[dict, dict]:
     """Potvrzený závěr (Decision §8.4) → transaction Bundle + `fhir_ids`. Čistá funkce (testovatelná bez IRIS)."""

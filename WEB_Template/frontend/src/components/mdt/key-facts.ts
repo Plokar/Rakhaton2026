@@ -1,4 +1,4 @@
-import type { EvidenceId, IntakeField, IntakePrefill, IntakeWarning, ObservationSeries, Severity } from '@/types/mdt';
+import type { EvidenceId, FactCategory, IntakeField, IntakePrefill, IntakeWarning, ObservationSeries, Severity } from '@/types/mdt';
 
 /**
  * Klíčové údaje pro úzký panel projektoru (T-512): šablona podle diagnózy z `IntakePrefill.fields`
@@ -24,6 +24,8 @@ export interface KeyFact {
   reason?: string;
   citations: EvidenceId[];
   group: FactGroup;
+  /** Pevná kategorie (T-338, D-024): z pole formuláře, laboratoř, nebo z varování (dotazník → pacient). */
+  category: FactCategory;
 }
 
 export interface KeyFacts {
@@ -40,7 +42,7 @@ const GENERAL = new Set([
   'preferences', 'allergies', 'weight', 'geri.g8',
 ]);
 
-const FIELD_ABBR: Record<string, string> = {
+export const FIELD_ABBR: Record<string, string> = {
   'dx.histology': 'Histologie',
   'staging.tnm': 'TNM',
   'staging.imaging': 'Zobrazení ≤ 6 t.',
@@ -164,6 +166,7 @@ function labFact(series: ObservationSeries): KeyFact | null {
     reason: `${outside ? 'mimo ref.' : 'ref.'} ${range}${shownUnit}`,
     citations: [last.citation],
     group: 'lab',
+    category: 'lab',
   };
 }
 
@@ -231,6 +234,7 @@ export function buildKeyFacts(intake: IntakePrefill | null | undefined, series: 
       reason: lab?.reason,
       citations: [f.citation, f.required_by].filter((c): c is EvidenceId => Boolean(c)),
       group: GENERAL.has(f.id) ? 'general' : 'diagnosis',
+      category: lab ? 'lab' : f.category ?? 'history',
     });
   }
 
@@ -271,6 +275,7 @@ export function buildKeyFacts(intake: IntakePrefill | null | undefined, series: 
       reason: warning.detail,
       citations: warning.citations,
       group: 'alert',
+      category: warning.category ?? 'alerts',
     });
   }
 

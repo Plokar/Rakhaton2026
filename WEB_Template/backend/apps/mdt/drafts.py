@@ -38,7 +38,7 @@ NARROW_CONFIG = next(p for p in PRESETS if p['detail_level'] == 'brief')      # 
 
 # ── pomocné ──────────────────────────────────────────────────────────────────
 def _user_name(user) -> str:
-    return (user.get_full_name() or user.username) if user else 'zadávající lékař'
+    return roles.display_name(user) if user else 'zadávající lékař'
 
 
 def _draft_dict(d: PatientDraft) -> dict:

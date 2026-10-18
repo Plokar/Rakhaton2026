@@ -27,6 +27,17 @@ REQUESTER_BY_PATIENT = {'P04': 'pneumolog'}
 DEFAULT_REQUESTER = 'onkolog'
 
 
+def display_name(user) -> str:
+    """Jméno lékaře s tituly („MUDr. Petr Novák, Ph.D.“, T-338); bez jména uživatelské jméno."""
+    name = user.get_full_name() or user.username
+    try:
+        profile = user.mdt_profile
+    except UserProfile.DoesNotExist:
+        return name
+    before, after = profile.title_before.strip(), profile.title_after.strip()
+    return f"{before + ' ' if before else ''}{name}{', ' + after if after else ''}"
+
+
 def role(user) -> str | None:
     if not user or not user.is_authenticated:
         return None
@@ -69,7 +80,7 @@ def ensure_practitioner(user) -> str:
     profile, _ = UserProfile.objects.get_or_create(user=user)
     pid = profile.practitioner_fhir_id or practitioners.app_practitioner_id(user.username)
     if pid.startswith(practitioners.APP_PREFIX):        # lékaře účtu aplikace udržujeme (jméno, odbornost)
-        fhir.put(practitioners.app_practitioner(pid, user.get_full_name() or user.username, profile.specialty,
+        fhir.put(practitioners.app_practitioner(pid, display_name(user), profile.specialty,
                                                 user.username))
     if profile.practitioner_fhir_id != pid:
         profile.practitioner_fhir_id = pid

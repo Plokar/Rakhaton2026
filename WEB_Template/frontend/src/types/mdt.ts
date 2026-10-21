@@ -794,6 +794,9 @@ export interface ChatbotMessage {
   created_at: string;
 }
 
+/** POST /api/mdt/patients/{pid}/chatbot/ (T-345): odpověď AI nad kartou pacienta bez boardu, nic se neukládá. */
+export type PatientChatbotAnswer = Pick<ChatbotMessage, 'text' | 'claims' | 'uncertain' | 'model'>;
+
 /** GET /api/mdt/sessions/ */
 export type MdtSessionListItem = MdtSession & { patients: string[] };
 
@@ -845,4 +848,16 @@ export interface ProjectorLayout {
   categories?: { order: FactCategory[]; hidden: FactCategory[] };
   /** Klíče údajů: ID pole, `lab:<LOINC>`, `alert:<pravidlo>` (šablona) nebo přesné `KeyFact.id` (úprava u případu). */
   facts?: { order: string[]; hidden: string[] };
+  /** Jen u případu (T-345): údaje doplněné z karty pacienta přes chatbot, nejvýš 12; šablona lékaře je nemá. */
+  extra?: ProjectorExtra[];
+}
+
+/** Údaj doplněný z karty pacienta (T-345): tvrzení odpovědi chatbotu, které lékař přidal do okna pro projektor. */
+export interface ProjectorExtra {
+  id: string;
+  text: string;
+  /** Aspoň jedno Evidence ID, odkud tvrzení je. */
+  citations: EvidenceId[];
+  /** true = text napsala AI, false = doslovně z dokumentace (odpověď bez jazykového modelu). */
+  ai?: boolean;
 }

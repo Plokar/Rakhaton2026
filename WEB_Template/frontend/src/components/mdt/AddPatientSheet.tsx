@@ -10,13 +10,15 @@ import { Input } from '@/components/ui/input';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage, useCreateCase, useIntakeQuery, usePatientsQuery, useSessionQuery, useSessionsWithCases } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import type { MdtCase, MdtSession, MdtSessionListItem, PatientListItem } from '@/types/mdt';
+import type { MdtCase, MdtSession, MdtSessionListItem, PatientListItem, ProjectorExtra, ProjectorLayout } from '@/types/mdt';
 import { CitationProvider } from './citations';
 import { dayLabel, timeLabel } from './dates';
 import { ImportReportSheet } from './ImportReportSheet';
-import { IntakeForm, type IntakeResult } from './IntakeForm';
+import { IntakeForm, type IntakeChoice, type IntakeResult } from './IntakeForm';
+import { IntakeProjectorPreview } from './IntakeProjectorPreview';
 import { useMe } from './me';
 import { NewPatientForm } from './NewPatientForm';
+import { PatientChatFocus, PatientChatPanel } from './PatientChatDialog';
 import { SourceDrawer } from './SourceDrawer';
 
 const OPEN_SESSIONS = (s: MdtSessionListItem) => s.status !== 'closed';
@@ -27,7 +29,8 @@ export const intakePending = (c: Pick<MdtCase, 'status'>) => c.status === 'nomin
 /**
  * Zařazení pacienta z kalendáře nebo z jednání (NAVRH_UI §6.5): výběr pacienta z IRIS, pak formulář
  * s kontrolou úplnosti (`IntakeForm`: Doplnit / Přeskočit, varování, ECOG + C/P). Otázku pro MDT
- * přeskočit nejde (OBC-1.1).
+ * přeskočit nejde (OBC-1.1). Na širokém displeji je úplně vlevo živý náhled okna pro projektor a mezi ním a panelem
+ * chatbot nad kartou pacienta, kde se lékař doptává (T-345); od 1024 px jen náhled, chatbot pak v dialogu.
  */
 export function AddPatientSheet({ session, onClose, patientId }: { session: MdtSession | null; onClose: () => void; patientId?: string | null }) {
   const [shown, setShown] = React.useState(session);
@@ -44,7 +47,14 @@ export function AddPatientSheet({ session, onClose, patientId }: { session: MdtS
               </SheetDescription>
             </SheetHeader>
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-              <AddPatientForm key={`${shown.id}:${patientId ?? ''}`} session={shown} onDone={onClose} initialPatientId={patientId ?? null} />
+              <AddPatientForm
+                key={`${shown.id}:${patientId ?? ''}`}
+                session={shown}
+                onDone={onClose}
+                initialPatientId={patientId ?? null}
+                // celá plocha vlevo od panelu (36rem), mimo jeho posuvník: obsahující blok je panel (fixed), ne posuvná oblast
+                asideClassName="absolute inset-y-3 right-[calc(100%+0.75rem)] hidden w-[calc(100vw-36rem-1.5rem)] gap-3 lg:flex"
+              />
             </div>
           </>
         )}
@@ -54,9 +64,39 @@ export function AddPatientSheet({ session, onClose, patientId }: { session: MdtS
 }
 
 /** Výběr pacienta a formulář zařazení; sdílí ho boční panel i stránka `/dashboard/mdt/[id]/add`. */
-export function AddPatientForm({ session, onDone, initialPatientId = null }: { session: MdtSession; onDone: () => void; initialPatientId?: string | null }) {
+export function AddPatientForm({
+  session,
+  onDone,
+  initialPatientId = null,
+  asideClassName,
+}: {
+  session: MdtSession;
+  onDone: () => void;
+  initialPatientId?: string | null;
+  /** Umístění náhledu okna pro projektor a chatbotu vedle formuláře (T-345); bez něj se neukážou. */
+  asideClassName?: string;
+}) {
   const me = useMe();
-  const [patientId, setPatientId] = React.useState<string | null>(initialPatientId);
+  const [patientId, setPatientIdState] = React.useState<string | null>(initialPatientId);
+  const [choice, setChoice] = React.useState<IntakeChoice | null>(null);
+  const [layout, setLayout] = React.useState<ProjectorLayout>({});
+  const chatInput = React.useRef<HTMLTextAreaElement>(null);
+  const setPatientId = (next: string | null) => {
+    setPatientIdState(next);
+    setChoice(null);                                // jiný pacient začíná z předvyplnění a s výchozím oknem
+    setLayout({});
+  };
+  // „+ Doplnit z karty“ skočí do chatbotu vedle formuláře; na užším displeji (chatbot skrytý) otevře editor dialog
+  const focusChat = React.useCallback(() => {
+    const input = chatInput.current;
+    if (!input || input.getClientRects().length === 0) return false;
+    input.focus();
+    return true;
+  }, []);
+  const addExtra = (item: ProjectorExtra) => {
+    setLayout((prev) => ({ ...prev, extra: [...(prev.extra ?? []), item] }));
+    toast.success('Doplněno do okna pro projektor', { description: item.text });
+  };
   const [query, setQuery] = React.useState('');
   const [creating, setCreating] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
@@ -180,12 +220,44 @@ export function AddPatientForm({ session, onDone, initialPatientId = null }: { s
                   {apiErrorMessage(intake.error, 'Údaje pacienta se nepodařilo načíst z IRIS.')}
                 </p>
               ) : intake.data ? (
-                <IntakeForm key={patientId} prefill={intake.data} submitting={create.isPending} onSubmit={submit} patientId={patientId ?? undefined} />
+                <PatientChatFocus.Provider value={asideClassName ? focusChat : null}>
+                  <IntakeForm
+                    key={patientId}
+                    prefill={intake.data}
+                    submitting={create.isPending}
+                    onSubmit={submit}
+                    patientId={patientId ?? undefined}
+                    layout={layout}
+                    onLayoutChange={setLayout}
+                    onChoiceChange={setChoice}
+                  />
+                </PatientChatFocus.Provider>
               ) : null}
               <SourceDrawer evidenceId={sourceId} loadSource={mdtApi.getEvidence} onClose={() => setSourceId(null)} />
             </CitationProvider>
             {create.isError && (
               <p role="alert" className="text-sm text-destructive">{apiErrorMessage(create.error, 'Pacienta se nepodařilo zařadit.')}</p>
+            )}
+            {asideClassName && intake.data && (
+              <div className={asideClassName}>
+                {/* úplně vlevo náhled okna (od 48rem jako široký projektor), mezi ním a formulářem chatbot */}
+                <IntakeProjectorPreview
+                  session={session}
+                  patient={selected}
+                  intake={intake.data}
+                  choice={choice}
+                  layout={layout}
+                  className="min-w-0 flex-1 xl:max-w-[44rem] xl:flex-[1_1_45%]"
+                />
+                <PatientChatPanel
+                  key={selected.id}
+                  patientId={selected.id}
+                  extra={layout.extra}
+                  onAdd={addExtra}
+                  inputRef={chatInput}
+                  className="hidden min-w-[20rem] flex-[1_1_55%] overflow-hidden rounded-xl border border-border shadow-[0_12px_32px_-12px_rgb(15_23_42/0.25)] xl:flex"
+                />
+              </div>
             )}
           </div>
         )}

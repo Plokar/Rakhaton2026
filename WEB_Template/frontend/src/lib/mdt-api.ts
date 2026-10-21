@@ -11,6 +11,7 @@ import type {
   RuleInfo,
   SimilarCases,
   ChatbotMessage,
+  PatientChatbotAnswer,
   MdtRole,
   MyTemplates,
   ProjectorLayout,
@@ -249,6 +250,15 @@ export const mdtApi = {
   /** Dotaz na AI; `case_id` = pacient z agendy boardu, bez něj jen guidelines a studie. Vrátí `[dotaz, odpověď]`, uzavřený board 409. */
   postChatbotMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
     apiFetch<ChatbotMessage[]>(`/api/mdt/sessions/${sessionId}/chatbot/`, { method: 'POST', body: JSON.stringify(input) }),
+  /** Chatbot nad kartou pacienta (T-345): bez boardu (zařazení, okno pro projektor), historii drží prohlížeč. */
+  askPatientChatbot: (
+    patientId: string,
+    input: { text: string; history?: Pick<ChatbotMessage, 'role' | 'text' | 'claims'>[] },
+  ) =>
+    apiFetch<PatientChatbotAnswer>(`/api/mdt/patients/${encodeURIComponent(patientId)}/chatbot/`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   /** Přesun do jiného boardu (`session`), ECOG, záměr, checkbox, `acknowledge` (D-019), `status` (jen předseda). */
   updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>

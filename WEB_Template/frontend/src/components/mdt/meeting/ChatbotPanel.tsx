@@ -1,17 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { Bot, CircleHelp, LoaderCircle, SendHorizontal, X } from 'lucide-react';
+import { Bot, LoaderCircle, SendHorizontal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shadcn/button';
 import { Textarea } from '@/components/shadcn/textarea';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage } from '@/lib/queries';
-import type { ChatbotMessage, EvidenceId, MdtCase } from '@/types/mdt';
-import { AiTag } from '../AiBlock';
-import { CitationProvider, Citations, collectCitations } from '../citations';
-import { ClaimItem } from '../ClaimList';
-import { timeLabel } from '../dates';
+import type { EvidenceId, MdtCase } from '@/types/mdt';
+import { ChatAnswer, ChatQuestion } from '../ChatbotAnswer';
+import { CitationProvider, collectCitations } from '../citations';
 import { SourceDrawer } from '../SourceDrawer';
 import type { ChatbotState } from './use-chatbot';
 
@@ -105,7 +103,7 @@ export function ChatbotPanel({
               m.role === 'user' ? (
                 <Question key={m.id} text={m.text} label={m.case} createdAt={m.created_at} onSelectCase={onSelectCase} />
               ) : (
-                <Answer key={m.id} message={m} />
+                <ChatAnswer key={m.id} message={m} patientId={m.case?.patient_id} />
               ),
             )
           )}
@@ -209,63 +207,20 @@ function Question({
   createdAt?: string;
   onSelectCase?: (caseId: number) => void;
 }) {
-  return (
-    <li className="flex flex-col items-end gap-1 pl-8">
-      <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">Vy</span>
-        {createdAt && <time dateTime={createdAt} className="tabular-nums">{timeLabel(createdAt)}</time>}
-        {label &&
-          (onSelectCase ? (
-            <button
-              type="button"
-              translate="no"
-              onClick={() => onSelectCase(label.id)}
-              title={`Zobrazit ${label.patient_id}`}
-              className="rounded-md bg-muted px-1.5 py-px font-medium text-foreground hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {label.patient_id}
-            </button>
-          ) : (
-            <span translate="no" className="rounded-md bg-muted px-1.5 py-px font-medium text-foreground">{label.patient_id}</span>
-          ))}
-      </p>
-      <p className="max-w-full rounded-lg bg-primary/10 px-3 py-2 text-sm whitespace-pre-wrap break-words text-foreground">{text}</p>
-    </li>
-  );
-}
-
-/** Odpověď AI: fialový pruh vlevo (D-017) a štítek „AI návrh“, tvrzení s citacemi jako v podkladu. */
-function Answer({ message }: { message: ChatbotMessage }) {
-  const empty = !message.text && message.claims.length === 0 && message.uncertain.length === 0;
-  return (
-    <li className="flex flex-col items-start gap-1 pr-4">
-      <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-        <AiTag />
-        {message.case && <span translate="no" className="font-medium text-foreground">{message.case.patient_id}</span>}
-        <time dateTime={message.created_at} className="tabular-nums">{timeLabel(message.created_at)}</time>
-      </p>
-      <div className="w-full space-y-2 border-l-2 border-ai/50 pl-3">
-        {message.text && <p className="text-sm text-muted-foreground">{message.text}</p>}
-        {empty && <p className="text-sm text-muted-foreground">AI neodpověděla.</p>}
-        {message.claims.length > 0 && (
-          <ul className="flex flex-col gap-2">
-            {message.claims.map((claim) => (
-              <li key={claim.id}>
-                <ClaimItem claim={claim} />
-              </li>
-            ))}
-          </ul>
-        )}
-        {message.uncertain.map((u, i) => (
-          <p key={i} className="rounded-md bg-amber-50 px-2.5 py-1.5 text-sm leading-relaxed dark:bg-amber-400/10">
-            <span className="mr-1.5 inline-flex items-center gap-1 align-baseline text-xs font-medium text-amber-800 dark:text-amber-300">
-              <CircleHelp className="size-3.5 self-center" aria-hidden /> Nejistota AI
-            </span>
-            {u.text}
-            <Citations ids={u.citations} />
-          </p>
-        ))}
-      </div>
-    </li>
-  );
+  const tag =
+    label &&
+    (onSelectCase ? (
+      <button
+        type="button"
+        translate="no"
+        onClick={() => onSelectCase(label.id)}
+        title={`Zobrazit ${label.patient_id}`}
+        className="rounded-md bg-muted px-1.5 py-px font-medium text-foreground hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {label.patient_id}
+      </button>
+    ) : (
+      <span translate="no" className="rounded-md bg-muted px-1.5 py-px font-medium text-foreground">{label.patient_id}</span>
+    ));
+  return <ChatQuestion text={text} createdAt={createdAt} tag={tag} />;
 }

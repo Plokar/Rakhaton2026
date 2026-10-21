@@ -26,6 +26,7 @@ import type {
   ObservationSeries,
   ProcedureCompatibility,
   ProjectorBlock,
+  ProjectorExtra,
   ProjectorLayout,
   TemplateArea,
 } from '@/types/mdt';
@@ -1217,6 +1218,9 @@ export function orderedFacts(facts: KeyFact[], layout?: ProjectorLayout | null):
 
 /** Rozložení pro okno projektoru: z případu, nebo náhled rozpracovaného v editoru. */
 const ProjectorLayoutContext = React.createContext<ProjectorLayout | null>(null);
+/** Údaje doplněné z karty pacienta (T-345): z rozpracovaného rozložení, jinak z případu. */
+const NO_EXTRA: ProjectorExtra[] = [];
+const ProjectorExtraContext = React.createContext<ProjectorExtra[]>(NO_EXTRA);
 
 /**
  * Šířka buňky v okně projektoru: závažný údaj má celý řádek (podbarvení přes celou šířku); buňky mají větší
@@ -1324,6 +1328,7 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
 function ProjectorFacts() {
   const { facts, sources, item } = useQuickView();
   const layout = React.useContext(ProjectorLayoutContext);
+  const extra = React.useContext(ProjectorExtraContext);
   const { groups, hiddenCount } = arrangeFacts(facts, layout, defaultFactOrder);
   const exact = Boolean(layout?.facts?.order?.length);              // pořadí zadávajícího platí přesně, bez dobalování
   const source = layout === item?.projector_layout ? 'upraveno u pacienta' : layout ? 'šablona zadávajícího lékaře' : null;
@@ -1356,10 +1361,39 @@ function ProjectorFacts() {
           ))}
         </div>
       )}
+      {!loading && extra.length > 0 && <ProjectorExtraList items={extra} />}
       {hiddenCount > 0 && (
         <p className="mx-0.5 text-[11px] text-muted-foreground">Skryto zadávajícím lékařem: {hiddenCount} (v podkladu zůstávají).</p>
       )}
     </section>
+  );
+}
+
+/** Doplněno z karty pacienta (T-345): tvrzení z chatbotu, které lékař přidal; text od AI má fialový pruh a štítek. */
+function ProjectorExtraList({ items }: { items: ProjectorExtra[] }) {
+  return (
+    <div>
+      <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-semibold uppercase leading-4 tracking-wide text-muted-foreground">
+        <span>Doplněno z karty pacienta</span>
+        <span className="tabular-nums">{items.length}</span>
+      </h3>
+      <ul className="flex flex-col gap-px overflow-hidden rounded-xl border border-border bg-border">
+        {items.map((x) => (
+          <li key={x.id} className={cn('bg-card px-2.5 py-1.5 text-[13px] leading-snug', x.ai && 'border-l-2 border-l-ai/60')}>
+            {x.ai && (
+              <span
+                className="mr-1.5 rounded bg-ai-soft px-1 text-[11px] font-medium text-ai"
+                title="Text napsala AI z dokumentace pacienta, do okna ho přidal lékař"
+              >
+                AI
+              </span>
+            )}
+            {x.text}
+            <Citations ids={x.citations} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -1431,7 +1465,10 @@ function ProjectorTreatments() {
         <SkeletonRows rows={4} />
       ) : sources.compatibility.failed ? (
         <p role="alert" className="text-sm text-destructive">Soulad postupů se nepodařilo načíst. Obnovte okno (F5).</p>
-      ) : !options?.length ? (
+      ) : options === undefined ? (
+        // náhled při zařazení (T-345): soulad se počítá u případu, ten ještě není
+        <p className="text-sm text-muted-foreground">Semafor postupů se spočítá po zařazení pacienta.</p>
+      ) : !options.length ? (
         <p className="text-sm text-muted-foreground">Pro diagnózu nejsou v katalogu žádné postupy.</p>
       ) : (
         <ul className="flex flex-col gap-0.5">
@@ -1523,6 +1560,7 @@ const PJ_BLOCK: Record<ProjectorBlock, () => React.ReactNode> = {
 function ProjectorBody({ titleAs, className, layout }: { titleAs: 'h1' | 'h2'; className?: string; layout?: ProjectorLayout | null }) {
   const { item, sources } = useQuickView();
   const effective = layout ?? committeeLayout(item).layout;
+  const extra = (layout ?? item?.projector_layout)?.extra ?? NO_EXTRA;
   const hasAnamnesis = Boolean(sources.brief.data?.sections.find((s) => s.id === 'anamnesis')?.items.length);
   const blocks = orderedBlocks(effective).filter((b) => !b.hidden && (b.id !== 'anamnesis' || hasAnamnesis));
   const facts = blocks.find((b) => b.id === 'facts');
@@ -1534,24 +1572,26 @@ function ProjectorBody({ titleAs, className, layout }: { titleAs: 'h1' | 'h2'; c
   );
   return (
     <ProjectorLayoutContext.Provider value={effective}>
-      <article className={cn('flex h-full min-h-0 flex-col gap-2 bg-muted p-2', className)} aria-label="Přehled případu pro projektor">
-        <ProjectorHeader as={titleAs} />
-        {/* T-343: úzké okno vedle PACS má karty pod sebou; široké okno nebo projektor (od 48rem) má klíčové údaje
-            vlevo v širším sloupci a ostatní karty vpravo pod sebou */}
-        <div className="@container relative -mx-2 min-h-0 flex-1 overflow-y-auto overscroll-contain px-2">
-          <div className={cn('flex flex-col gap-2', split && '@[48rem]:grid @[48rem]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @[48rem]:items-start')}>
-            {split && facts ? (
-              <>
-                <div className="contents @[48rem]:flex @[48rem]:flex-col @[48rem]:gap-2">{card(facts)}</div>
-                <div className="contents @[48rem]:flex @[48rem]:flex-col @[48rem]:gap-2">{side.map(card)}</div>
-              </>
-            ) : (
-              blocks.map(card)
-            )}
+      <ProjectorExtraContext.Provider value={extra}>
+        <article className={cn('flex h-full min-h-0 flex-col gap-2 bg-muted p-2', className)} aria-label="Přehled případu pro projektor">
+          <ProjectorHeader as={titleAs} />
+          {/* T-343: úzké okno vedle PACS má karty pod sebou; široké okno nebo projektor (od 48rem) má klíčové údaje
+              vlevo v širším sloupci a ostatní karty vpravo pod sebou */}
+          <div className="@container relative -mx-2 min-h-0 flex-1 overflow-y-auto overscroll-contain px-2">
+            <div className={cn('flex flex-col gap-2', split && '@[48rem]:grid @[48rem]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @[48rem]:items-start')}>
+              {split && facts ? (
+                <>
+                  <div className="contents @[48rem]:flex @[48rem]:flex-col @[48rem]:gap-2">{card(facts)}</div>
+                  <div className="contents @[48rem]:flex @[48rem]:flex-col @[48rem]:gap-2">{side.map(card)}</div>
+                </>
+              ) : (
+                blocks.map(card)
+              )}
+            </div>
           </div>
-        </div>
-        <ProjectorQuestion />
-      </article>
+          <ProjectorQuestion />
+        </article>
+      </ProjectorExtraContext.Provider>
     </ProjectorLayoutContext.Provider>
   );
 }

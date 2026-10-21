@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity } from '@/types/mdt';
 import { Citations } from './citations';
+import { hasLayout } from './fact-layout';
 import { warningLabel } from './key-facts';
 import { ProjectorLayoutEditor } from './ProjectorLayoutEditor';
 
@@ -27,6 +28,9 @@ export type IntakeResult = {
   projector_layout?: ProjectorLayout;
 };
 
+/** ECOG a záměr C/P z formuláře: živý náhled okna pro projektor vedle formuláře (T-345). */
+export type IntakeChoice = { ecog: number | null; intent: 'C' | 'P' | null };
+
 /**
  * Zařazení pacienta do boardu (FR-P4, ARCH §5.10, POZADAVKY §2.2): předvyplněné údaje z IRIS s citací,
  * chybějící údaj Doplnit / Přeskočit (otázku pro MDT přeskočit nelze), varování s „Beru na vědomí“,
@@ -37,18 +41,33 @@ export function IntakeForm({
   submitting,
   onSubmit,
   patientId,
+  layout,
+  onLayoutChange,
+  onChoiceChange,
 }: {
   prefill: IntakePrefill;
   submitting: boolean;
   onSubmit: (result: IntakeResult) => void;
   /** Pacient pro úpravu okna pro projektor (T-333); bez něj se sekce nezobrazí. */
   patientId?: string;
+  /** Okno pro projektor drží rodič (T-345): mění ho editor i chatbot vedle formuláře. */
+  layout: ProjectorLayout;
+  onLayoutChange: (next: ProjectorLayout) => void;
+  /** Změna ECOG nebo záměru (náhled okna vedle formuláře, T-345). */
+  onChoiceChange?: (choice: IntakeChoice) => void;
 }) {
-  const [layout, setLayout] = React.useState<ProjectorLayout>({});
   const [skipped, setSkipped] = React.useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = React.useState<Set<string>>(new Set());
-  const [ecog, setEcog] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
-  const [intent, setIntent] = React.useState<'C' | 'P' | null>(prefill.intent_prefill ?? null);
+  const [ecog, setEcogState] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
+  const [intent, setIntentState] = React.useState<'C' | 'P' | null>(prefill.intent_prefill ?? null);
+  const setEcog = (next: number) => {
+    setEcogState(next);
+    onChoiceChange?.({ ecog: next, intent });
+  };
+  const setIntent = (next: 'C' | 'P') => {
+    setIntentState(next);
+    onChoiceChange?.({ ecog, intent: next });
+  };
   const [imaging, setImaging] = React.useState(false);
   const [fillHint, setFillHint] = React.useState<string | null>(null);
 
@@ -92,7 +111,7 @@ export function IntakeForm({
           imaging_recent_checked: imaging,
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
-          ...(layout.blocks || layout.facts || layout.categories ? { projector_layout: layout } : {}),
+          ...(layout.extra?.length || hasLayout(layout) ? { projector_layout: layout } : {}),
         });
       }}
     >
@@ -266,10 +285,10 @@ export function IntakeForm({
       {patientId && (
         <details className="rounded-lg border border-border bg-card px-3 py-2">
           <summary className="cursor-pointer text-sm font-semibold">
-            Okno pro projektor <span className="font-normal text-muted-foreground">(volitelné: skrýt nebo přeskládat údaje)</span>
+            Okno pro projektor <span className="font-normal text-muted-foreground">(volitelné: skrýt, přeskládat nebo doplnit z karty)</span>
           </summary>
           <div className="mt-3">
-            <ProjectorLayoutEditor patientId={patientId} value={layout} onChange={setLayout} />
+            <ProjectorLayoutEditor patientId={patientId} value={layout} onChange={onLayoutChange} />
           </div>
         </details>
       )}

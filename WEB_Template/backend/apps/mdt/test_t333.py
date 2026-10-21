@@ -33,3 +33,22 @@ def test_projector_layout_saved_by_case_editors(seeded):  # noqa: F811
 def test_projector_layout_validation(seeded, bad):  # noqa: F811
     p04 = MdtCase.objects.get(patient_fhir_id='P04')
     assert as_user('pneumolog').patch(f'/api/mdt/cases/{p04.pk}/', {'projector_layout': bad}, format='json').status_code == 400
+
+
+EXTRA = [{'id': 'x1', 'text': 'FEV1 1,9 l (58 % náležité hodnoty).', 'citations': ['P04-doc03#2'], 'ai': True}]
+
+
+def test_projector_layout_extra_from_patient_record(seeded):  # noqa: F811
+    """T-345: údaje doplněné z karty pacienta jen u případu, každý s citací; šablona lékaře je nemá."""
+    p04 = MdtCase.objects.get(patient_fhir_id='P04')
+    url = f'/api/mdt/cases/{p04.pk}/'
+    r = as_user('pneumolog').patch(url, {'projector_layout': {**LAYOUT, 'extra': EXTRA}}, format='json')
+    assert r.status_code == 200, r.json()
+    assert r.json()['projector_layout']['extra'] == EXTRA
+    for bad in ([{'id': 'x1', 'text': 'Bez citace', 'citations': []}],
+                [{'id': 'x1', 'text': '   ', 'citations': ['P04-doc03']}],
+                [{'id': 'x1', 'text': 'a', 'citations': ['P04-doc03'], 'source': 'web'}],
+                EXTRA * 2,                                  # stejné ID dvakrát
+                [{**EXTRA[0], 'id': f'x{i}'} for i in range(13)]):
+        assert as_user('pneumolog').patch(url, {'projector_layout': {'extra': bad}}, format='json').status_code == 400, bad
+    assert as_user('pneumolog').put('/api/mdt/templates/PLI/', {'layout': {'extra': EXTRA}}, format='json').status_code == 400

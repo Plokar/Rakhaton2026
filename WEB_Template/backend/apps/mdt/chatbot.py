@@ -2,6 +2,9 @@
 
 Vedle chatu lékařů (T-334), ale soukromý: rozhovor patří lékaři a boardu, ostatní ho nevidí. Odpovídá jen AI tomu,
 kdo se ptá, takže stačí jeden POST (otázka i odpověď v těle odpovědi), bez streamu. Logika je v `services/ai/chatbot.py`.
+
+Chatbot nad kartou pacienta (T-345): stejná odpověď bez boardu a bez případu (zařazení, okno pro projektor),
+nic se neukládá, rozhovor drží prohlížeč.
 """
 import logging
 
@@ -10,13 +13,15 @@ from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from services import patients
 from services.ai import chatbot as ai_chatbot
 
 from .chat import HISTORY, message_case, message_text
-from .models import ChatbotMessage, MdtSession
+from .models import ChatbotMessage, MdtSession, SessionMessage
 
 log = logging.getLogger(__name__)
 
@@ -57,3 +62,35 @@ def session_chatbot(request, sid):
                                           text=result['text'], claims=result['claims'],
                                           uncertain=result['uncertain'], model=result['model'] or '')
     return Response([_message(question), _message(reply)], status=201)
+
+
+def _client_history(raw) -> list[dict]:
+    """Předchozí zprávy z prohlížeče (T-345) ve tvaru pro prompt: posledních `CONTEXT_MESSAGES`, jen role, text a tvrzení."""
+    if raw is None:
+        return []
+    if not isinstance(raw, list) or not all(isinstance(m, dict) and m.get('role') in ('user', 'ai') for m in raw):
+        raise ValidationError({'history': 'Seznam zpráv {role: "user" | "ai", text, claims?}.'})
+    out = []
+    for m in raw[-CONTEXT_MESSAGES:]:
+        claims = [{'kind': c['kind'], 'text': str(c.get('text') or '')[:SessionMessage.MAX_LENGTH],
+                   'citations': [str(x) for x in c.get('citations') or []][:10]}
+                  for c in m.get('claims') or [] if isinstance(c, dict) and c.get('kind') in ('claim', 'missing')]
+        out.append({'role': m['role'], 'text': str(m.get('text') or '')[:SessionMessage.MAX_LENGTH], 'claims': claims})
+    return out
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def patient_chatbot(request, pid):
+    """POST `{text, history?}`: dotaz na kartu pacienta bez boardu (zařazení, okno pro projektor) → 200
+    `{text, claims, uncertain, model}` jako odpověď AI v `ChatbotMessage`. Nic se neukládá."""
+    if not patients.VALID_ID.match(pid or ''):
+        raise ValidationError({'patient_id': 'Neplatné ID pacienta.'})
+    text, history = message_text(request.data), _client_history(request.data.get('history'))
+    try:
+        result = ai_chatbot.answer(text, pid, history)
+    except Exception:
+        log.exception('T-345: chatbot nad kartou %s neodpověděl', pid)
+        result = {'text': 'AI se teď nepodařilo odpovědět.', 'claims': [], 'uncertain': [], 'model': None}
+    return Response(result)

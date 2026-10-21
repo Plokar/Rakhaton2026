@@ -30,6 +30,7 @@ urlpatterns = [
     path('patients/<str:pid>/intake/', views.patient_intake, name='patient-intake'),
     path('patients/<str:pid>/import/', views.patient_import, name='patient-import'),
     path('patients/<str:pid>/import/confirm/', views.patient_import_confirm, name='patient-import-confirm'),
+    path('patients/<str:pid>/chatbot/', chatbot.patient_chatbot, name='patient-chatbot'),
     path('cases/', views.case_create, name='case-create'),
     path('cases/<int:cid>/', views.case_detail, name='case-detail'),
     path('cases/<int:cid>/decision/', views.case_decision, name='case-decision'),

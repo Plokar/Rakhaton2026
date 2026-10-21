@@ -362,10 +362,11 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
 
 
 def _validate_projector_layout(layout) -> None:
-    """Okno pro projektor (T-333) se stejným tvarem jako šablona lékaře (T-338): `{categories?, facts?, blocks?}`."""
+    """Okno pro projektor (T-333) se stejným tvarem jako šablona lékaře (T-338): `{categories?, facts?, blocks?}`,
+    navíc `extra` = údaje doplněné z karty pacienta (T-345)."""
     from services.rules.fact_templates import validate_layout
     try:
-        validate_layout(layout)
+        validate_layout(layout, extra=True)
     except ValueError as e:
         raise ValidationError({'projector_layout': str(e)}) from None
 

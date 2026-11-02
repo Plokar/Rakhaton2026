@@ -1,16 +1,16 @@
-// Prezentace MedTeam · Rakathon 2026 (13 slidů) ve vizuálním jazyce videí: tmavý „sál“, tyrkysová, fialová = AI.
-// node build_deck.js  → MedTeam_Prezentace.pptx (pak téma přes apply_theme.js, viz README v FILM_SCENAR §10)
+// Prezentace MDTcore · Rakathon 2026 (13 slidů) ve vizuálním jazyce videí: tmavý „sál“, tyrkysová, fialová = AI.
+// node build_deck.js  → MDTcore_Prezentace.pptx (pak téma přes apply_theme.js, viz README v FILM_SCENAR §10)
 const fs = require('fs');
 const path = require('path');
 const pptxgen = require('pptxgenjs');
 const sharp = require('sharp');
 
-const OUT = 'MedTeam_Prezentace.pptx';
+const OUT = 'MDTcore_Prezentace.pptx';
 const A = (f) => path.join(__dirname, 'assets', f);
-const HOOK = path.join(__dirname, '..', 'out', 'medteam-hook.mp4');
+const HOOK = path.join(__dirname, '..', 'out', 'mdtcore-hook.mp4');
 
 const THEME = {
-  name: 'MedTeam',
+  name: 'MDTcore',
   headFontFace: 'Segoe UI Semibold',
   bodyFontFace: 'Segoe UI',
   colors: {
@@ -34,16 +34,16 @@ async function icon(name, tone = 'teal') {
 async function build() {
   const pres = new pptxgen();
   pres.layout = 'LAYOUT_WIDE'; // 13,333 × 7,5 in
-  pres.author = 'Tým MedTeam';
-  pres.title = 'MedTeam · MDT Copilot · Rakathon 2026';
+  pres.author = 'Tým MDTcore';
+  pres.title = 'MDTcore · Rakathon 2026';
   pres.theme = { headFontFace: THEME.headFontFace, bodyFontFace: THEME.bodyFontFace };
   const C = pres.SchemeColor;
   const INK = C.background1, MUTED = C.background2, SURF = C.text2, TEAL = C.accent1, AI = C.accent2, AMBER = C.accent3, RED = C.accent4;
 
   // ── rozvržení (layouts) ──
   const footer = [
-    { image: { x: 0.7, y: 6.98, w: 0.327, h: 0.3, path: A('mark.png'), altText: 'MedTeam' } },
-    { text: { text: 'MedTeam · MDT Copilot', options: { x: 1.12, y: 6.93, w: 4, h: 0.4, fontSize: 12, color: MUTED, margin: 0, valign: 'middle' } } },
+    { image: { x: 0.7, y: 6.98, w: 0.327, h: 0.3, path: A('mark.png'), altText: 'MDTcore' } },
+    { text: { text: 'MDTcore', options: { x: 1.12, y: 6.93, w: 4, h: 0.4, fontSize: 12, color: MUTED, margin: 0, valign: 'middle' } } },
   ];
   const titlePh = { placeholder: { options: { name: 'title', type: 'title', x: 0.7, y: 0.45, w: 11.9, h: 0.95, fontSize: 36, color: INK, align: 'left', valign: 'middle', margin: 0 }, text: '' } };
   const slideNumber = { x: 12.1, y: 6.93, w: 0.5, h: 0.4, fontSize: 12, color: MUTED, align: 'right' };
@@ -93,8 +93,8 @@ async function build() {
   // ── 1 · Uvítání ──
   pres.addSection({ title: 'Úvod' });
   let s = pres.addSlide({ masterName: 'TITLE', sectionTitle: 'Úvod' });
-  s.addImage({ path: A('logo.png'), x: 0.75, y: 1.75, w: 7.2, h: 2.38, objectName: 'Logo MedTeam', altText: 'MedTeam' });
-  text(s, [{ text: 'MDT Copilot', options: { bold: true, color: INK } }, { text: ' · podklady pro onkologickou komisi', options: { color: MUTED } }], { x: 0.95, y: 4.35, w: 7.4, h: 0.5, fontSize: 22 });
+  s.addImage({ path: A('logo.png'), x: 0.75, y: 1.75, w: 7.2, h: 2.38, objectName: 'Logo MDTcore', altText: 'MDTcore' });
+  text(s, [{ text: 'MDTcore', options: { bold: true, color: INK } }, { text: ' · podklady pro onkologickou komisi', options: { color: MUTED } }], { x: 0.95, y: 4.35, w: 7.4, h: 0.5, fontSize: 22 });
   text(s, 'Rakathon 2026 · výzva Asseco CE · InterSystems IRIS for Health', { x: 0.95, y: 6.55, w: 8, h: 0.4, fontSize: 14, color: MUTED });
   qrCard(s, 9.2, 1.45, 3.4);
   text(s, 'Vyzkoušejte si demo', { x: 9.0, y: 5.05, w: 3.8, h: 0.5, fontSize: 22, bold: true, align: 'center' });
@@ -200,7 +200,7 @@ async function build() {
   s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: 'Řešení' });
   s.addText([{ text: 'Chybí ti informace? ', options: {} }, { text: 'Zeptej se AI bota', options: { color: AI } }], { placeholder: 'title' });
   card(s, 0.7, 1.65, 11.9, 2.9, 'Ukázka odpovědi', { line: AI, lineT: 50, lw: 1.25 });
-  s.addImage({ path: A('qa_answer.png'), x: 0.95, y: 1.85, w: 11.4, h: 2.5, objectName: 'Odpověď AI z aplikace', altText: 'Skutečná odpověď AI v aplikaci MedTeam s citacemi zdrojů' });
+  s.addImage({ path: A('qa_answer.png'), x: 0.95, y: 1.85, w: 11.4, h: 2.5, objectName: 'Odpověď AI z aplikace', altText: 'Skutečná odpověď AI v aplikaci MDTcore s citacemi zdrojů' });
   const FEAT = [
     ['bot', 'ai', 'Odpoví hned', 'otázka vlastními slovy, odpověď za pár sekund'],
     ['database', 'teal', 'Jen z dat pacienta', 'čte z nemocniční databáze InterSystems IRIS (FHIR)'],
@@ -232,11 +232,11 @@ async function build() {
     text(s, sub, { x: x + 0.15, y: y + 1.75, w: w - 0.3, h: 0.7, fontSize: 14, color: MUTED, align: 'center', valign: 'top' });
   };
   await node(4.55, 2.55, 2.9, 2.5, 'database', 'InterSystems IRIS for Health', 'FHIR R4 · jeden zdroj dat pacienta', 'teal', 'IRIS');
-  await node(8.0, 2.55, 2.0, 2.5, 'laptop', 'MedTeam', 'webová aplikace', 'muted', 'MedTeam');
+  await node(8.0, 2.55, 2.0, 2.5, 'laptop', 'MDTcore', 'webová aplikace', 'muted', 'MDTcore');
   await node(10.55, 2.55, 2.05, 2.5, 'presentation', 'Komise', 'notebook předsedy + plátno', 'muted', 'Komise');
   [[7.45, 8.0], [10.0, 10.55]].forEach(([a, b], i) => s.addShape(pres.shapes.LINE, { x: a, y: 3.8, w: b - a, h: 0, line: { color: MUTED, width: 1.25, endArrowType: 'triangle' }, objectName: `Spojení ${i + 1}` }));
-  text(s, 'Data pacienta zůstávají v nemocnici. MedTeam čte jen z IRIS a potvrzený závěr zapisuje zpět.', { x: 4.55, y: 5.55, w: 8.05, h: 0.8, fontSize: 16, color: MUTED, valign: 'top' });
-  s.addNotes('Aktuální síť bez AI: nemocniční systémy (NIS, PACS, laboratoř, dotazníky) → InterSystems IRIS for Health jako FHIR databáze → aplikace MedTeam → komise (notebook předsedy a plátno).');
+  text(s, 'Data pacienta zůstávají v nemocnici. MDTcore čte jen z IRIS a potvrzený závěr zapisuje zpět.', { x: 4.55, y: 5.55, w: 8.05, h: 0.8, fontSize: 16, color: MUTED, valign: 'top' });
+  s.addNotes('Aktuální síť bez AI: nemocniční systémy (NIS, PACS, laboratoř, dotazníky) → InterSystems IRIS for Health jako FHIR databáze → aplikace MDTcore → komise (notebook předsedy a plátno).');
 
   // ── 10 · Hardware a ukázka ──
   s = pres.addSlide({ masterName: 'PHOTO2', sectionTitle: 'Řešení' });
@@ -294,7 +294,7 @@ async function build() {
 
   // ── 13 · Závěr ──
   s = pres.addSlide({ masterName: 'TITLE', sectionTitle: 'Tým a závěr' });
-  s.addImage({ path: A('logo.png'), x: 0.75, y: 1.2, w: 6.0, h: 1.98, objectName: 'Logo MedTeam', altText: 'MedTeam' });
+  s.addImage({ path: A('logo.png'), x: 0.75, y: 1.2, w: 6.0, h: 1.98, objectName: 'Logo MDTcore', altText: 'MDTcore' });
   s.addText('Děkujeme za pozornost', { placeholder: 'title' });
   text(s, [{ text: 'AI předkládá. ', options: { color: INK } }, { text: 'Lékař rozhoduje.', options: { color: TEAL } }], { x: 0.8, y: 5.7, w: 7.6, h: 0.6, fontSize: 26, bold: true });
   qrCard(s, 9.2, 1.45, 3.4);

@@ -1,8 +1,9 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Activity, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { buttonVariants } from '@/components/shadcn/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -15,10 +16,8 @@ export default function NotFound() {
       <header className="border-b border-border">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Activity className="size-4" aria-hidden />
-            </span>
-            <span translate="no" className="text-sm font-semibold">MedTeam</span>
+            <Image src="/icon-192.png" alt="" width={32} height={32} className="size-8 shrink-0 rounded-lg" aria-hidden />
+            <span translate="no" className="text-sm font-semibold">MDTcore</span>
           </Link>
           <ThemeToggle />
         </div>
@@ -44,7 +43,7 @@ export default function NotFound() {
 
       <footer className="border-t border-border py-4 text-xs text-muted-foreground">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
-          <span translate="no">MedTeam</span>
+          <span translate="no">MDTcore</span>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="transition-colors hover:text-foreground">Zásady soukromí</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Podmínky užití</Link>

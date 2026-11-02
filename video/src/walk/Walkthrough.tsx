@@ -30,7 +30,7 @@ const Intro: React.FC<{ f: number }> = ({ f }) => {
   );
 };
 
-/** 05: notebook předsedy + plátno v zasedačce (snímky z PACS a vedle panel MedTeam). */
+/** 05: notebook předsedy + plátno v zasedačce (snímky z PACS a vedle panel MDTcore). */
 const Room: React.FC<{ f: number; p: number; push: number }> = ({ f, p, push }) => {
   if (p <= 0.001) return null;
   const labels = 1 - Math.min(1, push * 2.5); // popisky zmizí při přiblížení na panel
@@ -59,7 +59,7 @@ const Room: React.FC<{ f: number; p: number; push: number }> = ({ f, p, push }) 
         </div>
       </div>
       <div style={{ position: 'absolute', left: SCR.x, top: SCR.y + SCR.h + 22, width: SCR.w, textAlign: 'center', fontFamily: INTER, fontSize: 36, fontWeight: 650, color: C.ink, opacity: screenOn * labels }}>
-        Plátno v zasedačce <span style={{ color: C.ink3, fontWeight: 500 }}>· panel MedTeam vedle snímků</span>
+        Plátno v zasedačce <span style={{ color: C.ink3, fontWeight: 500 }}>· panel MDTcore vedle snímků</span>
       </div>
       {/* notebook: rám kolem zmenšeného záběru + deska */}
       <div style={{ position: 'absolute', left: LAP.x - 14, top: LAP.y - 14, width: LAP.w + 28, height: LAP.h + 28, borderRadius: 18, border: `2px solid ${C.border}`, background: 'transparent', boxShadow: '0 30px 80px rgba(0,0,0,0.6)' }} />

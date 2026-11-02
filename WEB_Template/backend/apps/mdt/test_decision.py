@@ -27,7 +27,7 @@ def decision():
 @pytest.fixture
 def case(fake_fhir_dataset):
     call_command('seed_mdt')
-    client.put({'resourceType': 'Device', 'id': 'mdt-copilot', 'deviceName': [{'name': 'MDT Copilot', 'type': 'user-friendly-name'}]})
+    client.put({'resourceType': 'Device', 'id': 'mdt-copilot', 'deviceName': [{'name': 'MDTcore', 'type': 'user-friendly-name'}]})
     return MdtCase.objects.get(patient_fhir_id='P03')
 
 

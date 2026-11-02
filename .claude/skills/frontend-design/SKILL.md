@@ -4,9 +4,9 @@ description: Guidance for distinctive, intentional visual design when building n
 license: Complete terms in LICENSE.txt
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže):**
+> **V MDTcore (čti první, má přednost před textem skillu níže):**
 >
-> - MDT Copilot je pracovní nástroj lékařů (impeccable režim **Operate**), ne landing page. Rada „take aesthetic risk“ a „hero“ platí jen pro pitch; v aplikaci se odvaha ukazuje přesností a střídmostí. Vizuální svět určuje [docs/NAVRH_UI.md](../../../docs/NAVRH_UI.md) §3 a přihlašovací stránka (T-514): jedna rodina Inter, váhy 400–600, tyrkysová jen pro akci, výběr a focus, fialová pro AI.
+> - MDTcore je pracovní nástroj lékařů (impeccable režim **Operate**), ne landing page. Rada „take aesthetic risk“ a „hero“ platí jen pro pitch; v aplikaci se odvaha ukazuje přesností a střídmostí. Vizuální svět určuje [docs/NAVRH_UI.md](../../../docs/NAVRH_UI.md) §3 a přihlašovací stránka (T-514): jedna rodina Inter, váhy 400–600, tyrkysová jen pro akci, výběr a focus, fialová pro AI.
 > - Seznam „tells“ (verzálkové popisky, monospace pro data, karta v kartě, `→` v tlačítkách) ber jako kontrolní seznam pro každou obrazovku. Výjimky z `AGENTS.md` a D-017 platí: tři barevné systémy semafor / odbornost / AI a levé pruhy u AI bloků, závažnosti a hlavní otázky jsou záměr.
 > - Copy je česky, jazykem komise (ECOG, C/P, MKN-10), nikdy „doporučujeme“.
 >

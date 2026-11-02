@@ -3,7 +3,7 @@ name: iris-vector-search
 description: Store text embeddings in an InterSystems IRIS VECTOR column and run semantic similarity search with SQL (TO_VECTOR, VECTOR_COSINE). Covers table DDL, chunking PDFs with pymupdf and langchain-text-splitters, embedding with OpenAI text-embedding-3-small, inserting, and a reusable search function for RAG or agent tools. Use for any vector / semantic search / RAG task against IRIS.
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem kitu níže):**
+> **V MDTcore (čti první, má přednost před textem kitu níže):**
 >
 > - Tabulky `MDT.EvidenceChunk`, `MDT.GuidelineChunk`, `MDT.TrialCriterion` a celé API jsou hotové v `WEB_Template/backend/services/iris/vector_store.py` a `indexing.py` (ARCHITEKTURA §4.5). Rozšiřuj je, nezakládej nové tabulky.
 > - **Embeddingy přes Gemini**, ne OpenAI: `services.ai_service.get_ai_provider().embed(texts, task_type=…)` (`gemini-embedding-001` @ 1536, L2). Vstup do API se pseudonymizuje (NFR-3).

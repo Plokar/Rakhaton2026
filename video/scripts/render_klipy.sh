@@ -6,7 +6,7 @@ npx remotion render src/index.ts KlipProjektor out/klipy/04_okno_projektoru.mp4 
 npx remotion render src/index.ts KlipProjektorSvetly out/klipy/04_okno_projektoru_svetly.mp4 --log=error
 # ostatní scény vyříznuté z průchodu (snímky podle CHAPTERS v src/walk/timeline.ts)
 while read -r name range; do
-  npx remotion render src/index.ts MedTeamWalkthrough "out/klipy/${name}.mp4" --frames="$range" --props=props-nobgm.json --log=error
+  npx remotion render src/index.ts MDTcoreWalkthrough "out/klipy/${name}.mp4" --frames="$range" --props=props-nobgm.json --log=error
 done <<'LIST'
 01_rychly_prehled 120-419
 02_podklad_podle_odbornosti 420-709

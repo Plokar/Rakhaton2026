@@ -1,4 +1,4 @@
-// MedTeam: pozadí transparentní (scéna kreslí vlastní temný sál).
+// MDTcore: pozadí transparentní (scéna kreslí vlastní temný sál).
 // origin: template/src/aifl/live/PageCam.tsx（模板片同源组件）
 import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame, Easing } from 'remotion';
 

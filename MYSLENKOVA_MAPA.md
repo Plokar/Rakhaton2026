@@ -1,14 +1,14 @@
-# MDT Copilot — myšlenková mapa projektu
+# MDTcore — myšlenková mapa projektu
 
 > Přehled celého projektu na jednom místě: zadání z prezentace, poznámky z konzultace se zadavateli, požadavky lékaře z [docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md), architektura z [ARCHITEKTURA.md](ARCHITEKTURA.md) a stav z [PROGRESS.md](PROGRESS.md). Stav odpovídá pátku 16. 10. večer.
 >
 > Značky: _(poznámka)_ = zaznělo na konzultaci se zadavateli · ⚠️ **mezera** = v návrhu zatím chybí.
 
-**MDT Copilot** je AI asistent pro onkologické konzilium. Z dat pacienta za pár sekund připraví podklad pro každého člena komise a zapíše rozhodnutí jako oficiální záznam ve FHIR.
+**MDTcore** je AI asistent pro onkologické konzilium. Z dat pacienta za pár sekund připraví podklad pro každého člena komise a zapíše rozhodnutí jako oficiální záznam ve FHIR.
 
 **Zlaté pravidlo:** AI připravuje, shrnuje, upozorňuje a navrhuje. Rozhoduje vždy lékař.
 
-## V kostce: vstupy → MDT Copilot → výstupy
+## V kostce: vstupy → MDTcore → výstupy
 
 Zjednodušený pohled, stejný graf jako záložka „Přehled“ v artefaktu. Čte se shora dolů, výstupy odpovídají blokům A · B · B2 · C ze zadání.
 
@@ -22,7 +22,7 @@ flowchart TB
     I4["<b>Od předsedy</b><br/>sekce, pořadí,<br/>přítomné role, detail;<br/>bonus: přepis diskuse"]
   end
 
-  CP[["<b>② MDT COPILOT</b><br/>spojí data v IRIS → vytáhne podstatné s citací<br/>→ zkontroluje rozpory a chybějící údaje → připraví podklad"]]
+  CP[["<b>② MDTCORE</b><br/>spojí data v IRIS → vytáhne podstatné s citací<br/>→ zkontroluje rozpory a chybějící údaje → připraví podklad"]]
 
   subgraph NAVRH["③ AI NÁVRH PODKLADU · za pár sekund"]
     direction LR
@@ -49,11 +49,11 @@ flowchart TB
   style ZAZNAM stroke:#2F7A4E,stroke-width:2px
 ```
 
-> **Nominace ≠ složení komise.** Nominace je žádanka na projednání *pacienta* (`ServiceRequest`: kdo posílá, otázka typu „lze operovat?“). Kdo sedí u stolu, vybírá předseda v nastavení (FR-R1, `roles_present`) a do výstupu se zapíše jako `CareTeam`. Jestli operovat, ozařovat nebo léčit léky, je **výstup**: Copilot navrhne posouzení každé role a možnosti léčby, komise rozhodne.
+> **Nominace ≠ složení komise.** Nominace je žádanka na projednání *pacienta* (`ServiceRequest`: kdo posílá, otázka typu „lze operovat?“). Kdo sedí u stolu, vybírá předseda v nastavení (FR-R1, `roles_present`) a do výstupu se zapíše jako `CareTeam`. Jestli operovat, ozařovat nebo léčit léky, je **výstup**: MDTcore navrhne posouzení každé role a možnosti léčby, komise rozhodne.
 
 ## Jak do sebe projekt zapadá
 
-Shora dolů: proč to stavíme, co Copilot připraví (bloky A · B · B2 · C ze zadání), na čem to stojí a podle čeho nás hodnotí. Vstupy a výstupy jsou v grafu výše.
+Shora dolů: proč to stavíme, co MDTcore připraví (bloky A · B · B2 · C ze zadání), na čem to stojí a podle čeho nás hodnotí. Vstupy a výstupy jsou v grafu výše.
 
 ```mermaid
 flowchart TB
@@ -96,7 +96,7 @@ flowchart TB
 
 ### Kdo sedí u stolu
 
-Každá role chce vidět něco jiného _(poznámka)_. Složení komise Copilot negeneruje: přítomné role vybere předseda v nastavení a Copilot pro každou z nich připraví pohled a posouzení.
+Každá role chce vidět něco jiného _(poznámka)_. Složení komise MDTcore negeneruje: přítomné role vybere předseda v nastavení a MDTcore pro každou z nich připraví pohled a posouzení.
 
 | Role | Co potřebuje vidět |
 |---|---|
@@ -130,7 +130,7 @@ Smyšlená data od Asseco, **dataset v1.1 už dorazil a je ve formátu FHIR R4**
 
 ### Proces komise
 
-Copilot má pokrýt všechny 3 fáze.
+MDTcore má pokrýt všechny 3 fáze.
 
 1. **Před:** lékař nominuje pacienta s otázkou (`ServiceRequest`), kontrola úplnosti, agenda, předseda vybere přítomné role.
 2. **Během:** přepínání pacientů, prezentační režim na projektor, AI zapisovatel převede přepis na draft závěru.
@@ -148,7 +148,7 @@ Copilot má pokrýt všechny 3 fáze.
 | Bonusy (kvalita, ne počet) | +10 % |
 
 - Finále: 5 minut, jeden pacient, celý cyklus komise živě.
-- Výzva InterSystems: 1. místo 1 500 EUR, kombinovatelná s MDT Copilot.
+- Výzva InterSystems: 1. místo 1 500 EUR, kombinovatelná s MDTcore.
 
 ### Plán a stav
 

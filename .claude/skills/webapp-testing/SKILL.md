@@ -4,7 +4,7 @@ description: Toolkit for interacting with and testing local web applications usi
 license: Complete terms in LICENSE.txt
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže):**
+> **V MDTcore (čti první, má přednost před textem skillu níže):**
 >
 > - Frontend: `cd WEB_Template/frontend && npm run dev` (port 3000). Backend s IRIS běží v Dockeru (`WEB_Template/dev.sh up`, port 8000); bez Dockeru jde UI pustit jen proti mocku nebo demo případu `/dashboard/cases/demo` (fixtures P03).
 > - Přihlášení přes demo účty z `seed_mdt` (`predseda` / `NEXT_PUBLIC_DEMO_PASSWORD`). Snímky dělej ve 1440 × 900, 1024 × 768 (projektor) a 390 px (FR-U2), světlý i tmavý režim (třída `.dark`).

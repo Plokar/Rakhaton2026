@@ -1,4 +1,4 @@
-# Požadavky lékaře pro MDT Copilot — poznámky a pokyny pro AI agenty
+# Požadavky lékaře pro MDTcore — poznámky a pokyny pro AI agenty
 
 > **Stav: zapracováno do ARCHITEKTURA.md a PROGRESS.md** (Pá 16. 10. 2026 večer). Vychází z požadavků budoucího uživatele (lékaře), které předal tým, z revize datasetu v1.1 a z porovnání se zadáním ([Soulad se zadáním](#soulad-se-zadáním)). V kódu zatím nic není.
 >

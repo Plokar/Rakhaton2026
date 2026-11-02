@@ -25,7 +25,7 @@ def _decision() -> dict:
 @pytest.fixture
 def iris(fake_fhir_dataset, fake_iris):
     client.put({'resourceType': 'Device', 'id': 'mdt-copilot',
-                'deviceName': [{'name': 'MDT Copilot', 'type': 'user-friendly-name'}]})
+                'deviceName': [{'name': 'MDTcore', 'type': 'user-friendly-name'}]})
     vs.ensure_schema()
     indexing.index_patient('P03')
     return fake_iris

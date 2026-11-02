@@ -5,7 +5,7 @@ user-invocable: false
 allowed-tools: Bash(npx shadcn@latest *), Bash(pnpm dlx shadcn@latest *), Bash(bunx --bun shadcn@latest *)
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže):**
+> **V MDTcore (čti první, má přednost před textem skillu níže):**
 >
 > - Frontend je `WEB_Template/frontend` (Next.js 16, React 19, Tailwind v4, npm, ikony `lucide-react`). Před psaním kódu přečti `WEB_Template/frontend/AGENTS.md` (Next 16 má breaking changes). CLI pouštěj s `--cwd WEB_Template/frontend` nebo z té složky. Proto i kontext níže se načítá s `--cwd`.
 > - **shadcn zatím není inicializovaný** (chybí `components.json`). `src/components/ui/*` jsou ručně psané komponenty se stejnými tokeny jako shadcn (`--primary`, `--muted-foreground`… v `src/app/globals.css`, `@theme inline`). Tmavý režim přepíná třída `.dark` na `<html>`, ne nastavení systému.

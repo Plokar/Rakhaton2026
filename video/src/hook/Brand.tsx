@@ -29,7 +29,7 @@ export const Brand: React.FC<{ f: number }> = ({ f }) => {
         position: 'absolute', left: 0, right: 0, top: 712, textAlign: 'center', fontFamily: INTER, fontSize: 46, fontWeight: 500,
         letterSpacing: '-0.01em', color: C.ink2, opacity: sub, transform: `translateY(${(1 - sub) * 16}px)`,
       }}>
-        <span style={{ color: C.ink, fontWeight: 650 }}>MDT Copilot</span> · podklady pro onkologickou komisi
+        <span style={{ color: C.ink, fontWeight: 650 }}>MDTcore</span> · podklady pro onkologickou komisi
       </div>
       <div style={{
         position: 'absolute', left: 0, right: 0, top: 968, textAlign: 'center', fontFamily: INTER, fontSize: 32, fontWeight: 500,

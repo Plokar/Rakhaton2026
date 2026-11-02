@@ -33,7 +33,7 @@ CHAPTER_ICD = re.compile(r"\(([^)]*\b[CD]\d{2}[^)]*)\)")
 
 
 def download() -> None:
-    req = urllib.request.Request(PDF_URL, headers={"User-Agent": "Mozilla/5.0 (MDT Copilot, hackathon)"})
+    req = urllib.request.Request(PDF_URL, headers={"User-Agent": "Mozilla/5.0 (MDTcore, hackathon)"})
     with urllib.request.urlopen(req, timeout=300) as resp:
         PDF.write_bytes(resp.read())
 

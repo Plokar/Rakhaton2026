@@ -1,6 +1,6 @@
 # AGENTS.md — pravidla pro AI agenty (a lidi)
 
-Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + výzva InterSystems). Paralelně na něm pracuje víc lidí a víc AI agentů, proto drž tento protokol.
+Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + výzva InterSystems). Paralelně na něm pracuje víc lidí a víc AI agentů, proto drž tento protokol.
 
 ## Než začneš
 
@@ -20,9 +20,9 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 - `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele, `onko/` = znalostní báze (postupy podle diagnózy, studie, kritéria semaforu, normy). Ptej se přes `python3 data/onko/q.py`, celé TSV do promptu nenačítej.
 - `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), později `EVAL.md` a `DEMO.md`.
 - `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej náš provider** (`services/ai_service.py`: NVIDIA / Gemini).
-  - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDT Copilot“ má přednost před textem skillu (ARCH §4.8).
+  - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDTcore“ má přednost před textem skillu (ARCH §4.8).
   - `impeccable` (T-016): `/impeccable audit | critique | polish | distill | harden | clarify | adapt <cíl>` nad `WEB_Template/frontend` (`--target`). Hook detektoru jen lokálně (`/impeccable hooks on`).
-  - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDT Copilot“ má přednost.
+  - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDTcore“ má přednost.
   - **UI v2** ([docs/NAVRH_UI.md](docs/NAVRH_UI.md)): shell v `app/dashboard/layout.tsx`, data přes TanStack Query (`src/lib/queries.ts`), 30s přehled `components/mdt/quick-view.tsx` je společný pro kalendář, jednání, detail i projektor.
 
 ## Příkazy

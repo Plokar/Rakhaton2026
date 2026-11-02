@@ -7,7 +7,7 @@ metadata:
   version: "1.0.0"
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže):**
+> **V MDTcore (čti první, má přednost před textem skillu níže):**
 >
 > - Next.js 16 a React 19: když se pravidlo liší od `node_modules/next/dist/docs/` (viz `WEB_Template/frontend/AGENTS.md`), platí dokumentace Next 16.
 > - Data jdou z API backendu přes `src/lib/api.ts` a `src/lib/mdt-api.ts`. Sdílená cache je TanStack Query v `src/lib/queries.ts` (UI v2, NAVRH_UI §10.3): pravidlo `client-swr-dedup` splňuje, SWR nepřidávej. Starší `src/lib/use-api-data.ts` zůstává jen pro okrajové stránky.

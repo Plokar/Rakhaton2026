@@ -1,4 +1,4 @@
-# Eval MDT Copilot (T-301, T-302)
+# Eval MDTcore (T-301, T-302)
 
 > Pro tým a pro slide „Tech“ v pitchi. Postup je v [ARCHITEKTURA §5.8](../ARCHITEKTURA.md#58-evaluace), formát ground truth v [data/dev_ground_truth/README.md](../data/dev_ground_truth/README.md).
 

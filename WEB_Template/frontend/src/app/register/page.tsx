@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Activity, CircleAlert, Eye, EyeOff } from 'lucide-react';
+import { CircleAlert, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { TemplateAreasEditor } from '@/components/mdt/FactLayoutEditor';
 import { ROLE_META } from '@/components/mdt/roles';
@@ -107,10 +108,8 @@ export default function RegisterPage() {
     >
       <div className="flex items-center justify-between gap-3">
         <Link href="/login" className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Activity className="size-5" aria-hidden />
-          </span>
-          <span translate="no" className="text-base font-semibold tracking-tight">MedTeam</span>
+          <Image src="/icon-192.png" alt="" width={36} height={36} className="size-9 rounded-lg" aria-hidden />
+          <span translate="no" className="text-base font-semibold tracking-tight">MDTcore</span>
         </Link>
         <ThemeToggle />
       </div>

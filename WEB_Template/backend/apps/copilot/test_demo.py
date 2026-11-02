@@ -20,7 +20,7 @@ def demo_env(fake_fhir_dataset, settings, tmp_path, monkeypatch):
     settings.MDT_DEMO_CACHE_DIR = str(tmp_path)
     monkeypatch.setitem(jobs.GENERATORS, 'brief', 'apps.copilot.test_jobs.fake_generate')
     call_command('seed_mdt')
-    client.put({'resourceType': 'Device', 'id': 'mdt-copilot', 'deviceName': [{'name': 'MDT Copilot', 'type': 'user-friendly-name'}]})
+    client.put({'resourceType': 'Device', 'id': 'mdt-copilot', 'deviceName': [{'name': 'MDTcore', 'type': 'user-friendly-name'}]})
     return tmp_path
 
 

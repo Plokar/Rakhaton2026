@@ -27,7 +27,7 @@ export const DEFAULT_COOKIE_PREFERENCES: CookiePreferences = {
 export const KNOWN_COOKIES: CookieItem[] = [
   {
     name: 'access_token',
-    provider: 'MDT Copilot Auth API',
+    provider: 'MDTcore Auth API',
     category: 'necessary',
     duration: '1 den / relace',
     description: 'Bezpečný JWT token v httpOnly cookie zajišťující ověření přihlášeného uživatele a ochranu API endpointů.',
@@ -48,7 +48,7 @@ export const KNOWN_COOKIES: CookieItem[] = [
   },
   {
     name: 'theme',
-    provider: 'MDT Copilot UI',
+    provider: 'MDTcore UI',
     category: 'marketing',
     duration: 'Trvalé (localStorage)',
     description: 'Ukládá zvolený grafický režim (tmavý / světlý / systémový) pro optimální vizuální zážitek.',

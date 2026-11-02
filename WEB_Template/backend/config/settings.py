@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'apps.ws',               # WebSocket consumers
     'apps.items',            # Example domain module
     'apps.projects',         # Hackathon projects, tasks, notifs, storage, AI
-    'apps.copilot',          # MDT Copilot (iris_init, ingest, AI orchestrace)
+    'apps.copilot',          # MDTcore (iris_init, ingest, AI orchestrace)
     'apps.patients',         # Pacienti z IRIS FHIR (T-103)
     'apps.mdt',              # Boardy, případy, konfigurace (T-107)
 ]
@@ -318,7 +318,7 @@ LOGGING = {
 # CELERY_TASK_TRACK_STARTED = True
 # CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minut
 
-# ── MDT Copilot ───────────────────────────────────────────────────────────────
+# ── MDTcore ───────────────────────────────────────────────────────────────
 # Joby generování synchronně (testy); jinak in-process ThreadPool (D-004)
 MDT_JOBS_SYNC = os.environ.get('MDT_JOBS_SYNC', 'False') == 'True'
 # Offline demo (T-311): podklad z data/demo_cache místo LLM

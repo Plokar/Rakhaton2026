@@ -1,6 +1,6 @@
-# MDT Copilot — technická specifikace a architektura
+# MDTcore — technická specifikace a architektura
 
-> **Rakathon 2026** · Praha 16.–18. 10. 2026 · zadání **Asseco Central Europe** (MDT Copilot) + souběžná výzva **InterSystems** („Best Use of InterSystems Technology for AI and Interoperability“)
+> **Rakathon 2026** · Praha 16.–18. 10. 2026 · zadání **Asseco Central Europe** (MDTcore) + souběžná výzva **InterSystems** („Best Use of InterSystems Technology for AI and Interoperability“)
 >
 > Tento dokument je **jediný zdroj pravdy** pro architekturu, požadavky a datové kontrakty.
 >
@@ -60,7 +60,7 @@ Výtah ze zadání `docs/zadani/MDT_Copilot_zadani_upravené_2026_v02.pptx`, vč
   2. **během:** diskuse a rozhodnutí;
   3. **po zasedání:** úkoly, kontrola a opětovné posouzení.
 
-  Copilot má podpořit **všechny tři fáze**, ne jen přípravu podkladu.
+  MDTcore má podpořit **všechny tři fáze**, ne jen přípravu podkladu.
 
 ### 1.2 Mise a zlaté pravidlo
 
@@ -144,7 +144,7 @@ Podrobně v **[DATASET.md](DATASET.md)**. Shrnutí:
 
 **Demo pacient:** **P03** (záloha P05). Zdůvodnění je v [DATASET.md §9](DATASET.md#9-vložené-nesrovnalosti--pracovní-hypotézy-týmu).
 
-### 1.8 Výzva InterSystems (kombinovatelná s MDT Copilot)
+### 1.8 Výzva InterSystems (kombinovatelná s MDTcore)
 
 - **Název:** „Best Use of InterSystems Technology for AI and Interoperability“, 1. místo **1 500 EUR**.
 - **Technologie (žádná není povinná):** IRIS for Health, InterSystems FHIR Server, Vector Search (GenAI; přes Python, SQL, LangChain nebo LlamaIndex) a agentní AI.
@@ -155,7 +155,7 @@ Podrobně v **[DATASET.md](DATASET.md)**. Shrnutí:
   - technická soudržnost.
 
   Organizátoři chtějí vidět jasně definovaný zdravotnický problém, chytré využití AI a HL7 FHIR, dobře navržený datový model a architekturu a realistickou cestu k MVP nebo startupu.
-- **Mentoři:** InterSystems je k dispozici 24/7. Mgr. **Ondřej Hoferek** (technický ředitel InterSystems CZ/SK, HL7 ČR) je zároveň mentorem zadání MDT Copilot.
+- **Mentoři:** InterSystems je k dispozici 24/7. Mgr. **Ondřej Hoferek** (technický ředitel InterSystems CZ/SK, HL7 ČR) je zároveň mentorem zadání MDTcore.
 - **Zdroje:**
   - [FHIR-AI-Hackathon-Kit](https://github.com/intersystems-community/FHIR-AI-Hackathon-Kit) (větev V2) s tutoriály 5.1 agents & tools a 5.2 MCP server;
   - Synthea pro syntetická data;
@@ -343,7 +343,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 - **Env proměnné:**
   - `BACKEND_URL=https://api.<doména>`: jen pro server, používá se v `rewrites`;
   - `NEXT_PUBLIC_API_URL=`: prázdné, aby se volalo same-origin `/api/...`;
-  - `NEXT_PUBLIC_APP_NAME=MDT Copilot`.
+  - `NEXT_PUBLIC_APP_NAME=MDTcore`.
 - **Úpravy kódu (úkol T-004):**
   - `next.config.ts`:
     ```ts
@@ -396,7 +396,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 
 ### 4.1 Co z IRIS použijeme
 
-| Funkce IRIS | Využití v MDT Copilot | Priorita |
+| Funkce IRIS | Využití v MDTcore | Priorita |
 |---|---|---|
 | **FHIR R4 server** (`/fhir/r4`) | **Nemocniční DB:** celý dataset (6 pacientů, studie, dotazník) jako FHIR resources; backend čte přes REST (search `patient=`, `_tag`, `_summary=count`) | MUST |
 | **FHIR write-back** (transaction Bundle) | Potvrzený závěr komise ve struktuře datasetu ([§4.3](#43-fhir-datový-model)) + aktualizace stavu žádanky (`Task`, `ServiceRequest`) | MUST |
@@ -439,7 +439,7 @@ Command musí být idempotentní (`ExistsByUrl`). **Nenahrávat** Synthea data z
 
 Kompletní popis je v [DATASET.md §4](DATASET.md#4-fhir-model-datasetu-kde-co-je). Pro orientaci:
 
-| Potřeba Copilotu | Kde v IRIS |
+| Potřeba MDTcore | Kde v IRIS |
 |---|---|
 | Diagnóza, stadium, histologie | `Condition` „onkologická diagnóza“ (MKN-10, ICD-O-3 extension, `stage.summary.text`) + `Observation` `tnm` |
 | **Komorbidity** | `Condition` s `category.text = "komorbidita"` |
@@ -474,7 +474,7 @@ Zápis zrcadlí strukturu předchozích MDT v datasetu (D-009). Číslo zasedán
 | Odkliknuté varování (FR-P4) | `DetectedIssue/Pxx-caseNN-wNN` | `mitigation[]` (`action.text` „Beru na vědomí“, `author`, `date`); v podkladu se zobrazuje dál (D-019) |
 | Přepis diskuse (BON-3) | `DocumentReference/Pxx-mdtNN-prepis` | `type` text „Přepis diskuse MDT“, `content.attachment` (text, base64) |
 | **Původ a potvrzení** | `Provenance/Pxx-mdtNN-prov` | `target` = vše výše; `agent[]`: `Device/mdt-copilot` (model Gemini, typ `assembler`) + `Practitioner` předseda (`verifier` / `attester`); `entity[]` (`role=source`) = citované zdroje; `recorded` |
-| AI systém | `Device/mdt-copilot` (jednou při `iris_init`) | `deviceName` „MDT Copilot“, `version` = model |
+| AI systém | `Device/mdt-copilot` (jednou při `iris_init`) | `deviceName` „MDTcore“, `version` = model |
 | Označení AI obsahu | `meta.security` `AIAST` (`http://terminology.hl7.org/CodeSystem/v3-ObservationValue`) na resources s AI draftem | podle HL7 *AI Transparency on FHIR* (draft IG, **ověřit stav**) |
 | PDF | `DocumentReference/Pxx-mdtNN-pdf` | `application/pdf` (base64 v `attachment.data`), `context.related` → Composition (R4 `relatesTo` jen na DocumentReference); vzniká při prvním `GET …/export.pdf` potvrzeného závěru |
 | **FHIR export** | `Bundle` `type=document` | `Composition` jako 1. entry + zápis komise + resources, na které přímo odkazuje (pacient, lékaři, citované zdroje, studie); jde znovu nahrát `POST /Bundle` |
@@ -621,7 +621,7 @@ ORDER BY Score DESC
   - `fhir_query(resource, params)`;
   - `search_evidence(patient_id, query)`;
   - `search_guidelines(query, icd10)`.
-- Copilot ho může používat interně. V pitchi ukážeme, že stejné nástroje fungují i v libovolném MCP klientovi.
+- MDTcore ho může používat interně. V pitchi ukážeme, že stejné nástroje fungují i v libovolném MCP klientovi.
 - Read-only: jen `SELECT` a jen `GET`, dedikovaný IRIS uživatel s právy pro čtení.
 - **Implementace (T-308):** `fastmcp` 4, nástroje v `services/mcp/server.py` (obyčejné funkce, jdou volat i z Pythonu), spouštění `mcp_server.py`.
   - Nástroje (všechny s anotací `readOnlyHint`):
@@ -642,11 +642,11 @@ ORDER BY Score DESC
 
 ### 4.8 Pro AI agenty v týmu
 
-- Skills z kitu (`iris-fhir`, `iris-vector-search`, `iris-sql-python`, `iris-ai-agents`, `iris-environment`) jsou v `.claude/skills/` (T-011, MIT, kit V2 commit `3ebaee2`). Každý začíná blokem **„V MDT Copilot“**, který má přednost před textem kitu: odkazuje na naše implementace (`services/fhir`, `services/iris`, `services/mcp`) a vypisuje rozdíly (žádná Synthea ani POST, Gemini místo OpenAI, bez LangChain, compose služba `iris`).
+- Skills z kitu (`iris-fhir`, `iris-vector-search`, `iris-sql-python`, `iris-ai-agents`, `iris-environment`) jsou v `.claude/skills/` (T-011, MIT, kit V2 commit `3ebaee2`). Každý začíná blokem **„V MDTcore“**, který má přednost před textem kitu: odkazuje na naše implementace (`services/fhir`, `services/iris`, `services/mcp`) a vypisuje rozdíly (žádná Synthea ani POST, Gemini místo OpenAI, bez LangChain, compose služba `iris`).
   - Obsahují ověřené snippety a gotchas.
   - **Pozor: kit používá OpenAI** (`text-embedding-3-small`, `gpt-5-nano`). U nás se embeddingy i LLM volají přes Gemini ([§5.7](#57-model-a-ochrana-údajů)). IRIS část (SQL, `TO_VECTOR`, `VECTOR_COSINE`) platí beze změny.
-- **UI skills** (T-015, MIT): `shadcn` ([shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), commit `d2fba50`), `web-design-guidelines` a `vercel-react-best-practices` ([vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `063bee9`). I ty začínají blokem **„V MDT Copilot“**: Next 16 v `WEB_Template/frontend`, shadcn zatím bez `components.json` (`init` / `add` jen po domluvě s UI lane), tři barevné systémy semafor / odbornost / AI jsou záměr (D-017) a pravidlo „jen sémantické tokeny“ na ně neplatí.
-- **Impeccable** (T-016, Apache-2.0, odsouhlaseno UI lane): skill `impeccable` + subagenti `.claude/agents/impeccable-*.md` z [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (commit `6af45ac`). Blok „V MDT Copilot“: režim Operate, levé pruhy AI / varování / otázky pro MDT jsou záměr (D-017), direktivy enginu nepřebíjejí `AGENTS.md`. Engine se stahuje při prvním použití do `~/.impeccable/bin/` (ověřený SHA-256); hook detektoru je jen lokální a dobrovolný (`/impeccable hooks on` → `.claude/settings.local.json`).
+- **UI skills** (T-015, MIT): `shadcn` ([shadcn-ui/ui](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), commit `d2fba50`), `web-design-guidelines` a `vercel-react-best-practices` ([vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills), commit `063bee9`). I ty začínají blokem **„V MDTcore“**: Next 16 v `WEB_Template/frontend`, shadcn zatím bez `components.json` (`init` / `add` jen po domluvě s UI lane), tři barevné systémy semafor / odbornost / AI jsou záměr (D-017) a pravidlo „jen sémantické tokeny“ na ně neplatí.
+- **Impeccable** (T-016, Apache-2.0, odsouhlaseno UI lane): skill `impeccable` + subagenti `.claude/agents/impeccable-*.md` z [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (commit `6af45ac`). Blok „V MDTcore“: režim Operate, levé pruhy AI / varování / otázky pro MDT jsou záměr (D-017), direktivy enginu nepřebíjejí `AGENTS.md`. Engine se stahuje při prvním použití do `~/.impeccable/bin/` (ověřený SHA-256); hook detektoru je jen lokální a dobrovolný (`/impeccable hooks on` → `.claude/settings.local.json`).
 - Volitelně MCP [iris-agentic-dev](https://github.com/intersystems-community/iris-agentic-dev) pro živý přístup agenta k IRIS (`iris-agentic-dev init` detekuje Docker kontejner).
 
 ---

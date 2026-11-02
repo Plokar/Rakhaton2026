@@ -142,11 +142,11 @@ def decision_pdf(decision: dict, *, title: str, mdt_date: datetime, patient: dic
         story.append(p(f"Potvrdil: {decision['confirmed_by']['name']}, {decision.get('confirmed_at', '')[:16].replace('T', ' ')}"))
     if decision.get('fhir_ids'):
         story.append(p(f"IRIS FHIR: Composition/{decision['fhir_ids']['composition']}", small))
-    story.append(p('Části označené [AI] připravil MDT Copilot (AI asistent); obsah zkontroloval a potvrdil lékař. '
+    story.append(p('Části označené [AI] připravil MDTcore (AI asistent); obsah zkontroloval a potvrdil lékař. '
                    'Fiktivní data, nejedná se o zdravotnickou dokumentaci.', small))
 
     buf = io.BytesIO()
-    SimpleDocTemplate(buf, pagesize=A4, title=f'Záznam MDT – {title}', author='MDT Copilot',
+    SimpleDocTemplate(buf, pagesize=A4, title=f'Záznam MDT – {title}', author='MDTcore',
                       leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=16 * mm).build(story)
     return buf.getvalue()
 

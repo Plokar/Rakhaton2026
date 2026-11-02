@@ -103,7 +103,7 @@ Zásadní nekonzistence: **AI je označená tyrkysově (`teal-700`), stejnou bar
 - **Z T-512:**
   - `ProjectorPanel` a `key-facts.ts`, tedy 30s přehled: kolečka normality jen z referenčních mezí a pravidel, všechny postupy se semaforem, otázka a MKN-10 dole;
   - synchronizace oken přes BroadcastChannel.
-- **Z T-514:** vizuální jazyk loginu (MedTeam, tiché plochy, štítky odborností u rolí).
+- **Z T-514:** vizuální jazyk loginu (MDTcore, tiché plochy, štítky odborností u rolí).
 
 ---
 
@@ -207,7 +207,7 @@ Společný shell bude **`app/dashboard/layout.tsx`** místo `<DashboardLayout>` 
 
 ```
 ┌──────────────────────┬────────────────────────────────────────────────────────────────────┐
-│ ◉ MedTeam        ⟨⟨  │ Přehled › Mamární komise › P05          [⌕ Hledat pacienta… Ctrl K]  ◐  (P)│
+│ ◉ MDTcore        ⟨⟨  │ Přehled › Mamární komise › P05          [⌕ Hledat pacienta… Ctrl K]  ◐  (P)│
 │                      ├────────────────────────────────────────────────────────────────────┤
 │ ▣ Přehled            │                                                                    │
 │ ▤ Zasedání           │                         obsah stránky                              │
@@ -229,7 +229,7 @@ Společný shell bude **`app/dashboard/layout.tsx`** místo `<DashboardLayout>` 
 
 Postavený na komponentě `Sidebar` ze shadcn (`collapsible="icon"`, Ctrl+B, stav v cookie).
 
-- **Hlavička:** logo MedTeam (jako login a admin okno).
+- **Hlavička:** logo MDTcore (jako login a admin okno).
 - **Navigace:** Přehled · Zasedání · Úkoly. U Úkolů je počet otevřených úkolů po termínu (`GET /api/mdt/tasks/?status=requested`, filtr termínu na klientu).
 - **„Nejbližší zasedání“:** 5 nadcházejících boardů seskupených podle dne, s časem, zkráceným názvem a počtem pacientů. Aktivní board je zvýrazněný. Proklik vede do Jednání. Tohle je hlavní přidaná funkce: předseda se dostane k zasedání jedním klikem z jakékoli obrazovky.
 - **Patička:** akce „Okno pro projektor“ otevře `/projector` (T-512).
@@ -592,7 +592,7 @@ Verze ověřené v npm registru 17. 10. 2026. Všechny podporují React 19.
 1. `npx shadcn@latest init --base base` ve `WEB_Template/frontend`.
 2. Tokeny v `globals.css` sloučit ručně: názvy už sedí, hodnoty zůstávají naše.
 3. Komponenty, které už existují pod stejným jménem (`button`, `card`, `dialog`, `input`, `tabs`, `badge`, `avatar`, `skeleton`), přidávat **jen s `--dry-run` a `--diff`** a přepisovat po jedné. Nové (`sidebar`, `sheet`, `dropdown-menu`…) přidat rovnou.
-4. Skill `shadcn` je v `.claude/skills/` a jeho blok „V MDT Copilot“ hlídá D-017 a lane.
+4. Skill `shadcn` je v `.claude/skills/` a jeho blok „V MDTcore“ hlídá D-017 a lane.
 
 ---
 
@@ -639,6 +639,6 @@ Na pitch (So 13:00) a finále (Ne 14:00). Úkoly jsou návrh. Do PROGRESS §4 se
 | Q2 | shadcn nad Base UI, nebo nad Radix? | **Base UI** (`components/shadcn`, kompozice přes `render`) |
 | Q3 | Rozsah kalendáře: 1 týden, 2 týdny, měsíc? | **2 týdny** pod sebou, posun po týdnu, „Dnes“ vrací na aktuální týden |
 | Q4 | Čas na pacienta v Jednání: zobrazovat? | **ano**, v pruhu agendy, po 5 min oranžově, jen `sessionStorage`, do IRIS nic |
-| Q5 | Značka: MedTeam (login, admin okno) vs. MDT Copilot (sidebar, metadata) | **MedTeam** všude (titulek, manifest, sidebar), „MDT Copilot“ v popisu produktu |
+| Q5 | Značka (původně MedTeam a MDT Copilot) | **MDTcore** všude (titulek, manifest, sidebar, login). Přejmenováno, vyřešeno |
 | Q6 | Přetahování i uvnitř boardu (pořadí agendy)? | **později** (chce zapisovatelné `order`, T-518 bod 3) |
 | Q7 | Potvrzovat přesun mezi daty (zápis do IRIS)? | **nepotvrzovat**, toast s „Vrátit“ 8 s; přesun na uzavřený nebo minulý board UI nepustí (backend 409 zatím nemá) |

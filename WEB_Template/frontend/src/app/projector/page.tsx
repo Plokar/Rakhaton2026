@@ -24,7 +24,7 @@ function ProjectorWindow({ initial }: { initial: ProjectorSelection | null }) {
   const selection = useProjectorSelection(initial);
   // Titulek okna (Next metadata mají přednost před <title> v klientské stránce): okno jde najít na liště.
   React.useEffect(() => {
-    document.title = selection ? `${selection.patient} · projektor · MedTeam` : 'Projektor · MedTeam';
+    document.title = selection ? `${selection.patient} · projektor · MDTcore` : 'Projektor · MDTcore';
   }, [selection]);
   return (
     // Celá šířka okna (T-343): úzké okno vedle PACS má karty pod sebou, široké okno nebo projektor je skládá do sloupců.

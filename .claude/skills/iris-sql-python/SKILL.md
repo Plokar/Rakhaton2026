@@ -3,7 +3,7 @@ name: iris-sql-python
 description: Create, load and query InterSystems IRIS SQL tables from Python using the intersystems-irispython DB-API driver (import iris). Covers connecting, CREATE TABLE, parameterised INSERT/SELECT, executemany bulk loads, loading a CSV with pandas type inference, transactions and schema discovery. Use for any tabular / relational data work against IRIS.
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem kitu níže):**
+> **V MDTcore (čti první, má přednost před textem kitu níže):**
 >
 > - Spojení přes `WEB_Template/backend/services/iris/db.py:connect()` (context manager, env `IRIS_*`, v compose host `iris`). Vždy zavřít, CE má limit spojení.
 > - `GROUP BY` / `DISTINCT` vrací hodnoty v kolaci SQLUPPER; přesnou hodnotu dá `%EXACT(sloupec)` (Q16).

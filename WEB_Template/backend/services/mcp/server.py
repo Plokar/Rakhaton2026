@@ -34,7 +34,7 @@ FHIR_PARAMS = {'_id', 'patient', 'subject', 'code', 'category', 'date', 'status'
 _PERSON_FIELDS = ('name', 'telecom', 'address', 'photo', 'contact', 'identifier', 'birthDate')
 
 mcp = FastMCP(
-    'MDT Copilot · IRIS',
+    'MDTcore · IRIS',
     instructions=(
         'Data onkologických pacientů (fiktivní dataset Rakathon 2026) v InterSystems IRIS for Health: FHIR R4 + '
         'Vector Search. Pacienti P01–P06. Každé tvrzení o pacientovi cituj Evidence ID ze zdroje '

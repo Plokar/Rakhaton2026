@@ -1,10 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Activity,
   ArrowRight,
   CircleAlert,
   CircleCheck,
@@ -107,7 +107,7 @@ export default function LoginForm() {
   return (
     <div className="flex min-h-dvh bg-background">
       <aside
-        aria-label="O aplikaci MedTeam"
+        aria-label="O aplikaci MDTcore"
         className="hidden min-h-dvh flex-1 flex-col justify-between gap-8 border-r border-border bg-muted/40 p-8 lg:flex xl:p-14"
       >
         <Brand subtitle />
@@ -125,7 +125,7 @@ export default function LoginForm() {
           <ProductPreview />
         </div>
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} MedTeam · podklady pro multidisciplinární onkologickou komisi
+          © {new Date().getFullYear()} MDTcore · podklady pro multidisciplinární onkologickou komisi
         </p>
       </aside>
 
@@ -279,11 +279,9 @@ export default function LoginForm() {
 function Brand({ className, subtitle = false }: { className?: string; subtitle?: boolean }) {
   return (
     <div className={cn('flex items-center gap-2.5', className)}>
-      <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <Activity className="size-5" aria-hidden />
-      </span>
+      <Image src="/icon-192.png" alt="" width={36} height={36} className="size-9 rounded-lg" aria-hidden />
       <span>
-        <span translate="no" className="block text-lg font-bold leading-tight tracking-tight text-foreground">MedTeam</span>
+        <span translate="no" className="block text-lg font-bold leading-tight tracking-tight text-foreground">MDTcore</span>
         {subtitle && <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>}
       </span>
     </div>

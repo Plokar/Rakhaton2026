@@ -26,7 +26,7 @@ from services.ai.text import split_paragraphs
 from services.fhir.ingest import FICTIONAL_TAG
 
 TAG_SYSTEM = FICTIONAL_TAG["system"]
-SOURCE_TAG = {"system": TAG_SYSTEM, "code": "zadano-v-aplikaci", "display": "Zadáno lékařem v MDT Copilot"}
+SOURCE_TAG = {"system": TAG_SYSTEM, "code": "zadano-v-aplikaci", "display": "Zadáno lékařem v MDTcore"}
 EXT = "https://rakathon.example.org/fhir/StructureDefinition"
 NOMINATION_TYPES = {"primarni": "Primární projednání", "restaging": "Restaging / hodnocení odpovědi",
                     "progrese": "Progrese / recidiva"}
@@ -269,7 +269,7 @@ def _prune(value):
 # Sanitizace jako ingest datasetu, přečíslování na volné `Pnn` a ID podle konvence datasetu (citace, resolver),
 # kontrola referencí a RČ. Nominace se předvyplní ze strukturovaných dat, citací je ID resource.
 JSON_SUFFIXES = (".json",)
-IMPORT_TAG = {"system": TAG_SYSTEM, "code": "import-fhir-json", "display": "Importováno z FHIR JSON v MDT Copilot"}
+IMPORT_TAG = {"system": TAG_SYSTEM, "code": "import-fhir-json", "display": "Importováno z FHIR JSON v MDTcore"}
 PATIENT_SID = "https://rakathon.example.org/fhir/sid/pacient"
 SHARED_TYPES = frozenset({"Organization", "Practitioner", "PractitionerRole", "Location", "Medication",
                           "Questionnaire", "ResearchStudy", "Group", "Device"})

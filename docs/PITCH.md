@@ -1,4 +1,4 @@
-# Pitch MDT Copilot (T-402)
+# Pitch MDTcore (T-402)
 
 > Pro toho, kdo pitch prezentuje: obsah slidů, co říct a kolik času. Demo samotné je v [DEMO.md](DEMO.md), čísla v [EVAL.md](EVAL.md).
 > Pořadí podle zadání: problém → řešení → demo → technologie → InterSystems → dopad a cesta k MVP. Celkem **7 minut** (5 min demo + 2 min slidy), na lokální pitch lze zkrátit slidy 2, 6 a 7.
@@ -15,7 +15,7 @@
 
 ## Slide 2 · Řešení (30 s)
 
-**MDT Copilot připraví podklad za pár sekund. Rozhoduje vždy lékař.**
+**MDTcore připraví podklad za pár sekund. Rozhoduje vždy lékař.**
 
 - Celý cyklus komise: zařazení pacienta s kontrolou úplnosti → podklad → jednání → potvrzený zápis do nemocniční FHIR databáze → úkoly a re-MDT.
 - Každé tvrzení AI má klikací citaci zdroje. Co v datech není, podklad řekne jako „údaj chybí“.

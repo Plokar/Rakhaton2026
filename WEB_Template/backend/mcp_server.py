@@ -1,4 +1,4 @@
-"""MCP server MDT Copilot nad IRIS (T-308, ARCH §4.7). Nástroje: services/mcp/server.py.
+"""MCP server MDTcore nad IRIS (T-308, ARCH §4.7). Nástroje: services/mcp/server.py.
 
     # stdio (Claude Desktop / Claude Code / jiný MCP klient), uvnitř dev stacku:
     docker compose -f docker-compose.dev.yml exec -T backend python mcp_server.py

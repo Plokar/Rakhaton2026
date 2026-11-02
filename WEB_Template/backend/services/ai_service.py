@@ -1,5 +1,5 @@
 """
-AI služba MDT Copilot: abstrakce providerů (ARCHITEKTURA §5.7, D-008).
+AI služba MDTcore: abstrakce providerů (ARCHITEKTURA §5.7, D-008).
 
 Providery (výběr v ``.env``):
 - ``GeminiProvider``: Google AI Studio (Gemini API) přes SDK ``google-genai``: LLM, embeddingy, audio i PDF.

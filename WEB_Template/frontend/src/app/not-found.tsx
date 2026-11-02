@@ -33,7 +33,7 @@ export default function NotFound() {
               <Stethoscope className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-tight">MDT Copilot</span>
+              <span className="text-sm font-bold tracking-tight">MDTcore</span>
               <span className="text-[10px] font-mono text-muted-foreground">Error 404</span>
             </div>
           </Link>
@@ -98,7 +98,7 @@ export default function NotFound() {
       {/* Footer */}
       <footer className="relative z-10 py-6 text-center text-xs text-muted-foreground border-t border-border">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>MDT Copilot • 404</span>
+          <span>MDTcore • 404</span>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-foreground transition">Zásady soukromí</Link>
             <Link href="/terms" className="hover:text-foreground transition">Podmínky užití</Link>

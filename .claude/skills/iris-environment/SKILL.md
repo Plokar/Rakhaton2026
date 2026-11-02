@@ -3,7 +3,7 @@ name: iris-environment
 description: Start, stop, inspect and troubleshoot the kit's InterSystems IRIS for Health Docker container (iris-fhir), its ports, credentials, URLs, Python env and skip-setup scripts. Use when setting up the hackathon environment, when a connection to IRIS or the FHIR server fails, or when a later tutorial needs tables that an earlier one builds.
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem kitu níže):**
+> **V MDTcore (čti první, má přednost před textem kitu níže):**
 >
 > - IRIS je služba `iris` v `WEB_Template/docker-compose.dev.yml` (ne kontejner `iris-fhir` ani `start.sh` z kitu). Start: `cd WEB_Template; ./dev.sh up` (Windows `.\dev.ps1 up`).
 > - FHIR server zakládá `python manage.py iris_init` (spouští ho entrypoint backendu), data nahrává `python manage.py ingest_dataset` (ne Synthea).

@@ -1,6 +1,6 @@
 # Soulad se zadáním (T-326, T-332)
 
-> Kontrola aplikace proti zadání *MDT Copilot – Asistovaná interpretace pro multidisciplinární onkologické konzilium* (verze v02, [docs/zadani](zadani/)), stav k 17. 10. 2026 (větev `t-332-soulad-video`).
+> Kontrola aplikace proti zadání *MDTcore – Asistovaná interpretace pro multidisciplinární onkologické konzilium* (verze v02, [docs/zadani](zadani/)), stav k 17. 10. 2026 (větev `t-332-soulad-video`).
 > Pro tým před pitchem: každý bod zadání, kde je v aplikaci a jak ho ukázat. Katalog požadavků je v [ARCHITEKTURA §2](../ARCHITEKTURA.md#2-katalog-požadavků), scénář dema v [DEMO.md](DEMO.md).
 
 **Legenda:** ✅ hotovo a ukazatelné v UI · 🟡 hotovo jen částečně · ❌ chybí. Položky bez „BONUS“ jsou **povinné minimum**.

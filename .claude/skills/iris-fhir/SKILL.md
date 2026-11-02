@@ -3,7 +3,7 @@ name: iris-fhir
 description: Load, create, validate and query FHIR R4 data on the InterSystems IRIS for Health FHIR server from Python, using requests (REST), fhir.resources (building resources) and fhirpy (client). Covers posting Synthea bundles, creating Patient/DocumentReference resources, handling OperationOutcome validation errors, search parameters, paging, and generating synthetic data. Use for any FHIR task in this kit.
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem kitu níže):**
+> **V MDTcore (čti první, má přednost před textem kitu níže):**
 >
 > - FHIR klient je `WEB_Template/backend/services/fhir/client.py` (stdlib, `read`/`put`/`search`/`count`/`transaction`/`patient_everything`), ne `requests` ani `fhirpy`.
 > - Data jsou dataset Asseco přes `python manage.py ingest_dataset` (`services/fhir/ingest.py`): **PUT s ID z datasetu** (D-005), žádný POST (duplikuje) a **žádná Synthea**.

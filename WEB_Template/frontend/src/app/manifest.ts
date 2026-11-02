@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'MedTeam · MDT Copilot',
-    short_name: 'MedTeam',
+    name: 'MDTcore',
+    short_name: 'MDTcore',
     description: 'Podklady pro multidisciplinární onkologickou komisi (MDT)',
     start_url: '/dashboard',
     display: 'standalone',

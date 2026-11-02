@@ -32,7 +32,7 @@ function BriefWindow({ caseId }: { caseId: string }) {
           <div className="flex w-full items-center justify-between">
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <Activity className="size-3.5 text-primary" aria-hidden />
-              <span translate="no">MedTeam</span> · podklad pro komisi
+              <span translate="no">MDTcore</span> · podklad pro komisi
             </span>
             <ThemeToggle />
           </div>

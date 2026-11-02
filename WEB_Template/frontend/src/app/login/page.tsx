@@ -4,7 +4,7 @@ import LoginForm from './LoginForm';
 
 export const metadata: Metadata = {
   title: 'Přihlásit se',
-  description: 'Přihlášení do MedTeam: podklady pro multidisciplinární onkologickou komisi.',
+  description: 'Přihlášení do MDTcore: podklady pro multidisciplinární onkologickou komisi.',
 };
 
 export default function LoginPage() {

@@ -7,7 +7,7 @@ metadata:
   argument-hint: <file-or-pattern>
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže):**
+> **V MDTcore (čti první, má přednost před textem skillu níže):**
 >
 > - UI je česky ve `WEB_Template/frontend/src` (`app/`, `components/mdt/`, `components/ui/`). Nálezy piš česky, ve formátu `soubor:řádek` podle stažených pravidel.
 > - Kontroluj navíc požadavky projektu: použitelnost od 360 px bez vodorovného posouvání (FR-U2, D-017), čitelnost na projektoru (kontrast, velikost písma, T-310), tmavý režim (třída `.dark`), odlišený AI text a citace u tvrzení (`AGENTS.md`). Tři barevné systémy semafor / odbornost / AI jsou záměr (D-017), nehlas je jako nekonzistenci.

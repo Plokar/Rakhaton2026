@@ -28,7 +28,7 @@
 | V-19 | Průchod v2.1: gramatika kamery (navigace × čtení), pomalejší tempo, závěr 5,5 s | ✅ | render s hudbou hotový; verze bez hudby zůstala z v2 (na přání uživatele nerenderováno) |
 | V-21 | Klip 04: okno projektoru s výbuchem skrytých údajů (preset pneumologa) | ✅ | v2: vertikální úzký náhled, 5 s, tmavá + světlá (`src/clips/ProjectorPreset.tsx`) |
 | V-22 | Klipy po scénách (výřezy z průchodu) | ✅ | `scripts/render_klipy.sh` → `out/klipy/` |
-| V-20 | Prezentace 13 slidů (.pptx) ve stylu videí | ✅ | `prezentace/MedTeam_Prezentace.pptx`, validace prošla, kontrola exportem z PowerPointu |
+| V-20 | Prezentace 13 slidů (.pptx) ve stylu videí | ✅ | `prezentace/MDTcore_Prezentace.pptx`, validace prošla, kontrola exportem z PowerPointu |
 
 ## Klíčová rozhodnutí
 

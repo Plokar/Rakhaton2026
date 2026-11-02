@@ -12,7 +12,7 @@ metadata:
   version: '1.0.0'
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže):**
+> **V MDTcore (čti první, má přednost před textem skillu níže):**
 >
 > - React 19 a Next.js 16 (`WEB_Template/frontend/AGENTS.md`). Primitiva jsou shadcn nad Base UI v `src/components/shadcn` (kompozice přes `render`, ne `asChild`), klinické komponenty v `src/components/mdt`.
 > - Sdílený obsah rychlého přehledu (`CaseQuickView`) se skládá z částí, ne z boolean propů: stejné pořadí a zkratky v panelu, jednání, detailu i na projektoru (NAVRH_UI §2).

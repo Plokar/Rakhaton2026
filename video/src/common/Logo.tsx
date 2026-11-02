@@ -1,4 +1,4 @@
-// Logo MedTeam jako SVG (originál v repu je JPG se zapečenou šachovnicí). Tmavá varianta pro film:
+// Logo MDTcore jako SVG (originál v repu je JPG se zapečenou šachovnicí). Tmavá varianta pro film:
 // „Med“ bílé místo navy a bublina s tyrkysovým obrysem, jinak by na černé zmizely (zapsáno ve FILM_SCENAR §2).
 // Souřadnice podle MedTeam_logo.jpg zmenšeného na 2000 × 661.
 import React from 'react';

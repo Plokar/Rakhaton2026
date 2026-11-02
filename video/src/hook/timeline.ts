@@ -56,9 +56,9 @@ export const SFX_A: Sfx[] = [
 export const VO_A: VoSlot[] = [
   { file: 'A_01.mp3', from: 18, maxDur: 90, text: 'Pět specialistů. Pět minut. Jeden pacient.' },
   { file: 'A_02.mp3', from: 126, maxDur: 135, text: 'A za ním roky zpráv, nálezů… a rozporů.' },
-  { file: 'A_03.mp3', from: 348, maxDur: 90, text: 'MedTeam připraví celý případ za pár sekund.' },
+  { file: 'A_03.mp3', from: 348, maxDur: 90, text: 'MDTcore připraví celý případ za pár sekund.' },
   { file: 'A_04.mp3', from: 450, maxDur: 120, text: 'Každé tvrzení má zdroj. Každý rozpor je na očích.' },
   { file: 'A_05.mp3', from: 612, maxDur: 84, text: 'Semafor léčby počítají pravidla. Ne AI.' },
   { file: 'A_06.mp3', from: 705, maxDur: 54, text: 'Rozhoduje vždy lékař.' },
-  { file: 'A_07.mp3', from: 798, maxDur: 78, text: 'MedTeam. Copilot onkologické komise.' },
+  { file: 'A_07.mp3', from: 798, maxDur: 78, text: 'MDTcore. Asistent onkologické komise.' },
 ];

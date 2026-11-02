@@ -21,7 +21,7 @@ EXTRACTION = {"title": "Laboratoř", "date": "2026-10-12", "values": [
 @pytest.fixture
 def mocked(fake_fhir_dataset, monkeypatch):
     call_command('seed_mdt')
-    client.put({'resourceType': 'Device', 'id': 'mdt-copilot', 'deviceName': [{'name': 'MDT Copilot', 'type': 'user-friendly-name'}]})
+    client.put({'resourceType': 'Device', 'id': 'mdt-copilot', 'deviceName': [{'name': 'MDTcore', 'type': 'user-friendly-name'}]})
     monkeypatch.setattr(ai_service, 'get_ai_provider', lambda *a, **k: MockAIProvider(responses={'Extraction': EXTRACTION}))
 
 

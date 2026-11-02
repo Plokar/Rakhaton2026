@@ -58,7 +58,7 @@ def dataset_dir(path: str | os.PathLike | None = None) -> Path:
         raise DatasetError('Není nastavená proměnná DATASET_DIR (cesta k Dataset_MDT_Copilot_v1.1).')
     root = Path(raw)
     if not (root / 'pacienti').is_dir():
-        raise DatasetError(f'{root} není dataset MDT Copilot (chybí složka pacienti/).')
+        raise DatasetError(f'{root} není dataset MDTcore (chybí složka pacienti/).')
     return root
 
 

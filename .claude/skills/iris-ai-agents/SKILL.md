@@ -3,7 +3,7 @@ name: iris-ai-agents
 description: Build LLM agents over InterSystems IRIS data - LangChain create_agent with Python function tools (SQL, FHIR REST, vector search), and exposing the same tools as MCP servers with FastMCP (streamable HTTP or stdio) for Claude Code or other MCP clients. Use when wiring IRIS / FHIR / vector data into an AI agent, chatbot, or MCP server.
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem kitu níže):**
+> **V MDTcore (čti první, má přednost před textem kitu níže):**
 >
 > - LLM je **Gemini** přes `WEB_Template/backend/services/ai_service.py` (structured output, mock pro testy). LangChain ani OpenAI v projektu nejsou (ARCHITEKTURA §6.1).
 > - MCP server nad IRIS je hotový: `services/mcp/server.py` + `mcp_server.py` (ARCHITEKTURA §4.7, jen čtení, pseudonymizace, allowlist FHIR parametrů). Nové nástroje přidávej tam.

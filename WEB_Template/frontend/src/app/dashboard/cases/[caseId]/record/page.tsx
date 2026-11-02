@@ -188,8 +188,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
         title="Závěr komise"
         meta={
           <>
-            <span translate="no">{brief?.header.display_name ?? patientLabel}</span> · zápis ve struktuře záznamu MDT. Text od AI je
-            odlišený, rozhoduje lékař.
+            <span translate="no">{brief?.header.display_name ?? patientLabel}</span>
           </>
         }
         actions={

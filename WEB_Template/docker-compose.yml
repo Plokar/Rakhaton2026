@@ -93,6 +93,7 @@ services:
       IRIS_PASSWORD: ${IRIS_PASSWORD:?IRIS_PASSWORD v .env (ne výchozí SYS)}
       FHIR_BASE_URL: ${FHIR_BASE_URL:-http://iris:52773/fhir/r4}
       DATASET_DIR: /data/dataset
+      DEMO_DATASET_DIR: /data/demo_pacienti                 # demo pacienti P13–P32 (komise v listopadu)
       ONKO_KB_DIR: /data/onko
       ONKO_DATASET_DIR: /data/dataset
       ONKO_GUIDELINES_DIR: /data/dataset/guidelines
@@ -117,6 +118,7 @@ services:
       - backend_static:/code/staticfiles
       - backend_media:/code/media
       - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
+      - ../data/demo_pacienti:/data/demo_pacienti:ro
       - ../data/onko:/data/onko:ro
       - ../data/audio:/data/audio:ro
       - ../data/demo_cache:/data/demo_cache

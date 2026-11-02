@@ -51,6 +51,16 @@ def repo_dataset() -> Path | None:
     return None
 
 
+def demo_dataset_dir() -> Path | None:
+    """Demo pacienti P13+ (`data/demo_pacienti`, fiktivní) vedle datasetu: env ``DEMO_DATASET_DIR``, jinak složka
+    v checkoutu repa. ``DEMO_DATASET_DIR=off`` je vypne. Jen pacienti, Questionnaire a studie bere z datasetu."""
+    raw = os.environ.get('DEMO_DATASET_DIR')
+    if raw and raw.lower() in ('off', 'false', '0'):
+        return None
+    candidates = [Path(raw)] if raw else [p / 'data' / 'demo_pacienti' for p in Path(__file__).resolve().parents]
+    return next((c for c in candidates if (c / 'pacienti').is_dir()), None)
+
+
 def dataset_dir(path: str | os.PathLike | None = None) -> Path:
     """Kořen datasetu z argumentu, env ``DATASET_DIR``, jinak z checkoutu repa (cestu nehardcodujeme)."""
     raw = path or os.environ.get('DATASET_DIR') or repo_dataset()

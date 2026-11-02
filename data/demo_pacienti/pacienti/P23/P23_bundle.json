@@ -1,0 +1,1192 @@
+{
+  "resourceType": "Bundle",
+  "id": "P23-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P23",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P23",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P23"
+          }
+        ],
+        "name": [
+          {
+            "text": "Pacient P23 (fiktivní)"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1956",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 70
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P23-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P23-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P23-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P23-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P23-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P23-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P23-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P23-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P23-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P23-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P23-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P23-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P23-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P23-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C18.7",
+              "display": "Zhoubný novotvar esovité kličky tlustého střeva (sigmatu)"
+            }
+          ],
+          "text": "Zhoubný novotvar esovité kličky tlustého střeva (sigmatu)"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "onsetDateTime": "2026-09-08",
+        "bodySite": [
+          {
+            "text": "colon sigmoideum"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8140/3",
+                  "display": "Adenokarcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C18.7"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT3 cN1 cM1a, stadium IVA (TNM 8. vyd.)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P23-dg2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P23-dg2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C78.7",
+              "display": "Sekundární zhoubný novotvar jater a intrahepatálních žlučovodů"
+            }
+          ],
+          "text": "Sekundární zhoubný novotvar jater a intrahepatálních žlučovodů"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "onsetDateTime": "2026-09-15",
+        "bodySite": [
+          {
+            "text": "játra, 7 ložisek v obou lalocích"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P23-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P23-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Diabetes mellitus 2. typu"
+            }
+          ],
+          "text": "Diabetes mellitus 2. typu"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "onsetDateTime": "2011-08"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P23-kom2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P23-kom2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "N18.3",
+              "display": "Chronické onemocnění ledvin, stadium 3"
+            }
+          ],
+          "text": "Chronické onemocnění ledvin, stadium 3"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "onsetDateTime": "2022-02"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P23-med01",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P23-med01",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "A10BJ06",
+              "display": "semaglutid"
+            }
+          ],
+          "text": "semaglutid"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "1 mg s.c. 1× týdně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P23-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P23-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P23-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-09-08",
+        "issued": "2026-09-08T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P23-03"
+          }
+        ],
+        "conclusion": "Biopsie sigmatu: adenokarcinom G2, pMMR, RAS a BRAF bez mutace..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QmlvcHNpZSBzaWdtYXR1OiBhZGVub2thcmNpbm9tIEcyLCBwTU1SLCBSQVMgYSBCUkFGIGJleiBtdXRhY2Uu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-09-08"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P23-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P23-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "issued": "2026-10-12T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P23-02"
+          }
+        ],
+        "conclusion": "CT břicha: 7 jaterních metastáz v obou lalocích, největší 52 mm, odhad FLR nedostatečný.",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1QgYsWZaWNoYTogNyBqYXRlcm7DrWNoIG1ldGFzdMOheiB2IG9ib3UgbGFsb2PDrWNoLCBuZWp2xJt0xaHDrSA1MiBtbSwgb2RoYWQgRkxSIG5lZG9zdGF0ZcSNbsO9LiBQbMOtY2UgYmV6IGxvxb5pc2VrLg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-12"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P23-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P23-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "date": "2026-10-14T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P23-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA3MCBsZXQsIGRpYWJldGlrIHMgQ0tEIDMuIEVDT0cgMS4gQ0VBIDg2IMK1Zy9sLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-14"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P23-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT3 cN1 cM1a, stadium IVA (TNM 8. vyd.)",
+        "focus": [
+          {
+            "reference": "Condition/P23-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P23-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P23-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 92,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-09-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P23-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "KRAS"
+        },
+        "valueString": "bez mutace (wild-type)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-09-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P23-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "NRAS"
+        },
+        "valueString": "bez mutace (wild-type)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-bm03",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-bm03",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-09-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P23-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "BRAF V600E"
+        },
+        "valueString": "neprokázána (wild-type)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-bm04",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-bm04",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-09-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P23-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "MMR (IHC)"
+        },
+        "valueString": "zachovalá exprese (pMMR)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 115,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 128,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P23-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P23-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P23-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P23-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Levostranný karcinom sigmatu RAS/BRAF wt s neresekabilními jaterními metastázami: FOLFOX s panitumumabem a konverzní záměr?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: adenokarcinom G2, pMMR, RAS a BRAF bez mutace."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: DM 2. typu, CKD 3 (kreatinin 128 µmol/l). ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Přeje si léčbu ambulantně, dojíždí 60 km."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P23-dg1"
+          },
+          {
+            "reference": "Condition/P23-dg2"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P23-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P23-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P23-zad01"
+        },
+        "for": {
+          "reference": "Patient/P23"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P23-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-05T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P23-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P23-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "authored": "2026-10-13T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P23"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "2",
+                  "display": "O sebe se postarám, ale práci nezvládnu, přes den odpočívám méně než polovinu dne"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 92
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P23-lab02-cea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P23-lab02-cea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Nádorové markery"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2039-6",
+              "display": "CEA"
+            }
+          ],
+          "text": "CEA"
+        },
+        "subject": {
+          "reference": "Patient/P23"
+        },
+        "effectiveDateTime": "2026-10-29T07:30:00+01:00",
+        "valueQuantity": {
+          "value": 124,
+          "unit": "µg/l"
+        }
+      }
+    }
+  ]
+}

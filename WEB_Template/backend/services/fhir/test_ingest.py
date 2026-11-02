@@ -181,8 +181,28 @@ def test_verify_reports_missing_and_tolerates_extra(fake_fhir_dataset, dataset_r
 
 def test_command_dry_run(dataset_root):
     out = StringIO()
-    call_command('ingest_dataset', '--dry-run', dataset_dir=str(dataset_root), stdout=out)
+    call_command('ingest_dataset', '--dry-run', '--no-demo', dataset_dir=str(dataset_root), stdout=out)
     assert 'FHIR: celkem 1091 unikátních resources připraveno' in out.getvalue()
+
+
+def test_command_adds_demo_patients(dataset_root, tmp_path, monkeypatch):
+    """Demo pacienti (data/demo_pacienti, T-347) jdou vedle datasetu; --patients vybírá z obou složek."""
+    demo = tmp_path / 'demo'
+    (demo / 'pacienti' / 'P40').mkdir(parents=True)
+    bundle = json.loads((dataset_root / 'pacienti' / 'P03' / 'P03_bundle.json').read_text(encoding='utf-8'))
+    text = json.dumps(bundle).replace('P03', 'P40')
+    (demo / 'pacienti' / 'P40' / 'P40_bundle.json').write_text(text, encoding='utf-8')
+    monkeypatch.setenv('DEMO_DATASET_DIR', str(demo))
+    out = StringIO()
+    call_command('ingest_dataset', '--dry-run', '--skip-vectors', dataset_dir=str(dataset_root), stdout=out)
+    assert 'P40' in out.getvalue() and 'P06' in out.getvalue()
+    out = StringIO()
+    call_command('ingest_dataset', '--dry-run', '--skip-vectors', patients='P03,P40', dataset_dir=str(dataset_root),
+                 stdout=out)
+    labels = [line.split()[0] for line in out.getvalue().splitlines() if line.startswith('  P')]
+    assert labels == ['P03', 'P40']
+    monkeypatch.setenv('DEMO_DATASET_DIR', 'off')
+    assert ingest.demo_dataset_dir() is None
 
 
 def test_command_ingests_selected_patients(fake_fhir, dataset_root):

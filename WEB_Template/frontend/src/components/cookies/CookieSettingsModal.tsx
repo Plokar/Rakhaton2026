@@ -6,7 +6,7 @@ import { KNOWN_COOKIES } from '@/types/cookies';
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShieldCheck, BarChart3, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { ShieldCheck, BarChart3, SlidersHorizontal, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 
 export function CookieSettingsModal() {
   const {
@@ -70,7 +70,7 @@ export function CookieSettingsModal() {
                     <span className="font-semibold text-sm text-foreground">
                       Technicky nezbytné cookies
                     </span>
-                    <Badge variant="default" className="text-[10px] py-0 px-2">
+                    <Badge variant="default" className="text-[11px] py-0 px-2">
                       Vždy aktivní
                     </Badge>
                   </div>
@@ -96,14 +96,14 @@ export function CookieSettingsModal() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-muted text-foreground">
-                  <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+                  <BarChart3 className="h-3.5 w-3.5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm text-foreground">
                       Analytické &amp; Výkonnostní cookies
                     </span>
-                    <Badge variant="outline" className="text-[10px] py-0 px-2">
+                    <Badge variant="outline" className="text-[11px] py-0 px-2">
                       Volitelné
                     </Badge>
                   </div>
@@ -131,14 +131,14 @@ export function CookieSettingsModal() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-muted text-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm text-foreground">
                       Funkční &amp; AI Studio preference
                     </span>
-                    <Badge variant="outline" className="text-[10px] py-0 px-2">
+                    <Badge variant="outline" className="text-[11px] py-0 px-2">
                       Volitelné
                     </Badge>
                   </div>
@@ -185,14 +185,14 @@ export function CookieSettingsModal() {
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="font-mono font-semibold text-primary">{cookie.name}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">
+                    <span className="text-[11px] text-muted-foreground font-mono">
                       {cookie.duration}
                     </span>
                   </div>
                   <p className="text-muted-foreground text-[11px] leading-relaxed">
                     {cookie.description}
                   </p>
-                  <div className="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground/80">
+                  <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted-foreground/80">
                     <span>Poskytovatel: <strong>{cookie.provider}</strong></span>
                     <span>•</span>
                     <span className="capitalize">Kategorie: {cookie.category}</span>

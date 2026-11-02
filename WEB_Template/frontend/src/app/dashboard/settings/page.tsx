@@ -112,7 +112,7 @@ export default function SettingsPage() {
       <div className="space-y-6 max-w-4xl">
         {/* Header */}
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
             Nastavení profilu
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

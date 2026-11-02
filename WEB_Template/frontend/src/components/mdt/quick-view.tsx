@@ -492,7 +492,7 @@ function LayoutNote() {
 
 function CategoryHeading({ label, count }: { label: string; count?: number }) {
   return (
-    <h4 className="mt-3 mb-0.5 flex items-baseline justify-between text-[11px] font-semibold uppercase tracking-wide text-muted-foreground first:mt-0">
+    <h4 className="mt-3 mb-0.5 flex items-baseline justify-between text-[11px] font-medium text-muted-foreground first:mt-0">
       <span>{label}</span>
       {count !== undefined && <span className="tabular-nums">{count}</span>}
     </h4>
@@ -1345,7 +1345,7 @@ function ProjectorFacts() {
         <div className="flex flex-col gap-1.5 @[46rem]:block @[46rem]:columns-2 @[46rem]:gap-3">
           {groups.filter((g) => g.facts.length).map((g) => (
             <div key={g.category} className="@container break-inside-avoid @[46rem]:mb-1.5">
-              <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-semibold uppercase leading-4 tracking-wide text-muted-foreground">
+              <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-medium leading-4 text-muted-foreground">
                 <span>{g.label}</span>
                 <span className="tabular-nums">{g.facts.length}</span>
               </h3>
@@ -1448,7 +1448,7 @@ function ProjectorQuestion() {
   return (
     <footer className={cn(PJ_CARD, 'flex shrink-0 items-start gap-3')}>
       <div className="min-w-0 flex-1">
-        <h2 className="mb-0.5 text-[11px] font-semibold uppercase leading-4 tracking-wide text-muted-foreground">Otázka pro MDT</h2>
+        <h2 className="mb-0.5 text-[11px] font-medium leading-4 text-muted-foreground">Otázka pro MDT</h2>
         {sources.session.loading && !header.question ? (
           <Skeleton className="h-5 w-full" />
         ) : (
@@ -1469,7 +1469,7 @@ function ProjectorQuestion() {
       {header.diagnosis && (
         <div className={cn('shrink-0 rounded-xl px-2 py-1 text-center', PJ_ACCENT)} title={header.diagnosis.text}>
           <p className="text-[11px] font-semibold leading-4 text-muted-foreground">MKN-10</p>
-          <p translate="no" className="text-base font-bold tabular-nums">{header.diagnosis.icd10}</p>
+          <p translate="no" className="text-base font-semibold tabular-nums">{header.diagnosis.icd10}</p>
         </div>
       )}
     </footer>

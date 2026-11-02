@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
           <Link href="/" className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground mb-4">
             <Zap className="h-5 w-5 fill-current" />
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Obnova zapomenutého hesla</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Obnova zapomenutého hesla</h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Zadejte e-mail přidružený k vašemu účtu. V dev módu se e-mail odešle do Mailhogu.
           </p>
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
               E-mail s odkazem pro obnovu byl odeslán.
             </p>
             <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground text-left space-y-1">
-              <p className="font-semibold text-foreground">🔍 Kde najdu e-mail v dev prostředí?</p>
+              <p className="font-semibold text-foreground">Kde najdu e-mail v dev prostředí?</p>
               <p>Otevřete Mailhog webové rozhraní na portu 8025:</p>
               <a
                 href="http://localhost:8025"

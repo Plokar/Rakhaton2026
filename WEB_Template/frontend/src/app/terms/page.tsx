@@ -54,7 +54,7 @@ export default function TermsOfUsePage() {
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-4">
               <FileCheck2 className="h-3.5 w-3.5" /> Podmínky služby &amp; Pravidla
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-foreground">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl text-foreground">
               Podmínky užití služby
             </h1>
             <p className="mt-3 text-base text-muted-foreground leading-relaxed">
@@ -74,7 +74,7 @@ export default function TermsOfUsePage() {
           <div className="space-y-10 text-sm leading-relaxed text-muted-foreground">
             {/* 1. Úvod */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Scale className="h-5 w-5 text-primary" />
                 1. Úvodní ustanovení a přijetí podmínek
               </h2>
@@ -90,7 +90,7 @@ export default function TermsOfUsePage() {
 
             {/* 2. Uživatelské účty */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
                 2. Uživatelský účet a bezpečnost
               </h2>
@@ -107,7 +107,7 @@ export default function TermsOfUsePage() {
 
             {/* 3. Pravidla přijatelného užití */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Ban className="h-5 w-5 text-rose-500" />
                 3. Pravidla přijatelného užití (AUP)
               </h2>
@@ -116,21 +116,21 @@ export default function TermsOfUsePage() {
               </p>
               <div className="rounded-xl border border-border bg-card p-4 space-y-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-rose-500 font-bold">•</span>
+                  <span className="text-rose-500 font-semibold">•</span>
                   <span>
                     Využívat AI Studio nebo API ke generování škodlivého kódu, malwaru, phishingu,
                     nenávistného obsahu či materiálů porušujících zákony České republiky nebo EU.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-rose-500 font-bold">•</span>
+                  <span className="text-rose-500 font-semibold">•</span>
                   <span>
                     Provádět záměrné zatěžovací útoky (DoS/DDoS), přetěžovat společné API limity či provádět
                     neoprávněné penetrační testování bez předchozího písemného souhlasu organizátorů.
                   </span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-rose-500 font-bold">•</span>
+                  <span className="text-rose-500 font-semibold">•</span>
                   <span>
                     Pokoušet se o obcházení autentizačních mechanismů, manipulaci s cizími JWT tokeny
                     nebo přístup k projektům jiných soutěžních týmů bez oprávnění.
@@ -141,12 +141,12 @@ export default function TermsOfUsePage() {
 
             {/* 4. Duševní vlastnictví */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Code2 className="h-5 w-5 text-primary" />
                 4. Duševní vlastnictví a autorská práva k projektům
               </h2>
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5 text-muted-foreground">
-                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold mb-2">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold mb-2">
                   <CheckCircle2 className="h-5 w-5" /> Vlastnictví vašeho hackathon kódu
                 </div>
                 <p className="text-xs leading-relaxed">
@@ -163,7 +163,7 @@ export default function TermsOfUsePage() {
 
             {/* 5. Vyloučení záruk */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
                 5. Vyloučení záruk a dostupnost („AS IS“)
               </h2>
@@ -183,7 +183,7 @@ export default function TermsOfUsePage() {
 
             {/* 6. Omezení odpovědnosti */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Terminal className="h-5 w-5 text-primary" />
                 6. Omezení odpovědnosti
               </h2>
@@ -196,7 +196,7 @@ export default function TermsOfUsePage() {
 
             {/* 7. Ukončení a rozhodné právo */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Scale className="h-5 w-5 text-primary" />
                 7. Rozhodné právo a řešení sporů
               </h2>

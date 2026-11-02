@@ -59,7 +59,7 @@ export default function PrivacyPolicyPage() {
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-4">
               <ShieldCheck className="h-3.5 w-3.5" /> Ochrana soukromí &amp; GDPR
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-foreground">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl text-foreground">
               Zásady ochrany osobních údajů
             </h1>
             <p className="mt-3 text-base text-muted-foreground leading-relaxed">
@@ -115,7 +115,7 @@ export default function PrivacyPolicyPage() {
           <div className="space-y-10 text-sm leading-relaxed text-muted-foreground">
             {/* 1. Správce */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-primary" />
                 1. Správce osobních údajů
               </h2>
@@ -137,7 +137,7 @@ export default function PrivacyPolicyPage() {
 
             {/* 2. Zpracovávané údaje */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Database className="h-5 w-5 text-primary" />
                 2. Rozsah zpracovávaných osobních údajů
               </h2>
@@ -168,7 +168,7 @@ export default function PrivacyPolicyPage() {
 
             {/* 3. Účely a právní základ */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
                 3. Účely a právní základ zpracování
               </h2>
@@ -214,7 +214,7 @@ export default function PrivacyPolicyPage() {
 
             {/* 4. AI a třetí strany */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Bot className="h-5 w-5 text-primary" />
                 4. Zapojení AI modelů a subdodavatelů
               </h2>
@@ -235,7 +235,7 @@ export default function PrivacyPolicyPage() {
 
             {/* 5. Cookies */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Cookie className="h-5 w-5 text-primary" />
                 5. Soubory Cookie a lokální úložiště
               </h2>
@@ -265,7 +265,7 @@ export default function PrivacyPolicyPage() {
 
             {/* 6. Doba uchování */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Lock className="h-5 w-5 text-primary" />
                 6. Doba uchovávání údajů
               </h2>
@@ -281,7 +281,7 @@ export default function PrivacyPolicyPage() {
 
             {/* 7. Práva uživatele */}
             <section className="space-y-3">
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
                 7. Vaše práva podle GDPR
               </h2>

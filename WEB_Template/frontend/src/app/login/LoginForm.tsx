@@ -283,7 +283,7 @@ function Brand({ className, subtitle = false }: { className?: string; subtitle?:
         <Activity className="size-5" aria-hidden />
       </span>
       <span>
-        <span translate="no" className="block text-lg font-bold leading-tight tracking-tight text-foreground">MedTeam</span>
+        <span translate="no" className="block text-lg font-semibold leading-tight tracking-tight text-foreground">MedTeam</span>
         {subtitle && <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>}
       </span>
     </div>
@@ -397,12 +397,12 @@ function ProductPreview() {
           </ul>
         </div>
         <div className="flex items-start gap-3 border-t-2 border-primary/40 bg-card px-4 py-2.5">
-          <p className="line-clamp-2 flex-1 text-sm font-bold leading-snug">
+          <p className="line-clamp-2 flex-1 text-sm font-semibold leading-snug">
             Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní?
           </p>
           <p className="shrink-0 text-right leading-tight">
-            <span className="block text-[10px] text-muted-foreground">MKN-10</span>
-            <span className="text-sm font-bold">C18.7</span>
+            <span className="block text-[11px] text-muted-foreground">MKN-10</span>
+            <span className="text-sm font-semibold">C18.7</span>
           </p>
         </div>
       </div>
@@ -416,9 +416,9 @@ function ProductPreview() {
 function PreviewTile({ term, value, note, warn = false }: { term: string; value: string; note: string; warn?: boolean }) {
   return (
     <div className="flex min-w-12 flex-col items-center rounded-lg border border-border bg-background px-2 py-1">
-      <span className="text-[10px] font-medium text-muted-foreground">{term}</span>
-      <span className="text-xl font-bold leading-none">{value}</span>
-      <span className={cn('mt-0.5 text-[10px]', warn ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-muted-foreground')}>{note}</span>
+      <span className="text-[11px] font-medium text-muted-foreground">{term}</span>
+      <span className="text-xl font-semibold leading-none">{value}</span>
+      <span className={cn('mt-0.5 text-[11px]', warn ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-muted-foreground')}>{note}</span>
     </div>
   );
 }

@@ -100,7 +100,7 @@ export default function StoragePage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
                 Úložiště souborů
               </h1>
               <Badge variant="success">Local Disk / S3 Ready</Badge>
@@ -114,16 +114,16 @@ export default function StoragePage() {
         {/* Top Metric Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground uppercase font-semibold">Celkem souborů</p>
-            <p className="text-2xl font-bold mt-1 text-foreground">{files.length}</p>
+            <p className="text-xs text-muted-foreground">Celkem souborů</p>
+            <p className="text-2xl font-semibold mt-1 text-foreground">{files.length}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground uppercase font-semibold">Využité místo</p>
-            <p className="text-2xl font-bold mt-1 text-foreground">{humanTotal}</p>
+            <p className="text-xs text-muted-foreground">Využité místo</p>
+            <p className="text-2xl font-semibold mt-1 text-foreground">{humanTotal}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground uppercase font-semibold">Storage Provider</p>
-            <p className="text-2xl font-bold mt-1 text-foreground">Local Media</p>
+            <p className="text-xs text-muted-foreground">Storage Provider</p>
+            <p className="text-2xl font-semibold mt-1 text-foreground">Local Media</p>
           </div>
         </div>
 

@@ -34,7 +34,7 @@ export function Avatar({ src, alt, fallback = 'U', size = 'default', className, 
           className="aspect-square h-full w-full object-cover"
         />
       ) : (
-        <span className="uppercase text-foreground/80 font-bold">{fallback.slice(0, 2)}</span>
+        <span className="uppercase text-foreground/80 font-medium">{fallback.slice(0, 2)}</span>
       )}
     </div>
   );

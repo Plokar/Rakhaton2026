@@ -201,7 +201,7 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
               Projekty &amp; Úkoly
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -266,7 +266,7 @@ export default function ProjectsPage() {
                 <div key={col.id} className="flex flex-col rounded-2xl border border-border bg-muted/20 p-4">
                   {/* Column header */}
                   <div className="flex items-center justify-between pb-3 border-b border-border/60 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    <span className="text-xs font-medium text-foreground">
                       {col.title}
                     </span>
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-mono font-semibold text-muted-foreground">
@@ -300,7 +300,7 @@ export default function ProjectsPage() {
                           )}
 
                           <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/50 text-[11px] text-muted-foreground">
-                            <span className="font-mono text-[10px] truncate max-w-[100px]">
+                            <span className="font-mono text-[11px] truncate max-w-[100px]">
                               {task.project_title || 'Hackathon'}
                             </span>
 
@@ -313,7 +313,7 @@ export default function ProjectsPage() {
                                     const next = col.id === 'todo' ? 'in_progress' : col.id === 'in_progress' ? 'review' : 'done';
                                     handleStatusChange(task.id, next);
                                   }}
-                                  className="flex items-center text-[10px] text-primary hover:underline font-semibold"
+                                  className="flex items-center text-[11px] text-primary hover:underline font-semibold"
                                   title="Posunout do dalšího sloupce"
                                 >
                                   Posunout <ChevronRight className="h-3 w-3" />

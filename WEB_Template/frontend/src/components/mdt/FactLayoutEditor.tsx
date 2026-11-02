@@ -143,7 +143,7 @@ export function FactLayoutEditor({ items, value, onChange, blocks = false, hideV
           </section>
           {groups.map((g) => (
             <section key={g.category} className={cn(g.hidden && 'opacity-60')}>
-              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="mb-1.5 text-[11px] font-medium text-muted-foreground">
                 {g.label}{g.hidden && ' · skrytá celá kategorie'}
               </h3>
               <SortableRows

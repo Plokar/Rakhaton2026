@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 HERE = Path(__file__).parent
@@ -501,6 +503,514 @@ PATIENTS: dict[str, dict] = {
 }
 
 
+
+# ── Druhá vlna (T-351): 4 nové komise a další termíny do 4. 12. 2026 ───────────────────────────────────────────
+NEURO, HEMATO = "Neuroonkologická komise", "Hematoonkologická komise"
+MEL, SARC = "Komise pro melanom a kožní nádory", "Komise pro sarkomy a GIST"
+BASE_MDT = "2026-11-04"     # data v zadání pacientů jsou psaná k tomuto termínu, `shift` je posune k jeho zasedání
+
+
+def pt(gender, age, focus, mdt, question, dx, *, histology, imaging, consult, comorb=(), meds=(), bm=(), ecog=1,
+       weight=75, labs_over=None, treatment="Předchozí onkologická léčba: žádná.", preference=None,
+       proms=(1, "oboji", "nevím o žádné"), procedures=(), therapy=(), new=(), lung=None) -> dict:
+    """Pacient druhé vlny v kratším zápisu. `dx` = (MKN-10, název, (ICD-O-3, morfologie) | None, lokalita, vznik,
+    stadium | None); `proms` = (ECOG podle pacienta, priorita, alergie) nebo None (dotazník chybí)."""
+    comorb_text = ", ".join(c[1] for c in comorb) or "bez komorbidit"
+    notes = {"treatment": treatment,
+             "comorb": f"Relevantní komorbidity a současný stav: {comorb_text}. ECOG {ecog}."}
+    if preference:
+        notes["preference"] = f"Preference a omezení pacienta: {preference}"
+    out = {
+        "gender": gender, "age": age, "focus": focus, "mdt": mdt, "question": question, "shift": True,
+        "dx": [{"code": c, "display": d, **({"morph": m} if m else {}), "site": site, "onset": onset,
+                **({"stage": st} if st else {})} for c, d, m, site, onset, st in dx],
+        "comorb": list(comorb), "meds": list(meds), "biomarkers": list(bm), "labs": labs(**(labs_over or {})),
+        "ecog": ecog, "weight": weight, "histology": histology, "imaging": imaging, "consult": consult,
+        "notes": notes, "proms": ({"ecog": proms[0], "priority": proms[1], "allergy": proms[2]} if proms else None),
+        "procedures": list(procedures), "treatment": list(therapy), "new": list(new),
+    }
+    if lung:
+        out["lung"] = lung
+    if not any(d[5] for d in dx):                 # bez stadia (nádory bez TNM) aspoň popis rozsahu
+        out["dx"][0]["stage"] = "rozsah viz zobrazení"
+    return out
+
+
+ADENO = ("8140/3", "Adenokarcinom NOS")
+SCC = ("8070/3", "Spinocelulární karcinom NOS")
+NST = ("8500/3", "Invazivní karcinom NST")
+
+PATIENTS.update({
+    # Neuroonkologická komise — čt 12. 11. a čt 26. 11.
+    "P33": pt("male", 58, NEURO, ("2026-11-12", "13:00"),
+              "Glioblastom IDH-wildtype po subtotální resekci, MGMT metylovaný: radioterapie 60 Gy s temozolomidem "
+              "(Stupp), případně s TTFields?",
+              [("C71.1", "Zhoubný novotvar čelního laloku", ("9440/3", "Glioblastom NOS"), "pravý frontální lalok",
+                "2026-10-01", None)],
+              bm=[("IDH1/2", "bez mutace (wild-type)"), ("MGMT promotor", "metylovaný"), ("EGFR amplifikace", "prokázána")],
+              histology="Resekce tumoru pravého frontálního laloku: glioblastom, IDH-wildtype, CNS WHO grade 4.",
+              imaging="MR mozku pooperačně: reziduum sytící se tkáně 6 mm podél dorzálního okraje resekční dutiny.",
+              consult="Pacient 58 let, po subtotální resekci 3 týdny, mírná levostranná hemiparéza v regresi. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] subtotální resekce tumoru (2026-10-08)",
+              preference="Chce se vrátit do práce projektanta, řídí auto.",
+              procedures=[("2026-10-08", "neurochirurgie", "Subtotální resekce tumoru pravého frontálního laloku")]),
+    "P34": pt("female", 44, NEURO, ("2026-11-12", "13:00"),
+              "Oligodendrogliom IDH mutovaný s 1p/19q kodelecí, CNS WHO grade 2, s reziduem po resekci: sledování, "
+              "nebo radioterapie s PCV?",
+              [("C71.0", "Zhoubný novotvar velkého mozku kromě laloků a komor", ("9450/3", "Oligodendrogliom NOS"),
+                "levá inzula", "2026-09-20", None)],
+              bm=[("IDH1", "mutace R132H"), ("1p/19q", "kodelece prokázána")], ecog=0, weight=64,
+              histology="Resekce: oligodendrogliom, IDH-mutovaný a 1p/19q-kodeletovaný, CNS WHO grade 2.",
+              imaging="MR mozku: T2/FLAIR reziduum v levé inzule 22 mm, bez sycení.",
+              consult="Pacientka 44 let, epileptický záchvat jako první příznak, nyní bez záchvatů na levetiracetamu.",
+              meds=[("N03AX14", "levetiracetam", "500 mg p.o. 2× denně")],
+              treatment="Předchozí onkologická léčba:\n- [Operace] resekce tumoru levé inzuly (2026-10-02)",
+              preference="Obává se kognitivních dopadů radioterapie, pracuje jako účetní.",
+              proms=(0, "kvalita", "nevím o žádné"),
+              procedures=[("2026-10-02", "neurochirurgie", "Resekce tumoru levé inzuly s neuromonitorací")]),
+    "P35": pt("male", 66, NEURO, ("2026-11-12", "13:00"),
+              "Solitární metastáza světlobuněčného karcinomu ledviny v mozečku 24 mm: neurochirurgická resekce, nebo "
+              "stereotaktická radiochirurgie?",
+              [("C79.3", "Sekundární zhoubný novotvar mozku a mozkových plen", None, "levá mozečková hemisféra",
+                "2026-10-05", None),
+               ("C64", "Zhoubný novotvar ledviny kromě ledvinné pánvičky", ("8310/3", "Světlobuněčný renální karcinom"),
+                "pravá ledvina, st. p. nefrektomii 2023", "2023-04-12", "pT2a pN0 M1 (mozek), stadium IV")],
+              comorb=[("I10", "Esenciální hypertenze", "2014-02")], meds=[("H02AB02", "dexamethason", "4 mg p.o. denně")],
+              histology="Nefrektomie 2023: světlobuněčný renální karcinom ISUP 2.",
+              imaging="MR mozku: solitární metastáza v levé mozečkové hemisféře 24 mm s edémem, IV. komora utlačena.",
+              consult="Pacient 66 let, závratě a nestabilita chůze 3 týdny. ECOG 1. Jinak bez nádorové aktivity.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] nefrektomie vpravo (2023)",
+              preference="Chce rychlé řešení, bojí se pádů."),
+    "P61": pt("female", 71, NEURO, ("2026-11-26", "13:00"),
+              "Glioblastom IDH-wildtype u 71leté pacientky, MGMT nemetylovaný, KPS 70: hypofrakcionovaná radioterapie "
+              "40 Gy v 15 frakcích samostatně?",
+              [("C71.2", "Zhoubný novotvar spánkového laloku", ("9440/3", "Glioblastom NOS"), "levý temporální lalok",
+                "2026-10-06", None)],
+              bm=[("IDH1/2", "bez mutace (wild-type)"), ("MGMT promotor", "nemetylovaný")], ecog=2, weight=61,
+              comorb=[("E11.9", "Diabetes mellitus 2. typu", "2012-05")],
+              histology="Stereotaktická biopsie: glioblastom, IDH-wildtype, CNS WHO grade 4.",
+              imaging="MR mozku: sytící se léze levého temporálního laloku 41 mm s nekrózou a edémem.",
+              consult="Pacientka 71 let, poruchy řeči a paměti. KPS 70, ECOG 2. Žije s manželem.",
+              proms=None),
+    "P62": pt("male", 38, NEURO, ("2026-11-26", "13:00"),
+              "Astrocytom IDH mutovaný, CNS WHO grade 3, po resekci: radioterapie 59,4 Gy a adjuvantní temozolomid?",
+              [("C71.1", "Zhoubný novotvar čelního laloku", ("9401/3", "Astrocytom anaplastický"), "levý frontální lalok",
+                "2026-10-10", None)],
+              bm=[("IDH1", "mutace R132H"), ("ATRX", "ztráta exprese"), ("1p/19q", "bez kodelece")], ecog=0, weight=82,
+              histology="Resekce: astrocytom, IDH-mutovaný, CNS WHO grade 3, Ki-67 12 %.",
+              imaging="MR mozku pooperačně: bez sytícího se rezidua, T2/FLAIR změny 15 mm.",
+              consult="Pacient 38 let, otec dvou dětí, bolesti hlavy 2 měsíce. ECOG 0.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] resekce tumoru (2026-10-10)",
+              preference="Plánuje další dítě, chce informace o kryokonzervaci spermatu.", proms=(0, "delka", "nevím o žádné"),
+              procedures=[("2026-10-10", "neurochirurgie", "Resekce tumoru levého frontálního laloku")]),
+    # Hematoonkologická komise — pá 13. 11. a po 30. 11.
+    "P36": pt("male", 62, HEMATO, ("2026-11-13", "13:00"),
+              "Difuzní velkobuněčný B-lymfom stadium III, IPI 2: R-CHOP, nebo Pola-R-CHP?",
+              [("C83.3", "Difuzní velkobuněčný B-lymfom", ("9680/3", "Difuzní velkobuněčný B-lymfom NOS"),
+                "krční, mediastinální a retroperitoneální uzliny", "2026-09-29", "Lugano stadium III, IPI 2")],
+              bm=[("CD20 (IHC)", "pozitivní"), ("MYC přestavba (FISH)", "neprokázána"), ("Ki-67", "80 %")],
+              labs_over={"hb": 121}, histology="Exstirpace krční uzliny: DLBCL, non-GCB typ, CD20+, Ki-67 80 %.",
+              imaging="PET/CT: metabolicky aktivní uzliny krku, mediastina a retroperitonea, slezina bez postižení.",
+              consult="Pacient 62 let, noční pocení a úbytek 6 kg. LDH 1,5× norma. ECOG 1.",
+              preference="Chce léčbu ambulantně.",
+              new=[{"kind": "lab", "date": "2026-10-30", "key": "ldh", "loinc": "14804-9", "name": "LDH",
+                    "unit": "µkat/l", "value": 7.9, "section": "Biochemie"}]),
+    "P37": pt("female", 27, HEMATO, ("2026-11-13", "13:00"),
+              "Klasický Hodgkinův lymfom stadium IIB s velkou mediastinální masou: eskalovaný BEACOPP, nebo ABVD s "
+              "PET řízenou léčbou, a zachování plodnosti?",
+              [("C81.1", "Hodgkinův lymfom, nodulární skleróza", ("9663/3", "Hodgkinův lymfom, nodulární skleróza"),
+                "mediastinum a krk vlevo", "2026-10-02", "Ann Arbor IIB, bulky mediastinum")],
+              bm=[("CD30 (IHC)", "pozitivní"), ("CD15 (IHC)", "pozitivní")], ecog=0, weight=58,
+              histology="Mediastinoskopická biopsie: klasický Hodgkinův lymfom, nodulární skleróza.",
+              imaging="PET/CT: mediastinální masa 11 cm, uzliny krku vlevo, bez postižení pod bránicí.",
+              consult="Pacientka 27 let, svědění kůže a teploty. Plánuje rodinu.",
+              preference="Zachování plodnosti je pro ni zásadní, zájem o kryokonzervaci oocytů.",
+              proms=(0, "delka", "nevím o žádné")),
+    "P38": pt("male", 69, HEMATO, ("2026-11-13", "13:00"),
+              "Mnohočetný myelom R-ISS II s t(4;14): indukce daratumumab-VRd a autologní transplantace?",
+              [("C90.0", "Mnohočetný myelom", ("9732/3", "Mnohočetný myelom"), "kostní dřeň, osteolýzy páteře",
+                "2026-09-25", "R-ISS II")],
+              bm=[("t(4;14) (FISH)", "prokázána"), ("del(17p)", "neprokázána"), ("M-protein", "IgG kappa 38 g/l")],
+              labs_over={"hb": 98, "krea": 140}, comorb=[("N18.3", "Chronické onemocnění ledvin, stadium 3", "2026-09")],
+              histology="Trepanobiopsie: 45 % klonálních plazmatických buněk kappa.",
+              imaging="Celotělové low-dose CT: osteolýzy Th9, L2 a pánve, bez patologické fraktury.",
+              consult="Pacient 69 let, bolesti zad, anémie. ECOG 1, fit pro transplantaci podle hematologa."),
+    "P65": pt("female", 74, HEMATO, ("2026-11-30", "13:00"),
+              "Folikulární lymfom grade 1–2 stadium IV bez kritérií GELF: sledování, nebo rituximab?",
+              [("C82.1", "Folikulární lymfom grade II", ("9691/3", "Folikulární lymfom grade 2"),
+                "generalizovaná lymfadenopatie, kostní dřeň", "2026-10-08", "Ann Arbor IV, FLIPI 3")],
+              bm=[("BCL2 přestavba", "prokázána")], ecog=0, weight=66,
+              histology="Exstirpace tříselné uzliny: folikulární lymfom grade 1–2, CD20+, BCL2+.",
+              imaging="PET/CT: uzliny do 4 cm nad i pod bránicí, bez bulky, slezina 12 cm.",
+              consult="Pacientka 74 let, bez B-symptomů, náhodný nález. ECOG 0.",
+              preference="Pokud léčba není nutná, nechce ji začínat.", proms=(0, "kvalita", "sulfonamidy – vyrážka")),
+    "P66": pt("male", 55, HEMATO, ("2026-11-30", "13:00"),
+              "Chronická lymfocytární leukémie s del(17p) a symptomatickou anémií: ibrutinib, nebo venetoklax s "
+              "obinutuzumabem?",
+              [("C91.1", "Chronická lymfocytární leukémie B-buněčného typu", ("9823/3", "CLL/SLL"), "periferní krev, uzliny",
+                "2026-08-20", "Rai III, Binet C")],
+              bm=[("del(17p) (FISH)", "prokázána"), ("TP53", "mutace"), ("IGHV", "nemutovaný")],
+              labs_over={"hb": 94, "plt": 112}, ecog=1, weight=88,
+              histology="Imunofenotypizace periferní krve: monoklonální B-lymfocyty CD5+ CD23+, 86 × 10^9/l.",
+              imaging="CT: generalizovaná lymfadenopatie do 3 cm, splenomegalie 16 cm.",
+              consult="Pacient 55 let, únava a anémie, infekce dýchacích cest 3× za půl roku.",
+              comorb=[("I48.0", "Paroxysmální fibrilace síní", "2021-03")],
+              meds=[("B01AF02", "apixaban", "5 mg p.o. 2× denně")],
+              preference="Dává přednost léčbě s pevně danou délkou."),
+    # Komise pro melanom a kožní nádory — po 16. 11. a pá 4. 12.
+    "P44": pt("female", 52, MEL, ("2026-11-16", "13:00"),
+              "Melanom zad pT3b pN1a (stadium IIIB), BRAF V600E, po excizi a biopsii sentinelové uzliny: adjuvantní "
+              "anti-PD-1, nebo dabrafenib s trametinibem?",
+              [("C43.5", "Zhoubný melanom trupu", ("8721/3", "Nodulární melanom"), "kůže zad", "2026-09-15",
+                "pT3b pN1a cM0, stadium IIIB (AJCC 8)")],
+              bm=[("BRAF", "mutace V600E"), ("Breslow", "3,2 mm, ulcerace")], ecog=0, weight=68,
+              histology="Reexcize a sentinelová biopsie: nodulární melanom Breslow 3,2 mm s ulcerací, 1 z 2 uzlin "
+                        "pozitivní (mikrometastáza 0,8 mm).",
+              imaging="PET/CT: bez vzdálených metastáz. MR mozku bez metastáz.",
+              consult="Pacientka 52 let, zdravotní sestra. Hojení jizev bez komplikací. ECOG 0.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] reexcize a biopsie sentinelové uzliny (2026-10-12)",
+              preference="Chce léčbu s co nejméně návštěvami.", proms=(0, "oboji", "nevím o žádné"),
+              procedures=[("2026-10-12", "chirurgie", "Reexcize jizvy a biopsie sentinelové uzliny axily")]),
+    "P45": pt("male", 67, MEL, ("2026-11-16", "13:00"),
+              "Metastatický melanom BRAF wild-type s jaterními a plicními metastázami, LDH 2× norma: ipilimumab s "
+              "nivolumabem, nebo nivolumab s relatlimabem?",
+              [("C43.7", "Zhoubný melanom dolní končetiny", ("8720/3", "Maligní melanom NOS"), "kůže lýtka vpravo",
+                "2024-05-02", "M1c, stadium IV (AJCC 8)"),
+               ("C78.7", "Sekundární zhoubný novotvar jater", None, "játra, 5 ložisek", "2026-10-01", None)],
+              bm=[("BRAF", "bez mutace (wild-type)"), ("NRAS", "mutace Q61R")], labs_over={"bili": 21},
+              comorb=[("I25.1", "Aterosklerotická choroba srdeční", "2018-04")],
+              histology="Biopsie jaterního ložiska: metastáza melanomu, BRAF wild-type, NRAS Q61R.",
+              imaging="CT: 5 jaterních metastáz do 35 mm, 3 plicní uzly do 12 mm. MR mozku bez metastáz.",
+              consult="Pacient 67 let, 2 roky po excizi melanomu lýtka, nyní únava a tlak v pravém podžebří. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] excize melanomu lýtka (2024)",
+              new=[{"kind": "lab", "date": "2026-10-29", "key": "ldh", "loinc": "14804-9", "name": "LDH",
+                    "unit": "µkat/l", "value": 9.4, "section": "Biochemie"}]),
+    "P46": pt("female", 78, MEL, ("2026-11-16", "13:00"),
+              "Karcinom z Merkelových buněk tváře 2,1 cm s pozitivní sentinelovou uzlinou: adjuvantní radioterapie "
+              "lůžka a uzlin, nebo sledování?",
+              [("C44.3", "Zhoubný novotvar kůže jiných a neurčených částí obličeje", ("8247/3", "Karcinom z Merkelových buněk"),
+                "levá tvář", "2026-09-25", "pT2 pN1a(sn) M0, stadium IIIA")],
+              bm=[("CK20 (IHC)", "pozitivní, perinukleární tečky"), ("MCPyV", "pozitivní")], ecog=1, weight=59,
+              comorb=[("I10", "Esenciální hypertenze", "2001-01"), ("M15.0", "Polyartróza", None)],
+              histology="Excize: karcinom z Merkelových buněk 21 mm, okraje volné, sentinelová uzlina pozitivní.",
+              imaging="PET/CT: bez dalších ložisek.",
+              consult="Pacientka 78 let, žije sama, do ambulance ji vozí syn.", proms=None),
+    "P71": pt("male", 45, MEL, ("2026-12-04", "13:00"),
+              "Melanom předloktí pT4b s klinicky postiženými axilárními uzlinami, BRAF V600K: neoadjuvantní "
+              "pembrolizumab před disekcí uzlin?",
+              [("C43.6", "Zhoubný melanom horní končetiny", ("8721/3", "Nodulární melanom"), "kůže levého předloktí",
+                "2026-10-06", "pT4b cN2b M0, stadium IIIC (AJCC 8)")],
+              bm=[("BRAF", "mutace V600K")], ecog=0, weight=86,
+              histology="Excize: nodulární melanom Breslow 5,1 mm s ulcerací. FNA axilární uzliny: metastáza melanomu.",
+              imaging="PET/CT: 2 metabolicky aktivní uzliny levé axily do 24 mm, bez vzdálených metastáz.",
+              consult="Pacient 45 let, stavbyvedoucí, velký pracovní vytížení. ECOG 0.",
+              preference="Chce co nejrychleji zpět do práce.", proms=(0, "delka", "nevím o žádné")),
+    "P72": pt("female", 60, MEL, ("2026-12-04", "13:00"),
+              "Uveální melanom s jaterními metastázami, HLA-A*02:01 pozitivní: tebentafusp, nebo jaterně cílená léčba?",
+              [("C69.4", "Zhoubný novotvar řasnatého tělesa", ("8720/3", "Maligní melanom NOS"), "pravé oko",
+                "2022-03-10", "M1b (játra)"),
+               ("C78.7", "Sekundární zhoubný novotvar jater", None, "játra, 3 ložiska", "2026-10-02", None)],
+              bm=[("HLA-A*02:01", "pozitivní"), ("GNAQ", "mutace Q209L")],
+              histology="Biopsie jaterní metastázy: metastáza melanomu, GNAQ Q209L.",
+              imaging="MR jater: 3 metastázy do 28 mm. CT hrudníku bez metastáz.",
+              consult="Pacientka 60 let, 4 roky po brachyterapii uveálního melanomu. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Radioterapie] brachyterapie ruthenium (2022)"),
+    # Komise pro sarkomy a GIST — pá 20. 11.
+    "P47": pt("male", 49, SARC, ("2026-11-20", "13:00"),
+              "Dediferencovaný liposarkom retroperitonea 18 cm: předoperační radioterapie, nebo primárně kompartmentová "
+              "resekce?",
+              [("C48.0", "Zhoubný novotvar retroperitonea", ("8858/3", "Dediferencovaný liposarkom"),
+                "levý retroperitoneální prostor", "2026-09-30", "cT4 N0 M0")],
+              bm=[("MDM2 amplifikace (FISH)", "prokázána")], weight=94,
+              histology="Core biopsie: dediferencovaný liposarkom, FNCLCC grade 3, MDM2 amplifikace.",
+              imaging="CT břicha: tumor 18 × 14 cm odtlačující levou ledvinu a sestupný tračník, bez metastáz.",
+              consult="Pacient 49 let, zvětšování obvodu břicha. ECOG 1.",
+              preference="Chce zachovat ledvinu, pokud to jde."),
+    "P48": pt("female", 61, SARC, ("2026-11-20", "13:00"),
+              "GIST žaludku 7 cm po R0 resekci, KIT exon 11, vysoké riziko recidivy: adjuvantní imatinib 3 roky?",
+              [("C16.2", "Zhoubný novotvar těla žaludku", ("8936/3", "Gastrointestinální stromální tumor"),
+                "tělo žaludku, velká kurvatura", "2026-09-10", "pT3 N0 M0, vysoké riziko (Miettinen)")],
+              bm=[("KIT", "delece exonu 11"), ("Mitotický index", "8 / 5 mm²")], ecog=0, weight=70,
+              histology="Parciální gastrektomie: GIST 70 mm, vřetenobuněčný, mitózy 8/5 mm², R0, bez ruptury.",
+              imaging="CT po operaci: bez rezidua a metastáz.",
+              consult="Pacientka 61 let, 4 týdny po operaci, dobře se zotavuje. ECOG 0.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] parciální gastrektomie (2026-10-05)",
+              preference="Bojí se otoků a únavy z dlouhodobé léčby.", proms=(0, "oboji", "nevím o žádné"),
+              procedures=[("2026-10-05", "chirurgie", "Laparoskopická parciální gastrektomie")],
+              new=[{"kind": "bm", "date": "2026-10-28", "name": "PDGFRA", "value": "bez mutace"}]),
+    "P49": pt("male", 19, SARC, ("2026-11-20", "13:00"),
+              "Osteosarkom distálního femuru, high-grade, bez metastáz: neoadjuvantní MAP a záchovná resekce s "
+              "endoprotézou?",
+              [("C40.2", "Zhoubný novotvar dlouhých kostí dolní končetiny", ("9180/3", "Osteosarkom NOS"),
+                "distální femur vpravo", "2026-10-07", "IIB (Enneking), bez metastáz")],
+              ecog=1, weight=72, labs_over={"bili": 9},
+              histology="Biopsie: konvenční osteoblastický osteosarkom, high-grade.",
+              imaging="MR stehna: tumor distální metafýzy 9 cm s měkkotkáňovou složkou, nervově-cévní svazek volný. "
+                      "CT plic bez metastáz.",
+              consult="Pacient 19 let, student, bolesti kolene 3 měsíce. Hraje fotbal.",
+              preference="Chce zachovat končetinu a vrátit se ke sportu.", proms=(1, "delka", "nevím o žádné")),
+    # Hrudní komise — út 17. 11. a út 24. 11.
+    "P41": pt("male", 71, LUNG, ("2026-11-17", "14:00"),
+              "Metastatický adenokarcinom plic PD-L1 80 %, KRAS G12C: pembrolizumab v monoterapii, nebo "
+              "chemoimunoterapie?",
+              [("C34.1", "Zhoubný novotvar horního laloku, průdušky nebo plíce", ADENO, "pravý horní plicní lalok",
+                "2026-10-05", "cT3 cN2 cM1b, stadium IVA (TNM 8. vyd.), metastáza nadledviny")],
+              bm=[("EGFR", "bez mutace"), ("ALK", "negativní"), ("KRAS", "mutace G12C"), ("PD-L1 (TPS)", "80 %")],
+              comorb=[("J44.9", "Chronická obstrukční plicní nemoc (GOLD 2)", "2015-06")], weight=73,
+              histology="EBUS-TBNA: adenokarcinom plic, TTF-1 pozitivní, PD-L1 TPS 80 %.",
+              imaging=[("PET/CT – staging", "2026-10-07", "PET/CT: tumor pravého horního laloku 52 mm, uzliny 4R a 7, "
+                        "metastáza levé nadledviny 31 mm."),
+                       ("MR mozku s kontrastem", "2026-10-09", "MR mozku: bez metastáz.")],
+              lung={"fev1": "1,9 l (62 % náležité hodnoty)", "dlco": "58 % náležité hodnoty",
+                    "smoking": "bývalý kuřák, 45 balíčkoroků"},
+              consult="Pacient 71 let, bývalý kuřák. Kašel, úbytek 4 kg. ECOG 1.", proms=None,
+              new=[{"kind": "img", "date": "2026-10-30", "title": "Biopsie nadledviny – výsledek",
+                    "text": "CT navigovaná biopsie levé nadledviny: metastáza adenokarcinomu plic."}]),
+    "P42": pt("female", 64, LUNG, ("2026-11-17", "14:00"),
+              "Neresekabilní spinocelulární karcinom plic stadium IIIB: konkomitantní chemoradioterapie a "
+              "konsolidační durvalumab?",
+              [("C34.3", "Zhoubný novotvar dolního laloku, průdušky nebo plíce", SCC, "levý dolní plicní lalok",
+                "2026-10-03", "cT3 cN3 cM0, stadium IIIB (TNM 8. vyd.)")],
+              bm=[("PD-L1 (TPS)", "30 %"), ("EGFR", "bez mutace"), ("ALK", "negativní")], weight=66,
+              histology="Bronchoskopická biopsie: spinocelulární karcinom, p40 pozitivní.",
+              imaging=[("PET/CT – staging", "2026-10-06", "PET/CT: tumor levého dolního laloku 46 mm, kontralaterální "
+                        "mediastinální uzlina 4R, bez vzdálených metastáz."),
+                       ("MR mozku s kontrastem", "2026-10-08", "MR mozku: bez metastáz.")],
+              lung={"fev1": "1,7 l (71 % náležité hodnoty)", "dlco": "60 % náležité hodnoty",
+                    "smoking": "aktivní kuřačka, 30 balíčkoroků"},
+              consult="Pacientka 64 let, hemoptýza. ECOG 1.", preference="Chce pokračovat v péči o vnoučata."),
+    "P43": pt("male", 59, LUNG, ("2026-11-17", "14:00"),
+              "Epitelioidní mezoteliom pleury: nivolumab s ipilimumabem, nebo chemoterapie s cisplatinou a "
+              "pemetrexedem?",
+              [("C45.0", "Mezoteliom pleury", ("9052/3", "Epitelioidní mezoteliom"), "pravá pleura", "2026-09-28",
+                "cT3 N1 M0, stadium IIIA (IASLC)")],
+              bm=[("BAP1 (IHC)", "ztráta exprese"), ("PD-L1 (TPS)", "5 %")], weight=80,
+              histology="Torakoskopická biopsie pleury: epitelioidní mezoteliom, kalretinin+, WT1+, BAP1 ztráta.",
+              imaging="CT hrudníku: difuzní ztluštění pravé pleury do 14 mm, fluidothorax, ipsilaterální hilové uzliny.",
+              consult="Pacient 59 let, instalatér, expozice azbestu. Dušnost po evakuaci výpotku zlepšena. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Výkon] torakoskopie s talkáží (2026-09-28)",
+              procedures=[("2026-09-28", "hrudní chirurgie", "Videotorakoskopie s biopsií a talkáží")]),
+    "P56": pt("female", 69, LUNG, ("2026-11-24", "14:00"),
+              "Adenokarcinom plic EGFR L858R s maligním pleurálním výpotkem: osimertinib, nebo osimertinib s "
+              "chemoterapií?",
+              [("C34.1", "Zhoubný novotvar horního laloku, průdušky nebo plíce", ADENO, "levý horní plicní lalok",
+                "2026-10-12", "cT2a cN1 cM1a, stadium IVA (TNM 8. vyd.)")],
+              bm=[("EGFR", "mutace L858R"), ("ALK", "negativní"), ("PD-L1 (TPS)", "1 %")], weight=57, ecog=1,
+              histology="Cytologie pleurálního výpotku: adenokarcinom plic, EGFR L858R (PCR).",
+              imaging=[("CT hrudníku a břicha s k. l.", "2026-10-10", "CT: tumor levého horního laloku 34 mm, "
+                        "levostranný fluidothorax, hilová uzlina vlevo. Břicho bez metastáz."),
+                       ("MR mozku s kontrastem", "2026-10-14", "MR mozku: bez metastáz.")],
+              lung={"fev1": "1,6 l (75 % náležité hodnoty)", "dlco": "68 % náležité hodnoty", "smoking": "nekuřačka"},
+              consult="Pacientka 69 let, nekuřačka, dušnost. Po hrudní punkci 1,2 l výpotku úleva.",
+              preference="Preferuje léčbu tabletami.", proms=(1, "kvalita", "nevím o žádné")),
+    "P57": pt("male", 76, LUNG, ("2026-11-24", "14:00"),
+              "Malobuněčný karcinom plic, extenzivní stadium, u 76letého pacienta s ECOG 2: karboplatina s etoposidem "
+              "a atezolizumabem?",
+              [("C34.1", "Zhoubný novotvar horního laloku, průdušky nebo plíce", ("8041/3", "Malobuněčný karcinom NOS"),
+                "pravý horní plicní lalok", "2026-10-09", "cT4 cN3 cM1c, extenzivní stadium")],
+              bm=[("TTF-1 (IHC)", "pozitivní"), ("Ki-67", "90 %")], ecog=2, weight=64, labs_over={"hb": 117},
+              comorb=[("I50.0", "Městnavé srdeční selhání (NYHA II)", "2020-01"), ("E11.9", "Diabetes mellitus 2. typu", "2010-03")],
+              histology="Bronchoskopická biopsie: malobuněčný karcinom plic.",
+              imaging=[("PET/CT – staging", "2026-10-12", "PET/CT: tumor pravého horního laloku 61 mm, mediastinální "
+                        "uzliny, jaterní a kostní metastázy.")],
+              lung={"fev1": "1,4 l (55 % náležité hodnoty)", "dlco": "48 % náležité hodnoty",
+                    "smoking": "bývalý kuřák, 60 balíčkoroků"},
+              consult="Pacient 76 let, výrazná únava, polovinu dne na lůžku. ECOG 2.", proms=None),
+    # Mamární komise — st 18. 11. a st 2. 12.
+    "P50": pt("female", 39, BREAST, ("2026-11-18", "14:00"),
+              "HER2 pozitivní karcinom prsu cT2 N0 po neoadjuvanci s dosaženou pCR: pokračovat v trastuzumabu a "
+              "pertuzumabu do 1 roku?",
+              [("C50.4", "Zhoubný novotvar horního zevního kvadrantu prsu", NST, "levý prs", "2026-03-10",
+                "ypT0 ypN0 (pCR), původně cT2 cN0")],
+              bm=[("ER", "60 %"), ("PR", "20 %"), ("HER2", "IHC 3+"), ("Ki-67", "40 %")], ecog=0, weight=62,
+              histology="Parciální mastektomie po neoadjuvanci: bez reziduálního invazivního karcinomu (pCR), sentinel 0/2.",
+              imaging="Mamografie a UZ po neoadjuvanci: kompletní regrese tumoru.",
+              consult="Pacientka 39 let, po 6 cyklech TCHP a operaci. ECOG 0.",
+              treatment="Předchozí onkologická léčba:\n- [Chemoterapie] TCHP 6 cyklů (2026-04 – 2026-07)\n"
+                        "- [Operace] parciální mastektomie a sentinelová biopsie (2026-09-01)",
+              preference="Chce otěhotnět, ptá se na načasování hormonální léčby.", proms=(0, "oboji", "nevím o žádné"),
+              procedures=[("2026-09-01", "chirurgie", "Parciální mastektomie a biopsie sentinelové uzliny")],
+              therapy=[("2026-07-15", "tchp", "L01FD01", "trastuzumab", "protinádorová léčba – TCHP")]),
+    "P51": pt("female", 58, BREAST, ("2026-11-18", "14:00"),
+              "Reziduální nádor po neoadjuvantní chemoterapii u HR+/HER2− karcinomu prsu, zárodečná mutace BRCA2: "
+              "adjuvantní olaparib?",
+              [("C50.2", "Zhoubný novotvar horního vnitřního kvadrantu prsu", NST, "pravý prs", "2026-02-20",
+                "ypT1c ypN1a, původně cT2 cN1")],
+              bm=[("ER", "90 %"), ("PR", "50 %"), ("HER2", "IHC 1+"), ("Ki-67", "25 %"),
+                  ("gBRCA2", "patogenní varianta prokázána")], weight=74,
+              histology="Mastektomie po neoadjuvanci: reziduální karcinom 14 mm, 2 z 12 uzlin pozitivní, CPS+EG 3.",
+              imaging="CT hrudníku a břicha: bez vzdálených metastáz.",
+              consult="Pacientka 58 let, po neoadjuvanci AC-T a mastektomii. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Chemoterapie] AC-T (2026-03 – 2026-08)\n"
+                        "- [Operace] mastektomie s disekcí axily (2026-09-20)",
+              procedures=[("2026-09-20", "chirurgie", "Mastektomie vpravo s disekcí axily")]),
+    "P67": pt("female", 82, BREAST, ("2026-12-02", "14:00"),
+              "ER pozitivní karcinom prsu cT2 N0 u 82leté pacientky: primární endokrinní léčba letrozolem, nebo operace?",
+              [("C50.8", "Zhoubný novotvar prsu přesahující více oblastí", NST, "levý prs", "2026-10-15",
+                "cT2 cN0 cM0, stadium IIA")],
+              bm=[("ER", "100 %"), ("PR", "80 %"), ("HER2", "IHC 0"), ("Ki-67", "8 %")], weight=55,
+              comorb=[("I48.2", "Permanentní fibrilace síní", "2016-01"), ("N18.4", "Chronické onemocnění ledvin, stadium 4", "2022-06")],
+              meds=[("B01AA03", "warfarin", "dle INR")],
+              histology="Core-cut biopsie: invazivní karcinom NST G1, ER 100 %, HER2 0.",
+              imaging="Mamografie a UZ: tumor 28 mm, axila bez suspektních uzlin.",
+              consult="Pacientka 82 let, žije v domově pro seniory, chodí s holí. ECOG 2.", ecog=2, proms=None),
+    "P68": pt("male", 66, BREAST, ("2026-12-02", "14:00"),
+              "Karcinom prsu u muže pT1c pN0, ER 100 %: adjuvantní tamoxifen 5 let a genetické vyšetření?",
+              [("C50.0", "Zhoubný novotvar bradavky a dvorce", NST, "pravý prs, retroareolárně", "2026-09-29",
+                "pT1c pN0 (0/2), stadium IA")],
+              bm=[("ER", "100 %"), ("PR", "70 %"), ("HER2", "IHC 1+"), ("Ki-67", "12 %")], ecog=0, weight=90,
+              histology="Mastektomie a sentinelová biopsie: invazivní karcinom NST G2, 15 mm, sentinel 0/2.",
+              imaging="CT hrudníku a břicha: bez metastáz.",
+              consult="Pacient 66 let, hmatná rezistence za bradavkou. Sestra měla karcinom ovaria.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] mastektomie vpravo a sentinelová biopsie (2026-10-14)",
+              preference="Bojí se vlivu tamoxifenu na sexuální funkce.", proms=(0, "kvalita", "nevím o žádné"),
+              procedures=[("2026-10-14", "chirurgie", "Mastektomie vpravo a biopsie sentinelové uzliny")]),
+    # GIT komise — čt 12. 11., čt 19. 11. a čt 3. 12.
+    "P39": pt("male", 63, GIT, ("2026-11-12", "14:00"),
+              "Adenokarcinom gastroezofageální junkce cT3 N1: perioperační FLOT, nebo neoadjuvantní chemoradioterapie?",
+              [("C16.0", "Zhoubný novotvar kardie", ADENO, "gastroezofageální junkce, Siewert II", "2026-09-30",
+                "cT3 cN1 cM0, stadium III (TNM 8. vyd.)")],
+              bm=[("HER2", "IHC 1+ (negativní)"), ("MMR (IHC)", "zachovalá exprese (pMMR)"), ("PD-L1 (CPS)", "5")],
+              comorb=[("K21.0", "Gastroezofageální reflux s ezofagitidou", "2010-01")], weight=78,
+              histology="Gastroskopická biopsie: adenokarcinom intestinálního typu, G2.",
+              imaging="CT a EUS: tumor GEJ 4 cm, T3, 2 periezofageální uzliny. PET/CT bez vzdálených metastáz.",
+              consult="Pacient 63 let, dysfagie na tuhou stravu, úbytek 5 kg. ECOG 1.",
+              preference="Chce léčbu s nejvyšší šancí na vyléčení."),
+    "P40": pt("female", 71, GIT, ("2026-11-12", "14:00"),
+              "Hepatocelulární karcinom BCLC B (4 ložiska do 4 cm), Child-Pugh A5: transarteriální chemoembolizace, "
+              "nebo systémová léčba?",
+              [("C22.0", "Hepatocelulární karcinom", ("8170/3", "Hepatocelulární karcinom NOS"), "pravý jaterní lalok",
+                "2026-10-01", "BCLC B, Child-Pugh A5")],
+              bm=[("AFP", "340 µg/l")], comorb=[("K74.6", "Jaterní cirhóza (MASH)", "2021-05"),
+                                               ("E11.9", "Diabetes mellitus 2. typu", "2009-02")],
+              weight=83, labs_over={"plt": 128, "bili": 22},
+              histology="Diagnóza podle kritérií LI-RADS 5, biopsie neprovedena.",
+              imaging="MR jater: 4 ložiska v pravém laloku 18–39 mm LI-RADS 5, portální žíla průchodná.",
+              consult="Pacientka 71 let s cirhózou na podkladě MASH, bez ascitu a encefalopatie. ECOG 1.", proms=None),
+    "P52": pt("male", 57, GIT, ("2026-11-19", "14:00"),
+              "Karcinom céka s peritoneálními metastázami, BRAF V600E, pMMR: FOLFOXIRI s bevacizumabem, nebo "
+              "cytoredukce s HIPEC?",
+              [("C18.0", "Zhoubný novotvar céka", ADENO, "cékum", "2026-09-22", "cT4a cN2 cM1c, stadium IVC"),
+               ("C78.6", "Sekundární zhoubný novotvar retroperitonea a peritonea", None, "peritoneum, PCI 9", "2026-09-28", None)],
+              bm=[("BRAF", "mutace V600E"), ("KRAS", "bez mutace (wild-type)"), ("MMR (IHC)", "zachovalá exprese (pMMR)")],
+              weight=71, labs_over={"hb": 108},
+              histology="Kolonoskopická biopsie: adenokarcinom G3, BRAF V600E.",
+              imaging="CT: tumor céka 6 cm, peritoneální implantáty v pravém hemiabdomenu, PCI 9, játra bez metastáz.",
+              consult="Pacient 57 let, anémie a bolesti v pravém podbřišku. ECOG 1."),
+    "P69": pt("female", 52, GIT, ("2026-12-03", "14:00"),
+              "Neresekabilní intrahepatální cholangiokarcinom s FGFR2 fúzí: gemcitabin s cisplatinou a durvalumabem v "
+              "první linii, pemigatinib při progresi?",
+              [("C22.1", "Karcinom intrahepatálních žlučovodů", ("8160/3", "Cholangiokarcinom"), "levý jaterní lalok",
+                "2026-10-10", "cT2 cN1 cM0, neresekabilní (cévní invaze)")],
+              bm=[("FGFR2", "fúze FGFR2–BICC1"), ("IDH1", "bez mutace"), ("CA 19-9", "212 kU/l")], ecog=0, weight=63,
+              histology="Biopsie jater: adenokarcinom pankreatobiliárního typu, CK7+, CK20−, odpovídá cholangiokarcinomu.",
+              imaging="CT: tumor levého laloku 7 cm s infiltrací levé a střední jaterní žíly, hilové uzliny.",
+              consult="Pacientka 52 let, náhodný nález při UZ pro bolest břicha. ECOG 0.",
+              preference="Má zájem o klinickou studii.", proms=(0, "delka", "nevím o žádné"),
+              new=[{"kind": "bm", "date": "2026-10-28", "name": "NGS panel", "value": "FGFR2 fúze potvrzena, TMB 3 mut/Mb"}]),
+    "P70": pt("male", 68, GIT, ("2026-12-03", "14:00"),
+              "Spinocelulární karcinom jícnu cT3 N1: neoadjuvantní chemoradioterapie a ezofagektomie, nebo definitivní "
+              "chemoradioterapie?",
+              [("C15.5", "Zhoubný novotvar dolní třetiny jícnu", SCC, "dolní třetina jícnu, 34 cm od řezáků",
+                "2026-10-08", "cT3 cN1 cM0, stadium III")],
+              bm=[("PD-L1 (CPS)", "12")], comorb=[("F10.2", "Závislost na alkoholu – abstinuje 2 roky", None)], weight=66,
+              histology="Ezofagoskopická biopsie: středně diferencovaný spinocelulární karcinom.",
+              imaging="CT a EUS: tumor dolní třetiny jícnu 5 cm, 2 periezofageální uzliny. PET/CT bez metastáz.",
+              consult="Pacient 68 let, dysfagie, úbytek 8 kg. Nutriční podpora sondou. ECOG 1.", proms=None),
+    # Uroonkologická komise — po 23. 11.
+    "P53": pt("male", 31, URO, ("2026-11-23", "14:00"),
+              "Neseminomový germinální nádor varlete po orchiektomii, stadium IIB, dobrá prognóza (IGCCCG): 3 cykly BEP?",
+              [("C62.1", "Zhoubný novotvar sestouplého varlete", ("9085/3", "Smíšený germinální nádor"), "levé varle",
+                "2026-10-01", "pT2 cN2 M0 S1, stadium IIB")],
+              bm=[("AFP", "84 µg/l"), ("beta-hCG", "120 IU/l"), ("LDH", "1,2× norma")], ecog=0, weight=79,
+              histology="Orchiektomie: smíšený germinální nádor (embryonální karcinom 60 %, teratom 40 %), LVI+.",
+              imaging="CT: retroperitoneální paraaortální uzliny vlevo do 3,5 cm, plíce bez metastáz.",
+              consult="Pacient 31 let, programátor, nekuřák. Po orchiektomii zotavený.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] orchiektomie vlevo (2026-10-03)",
+              preference="Před léčbou chce kryokonzervaci spermatu.", proms=(0, "delka", "nevím o žádné"),
+              procedures=[("2026-10-03", "urologie", "Inguinální orchiektomie vlevo")]),
+    "P54": pt("male", 74, URO, ("2026-11-23", "14:00"),
+              "Metastatický kastračně rezistentní karcinom prostaty s BRCA2 mutací, progrese na enzalutamidu: "
+              "olaparib, nebo docetaxel?",
+              [("C61", "Zhoubný novotvar předstojné žlázy (prostaty)", ADENO, "prostata, kosti", "2023-02-14",
+                "cT3b cN1 cM1b, mCRPC, Gleason 4+4 = 8")],
+              bm=[("PSA", "64 µg/l"), ("BRCA2 (NGS tkáně)", "patogenní varianta"), ("Testosteron", "0,3 nmol/l (kastrační)")],
+              weight=81, ecog=1,
+              histology="Biopsie prostaty 2023: acinární adenokarcinom Gleason 4+4 = 8.",
+              imaging="PSMA PET/CT: progrese kostních metastáz (nová ložiska v žebrech a pánvi), uzliny stacionární.",
+              consult="Pacient 74 let, na ADT a enzalutamidu 2 roky, nyní bolesti kostí. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Hormonální léčba] ADT + enzalutamid (2024 – dosud)",
+              new=[{"kind": "lab", "date": "2026-10-29", "key": "psa", "loinc": "2857-1", "name": "PSA",
+                    "unit": "µg/l", "value": 81, "section": "Nádorové markery"}]),
+    "P55": pt("female", 66, URO, ("2026-11-23", "14:00"),
+              "Metastatický uroteliální karcinom močového měchýře: enfortumab vedotin s pembrolizumabem v první linii?",
+              [("C67.9", "Zhoubný novotvar močového měchýře, neurčený", ("8120/3", "Uroteliální karcinom"),
+                "močový měchýř, uzliny a plíce", "2026-09-26", "cT3 cN2 cM1a, stadium IVA")],
+              bm=[("PD-L1 (CPS)", "15"), ("FGFR3", "bez alterace")], labs_over={"krea": 112}, weight=69,
+              comorb=[("E11.9", "Diabetes mellitus 2. typu s neuropatií", "2008-07")],
+              histology="TURBT: high-grade uroteliální karcinom s invazí do detrusoru.",
+              imaging="CT: tumor stěny měchýře, pánevní a paraaortální uzliny, 4 plicní metastázy do 15 mm.",
+              consult="Pacientka 66 let, diabetička s periferní neuropatií G1. ECOG 1."),
+    # Gynekoonkologická komise — pá 27. 11.
+    "P58": pt("female", 62, GYN, ("2026-11-27", "13:00"),
+              "Platina-senzitivní relaps high-grade serózního karcinomu ovaria (interval 18 měsíců), BRCA wild-type: "
+              "karboplatina s pegylovaným liposomálním doxorubicinem a udržovací niraparib?",
+              [("C56", "Zhoubný novotvar vaječníku", ("8461/3", "Serózní karcinom high-grade"), "peritoneum, uzliny",
+                "2024-03-05", "relaps po FIGO IIIC")],
+              bm=[("BRCA1/2", "bez patogenní varianty"), ("HRD", "negativní"), ("CA-125", "410 kU/l")], weight=64,
+              histology="Primární cytoredukce 2024: high-grade serózní karcinom.",
+              imaging="CT: peritoneální implantáty do 3 cm a paraaortální uzliny 18 mm.",
+              consult="Pacientka 62 let, 18 měsíců po ukončení karboplatiny s paklitaxelem. ECOG 1.",
+              treatment="Předchozí onkologická léčba:\n- [Operace] primární cytoredukce (2024)\n"
+                        "- [Chemoterapie] karboplatina + paklitaxel 6 cyklů (2024)",
+              preference="Chce pokračovat v práci učitelky, obává se ztráty vlasů."),
+    "P59": pt("female", 48, GYN, ("2026-11-27", "13:00"),
+              "Centrální recidiva karcinomu děložního hrdla v pánvi po chemoradioterapii: pánevní exenterace, nebo "
+              "systémová léčba s pembrolizumabem?",
+              [("C53.1", "Zhoubný novotvar exocervixu", SCC, "centrální recidiva v pánvi", "2024-01-12",
+                "recidiva po FIGO IIIC1")],
+              bm=[("PD-L1 (CPS)", "20"), ("HPV (PCR)", "HPV 18 pozitivní")], ecog=0, weight=60,
+              histology="Biopsie z pochvy: recidiva spinocelulárního karcinomu.",
+              imaging="MR pánve: centrální recidiva 38 mm bez infiltrace pánevní stěny. PET/CT bez vzdálených metastáz.",
+              consult="Pacientka 48 let, 22 měsíců po chemoradioterapii. ECOG 0.",
+              treatment="Předchozí onkologická léčba:\n- [Radioterapie] chemoradioterapie s cisplatinou a brachyterapií (2024)",
+              preference="Je ochotná podstoupit rozsáhlou operaci, pokud dává šanci na vyléčení.", proms=(0, "delka", "jód – kopřivka")),
+    "P60": pt("female", 71, GYN, ("2026-11-27", "13:00"),
+              "Spinocelulární karcinom vulvy pT2 s pozitivní tříselnou sentinelovou uzlinou: inguinofemorální "
+              "lymfadenektomie, nebo adjuvantní chemoradioterapie?",
+              [("C51.9", "Zhoubný novotvar vulvy, neurčený", SCC, "levý velký pysk", "2026-09-30",
+                "pT2 pN1a(sn), FIGO IIIA")],
+              bm=[("p16 (IHC)", "negativní")], weight=78,
+              comorb=[("I10", "Esenciální hypertenze", "2005-01"), ("E66.0", "Obezita (BMI 33)", None)],
+              histology="Radikální lokální excize: spinocelulární karcinom 32 mm, okraje volné, sentinel 1 ze 3 pozitivní.",
+              imaging="CT pánve: bez dalších zvětšených uzlin.",
+              consult="Pacientka 71 let, hojení rány po excizi pomalé. ECOG 1.", proms=None),
+    # Komise nádorů hlavy a krku — st 25. 11.
+    "P63": pt("male", 64, HN, ("2026-11-25", "13:30"),
+              "Spinocelulární karcinom okraje jazyka cT2 N1: hemiglosektomie s krční disekcí a rekonstrukcí, nebo "
+              "primární chemoradioterapie?",
+              [("C02.1", "Zhoubný novotvar okraje jazyka", SCC, "pravý okraj jazyka", "2026-10-06",
+                "cT2 cN1 cM0, stadium III (TNM 8. vyd.)")],
+              bm=[("p16 (IHC)", "negativní"), ("PD-L1 (CPS)", "25")],
+              comorb=[("F17.2", "Závislost na tabáku – kuřák (40 balíčkoroků)", None)], weight=70,
+              histology="Biopsie: středně diferencovaný spinocelulární karcinom, hloubka invaze 7 mm.",
+              imaging="MR orofaciální oblasti: tumor pravého okraje jazyka 28 mm, uzlina IIA vpravo 18 mm.",
+              consult="Pacient 64 let, kuřák, vřed na jazyku 2 měsíce. ECOG 1.",
+              new=[{"kind": "img", "date": "2026-11-02", "title": "PET/CT – staging",
+                    "text": "PET/CT: aktivita v tumoru jazyka a uzlině IIA vpravo, bez vzdálených metastáz."}]),
+    "P64": pt("female", 57, HN, ("2026-11-25", "13:30"),
+              "Nazofaryngeální karcinom EBV pozitivní, stadium III: indukční chemoterapie gemcitabin s cisplatinou a "
+              "konkomitantní chemoradioterapie?",
+              [("C11.9", "Zhoubný novotvar nosohltanu, neurčený", ("8072/3", "Nerohovějící spinocelulární karcinom"),
+                "nosohltan, oboustranně", "2026-10-02", "cT2 cN2 cM0, stadium III (TNM 8. vyd.)")],
+              bm=[("EBV DNA (plazma)", "4 800 kopií/ml"), ("EBER (ISH)", "pozitivní")], ecog=0, weight=58,
+              histology="Biopsie nosohltanu: nerohovějící nediferencovaný karcinom, EBER pozitivní.",
+              imaging="MR: tumor nosohltanu s šířením do parafaryngeálního prostoru, oboustranné krční uzliny.",
+              consult="Pacientka 57 let, ucpaný nos a bulka na krku. ECOG 0.",
+              preference="Obává se suchosti v ústech po ozáření, je zpěvačka ve sboru.", proms=(0, "kvalita", "nevím o žádné")),
+})
+
+
 def proms(pid: str, p: dict) -> dict:
     a = p["proms"]
     item = [
@@ -595,19 +1105,39 @@ def demo_bundle(pid: str, p: dict) -> dict:
             r["reasonReference"] = [base.ref("Condition", f"{pid}-dg{i}") for i in range(1, len(p["dx"]) + 1)]
     if p.get("proms"):
         resources.append(proms(pid, p))
-    for i, (date, category, title) in enumerate(p.get("procedures", []), 1):
+    for i, (when, category, title) in enumerate(p.get("procedures", []), 1):
         resources.append({"resourceType": "Procedure", "id": f"{pid}-proc{i:02d}", "status": "completed",
                           "code": {"text": title}, "subject": base.ref("Patient", pid), "category": {"text": category},
-                          "performedDateTime": date})
-    for i, (date, key, atc, name, regimen) in enumerate(p.get("treatment", []), 1):
+                          "performedDateTime": when})
+    for i, (when, key, atc, name, regimen) in enumerate(p.get("treatment", []), 1):
         resources.append({"resourceType": "MedicationAdministration", "id": f"{pid}-tx-{key}-{i:02d}",
                           "status": "completed", "category": {"text": regimen},
                           "medicationCodeableConcept": {"coding": [{"system": "http://www.whocc.no/atc", "code": atc,
                                                                     "display": name}], "text": name},
-                          "subject": base.ref("Patient", pid), "effectiveDateTime": date})
+                          "subject": base.ref("Patient", pid), "effectiveDateTime": when})
     resources += new_results(pid, p)
+    if p.get("shift"):                  # druhá vlna: data zadaná k BASE_MDT posunout k termínu zasedání
+        days = (date.fromisoformat(day) - date.fromisoformat(BASE_MDT)).days
+        resources = [shift_dates(r, days) for r in resources] if days > 0 else resources
+        for r in resources:             # termín zasedání posunout nesmí
+            if r["resourceType"] == "Task":
+                r["restriction"] = {"period": {"start": f"{day}T{time}:00+01:00"}}
     bundle["entry"] = [{"fullUrl": f"urn:uuid:{r['resourceType']}-{r['id']}", "resource": r} for r in resources]
     return bundle
+
+
+RECENT_DATE = re.compile(r"(?<![\d-])2026-(?:0[89]|1[0-2])-\d{2}(?!\d)")
+
+
+def shift_dates(node, days: int):
+    """Data od srpna 2026 (nominace, vyšetření, laboratoř) o `days` dní později; starší anamnéza zůstává."""
+    if isinstance(node, dict):
+        return {k: shift_dates(v, days) for k, v in node.items()}
+    if isinstance(node, list):
+        return [shift_dates(v, days) for v in node]
+    if isinstance(node, str):           # i data v textu nominace („resekce (2026-10-08)“); base64 je neobsahuje
+        return RECENT_DATE.sub(lambda m: (date.fromisoformat(m[0]) + timedelta(days=days)).isoformat(), node)
+    return node
 
 
 def main() -> None:

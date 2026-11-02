@@ -24,8 +24,9 @@ DEMO_USERS = {
 }
 # zadávající lékař podle pacienta (ARCH §6.2): P04 a hrudní demo pacienti pneumolog, GIT demo pacienti
 # onkolog-git (data/demo_pacienti), ostatní onkolog
-REQUESTER_BY_PATIENT = {'P04': 'pneumolog', **{f'P{n}': 'pneumolog' for n in range(13, 17)},
-                        **{f'P{n}': 'onkolog-git' for n in range(21, 25)}}
+REQUESTER_BY_PATIENT = {'P04': 'pneumolog',
+                        **{f'P{n}': 'pneumolog' for n in (*range(13, 17), 41, 42, 43, 56, 57)},
+                        **{f'P{n}': 'onkolog-git' for n in (*range(21, 25), 39, 40, 52, 69, 70)}}
 DEFAULT_REQUESTER = 'onkolog'
 
 

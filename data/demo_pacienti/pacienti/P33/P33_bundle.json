@@ -1,0 +1,967 @@
+{
+  "resourceType": "Bundle",
+  "id": "P33-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P33",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P33",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P33"
+          }
+        ],
+        "name": [
+          {
+            "text": "Pacient P33 (fiktivní)"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1968",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 58
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P33-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P33-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P33-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P33-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P33-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P33-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P33-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P33-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P33-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P33-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P33-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P33-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P33-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P33-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C71.1",
+              "display": "Zhoubný novotvar čelního laloku"
+            }
+          ],
+          "text": "Zhoubný novotvar čelního laloku"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "onsetDateTime": "2026-10-09",
+        "bodySite": [
+          {
+            "text": "pravý frontální lalok"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "9440/3",
+                  "display": "Glioblastom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C71.1"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "rozsah viz zobrazení"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P33-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P33-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-09",
+        "issued": "2026-10-09T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P33-03"
+          }
+        ],
+        "conclusion": "Resekce tumoru pravého frontálního laloku: glioblastom, IDH-wildtype, CNS WHO grade 4..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UmVzZWtjZSB0dW1vcnUgcHJhdsOpaG8gZnJvbnTDoWxuw61obyBsYWxva3U6IGdsaW9ibGFzdG9tLCBJREgtd2lsZHR5cGUsIENOUyBXSE8gZ3JhZGUgNC4=",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-10-09"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P33-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P33-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-20",
+        "issued": "2026-10-20T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P33-02"
+          }
+        ],
+        "conclusion": "MR mozku pooperačně: reziduum sytící se tkáně 6 mm podél dorzálního okraje resekční dutiny..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "TVIgbW96a3UgcG9vcGVyYcSNbsSbOiByZXppZHV1bSBzeXTDrWPDrSBzZSB0a8OhbsSbIDYgbW0gcG9kw6lsIGRvcnrDoWxuw61obyBva3JhamUgcmVzZWvEjW7DrSBkdXRpbnku",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-20"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P33-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P33-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "date": "2026-10-22T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P33-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA1OCBsZXQsIHBvIHN1YnRvdMOhbG7DrSByZXNla2NpIDMgdMO9ZG55LCBtw61ybsOhIGxldm9zdHJhbm7DoSBoZW1pcGFyw6l6YSB2IHJlZ3Jlc2kuIEVDT0cgMS4=",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-22"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-20",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P33-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "rozsah viz zobrazení",
+        "focus": [
+          {
+            "reference": "Condition/P33-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-22",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P33-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P33-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-22",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 75,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-09",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P33-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "IDH1/2"
+        },
+        "valueString": "bez mutace (wild-type)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-09",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P33-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "MGMT promotor"
+        },
+        "valueString": "metylovaný"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-bm03",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-bm03",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-09",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P33-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "EGFR amplifikace"
+        },
+        "valueString": "prokázána"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-21T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-21T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-21T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-21T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P33-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P33-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "effectiveDateTime": "2026-10-21T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P33-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P33-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P33-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Neuroonkologická komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "authoredOn": "2026-10-23T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P33-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Glioblastom IDH-wildtype po subtotální resekci, MGMT metylovaný: radioterapie 60 Gy s temozolomidem (Stupp), případně s TTFields?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: glioblastom, IDH-wildtype, CNS WHO grade 4."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Operace] subtotální resekce tumoru (2026-10-16)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce se vrátit do práce projektanta, řídí auto."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P33-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P33-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P33-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P33-zad01"
+        },
+        "for": {
+          "reference": "Patient/P33"
+        },
+        "authoredOn": "2026-10-23T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P33-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-12T13:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P33-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P33-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "authored": "2026-10-21T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P33"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 75
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Procedure-P33-proc01",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "P33-proc01",
+        "status": "completed",
+        "code": {
+          "text": "Subtotální resekce tumoru pravého frontálního laloku"
+        },
+        "subject": {
+          "reference": "Patient/P33"
+        },
+        "category": {
+          "text": "neurochirurgie"
+        },
+        "performedDateTime": "2026-10-16"
+      }
+    }
+  ]
+}

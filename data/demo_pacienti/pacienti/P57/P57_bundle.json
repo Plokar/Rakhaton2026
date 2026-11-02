@@ -1,0 +1,1018 @@
+{
+  "resourceType": "Bundle",
+  "id": "P57-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P57",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P57",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P57"
+          }
+        ],
+        "name": [
+          {
+            "text": "Pacient P57 (fiktivní)"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1950",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 76
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P57-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P57-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P57-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P57-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P57-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P57-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P57-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P57-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P57-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P57-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P57-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P57-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P57-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P57-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C34.1",
+              "display": "Zhoubný novotvar horního laloku, průdušky nebo plíce"
+            }
+          ],
+          "text": "Zhoubný novotvar horního laloku, průdušky nebo plíce"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "onsetDateTime": "2026-10-29",
+        "bodySite": [
+          {
+            "text": "pravý horní plicní lalok"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8041/3",
+                  "display": "Malobuněčný karcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C34.1"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT4 cN3 cM1c, extenzivní stadium"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P57-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P57-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I50.0",
+              "display": "Městnavé srdeční selhání (NYHA II)"
+            }
+          ],
+          "text": "Městnavé srdeční selhání (NYHA II)"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "onsetDateTime": "2020-01"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P57-kom2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P57-kom2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Diabetes mellitus 2. typu"
+            }
+          ],
+          "text": "Diabetes mellitus 2. typu"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "onsetDateTime": "2010-03"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P57-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P57-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-10-29",
+        "issued": "2026-10-29T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P57-03"
+          }
+        ],
+        "conclusion": "Bronchoskopická biopsie: malobuněčný karcinom plic..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QnJvbmNob3Nrb3BpY2vDoSBiaW9wc2llOiBtYWxvYnVuxJvEjW7DvSBrYXJjaW5vbSBwbGljLg==",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-10-29"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P57-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P57-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "date": "2026-11-03T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P57-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA3NiBsZXQsIHbDvXJhem7DoSDDum5hdmEsIHBvbG92aW51IGRuZSBuYSBsxa/Fvmt1LiBFQ09HIDIu",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-03"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-01",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P57-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT4 cN3 cM1c, extenzivní stadium",
+        "focus": [
+          {
+            "reference": "Condition/P57-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-03",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P57-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 2,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P57-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-03",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 64,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-10-29",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P57-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "TTF-1 (IHC)"
+        },
+        "valueString": "pozitivní"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-10-29",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P57-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "Ki-67"
+        },
+        "valueString": "90 %"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 117,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P57-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P57-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P57-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Hrudní – karcinom plic"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "authoredOn": "2026-11-04T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P57-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Malobuněčný karcinom plic, extenzivní stadium, u 76letého pacienta s ECOG 2: karboplatina s etoposidem a atezolizumabem?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: malobuněčný karcinom plic."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: Městnavé srdeční selhání (NYHA II), Diabetes mellitus 2. typu. ECOG 2."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P57-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P57-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P57-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P57-zad01"
+        },
+        "for": {
+          "reference": "Patient/P57"
+        },
+        "authoredOn": "2026-11-04T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P57-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-24T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P57-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P57-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "PET/CT – staging"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-01",
+        "issued": "2026-11-01T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P57-02"
+          }
+        ],
+        "conclusion": "PET/CT: tumor pravého horního laloku 61 mm, mediastinální uzliny, jaterní a kostní metastázy..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UEVUL0NUOiB0dW1vciBwcmF2w6lobyBob3Juw61obyBsYWxva3UgNjEgbW0sIG1lZGlhc3RpbsOhbG7DrSB1emxpbnksIGphdGVybsOtIGEga29zdG7DrSBtZXRhc3TDoXp5Lg==",
+            "title": "PET/CT – staging",
+            "creation": "2026-11-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-spiro01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-spiro01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-10-28",
+        "category": [
+          {
+            "text": "Funkční vyšetření plic"
+          }
+        ],
+        "code": {
+          "text": "FEV1"
+        },
+        "valueString": "1,4 l (55 % náležité hodnoty)"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-spiro02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-spiro02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-10-28",
+        "category": [
+          {
+            "text": "Funkční vyšetření plic"
+          }
+        ],
+        "code": {
+          "text": "DLCO"
+        },
+        "valueString": "48 % náležité hodnoty"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-kour01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-kour01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-03",
+        "category": [
+          {
+            "text": "Rizikové faktory"
+          }
+        ],
+        "code": {
+          "text": "Kouření"
+        },
+        "valueString": "bývalý kuřák, 60 balíčkoroků"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P57-lab01-na",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P57-lab01-na",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2951-2",
+              "display": "Sodík"
+            }
+          ],
+          "text": "Sodík"
+        },
+        "subject": {
+          "reference": "Patient/P57"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 139,
+          "unit": "mmol/l"
+        }
+      }
+    }
+  ]
+}

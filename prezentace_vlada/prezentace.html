@@ -1,0 +1,205 @@
+<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>MDTcore: prezentace (náhled)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Public+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0;background:#1e293b;padding:24px;display:flex;flex-direction:column;align-items:center;gap:24px}
+.frame{width:960px;height:540px;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.4);border-radius:8px}
+.slide{position:absolute;left:0;top:0;width:1920px;height:1080px;transform:scale(.5);transform-origin:0 0}
+.slide section{width:1920px;height:1080px;box-sizing:border-box;position:relative;overflow:hidden}
+aside{display:none}p,h1,h2,h3{margin:0}</style></head><body>
+<div class="frame"><div class="slide"><section id="cover" data-transition="fade" style="background:#0B1118;color:#F1F5F9;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/foto_kancelar_vecer.jpg" alt="Tmavá moderní kancelář v noci" style="position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:cover">
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:linear-gradient(to right, rgba(11,17,24,0.95) 0%, rgba(11,17,24,0.7) 55%, rgba(11,17,24,0.25) 100%)"></div>
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;left:128px;top:56px;height:110px;width:auto">
+<p style="position:absolute;left:270px;top:92px;font-size:30px;font-weight:600;color:#5EEAD4">Rakathon 2026 · funkční prototyp</p>
+<div style="position:absolute;right:128px;top:56px;background:#FFFFFF;border-radius:14px;padding:14px 22px">
+<img src="deck/images/asseco_logo.png" alt="Asseco Central Europe" style="width:280px;height:auto;display:block">
+</div>
+<p style="position:absolute;left:128px;top:270px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:124px;font-weight:700;line-height:0.95;text-transform:uppercase;color:#F1F5F9;width:1100px">Rychlejší rozhodnutí komise</p>
+<p style="position:absolute;left:128px;top:560px;font-size:46px;line-height:1.3;color:#CBD5E1">Méně ztracených hodin lékařů.</p>
+<div style="position:absolute;left:128px;top:680px;display:flex;gap:20px">
+<p style="font-size:24px;font-weight:600;color:#5EEAD4;border:1px solid rgba(94,234,212,0.5);border-radius:999px;padding:12px 24px">Orientace do 30 sekund</p>
+<p style="font-size:24px;font-weight:600;color:#5EEAD4;border:1px solid rgba(94,234,212,0.5);border-radius:999px;padding:12px 24px">Citace u každého údaje</p>
+<p style="font-size:24px;font-weight:600;color:#5EEAD4;border:1px solid rgba(94,234,212,0.5);border-radius:999px;padding:12px 24px">Lékař rozhoduje</p>
+</div>
+<div style="position:absolute;left:128px;bottom:120px;background:#FFFFFF;border-radius:18px;padding:22px 30px">
+<img src="deck/images/mdtcore_logo.png" alt="MDTcore" style="width:440px;height:auto;display:block">
+</div>
+<p style="position:absolute;left:128px;bottom:56px;font-size:26px;color:#94A3B8">Designed by doktoři · made by studenti</p>
+<aside>Úvod (10 s): MDTcore ukazuje na jedné obrazovce to, co lékař o pacientovi potřebuje, a u každého údaje odkaz na zdroj. Komise rozhoduje rychleji a lékaři ztrácejí méně času.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="problem" data-transition="fade" style="background:#0B1118;color:#F1F5F9;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/foto_chodba_hodiny.jpg" alt="Nemocniční chodba, lékař nese složky" style="position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:cover">
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:linear-gradient(to right, rgba(11,17,24,0.94) 0%, rgba(11,17,24,0.72) 50%, rgba(11,17,24,0.2) 100%)"></div>
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:120px;width:auto">
+<p style="position:absolute;left:128px;top:200px;font-size:30px;font-weight:600;color:#5EEAD4">Dnes</p>
+<p style="position:absolute;left:128px;top:240px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:300px;font-weight:700;line-height:0.9;color:#5EEAD4">3–5</p>
+<p style="position:absolute;left:128px;top:560px;font-size:44px;line-height:1.3;color:#F1F5F9;width:900px">minut na jednoho pacienta, než komise rozhodne</p>
+<div style="position:absolute;left:128px;top:720px;width:380px;border-top:3px solid rgba(255,255,255,0.35);padding-top:20px">
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:150px;font-weight:700;line-height:1;color:#F1F5F9">5</p>
+<p style="font-size:28px;line-height:1.3;color:#CBD5E1">specialistů u jednoho stolu</p>
+</div>
+<div style="position:absolute;left:580px;top:720px;width:380px;border-top:3px solid rgba(255,255,255,0.35);padding-top:20px">
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:150px;font-weight:700;line-height:1;color:#F1F5F9">ROKY</p>
+<p style="font-size:28px;line-height:1.3;color:#CBD5E1">historie pacienta v textu nálezů</p>
+</div>
+<aside>Dnes (12 s): Komise má na jednoho pacienta tři až pět minut. Za tu dobu se pět specialistů musí zorientovat v historii, která leží ve volném textu. Každá minuta navíc je čas lékaře, který nejde na pacienta.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="reseni" data-transition="fade" style="background:#F7F8F6;color:#14213D;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/foto_lekar_tablet.jpg" alt="Lékař drží tablet s podkladem pro komisi" style="position:absolute;left:960px;top:0;width:960px;height:1080px;object-fit:cover">
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;left:128px;top:48px;height:110px;width:auto">
+<p style="position:absolute;left:128px;top:250px;font-size:30px;font-weight:600;color:#0F766E">Řešení</p>
+<p style="position:absolute;left:128px;top:300px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:104px;font-weight:700;line-height:1;text-transform:uppercase;color:#14213D;width:760px">Podklad z dat pacienta za pár sekund</p>
+<div style="position:absolute;left:128px;top:640px;width:760px;display:flex;flex-direction:column;gap:22px">
+<p style="font-size:34px;line-height:1.3;color:#334155">✓ Citace zdroje u každého údaje</p>
+<p style="font-size:34px;line-height:1.3;color:#334155">✓ Rozpory a chybějící vyšetření nahoře</p>
+<p style="font-size:34px;line-height:1.3;color:#334155">✓ Závěr potvrdí lékař a zapíše se do nemocnice</p>
+</div>
+<p style="position:absolute;left:128px;bottom:72px;width:760px;font-size:26px;line-height:1.35;color:#64748B">Postaveno na standardu FHIR a nemocniční databázi InterSystems IRIS. AI jen připravuje.</p>
+<aside>Řešení (15 s): MDTcore z dat pacienta připraví podklad s citacemi. Hned ukáže rozpory a chybějící údaje. Závěr komise potvrdí lékař a zapíše se do nemocniční databáze. Umělá inteligence jen připravuje, rozhodování zůstává na lékaři.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="ukazka" data-transition="fade" style="background:#F7F8F6;color:#14213D;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:110px;width:auto">
+<p style="position:absolute;left:128px;top:250px;font-size:30px;font-weight:600;color:#0F766E">Ukázka v aplikaci</p>
+<p style="position:absolute;left:128px;top:300px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:104px;font-weight:700;line-height:1;text-transform:uppercase;color:#14213D;width:720px">Každý lékař vidí to, co potřebuje</p>
+<p style="position:absolute;left:128px;top:640px;font-size:34px;line-height:1.35;color:#334155;width:700px">Pořadí podkladu nastaví předseda komise, nebo si ho každý lékař upraví pro sebe.</p>
+<div style="position:absolute;left:960px;top:180px;width:520px;height:740px">
+<div style="position:absolute;left:0;top:0;width:520px;height:740px;background:#DDEFEC;border-radius:28px;transform:translate(32px,32px)"></div>
+<img src="deck/images/app_p04_svetly.jpg" alt="Podklad pro komisi v MDTcore, světlý režim, syntetický pacient" style="position:absolute;left:0;top:0;width:520px;height:740px;object-fit:cover;border-radius:24px;border:1px solid #CBD5E1;box-shadow:0 32px 64px -20px rgba(20,33,61,0.45)">
+</div>
+<aside>Ukázka (12 s): Tohle je podklad pro komisi. Předseda nastaví pořadí sekcí a každý lékař si může zobrazit to, co potřebuje u svého oboru. Data jsou syntetická.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="porovnani" data-transition="fade" style="background:#F7F8F6;color:#14213D;font-family:'Public Sans', Arial, sans-serif;padding:200px 128px 128px;display:flex;gap:96px;align-items:flex-start">
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:120px;width:auto">
+<div style="width:1000px;flex-shrink:0;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="font-size:30px;font-weight:600;color:#0F766E">Dnes a v MDTcore</p>
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:72px;font-weight:700;line-height:1;text-transform:uppercase;color:#14213D">22 374 znaků, nebo 16 údajů</p>
+</div>
+<div style="position:relative;height:440px;overflow:hidden;background:#FFFFFF;border:1px solid #CBD5E1;border-radius:20px;padding:32px 40px">
+<div style="display:flex;flex-direction:column;gap:18px"><p style="font-size:24px;line-height:1.45;color:#14213D"><b>Otázka pro MDT:</b> Adenokarcinom PHL cT3 N2 (single-station 4R) M0?, <b>PD-L1 60 %</b>. Resekce po neoadjuvantní chemoimunoterapii, nebo definitivní chemoradioterapie s konsolidační imunoterapií? Je pacient funkčně operabilní?</p>
+<p style="font-size:24px;line-height:1.45;color:#14213D"><b>Histologie a grade:</b> Adenokarcinom plic <b>G3</b> (solidní složka), TTF-1 pozitivní (bronchoskopická biopsie 12. 8. 2026); EBUS-TBNA 4R – metastáza adenokarcinomu (1. 10. 2026).</p>
+<p style="font-size:24px;line-height:1.45;color:#14213D"><b>Relevantní komorbidity a současný stav:</b> CHOPN GOLD 2 (<b>FEV1 58 %</b>, <b>DLCO 45 %</b>), hypertenze. Aktivní kuřák, 40 balíčkoroků. <b>ECOG 0</b>.</p>
+<p style="font-size:24px;line-height:1.45;color:#14213D"><b>Preference pacienta:</b> Přeje si operaci, pokud bude možná; obává se dušnosti po odstranění části plíce.</p>
+<p style="font-size:24px;line-height:1.45;color:#14213D"><b>Předchozí MDT:</b> P04-mdt01 · <b>Podklady (odkazy):</b> P04-pat0 …</p></div>
+<div style="position:absolute;left:0;top:300px;width:1000px;height:140px;background:linear-gradient(to bottom, rgba(255,255,255,0), #FFFFFF)"></div>
+</div>
+<p style="font-size:30px;line-height:1.35;color:#4A5568">25 tučných zvýraznění, které lékař hledá v textu. A to je jen jeden z podkladů.</p>
+</div>
+<div style="position:relative;width:500px;height:720px;flex-shrink:0">
+<div style="position:absolute;left:0;top:0;width:500px;height:720px;background:#DDEFEC;border-radius:28px;transform:translate(32px,32px)"></div>
+<img src="deck/images/app_p04_svetly.jpg" alt="MDTcore: 16 údajů a 14 upozornění na jedné obrazovce, světlý režim, syntetický pacient P04" style="position:absolute;left:0;top:0;width:500px;height:720px;object-fit:cover;border-radius:24px;border:1px solid #CBD5E1;box-shadow:0 32px 64px -20px rgba(20,33,61,0.45)">
+</div>
+<aside>Porovnání (15 s): Dnes lékař čte text o 22 374 znacích a v něm hledá 25 zvýrazněných hodnot. V MDTcore vidí 16 údajů na jedné obrazovce a 14 upozornění na rozpory. Stejná informace, jen bez hledání.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="chat" data-transition="fade" style="background:#0b1118">
+  <img src="deck/images/foto_kancelar_vecer.jpg" alt="Tmavá kancelář s osvětlením" style="position:absolute; top:0; left:0; width:1920px; height:1080px">
+  <div style="position:absolute; top:0; left:0; width:1920px; height:1080px; display:flex; flex-direction:column; background:linear-gradient(90deg, #0b1118f0 0%, #0b1118c7 60%, #0b111880 100%)">
+  </div>
+  <img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute; top:48px; right:128px; height:110px">
+  <p style="position:absolute; top:250px; left:128px; font-family:'Public Sans', Arial, sans-serif; font-size:30px; font-weight:600; color:#5eead4">Peníze</p>
+  <p style="position:absolute; top:300px; left:128px; width:1300px; font-family:Oswald, sans-serif; font-size:104px; font-weight:700; line-height:1; text-transform:uppercase; color:#f1f5f9">Čas lékařů je náklad státu</p>
+  <div style="position:absolute; top:600px; left:128px; width:600px; display:flex; flex-direction:column; padding:36px; background:#ffffff12; border:1px solid #ffffff33; border-radius:24px">
+    <p style="font-family:Oswald, sans-serif; font-size:150px; font-weight:700; line-height:1; color:#5eead4">25–42</p>
+    <p style="font-family:'Public Sans', Arial, sans-serif; font-size:30px; line-height:1.3; color:#cbd5e1">hodin lékařského času na 100 případů</p>
+  </div>
+  <p style="position:absolute; top:720px; left:690px; font-family:Oswald, sans-serif; font-size:120px; color:#94a3b8">×</p>
+  <div style="position:absolute; top:600px; left:850px; width:600px; display:flex; flex-direction:column; padding:36px; background:#ffffff12; border:1px solid #ffffff33; border-radius:24px">
+    <p style="font-family:Oswald, sans-serif; font-size:150px; font-weight:700; line-height:1; color:#5eead4">500–680</p>
+    <p style="font-family:'Public Sans', Arial, sans-serif; font-size:30px; line-height:1.3; color:#cbd5e1">Kč za hodinu lékaře (hrubá mzda, s odvody)</p>
+  </div>
+  <p style="position:absolute; top:880px; left:128px; width:1300px; font-family:'Public Sans', Arial, sans-serif; font-size:30px; line-height:1.35; color:#cbd5e1">Na 100 případů je to 12–29 tisíc Kč času lékařů. Kolik z něj lze skutečně uvolnit, ukáže pilot.</p>
+<p style="position:absolute; top:960px; left:128px; width:1500px; font-family:'Public Sans', Arial, sans-serif; font-size:26px; line-height:1.35; color:#94a3b8">Kontext: v ČR bylo v roce 2023 nově diagnostikováno 65 242 případů zhoubných novotvarů, tedy cca 5 400 pacientů měsíčně (ČSÚ).</p>
+  <aside>Peníze (15 s): Na 100 případů je to 25 až 42 hodin lékařského času. Vynásobeno cenou hodiny dostaneme cenu času. Cena hodiny je odhad z ČSÚ 2022 (84 810 Kč hrubě měsíčně, 168 hodin, plus odvody zaměstnavatele).</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="proc" data-transition="fade" style="background:#F7F8F6;color:#14213D;font-family:'Public Sans', Arial, sans-serif;padding:200px 128px 128px;display:flex;gap:96px;align-items:flex-start">
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:120px;width:auto">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:30px;font-weight:600;color:#0F766E">Pacienti a životy</p>
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:80px;font-weight:700;line-height:1;text-transform:uppercase;color:#14213D">Kolik pacientů ušetříme, změří pilot</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<p style="font-size:36px;line-height:1.3;color:#14213D">✓ Kolik případů ročně dostane víc času na rozhodnutí: ukáže pilot</p>
+<p style="font-size:36px;line-height:1.3;color:#14213D">✓ Kolik rozporů nebo chybějících vyšetření se najde před jednáním: ukáže pilot</p>
+<p style="font-size:36px;line-height:1.3;color:#14213D">✓ Kolik z nich ovlivní léčbu: pilot s lékaři ověří</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;background:#FFFFFF;border:1px solid #CBD5E1;border-left:6px solid #B45309;border-radius:16px;padding:28px 32px">
+<p style="font-size:28px;font-weight:600;color:#B45309">Poctivě</p>
+<p style="font-size:30px;line-height:1.3;color:#14213D">Počet zachráněných životů dnes neumíme doložit. Nezveřejňujeme odhad, který by nebyl podložený.</p>
+</div>
+</div>
+<div style="position:relative;width:500px;height:720px;flex-shrink:0">
+<div style="position:absolute;left:0;top:0;width:500px;height:720px;background:#DDEFEC;border-radius:28px;transform:translate(32px,32px)"></div>
+<img src="deck/images/foto_studenti_stul.jpg" alt="Studenti a lékaři u stolu s podklady" style="position:absolute;left:0;top:0;width:500px;height:720px;object-fit:cover;border-radius:24px;border:1px solid #CBD5E1;box-shadow:0 32px 64px -20px rgba(20,33,61,0.45)">
+</div>
+<aside>Pacienti (15 s): Kolik pacientů a životů ušetříme, zatím neumíme doložit. Pilot na jedné komisi změří, kolik případů dostane víc času a kolik rozporů se najde dřív. Teprve pak budeme mluvit o počtech pacientů.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="zivoty" data-transition="fade" style="background:#0B1118;color:#F1F5F9;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/foto_ruka_okno.jpg" alt="Ruka pacientky na parapetu okna" style="position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:cover">
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:linear-gradient(to right, rgba(11,17,24,0.95) 0%, rgba(11,17,24,0.75) 55%, rgba(11,17,24,0.15) 100%)"></div>
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:110px;width:auto">
+<p style="position:absolute;left:128px;top:250px;font-size:30px;font-weight:600;color:#5EEAD4">Proč čas lékařů znamená pacienty</p>
+<p style="position:absolute;left:128px;top:300px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:104px;font-weight:700;line-height:1;text-transform:uppercase;color:#F1F5F9;width:1000px">Kratší příprava, dřívější léčba</p>
+<p style="position:absolute;left:128px;top:600px;font-size:34px;line-height:1.35;color:#E2E8F0;width:900px">Kratší příprava → víc případů na zasedání → kratší čekání na rozhodnutí → dřívější léčba.</p>
+<div style="position:absolute;left:128px;top:760px;width:900px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:26px 30px">
+<p style="font-size:28px;line-height:1.35;color:#F1F5F9">Metaanalýza 34 studií (1,27 mil. pacientů): delší zpoždění léčby spojeno s vyšší úmrtností u 13 ze 17 diagnóz.</p>
+</div>
+<p style="position:absolute;left:128px;top:920px;width:900px;font-size:24px;line-height:1.35;color:#94A3B8">Poctivě: souvislost, ne přímý důkaz. Pilot měří dny od žádanky do rozhodnutí.</p>
+<aside>Čas a životy (20 s): Kratší příprava znamená víc případů na jednom zasedání a kratší čekání na rozhodnutí. Delší zpoždění léčby se v metaanalýzách spojuje s vyšší úmrtností u většiny diagnóz. Je to souvislost, ne přímý důkaz, a pilot to musí změřit.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="nakup" data-transition="fade" style="background:#F7F8F6;color:#14213D;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:110px;width:auto">
+<p style="position:absolute;left:128px;top:200px;font-size:30px;font-weight:600;color:#0F766E">Proč to koupit</p>
+<p style="position:absolute;left:128px;top:250px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:90px;font-weight:700;line-height:1;text-transform:uppercase;color:#14213D">Tři kupci, jedno měření</p>
+<div style="position:absolute;left:128px;top:430px;width:900px;display:flex;flex-direction:column;gap:20px">
+<div style="background:#FFFFFF;border:1px solid #CBD5E1;border-left:6px solid #0F766E;border-radius:16px;padding:22px 28px;display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:40px;font-weight:600;text-transform:uppercase;color:#0F766E">Nemocnice</p>
+<p style="font-size:26px;line-height:1.3;color:#334155">Pracuje nad standardem FHIR R4. Závěr komise se zapisuje s Provenance.</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #CBD5E1;border-left:6px solid #0F766E;border-radius:16px;padding:22px 28px;display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:40px;font-weight:600;text-transform:uppercase;color:#0F766E">Stát</p>
+<p style="font-size:26px;line-height:1.3;color:#334155">Ministerstvo zveřejnilo indikátory onkologické péče, mezi nimi dobu do zahájení léčby.</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #CBD5E1;border-left:6px solid #0F766E;border-radius:16px;padding:22px 28px;display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:40px;font-weight:600;text-transform:uppercase;color:#0F766E">Ekonomové</p>
+<p style="font-size:26px;line-height:1.3;color:#334155">Úspora = pacienti × minuty × cena hodiny. Pilot dodá všechna tři čísla.</p>
+</div>
+</div>
+<div style="position:absolute;left:1120px;top:250px;width:640px;height:420px">
+<div style="position:absolute;left:0;top:0;width:640px;height:420px;background:#DDEFEC;border-radius:28px;transform:translate(28px,28px)"></div>
+<img src="deck/images/foto_nemocnice_vecer.jpg" alt="Moderní nemocnice za soumraku" style="position:absolute;left:0;top:0;width:640px;height:420px;object-fit:cover;border-radius:24px;border:1px solid #CBD5E1;box-shadow:0 32px 64px -20px rgba(20,33,61,0.45)">
+</div>
+<div style="position:absolute;left:1120px;top:760px;width:640px;background:#FFFFFF;border:1px solid #CBD5E1;border-left:6px solid #0F766E;border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;font-weight:600;color:#0F766E">Pilot na jedné komisi měří čtyři věci</p>
+<p style="font-size:24px;line-height:1.35;color:#334155">Minuty na přípravu · dny od žádanky do rozhodnutí · počet případů · počet nalezených rozporů.</p>
+</div>
+<p style="position:absolute;left:128px;bottom:56px;font-size:20px;line-height:1.5;color:#64748B;width:1600px">Zdroje: <a href="https://www.mzd.gov.cz/tiskove-centrum-mz/kdyz-data-zachranuji-zivoty-cesko-otevira-prvni-data-o-organizaci-onkologicke-pece-v-oblasti-karcinomu-plic-prsu-a-pankreatu/" style="color:#0F766E">MZ: první indikátory onkologické péče</a> · <a href="https://www.bmj.com/content/371/bmj.m4087" style="color:#0F766E">BMJ 2020, zpoždění léčby</a></p>
+<aside>Nákup (20 s): Nástroj stojí na standardu FHIR, takže se napojí na data nemocnice. Stát už zveřejnil indikátory doby do léčby. Ekonomové dostanou tři čísla z pilotu. Cenu a délku pilotu doplníme po dohodě.</aside>
+</section>
+</div></div>
+<div class="frame"><div class="slide"><section id="zaver" data-transition="fade" style="background:#0B1118;color:#F1F5F9;font-family:'Public Sans', Arial, sans-serif;position:relative;overflow:hidden">
+<img src="deck/images/foto_lekari_kulaty_stul.jpg" alt="Lékaři u kulatého stolu při společném zasedání" style="position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:cover">
+<div style="position:absolute;left:0;top:0;width:1920px;height:1080px;background:linear-gradient(to right, rgba(11,17,24,0.96) 0%, rgba(11,17,24,0.85) 45%, rgba(11,17,24,0.35) 100%)"></div>
+<img src="deck/images/rakathon_logo.png" alt="Logo Rakathon" style="position:absolute;right:128px;top:48px;height:110px;width:auto">
+<div style="position:absolute;left:128px;top:220px;background:#FFFFFF;border-radius:20px;padding:26px 34px">
+<img src="deck/images/mdtcore_logo.png" alt="MDTcore" style="width:560px;height:auto;display:block">
+</div>
+<p style="position:absolute;left:128px;top:500px;font-family:'Oswald', 'Arial Narrow', sans-serif;font-size:100px;font-weight:700;line-height:1;text-transform:uppercase;color:#F1F5F9;width:1000px">Pilot na jedné komisi</p>
+<p style="position:absolute;left:128px;top:660px;font-size:38px;line-height:1.35;color:#CBD5E1;width:1000px">Změříme čas a peníze. Pak budeme mluvit o číslech.</p>
+<div style="position:absolute;left:128px;top:800px;width:1000px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:26px;font-weight:600;color:#5EEAD4">Demo a kontakt</p>
+<p style="font-size:30px;line-height:1.3;color:#E2E8F0">Živé demo na vyžádání · Tým MDTcore, Rakathon 2026</p>
+</div>
+<div style="position:absolute;right:128px;top:330px;width:340px;padding:36px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2);border-radius:24px"><p style="font-size:30px;line-height:1.35;color:#E2E8F0">Živé demo na vyžádání. Data jsou syntetická.</p></div>
+<p style="position:absolute;left:128px;bottom:56px;font-size:24px;color:#94A3B8">Designed by doktoři · made by studenti</p>
+<aside>Závěr (15 s): Děkuji. Prototyp běží a demo si můžete vyzkoušet přes QR kód. Dalším krokem je pilot na jedné komisi, který změří čas a náklady. Dotazy?</aside>
+</section>
+</div></div>
+</body></html>

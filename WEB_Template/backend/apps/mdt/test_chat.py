@@ -165,3 +165,32 @@ async def test_stream_heartbeat_and_endpoint(settings, monkeypatch, thread_db):
         assert _data((await anext(content)).decode())['id'] == first     # Last-Event-ID doplní zmeškané
     finally:
         await content.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+async def test_stream_survives_redis_read_timeout(settings, monkeypatch, thread_db):
+    """redis-py ≥ 6: BZPOPMIN občas spadne na timeout socketu; stream čte dál a zprávu doručí."""
+    settings.CHANNEL_LAYERS = IN_MEMORY
+    sid, first, _ = await sync_to_async(_board_with_message)()
+    layer = chat.get_channel_layer()
+    original, calls = layer.receive, []
+
+    async def flaky_receive(channel):
+        calls.append(channel)
+        if len(calls) == 1:
+            raise TimeoutError('Timeout reading from redis:6379')
+        return await original(channel)
+
+    monkeypatch.setattr(layer, 'receive', flaky_receive)
+    monkeypatch.setattr(chat, 'get_channel_layer', lambda: layer)
+    stream = chat._events(sid, after=first)
+    try:
+        assert await anext(stream) == 'retry: 3000\n\n'
+        waiting = asyncio.ensure_future(anext(stream))
+        await asyncio.sleep(0.05)
+        sent = await sync_to_async(_post)(sid, 'Po výpadku Redisu')
+        assert _data(await asyncio.wait_for(waiting, 5)) == sent
+        assert len(calls) >= 2
+    finally:
+        await stream.aclose()

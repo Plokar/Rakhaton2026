@@ -148,6 +148,14 @@ async def _events(sid: int, after: int | None):
             if not done:
                 yield ': ping\n\n'
                 continue
+            error = receiving.exception()
+            if error is not None:
+                # redis-py ≥ 6: blokující BZPOPMIN občas narazí na timeout socketu. Zpráva zůstává ve frontě kanálu,
+                # takže stačí číst dál; ukončený stream by klient obnovoval až po `retry` (3 s).
+                log.warning('Chat stream boardu %s: čtení z Redisu selhalo (%s), čtu znovu', sid, error)
+                await asyncio.sleep(1)
+                receiving = asyncio.ensure_future(layer.receive(channel))
+                continue
             m = receiving.result()['message']
             receiving = asyncio.ensure_future(layer.receive(channel))
             if after is None or m['id'] > after:

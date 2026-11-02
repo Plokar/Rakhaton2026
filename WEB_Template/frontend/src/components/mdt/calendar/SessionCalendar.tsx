@@ -196,6 +196,18 @@ export function SessionCalendar() {
 
   const shiftWeek = (delta: number) => void setWeek(isoWeekKey(addDays(monday, delta * 7)));
   const thisWeek = mondayOf(today) === monday;
+  // Prázdné období: nejbližší zasedání před ním a po něm (demo data mohou být mimo aktuální týden)
+  const nearest = React.useMemo(() => {
+    const days = (all ?? [])
+      .filter((s) => !committees.length || committees.includes(s.title))
+      .map((s) => ({ session: s, day: pragueDay(s.date) }))
+      .toSorted((a, b) => a.session.date.localeCompare(b.session.date));
+    return {
+      before: days.findLast((d) => d.day < monday)?.session,
+      after: days.find((d) => d.day > end)?.session,
+    };
+  }, [all, committees, monday, end]);
+  const goTo = (s: MdtSessionListItem) => void setWeek(isoWeekKey(mondayOf(pragueDay(s.date))));
 
   return (
     <LazyMotion features={domMax} strict>
@@ -278,6 +290,13 @@ export function SessionCalendar() {
           {!loading && !error && visible.length === 0 && (
             <p className="text-sm text-muted-foreground">
               {committees.length ? 'Vybrané komise v tomto období nezasedají.' : 'V tomto období nejsou naplánovaná žádná zasedání.'}{' '}
+              {([['Předchozí', nearest.before], ['Další', nearest.after]] as const).map(([label, s]) => s && (
+                <React.Fragment key={label}>
+                  <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={() => goTo(s)}>
+                    {label} zasedání: {s.title}, {dayLabel(s.date)}
+                  </button>{' '}
+                </React.Fragment>
+              ))}
               {!thisWeek && (
                 <button type="button" className="font-medium text-foreground underline underline-offset-4" onClick={() => void setWeek(null)}>
                   Zpět na tento týden

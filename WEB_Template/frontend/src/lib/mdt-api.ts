@@ -364,7 +364,7 @@ export const mdtApi = {
   /** Zařazení pacienta do boardu (FR-P4); ruční ECOG a záměr se zapíší do IRIS s Provenance. */
   createCase: (
     body: Pick<MdtCase, 'session' | 'patient_id' | 'service_request_id' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields'>
-      & { acknowledge?: string[] },
+      & { acknowledge?: string[]; prep_tasks?: string[] },
   ) =>
     apiFetch<MdtCase>('/api/mdt/cases/', { method: 'POST', body: JSON.stringify(body) }),
 

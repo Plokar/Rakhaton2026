@@ -94,6 +94,7 @@ export function AddPatientForm({ session, onDone, initialPatientId = null }: { s
         imaging_recent_checked: r.imaging_recent_checked,
         skipped_fields: r.skipped_fields,
         acknowledge: r.acknowledged,
+        prep_tasks: r.prep_tasks,
         ...(r.projector_layout ? { projector_layout: r.projector_layout } : {}),
       },
       {

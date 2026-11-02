@@ -405,6 +405,8 @@ export function useCreateCase() {
     onSuccess: (created) => {
       void client.invalidateQueries({ queryKey: queryKeys.session(created.session) });
       void client.invalidateQueries({ queryKey: queryKeys.sessions });
+      void client.invalidateQueries({ queryKey: queryKeys.tasks });           // úkoly z přípravy (T-350)
+      if (created.id) void client.invalidateQueries({ queryKey: ['case', String(created.id)] });
     },
   });
 }

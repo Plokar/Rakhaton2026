@@ -335,6 +335,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
               readOnly={!canEdit}
               redFlags={brief?.red_flags ?? []}
               options={optionsData.data ?? []}
+              requesterUserId={location.item?.created_by?.user_id ?? null}
             />
           </section>
           <SourceDrawer

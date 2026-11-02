@@ -1,13 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Scale, Trash2, UserRoundSearch } from 'lucide-react';
+import { ListChecks, Plus, Scale, Trash2, UserRoundSearch } from 'lucide-react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { usePractitionersQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { Decision, EvidenceId, Light, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
 import { Citations } from './citations';
 import { CompatibilityLight } from './CompatibilityLight';
+import { suggestTasks } from './decision-tasks';
 import { NationalRuleNote } from './NationalRuleNote';
 import { PractitionerPicker } from './PractitionerPicker';
 import { ROLE_META } from './roles';
@@ -438,6 +441,7 @@ export function DecisionEditor({
   readOnly,
   redFlags,
   options = [],
+  requesterUserId = null,
 }: {
   decision: Decision;
   onChange: (d: Decision) => void;
@@ -445,8 +449,16 @@ export function DecisionEditor({
   redFlags: RedFlag[];
   /** Postupy ze semaforu (GET compatibility) pro zvažované možnosti; bez nich se ukáže jen uložený výběr. */
   options?: ProcedureCompatibility[];
+  /** Zadávající lékař (účet): dostane úkoly re-MDT a sdělení závěru pacientovi (T-350). */
+  requesterUserId?: number | null;
 }) {
   const s = decision.sections;
+  const practitioners = usePractitionersQuery(!readOnly);
+  const suggest = () => {
+    const added = suggestTasks(decision, practitioners.data ?? [], requesterUserId ?? null);
+    if (added.length) onChange({ ...decision, tasks: [...decision.tasks, ...added] });
+    toast(added.length ? `Navrženo úkolů: ${added.length}. Zkontrolujte vlastníky a termíny.` : 'Úkoly pro všechny postupy už v závěru jsou.');
+  };
   const set = (patch: Partial<Sections>) => onChange({ ...decision, sections: { ...s, ...patch } });
   const setTop = (patch: Partial<Decision>) => onChange({ ...decision, ...patch });
   const [picker, setPicker] = React.useState<PickerTarget | null>(null);
@@ -793,6 +805,16 @@ export function DecisionEditor({
           })}
         </ul>
         {!readOnly && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <button
+            type="button"
+            onClick={suggest}
+            disabled={!s.recommendation.length && !s.re_mdt?.date}
+            title="Úkol pro každý doporučený postup podle odbornosti (přednostně přítomný lékař), re-MDT a sdělení závěru zadávajícímu lékaři"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline disabled:text-muted-foreground disabled:no-underline"
+          >
+            <ListChecks className="h-3.5 w-3.5" aria-hidden /> Navrhnout úkoly podle postupu
+          </button>
           <button
             type="button"
             onClick={() =>
@@ -807,6 +829,7 @@ export function DecisionEditor({
           >
             <Plus className="h-3.5 w-3.5" aria-hidden /> Přidat úkol
           </button>
+          </div>
         )}
       </Field>
 

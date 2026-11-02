@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CircleCheck, CircleDashed, Info, RotateCcw, TriangleAlert } from 'lucide-react';
+import { CircleCheck, CircleDashed, Info, ListTodo, RotateCcw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity } from '@/types/mdt';
@@ -22,6 +22,8 @@ export type IntakeResult = {
   intent: 'C' | 'P';
   imaging_recent_checked: boolean;
   skipped_fields: string[];
+  /** Chybějící údaje a varování „do mých úkolů“ (T-350): server je přeskočí / vezme na vědomí a založí úkol. */
+  prep_tasks: string[];
   acknowledged: string[];
   /** Okno pro projektor upravené při zařazení (T-333); bez úprav chybí. */
   projector_layout?: ProjectorLayout;
@@ -47,6 +49,7 @@ export function IntakeForm({
   const [layout, setLayout] = React.useState<ProjectorLayout>({});
   const [skipped, setSkipped] = React.useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = React.useState<Set<string>>(new Set());
+  const [toTasks, setToTasks] = React.useState<Set<string>>(new Set());
   const [ecog, setEcog] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
   const [intent, setIntent] = React.useState<'C' | 'P' | null>(prefill.intent_prefill ?? null);
   const [imaging, setImaging] = React.useState(false);
@@ -56,13 +59,14 @@ export function IntakeForm({
   const skippedCitations = new Set(fields.filter((f) => skipped.has(f.id) && f.citation).map((f) => f.citation as string));
   // Přeskočený údaj se dál nehlídá: varování, která na něm stojí, se v formuláři umlčí (v podkladu zůstanou).
   const silenced = (w: IntakeWarning) => w.citations.some((c) => skippedCitations.has(c));
-  const active = prefill.warnings.filter((w) => !acknowledged.has(w.id) && !silenced(w));
+  const active = prefill.warnings.filter((w) => !acknowledged.has(w.id) && !toTasks.has(w.id) && !silenced(w));
   const done = prefill.warnings.filter((w) => acknowledged.has(w.id) || silenced(w));
+  const tasked = prefill.warnings.filter((w) => toTasks.has(w.id));
   const question = fields.find((f) => f.id === 'mdt.question');
   const missingQuestion = !question || question.status !== 'present';
   // Zařazení projde až po vyřešení všeho: každý chybějící údaj doplněn nebo vědomě přeskočen,
   // každé varování vzato na vědomí, ECOG, záměr C/P a kontrola stáří snímku.
-  const unresolvedFields = fields.filter((f) => (f.status === 'missing' || f.status === 'pending') && !skipped.has(f.id));
+  const unresolvedFields = fields.filter((f) => (f.status === 'missing' || f.status === 'pending') && !skipped.has(f.id) && !toTasks.has(f.id));
   const remaining: string[] = [
     ...unresolvedFields.map((f) => `Údaj „${f.label}“: doplnit nebo přeskočit`),
     ...(active.length > 0 ? [`Varování k potvrzení: ${active.length}`] : []),
@@ -71,6 +75,14 @@ export function IntakeForm({
     ...(imaging ? [] : ['Kontrola stáří snímku']),
   ];
   const canSubmit = !missingQuestion && remaining.length === 0;
+
+  const toggleTask = (id: string) =>
+    setToTasks((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const toggleSkip = (f: IntakeField) =>
     setSkipped((prev) => {
@@ -92,6 +104,7 @@ export function IntakeForm({
           imaging_recent_checked: imaging,
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
+          prep_tasks: [...toTasks],
           ...(layout.blocks || layout.facts || layout.categories ? { projector_layout: layout } : {}),
         });
       }}
@@ -101,10 +114,13 @@ export function IntakeForm({
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {fields.map((f) => {
             const isSkipped = skipped.has(f.id);
+            const isTask = toTasks.has(f.id);
             const missing = f.status === 'missing' || f.status === 'pending';
             return (
               <li key={f.id} className="flex flex-wrap items-start gap-2 px-3 py-2 text-sm">
-                {missing && !isSkipped ? (
+                {isTask ? (
+                  <ListTodo className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                ) : missing && !isSkipped ? (
                   <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
                 ) : isSkipped ? (
                   <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -116,7 +132,9 @@ export function IntakeForm({
                     {f.label}
                     {f.required_by && <Citations ids={[f.required_by]} />}
                   </p>
-                  {isSkipped ? (
+                  {isTask ? (
+                    <p className="text-[13px] text-muted-foreground">V mých úkolech: doplnit před zasedáním (do té doby v podkladu jako chybějící)</p>
+                  ) : isSkipped ? (
                     <p className="text-[13px] text-muted-foreground">Chybí (přeskočeno lékařem), v podkladu zůstane jako chybějící údaj</p>
                   ) : (
                     <p className={cn('text-[13px]', missing ? 'font-medium text-amber-800 dark:text-amber-300' : 'text-muted-foreground')}>
@@ -133,12 +151,18 @@ export function IntakeForm({
                 </div>
                 {missing && (
                   <div className="flex shrink-0 gap-1.5">
-                    {!isSkipped && (
+                    {!isSkipped && !isTask && (
                       <Button type="button" variant="outline" size="sm" onClick={() => setFillHint(fillHint === f.id ? null : f.id)}>
                         Doplnit
                       </Button>
                     )}
-                    {!UNSKIPPABLE.has(f.id) && (
+                    {!UNSKIPPABLE.has(f.id) && !isSkipped && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => toggleTask(f.id)} className="gap-1"
+                        aria-pressed={isTask} title="Údaj se zatím přeskočí a do Mých úkolů přibude „doplnit před MDT“">
+                        {isTask ? <><RotateCcw aria-hidden /> Vrátit</> : <><ListTodo aria-hidden /> Do úkolů</>}
+                      </Button>
+                    )}
+                    {!UNSKIPPABLE.has(f.id) && !isTask && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => toggleSkip(f)} className="gap-1">
                         {isSkipped ? <><RotateCcw aria-hidden /> Vrátit</> : 'Přeskočit'}
                       </Button>
@@ -175,18 +199,32 @@ export function IntakeForm({
                     <Citations ids={w.citations} />
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAcknowledged((prev) => new Set(prev).add(w.id))}
-                >
-                  Beru na vědomí
-                </Button>
+                <div className="flex shrink-0 gap-1.5">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => toggleTask(w.id)} className="gap-1"
+                    title="Varování se vezme na vědomí a do Mých úkolů přibude úkol ho před MDT vyřešit">
+                    <ListTodo aria-hidden /> Do úkolů
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAcknowledged((prev) => new Set(prev).add(w.id))}
+                  >
+                    Beru na vědomí
+                  </Button>
+                </div>
               </div>
             </li>
           ))}
         </ul>
+        {tasked.length > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            V mých úkolech: {tasked.map((w) => warningLabel(w).text).join(', ')}.{' '}
+            <button type="button" className="font-medium text-primary hover:underline" onClick={() => setToTasks((prev) => new Set([...prev].filter((id) => !tasked.some((w) => w.id === id))))}>
+              Vrátit
+            </button>
+          </p>
+        )}
         {done.length > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
             Vzato na vědomí nebo umlčeno přeskočením: {done.length}. V podkladu pro komisi zůstávají (D-019).{' '}

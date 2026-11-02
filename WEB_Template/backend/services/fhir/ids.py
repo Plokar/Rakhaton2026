@@ -56,6 +56,7 @@ _PATIENT_RULES = (  # část ID za `Pxx-`
     (r'prom\d+', 'QuestionnaireResponse'),
     (r'zad\d+', 'ServiceRequest'),
     (r'zad\d+-task', 'Task'),
+    (r'zad\d+-prep\d+', 'Task'),                        # úkol z přípravy na MDT (T-350)
     (r'mdt\d+(-rozhodnuti)?', 'Composition'),
     (r'mdt\d+-careplan', 'CarePlan'),
     (r'mdt\d+-careteam', 'CareTeam'),

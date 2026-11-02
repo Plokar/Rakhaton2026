@@ -162,7 +162,7 @@ def test_ingest_command_builds_vectors_from_iris(fake_fhir, fake_iris, dataset_r
 
 def test_ingest_command_dry_run_counts_vectors_offline(dataset_root):
     out = StringIO()
-    call_command('ingest_dataset', '--dry-run', dataset_dir=str(dataset_root), stdout=out)
+    call_command('ingest_dataset', '--dry-run', '--no-demo', dataset_dir=str(dataset_root), stdout=out)
     national = len(indexing.modra_kniha_chunks())
     assert f'= 665, guidelines {148 + national} (z toho EXT 106, Modrá kniha {national})' in out.getvalue()
 

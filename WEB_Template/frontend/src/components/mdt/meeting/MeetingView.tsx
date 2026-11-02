@@ -208,7 +208,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           Případ je vrácený k doplnění podkladů (OBC-1.1). Zadávající lékař doplní chybějící údaje v dokumentaci.
         </p>
       )}
-      <ReviewNotice caseId={current.id} patient={current.patient_id} session={board} className="mb-4" />
+      {/* nejdřív dokončit zařazení, kontrola před zasedáním až po něm (jeden žlutý pruh, ne dva) */}
+      {!intakePending(current) && <ReviewNotice caseId={current.id} patient={current.patient_id} session={board} className="mb-4" />}
       {intakePending(current) && (
         <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/40 dark:bg-amber-400/10 dark:text-amber-200">
           <ClipboardCheck className="size-4 shrink-0" aria-hidden />
@@ -683,7 +684,7 @@ function MeetingRail({
                     <ReadinessMark caseId={item.id} />
                     {intakePending(item) && <span className="font-medium text-amber-700 dark:text-amber-400">k dokončení</span>}
                   </span>
-                  <ReviewMark caseId={item.id} short className="mt-0.5" />
+                  {!intakePending(item) && <ReviewMark caseId={item.id} short className="mt-0.5" />}
                 </span>
                 <span className="flex flex-col items-end gap-0.5 pt-px">
                   {active ? (

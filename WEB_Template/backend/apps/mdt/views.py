@@ -350,7 +350,7 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
         raise ValidationError({'ecog': 'ECOG 0–4 nebo null.'})
     if 'intent' in data and data['intent'] not in ('C', 'P', None):
         raise ValidationError({'intent': 'C, P nebo null.'})
-    for field in ('skipped_fields', 'acknowledge'):
+    for field in ('skipped_fields', 'acknowledge', 'prep_tasks'):
         if field in data and not (isinstance(data[field], list) and all(isinstance(x, str) for x in data[field])):
             raise ValidationError({field: 'Seznam ID.'})
     if 'mdt.question' in data.get('skipped_fields', []):
@@ -590,7 +590,17 @@ def case_create(request):
     if session.status == 'closed':
         return Response(CLOSED_BOARD, status=409)
     pid = data.get('patient_id')
-    prefill = intake.intake_prefill(_patient_resources(pid), data.get('skipped_fields', []))
+    resources = _patient_resources(pid)
+    prefill = intake.intake_prefill(resources, data.get('skipped_fields', []))
+    # T-350: „Do mých úkolů“ = údaj se zatím přeskočí / varování se vezme na vědomí a vznikne úkol k doplnění
+    prep = _prep_items(data.get('prep_tasks', []), prefill)
+    if prep:
+        prep['owner'] = roles.practitioner_id(request.user)
+        if prep['owner'] is None:
+            raise ValidationError({'prep_tasks': 'Účet nemá propojeného lékaře v IRIS, úkol nejde přiřadit.'})
+        data['skipped_fields'] = list(dict.fromkeys([*data.get('skipped_fields', []), *prep['fields']]))
+        data['acknowledge'] = list(dict.fromkeys([*data.get('acknowledge', []), *prep['warnings']]))
+        prefill = intake.intake_prefill(resources, data['skipped_fields'])
     question = next((f for f in prefill['fields'] if f['id'] == 'mdt.question'), {})
     if question.get('status') != 'present':
         raise ValidationError({'mdt.question': 'Bez otázky pro MDT nelze pacienta zařadit (OBC-1.1).'})
@@ -612,7 +622,23 @@ def case_create(request):
         if case.status in ('nominated', 'returned'):
             case.status = 'ready'
             case.save(update_fields=['status', 'updated_at'])
+    if prep:
+        written += tasks.create_prep_tasks(pid, case.service_request_fhir_id, prep['owner'], prep['items'],
+                                           timezone.localtime(case.session.date))
     return Response({**_case(case), 'fhir_written': written}, status=201 if created else 200)
+
+
+def _prep_items(ids: list[str], prefill: dict) -> dict | None:
+    """`prep_tasks` = ID chybějících údajů nebo varování z `prefill`; vrátí, co přeskočit, odkliknout a založit."""
+    if not ids:
+        return None
+    fields = {f['id']: f for f in prefill['fields'] if f['status'] in ('missing', 'pending') and f['id'] != 'mdt.question'}
+    warnings = {w['id']: w for w in prefill['warnings']}
+    unknown = [i for i in ids if i not in fields and i not in warnings]
+    if unknown:
+        raise ValidationError({'prep_tasks': f'Neznámý chybějící údaj nebo varování: {", ".join(unknown)}.'})
+    return {'fields': [i for i in ids if i in fields], 'warnings': [i for i in ids if i in warnings],
+            'items': [fields[i]['label'] if i in fields else warnings[i]['title'] for i in ids], 'owner': None}
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -1068,7 +1094,12 @@ def session_export_zip(request, sid):
 
 def _with_case(items: list[dict]) -> list[dict]:
     case_by_record = {d.fhir_ids.get('composition'): d.case_id for d in Decision.objects.filter(status='confirmed')}
-    return [{**i, 'case_id': case_by_record.get(i['mdt_record'])} for i in items]
+    # úkoly z přípravy (T-350) patří k nominaci: případ podle ServiceRequest
+    prep = {i['service_request'] for i in items if i.get('service_request')}
+    case_by_request = dict(MdtCase.objects.filter(service_request_fhir_id__in=prep)
+                           .values_list('service_request_fhir_id', 'pk')) if prep else {}
+    return [{**i, 'case_id': case_by_record.get(i['mdt_record']) if i['mdt_record'] else case_by_request.get(i.get('service_request'))}
+            for i in items]
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])

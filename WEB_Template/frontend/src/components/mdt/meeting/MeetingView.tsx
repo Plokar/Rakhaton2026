@@ -9,6 +9,8 @@ import {
   Bot,
   CheckCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   CircleCheck,
   ClipboardCheck,
@@ -60,7 +62,7 @@ import { dayLabel, timeLabel } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { isDiscussed, shortPatient, spokenPatient } from '../patient';
-import { openProjectorWindow, publishSelection } from '../projector';
+import { openProjectorWindow, publishSelection, publishSlide, useProjectorSlides, type SlideState } from '../projector';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { ChatbotPanel } from './ChatbotPanel';
@@ -159,7 +161,13 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
     else openProjectorWindow(null);
   };
 
+  // T-348: slidy projektoru u pacienta na řadě (projektor hlásí, kde je; šipky ←/→ ho posunou)
+  const slides = useProjectorSlides(sessionId, current?.id ?? null);
+  const slide = (move: { delta: number } | { to: number }) => current && publishSlide(sessionId, current.id, move);
+
   const hk = { preventDefault: true, ignoreEventWhen: overlayOpen };
+  useHotkeys('right', () => slide({ delta: 1 }), hk, [current]);
+  useHotkeys('left', () => slide({ delta: -1 }), hk, [current]);
   useHotkeys('down, j', () => go(1), hk, [index, cases]);
   useHotkeys('up, k', () => go(-1), hk, [index, cases]);
   useHotkeys('d', () => current && router.push(`/dashboard/cases/${current.id}`), hk, [current]);
@@ -271,6 +279,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         count={cases.length}
         total={total}
         onProjector={projector}
+        slides={slides}
+        onSlide={slide}
         onAdd={() => setAdding(true)}
         chatOpen={chat.open}
         unread={chat.unread}
@@ -382,6 +392,8 @@ function MeetingHeader({
   count,
   total,
   onProjector,
+  slides,
+  onSlide,
   onAdd,
   chatOpen,
   unread,
@@ -394,6 +406,8 @@ function MeetingHeader({
   count: number;
   total: number;
   onProjector: () => void;
+  slides: SlideState | null;
+  onSlide: (move: { delta: number }) => void;
   onAdd: () => void;
   chatOpen: boolean;
   unread: number;
@@ -444,9 +458,27 @@ function MeetingHeader({
         <Button variant={botOpen ? 'secondary' : 'outline'} size="lg" onClick={onBot} aria-pressed={botOpen} aria-label="Chatbot" title="Chatbot: dotazy na AI s odpověďmi se zdroji (A)">
           <Bot aria-hidden /> <span className="hidden sm:inline">Chatbot</span>
         </Button>
-        <Button variant="outline" size="lg" onClick={onProjector} aria-label="Projektor" title="Okno pro projektor (P)">
-          <MonitorUp aria-hidden /> <span className="hidden sm:inline">Projektor</span>
-        </Button>
+        <div className="flex items-center">
+          <Button variant="outline" size="lg" onClick={onProjector} aria-label="Projektor" title="Okno pro projektor (P)"
+            className={cn(slides && slides.total > 1 && 'rounded-r-none')}>
+            <MonitorUp aria-hidden /> <span className="hidden sm:inline">Projektor</span>
+          </Button>
+          {slides && slides.total > 1 && (
+            <div role="group" aria-label="Slidy projektoru" className="flex h-10 items-center rounded-r-lg border border-l-0 border-border">
+              <Button variant="ghost" size="icon-sm" onClick={() => onSlide({ delta: -1 })} disabled={slides.index === 0}
+                aria-label="Předchozí slide" aria-keyshortcuts="ArrowLeft" title="Předchozí slide (←)">
+                <ChevronLeft aria-hidden />
+              </Button>
+              <span className="px-1 text-[13px] tabular-nums" title={slides.label} aria-live="polite">
+                {slides.index + 1} / {slides.total}
+              </span>
+              <Button variant="ghost" size="icon-sm" onClick={() => onSlide({ delta: 1 })} disabled={slides.index === slides.total - 1}
+                aria-label="Další slide" aria-keyshortcuts="ArrowRight" title="Další slide (→)">
+                <ChevronRight aria-hidden />
+              </Button>
+            </div>
+          )}
+        </div>
         {chair && board.status !== 'closed' && count > 0 && (
           <Button variant="outline" size="lg" onClick={() => setClosing(true)} aria-label="Ukončit board" title="Ukončit board a stáhnout výstupy">
             <CheckCheck aria-hidden /> <span className="hidden sm:inline">Ukončit board</span>

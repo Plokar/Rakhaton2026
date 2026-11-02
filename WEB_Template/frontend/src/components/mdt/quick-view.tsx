@@ -40,6 +40,8 @@ import { KbItemRow } from './KbItem';
 import { AREA_LABEL, areaForIcd10, arrangeFacts, hasLayout } from './fact-layout';
 import { buildKeyFacts, type KeyFact } from './key-facts';
 import { NationalRuleNote, nationalSummary } from './NationalRuleNote';
+import { useSlideRemote } from './projector';
+import { pageBlocks, useSlidePages, type SlideSegment, type SlideUnit } from './slide-pager';
 import { SourceDrawer, type SourceLoader } from './SourceDrawer';
 
 /**
@@ -1321,48 +1323,6 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
   );
 }
 
-function ProjectorFacts() {
-  const { facts, sources, item } = useQuickView();
-  const layout = React.useContext(ProjectorLayoutContext);
-  const { groups, hiddenCount } = arrangeFacts(facts, layout, defaultFactOrder);
-  const exact = Boolean(layout?.facts?.order?.length);              // pořadí zadávajícího platí přesně, bez dobalování
-  const source = layout === item?.projector_layout ? 'upraveno u pacienta' : layout ? 'šablona zadávajícího lékaře' : null;
-  const loading = sources.intake.loading || sources.observations.loading;
-  return (
-    <section aria-labelledby="pj-facts" className={cn(PJ_CARD, '@container flex flex-col gap-1.5')}>
-      <h2 id="pj-facts" className="flex items-baseline justify-between gap-2 text-base font-semibold leading-tight">
-        Klíčové údaje
-        {source && <span className="text-[11px] font-normal text-muted-foreground">{source}</span>}
-      </h2>
-      {loading ? (
-        <SkeletonRows rows={5} />
-      ) : sources.intake.failed ? (
-        <p role="alert" className="text-sm text-destructive">Údaje pacienta se nepodařilo načíst. Obnovte okno (F5).</p>
-      ) : facts.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>
-      ) : (
-        // široká karta (od 46rem): skupiny ve dvou sloupcích; každá skupina je kontejner, šířka buněk se řídí jejím sloupcem
-        <div className="flex flex-col gap-1.5 @[46rem]:block @[46rem]:columns-2 @[46rem]:gap-3">
-          {groups.filter((g) => g.facts.length).map((g) => (
-            <div key={g.category} className="@container break-inside-avoid @[46rem]:mb-1.5">
-              <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-medium leading-4 text-muted-foreground">
-                <span>{g.label}</span>
-                <span className="tabular-nums">{g.facts.length}</span>
-              </h3>
-              <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
-                {(exact ? g.facts : packFacts(g.facts, pjUnits)).map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-      {hiddenCount > 0 && (
-        <p className="mx-0.5 text-[11px] text-muted-foreground">Skryto zadávajícím lékařem: {hiddenCount} (v podkladu zůstávají).</p>
-      )}
-    </section>
-  );
-}
-
 function ProjectorTreatmentRow({ option }: { option: ProcedureCompatibility }) {
   const open = useCitationOpen();
   const light = option.compatibility.overall;
@@ -1414,34 +1374,6 @@ function ProjectorTreatmentRow({ option }: { option: ProcedureCompatibility }) {
   );
 }
 
-function ProjectorTreatments() {
-  const { sources } = useQuickView();
-  const options = sources.compatibility.data;
-  return (
-    <section aria-labelledby="pj-treatments" className={cn(PJ_CARD, 'flex flex-col')}>
-      <h2 id="pj-treatments" className="mb-1 flex items-baseline justify-between gap-2 text-base font-semibold leading-tight">
-        <span>
-          Léčebné postupy{options?.length ? <span className="font-normal text-muted-foreground"> ({options.length})</span> : null}
-        </span>
-        <span className="text-[11px] font-normal text-muted-foreground" title="Důvod barvy se ukáže po najetí na štítek">
-          barvu počítají pravidla, ne AI
-        </span>
-      </h2>
-      {sources.compatibility.loading ? (
-        <SkeletonRows rows={4} />
-      ) : sources.compatibility.failed ? (
-        <p role="alert" className="text-sm text-destructive">Soulad postupů se nepodařilo načíst. Obnovte okno (F5).</p>
-      ) : !options?.length ? (
-        <p className="text-sm text-muted-foreground">Pro diagnózu nejsou v katalogu žádné postupy.</p>
-      ) : (
-        <ul className="flex flex-col gap-0.5">
-          {options.map((option) => <ProjectorTreatmentRow key={option.id} option={option} />)}
-        </ul>
-      )}
-    </section>
-  );
-}
-
 function ProjectorQuestion() {
   const { header, sources } = useQuickView();
   const [expanded, setExpanded] = React.useState(false);
@@ -1476,18 +1408,6 @@ function ProjectorQuestion() {
   );
 }
 
-/** Anamnéza jen když ji podklad má; prázdný blok okno pro projektor nezabírá. */
-function ProjectorAnamnesis() {
-  const { sources } = useQuickView();
-  const section = sources.brief.data?.sections.find((s) => s.id === 'anamnesis');
-  if (!section?.items.length) return null;
-  return (
-    <div className={PJ_CARD}>
-      <AnamnesisPanel defaultOpen={false} />
-    </div>
-  );
-}
-
 /**
  * Okno pro projektor (T-330, podle schváleného náhledu): šedé pozadí s bílými kartami, hlavička a otázka
  * pro MDT vždy vidět, mezi nimi anamnéza (když je), klíčové údaje ve skupinách a postupy se semaforem.
@@ -1499,6 +1419,7 @@ export function CaseQuickViewProjector({
   titleAs = 'h1',
   className,
   layout,
+  remote,
 }: {
   sources: QuickViewSources;
   caseId: number | null;
@@ -1506,52 +1427,263 @@ export function CaseQuickViewProjector({
   className?: string;
   /** Náhled rozpracovaného rozložení (editor, T-333); jinak platí rozložení uložené u případu. */
   layout?: ProjectorLayout | null;
+  /** Okno projektoru (T-348): slidy přepíná i jednání komise, klávesy ←/→ v tomto okně. */
+  remote?: { board: number; caseId: number } | null;
 }) {
   return (
     <QuickViewRoot sources={sources} caseId={caseId} layoutMode="committee">
-      <ProjectorBody titleAs={titleAs} className={className} layout={layout} />
+      <ProjectorBody titleAs={titleAs} className={className} layout={layout} remote={remote} />
     </QuickViewRoot>
   );
 }
 
-const PJ_BLOCK: Record<ProjectorBlock, () => React.ReactNode> = {
-  anamnesis: () => <ProjectorAnamnesis />,
-  facts: () => <ProjectorFacts />,
-  treatments: () => <ProjectorTreatments />,
+// ── Slidy okna projektoru (T-348): hlavička a otázka vždy, mezi nimi slide bez posouvání ─────────────────
+
+const PJ_FACT_CHUNK = 6;          // buněk v jedné jednotce: dlouhá skupina pokračuje ve sloupci vedle nebo na dalším slidu
+const PJ_TREATMENT_CHUNK = 4;     // postupů v jedné jednotce
+const PJ_BLOCK_TITLE: Record<ProjectorBlock, string | null> = {
+  facts: 'Klíčové údaje',
+  treatments: 'Léčebné postupy',
+  anamnesis: null,                // AnamnesisPanel má nadpis sám
 };
 
-function ProjectorBody({ titleAs, className, layout }: { titleAs: 'h1' | 'h2'; className?: string; layout?: ProjectorLayout | null }) {
+function chunk<T>(items: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, i * size + size));
+}
+
+/** Jednotky slidů v pořadí bloků lékaře: skupiny údajů po částech, postupy po čtyřech, anamnéza celá. */
+function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[] {
+  const { facts, sources } = useQuickView();
+  const layout = React.useContext(ProjectorLayoutContext);
+  const { groups, hiddenCount } = arrangeFacts(facts, layout, defaultFactOrder);
+  const exact = Boolean(layout?.facts?.order?.length);              // pořadí zadávajícího platí přesně, bez dobalování
+  const options = sources.compatibility.data;
+  const note = (key: string, block: ProjectorBlock, node: React.ReactNode): SlideUnit<ProjectorBlock> => ({ key, block, node });
+  const out: SlideUnit<ProjectorBlock>[] = [];
+  for (const block of blocks) {
+    if (block === 'facts') {
+      if (sources.intake.loading || sources.observations.loading) out.push(note('facts-loading', block, <SkeletonRows rows={5} />));
+      else if (sources.intake.failed) {
+        out.push(note('facts-failed', block, <p role="alert" className="text-sm text-destructive">Údaje pacienta se nepodařilo načíst. Obnovte okno (F5).</p>));
+      } else if (!facts.length) {
+        out.push(note('facts-empty', block, <p className="text-sm text-muted-foreground">Pro pacienta nejsou v IRIS žádné údaje šablony.</p>));
+      } else {
+        for (const g of groups.filter((g) => g.facts.length)) {
+          const parts = chunk(exact ? g.facts : packFacts(g.facts, pjUnits), PJ_FACT_CHUNK);
+          parts.forEach((part, i) => out.push(note(`facts-${g.category}-${i}`, block, (
+            <div className="@container">
+              <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-medium leading-4 text-muted-foreground">
+                <span>{g.label}{i > 0 && ' (pokračování)'}</span>
+                <span className="tabular-nums">{g.facts.length}</span>
+              </h3>
+              <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">
+                {part.map((fact) => <ProjectorFactCell key={fact.id} fact={fact} />)}
+              </ul>
+            </div>
+          ))));
+        }
+        if (hiddenCount > 0) {
+          out.push(note('facts-hidden', block, (
+            <p className="mx-0.5 text-[11px] text-muted-foreground">Skryto zadávajícím lékařem: {hiddenCount} (v podkladu zůstávají).</p>
+          )));
+        }
+      }
+    } else if (block === 'treatments') {
+      if (sources.compatibility.loading) out.push(note('tx-loading', block, <SkeletonRows rows={4} />));
+      else if (sources.compatibility.failed) {
+        out.push(note('tx-failed', block, <p role="alert" className="text-sm text-destructive">Soulad postupů se nepodařilo načíst. Obnovte okno (F5).</p>));
+      } else if (!options?.length) {
+        out.push(note('tx-empty', block, <p className="text-sm text-muted-foreground">Pro diagnózu nejsou v katalogu žádné postupy.</p>));
+      } else {
+        chunk(options, PJ_TREATMENT_CHUNK).forEach((part, i) => out.push(note(`tx-${i}`, block, (
+          <ul className="flex flex-col gap-0.5">
+            {part.map((option) => <ProjectorTreatmentRow key={option.id} option={option} />)}
+          </ul>
+        ))));
+      }
+    } else {
+      out.push(note('anamnesis', block, <AnamnesisPanel />));
+    }
+  }
+  return out;
+}
+
+function ProjectorCard({ segment, count, children }: { segment: SlideSegment<ProjectorBlock>; count?: number; children: React.ReactNode }) {
+  const title = PJ_BLOCK_TITLE[segment.block];
+  return (
+    <section className={cn(PJ_CARD, 'flex min-w-0 flex-col gap-1.5')} aria-label={title ?? 'Anamnéza'}>
+      {title && <ProjectorCardTitle block={segment.block} continued={segment.continued} count={count} />}
+      {children}
+    </section>
+  );
+}
+
+function ProjectorCardTitle({ block, continued, count }: { block: ProjectorBlock; continued?: boolean; count?: number }) {
+  const { item } = useQuickView();
+  const layout = React.useContext(ProjectorLayoutContext);
+  const source = layout === item?.projector_layout ? 'upraveno u pacienta' : layout ? 'šablona zadávajícího lékaře' : null;
+  return (
+    <h2 className="flex items-baseline justify-between gap-2 text-base font-semibold leading-tight">
+      <span>
+        {PJ_BLOCK_TITLE[block]}
+        {count ? <span className="font-normal text-muted-foreground"> ({count})</span> : null}
+        {continued && <span className="font-normal text-muted-foreground"> · pokračování</span>}
+      </span>
+      {block === 'facts' && source && <span className="text-[11px] font-normal text-muted-foreground">{source}</span>}
+      {block === 'treatments' && (
+        <span className="text-[11px] font-normal text-muted-foreground" title="Důvod barvy se ukáže po najetí na štítek">
+          barvu počítají pravidla, ne AI
+        </span>
+      )}
+    </h2>
+  );
+}
+
+/** Lišta slidů: co je na slidu, kolik jich je, přepínání. Klávesy ←/→ v okně projektoru i v jednání. */
+function SlideBar({ index, total, label, onGo }: { index: number; total: number; label: string; onGo: (to: number) => void }) {
+  if (total <= 1) return null;
+  return (
+    <nav aria-label="Slidy" className="flex shrink-0 items-center gap-2 px-1">
+      <button
+        type="button"
+        onClick={() => onGo(index - 1)}
+        disabled={index === 0}
+        aria-label="Předchozí slide"
+        aria-keyshortcuts="ArrowLeft"
+        className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-card hover:text-foreground disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronRight className="size-4 rotate-180" aria-hidden />
+      </button>
+      <p className="min-w-0 flex-1 truncate text-[13px] font-medium" aria-live="polite">
+        {label}
+        <span className="ml-1.5 font-normal tabular-nums text-muted-foreground">{index + 1} / {total}</span>
+      </p>
+      <ol className="flex items-center gap-1">
+        {Array.from({ length: total }, (_, i) => (
+          <li key={i}>
+            <button
+              type="button"
+              onClick={() => onGo(i)}
+              aria-label={`Slide ${i + 1}`}
+              aria-current={i === index ? 'step' : undefined}
+              className={cn('block h-2 rounded-full transition-[width,background-color]', i === index ? 'w-5 bg-primary' : 'w-2 bg-border hover:bg-muted-foreground')}
+            />
+          </li>
+        ))}
+      </ol>
+      <button
+        type="button"
+        onClick={() => onGo(index + 1)}
+        disabled={index === total - 1}
+        aria-label="Další slide"
+        aria-keyshortcuts="ArrowRight"
+        className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-card hover:text-foreground disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronRight className="size-4" aria-hidden />
+      </button>
+    </nav>
+  );
+}
+
+function ProjectorBody({
+  titleAs,
+  className,
+  layout,
+  remote,
+}: {
+  titleAs: 'h1' | 'h2';
+  className?: string;
+  layout?: ProjectorLayout | null;
+  remote?: { board: number; caseId: number } | null;
+}) {
   const { item, sources } = useQuickView();
   const effective = layout ?? committeeLayout(item).layout;
   const hasAnamnesis = Boolean(sources.brief.data?.sections.find((s) => s.id === 'anamnesis')?.items.length);
-  const blocks = orderedBlocks(effective).filter((b) => !b.hidden && (b.id !== 'anamnesis' || hasAnamnesis));
-  const facts = blocks.find((b) => b.id === 'facts');
-  const side = blocks.filter((b) => b.id !== 'facts');
-  const split = Boolean(facts && side.length);
-  // `order` drží pořadí lékaře v úzkém okně, kde jsou obaly sloupců `display: contents`
-  const card = (b: (typeof blocks)[number]) => (
-    <div key={b.id} className="min-w-0" style={{ order: blocks.indexOf(b) }}>{PJ_BLOCK[b.id]()}</div>
-  );
+  const blocks = orderedBlocks(effective).filter((b) => !b.hidden && (b.id !== 'anamnesis' || hasAnamnesis)).map((b) => b.id);
   return (
     <ProjectorLayoutContext.Provider value={effective}>
       <article className={cn('flex h-full min-h-0 flex-col gap-2 bg-muted p-2', className)} aria-label="Přehled případu pro projektor">
         <ProjectorHeader as={titleAs} />
-        {/* T-343: úzké okno vedle PACS má karty pod sebou; široké okno nebo projektor (od 48rem) má klíčové údaje
-            vlevo v širším sloupci a ostatní karty vpravo pod sebou */}
-        <div className="@container relative -mx-2 min-h-0 flex-1 overflow-y-auto overscroll-contain px-2">
-          <div className={cn('flex flex-col gap-2', split && '@[48rem]:grid @[48rem]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] @[48rem]:items-start')}>
-            {split && facts ? (
-              <>
-                <div className="contents @[48rem]:flex @[48rem]:flex-col @[48rem]:gap-2">{card(facts)}</div>
-                <div className="contents @[48rem]:flex @[48rem]:flex-col @[48rem]:gap-2">{side.map(card)}</div>
-              </>
-            ) : (
-              blocks.map(card)
-            )}
-          </div>
-        </div>
+        <ProjectorSlides blocks={blocks} remote={remote ?? null} />
         <ProjectorQuestion />
       </article>
     </ProjectorLayoutContext.Provider>
+  );
+}
+
+function ProjectorSlides({ blocks, remote }: { blocks: ProjectorBlock[]; remote: { board: number; caseId: number } | null }) {
+  const { sources } = useQuickView();
+  const units = useProjectorUnits(blocks);
+  const viewport = React.useRef<HTMLDivElement>(null);
+  const measure = React.useRef<HTMLDivElement>(null);
+  const { pages, columns, columnWidth } = useSlidePages(units, viewport, measure);
+  const [wanted, setWanted] = React.useState(0);
+  const index = Math.min(wanted, pages.length - 1);
+  const page = pages[index];
+  const label = pageBlocks(page).map((b) => PJ_BLOCK_TITLE[b] ?? 'Anamnéza').join(' · ');
+  const go = React.useCallback((to: number) => setWanted(Math.max(0, Math.min(to, pages.length - 1))), [pages.length]);
+
+  useSlideRemote(remote, { index, total: pages.length, label }, ({ delta, to }) => {
+    if (to !== undefined) go(to);
+    else if (delta) go(index + delta);
+  });
+  React.useEffect(() => {
+    if (!remote) return;                       // klávesy jen v okně projektoru, ne v náhledu editoru
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement)?.closest?.('input, textarea, [contenteditable]')) return;
+      const delta = { ArrowRight: 1, PageDown: 1, ' ': 1, ArrowLeft: -1, PageUp: -1 }[e.key];
+      if (delta) {
+        e.preventDefault();
+        go(index + delta);
+      } else if (e.key === 'Home') go(0);
+      else if (e.key === 'End') go(pages.length - 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [remote, go, index, pages.length]);
+
+  const treatments = sources.compatibility.data?.length;
+  const byBlock = (block: ProjectorBlock) => units.filter((u) => u.block === block);
+  return (
+    <>
+      <SlideBar index={index} total={pages.length} label={label} onGo={go} />
+      <div ref={viewport} className={cn('relative min-h-0 flex-1', page?.overflow ? 'overflow-y-auto overscroll-contain' : 'overflow-hidden')}>
+        <div
+          className="grid h-full content-start gap-2"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+          aria-roledescription="slide"
+          aria-label={`${label}, ${index + 1} z ${pages.length}`}
+        >
+          {page?.columns.map((column, c) => (
+            <div key={c} className="flex min-w-0 flex-col gap-2">
+              {column.map((segment) => (
+                <ProjectorCard key={`${segment.block}-${segment.units[0].key}`} segment={segment} count={segment.block === 'treatments' ? treatments : undefined}>
+                  {segment.units.map((u) => <React.Fragment key={u.key}>{u.node}</React.Fragment>)}
+                </ProjectorCard>
+              ))}
+            </div>
+          ))}
+        </div>
+        {/* měřicí vrstva: stejná šířka sloupce, neviditelná a mimo čtečky i fokus */}
+        <div
+          ref={measure}
+          inert
+          aria-hidden
+          className="pointer-events-none invisible absolute left-0 top-0 flex flex-col gap-2"
+          style={{ width: columnWidth ?? undefined }}
+        >
+          {blocks.map((block) => (
+            <section key={block} data-chrome={block} className={cn(PJ_CARD, 'flex flex-col gap-1.5')}>
+              {PJ_BLOCK_TITLE[block] && (
+                <div data-chrome-title>
+                  <ProjectorCardTitle block={block} count={block === 'treatments' ? treatments : undefined} />
+                </div>
+              )}
+              {byBlock(block).map((u) => <div key={u.key} data-unit={u.key}>{u.node}</div>)}
+            </section>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }

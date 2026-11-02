@@ -639,6 +639,6 @@ Na pitch (So 13:00) a finále (Ne 14:00). Úkoly jsou návrh. Do PROGRESS §4 se
 | Q2 | shadcn nad Base UI, nebo nad Radix? | **Base UI** (`components/shadcn`, kompozice přes `render`) |
 | Q3 | Rozsah kalendáře: 1 týden, 2 týdny, měsíc? | **2 týdny** pod sebou, posun po týdnu, „Dnes“ vrací na aktuální týden |
 | Q4 | Čas na pacienta v Jednání: zobrazovat? | **ano**, v pruhu agendy, po 5 min oranžově, jen `sessionStorage`, do IRIS nic |
-| Q5 | Značka (původně MedTeam a MDT Copilot) | **MDTcore** všude (titulek, manifest, sidebar, login). Přejmenováno, vyřešeno |
+| Q5 | Značka (dřívější názvy vyřazeny) | **MDTcore** všude (titulek, manifest, sidebar, login). Přejmenováno, vyřešeno |
 | Q6 | Přetahování i uvnitř boardu (pořadí agendy)? | **později** (chce zapisovatelné `order`, T-518 bod 3) |
 | Q7 | Potvrzovat přesun mezi daty (zápis do IRIS)? | **nepotvrzovat**, toast s „Vrátit“ 8 s; přesun na uzavřený nebo minulý board UI nepustí (backend 409 zatím nemá) |

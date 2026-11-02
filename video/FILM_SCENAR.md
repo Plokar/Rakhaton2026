@@ -160,9 +160,9 @@ npm run capture          # snímky pro hook → public/textures (Playwright, tma
 node scripts/capture2.mjs  # snímky interakcí pro průchod v2 → public/textures/v2 + layout2.json
 node scripts/stills.mjs MDTcoreWalkthrough 0.5 300 800  # rychlé kontrolní snímky (jeden bundle)
 npm run dev              # Remotion Studio: náhled a ladění
-npx remotion render src/index.ts MDTcoreHook out/medteam-hook.mp4
-npx remotion render src/index.ts MDTcoreWalkthrough out/medteam-walkthrough.mp4
-npx remotion render src/index.ts MDTcoreHook out/medteam-hook-nobgm.mp4 --props=props-nobgm.json
+npx remotion render src/index.ts MDTcoreHook out/mdtcore-hook.mp4
+npx remotion render src/index.ts MDTcoreWalkthrough out/mdtcore-walkthrough.mp4
+npx remotion render src/index.ts MDTcoreHook out/mdtcore-hook-nobgm.mp4 --props=props-nobgm.json
 ```
 
 - 1920 × 1080, 30 fps, H.264. Do PowerPointu vložit jako video a nastavit „Spustit automaticky“. U hooku navíc „Skrýt při nepřehrávání“ nevypínat, ať logo na konci zůstane stát.

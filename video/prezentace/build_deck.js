@@ -7,7 +7,7 @@ const sharp = require('sharp');
 
 const OUT = 'MDTcore_Prezentace.pptx';
 const A = (f) => path.join(__dirname, 'assets', f);
-const HOOK = path.join(__dirname, '..', 'out', 'medteam-hook.mp4');
+const HOOK = path.join(__dirname, '..', 'out', 'mdtcore-hook.mp4');
 
 const THEME = {
   name: 'MDTcore',

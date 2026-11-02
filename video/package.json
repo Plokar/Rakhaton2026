@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "remotion studio src/index.ts",
     "capture": "node scripts/capture.mjs",
-    "render": "remotion render src/index.ts MDTcoreFilm out/medteam-film.mp4",
+    "render": "remotion render src/index.ts MDTcoreFilm out/mdtcore-film.mp4",
     "still": "remotion still src/index.ts MDTcoreFilm"
   },
   "dependencies": {

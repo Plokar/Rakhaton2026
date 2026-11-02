@@ -1,4 +1,4 @@
-import type { EvidenceId, IntakeField, IntakePrefill, IntakeWarning, ObservationSeries, Severity } from '@/types/mdt';
+import type { EvidenceId, FactCategory, IntakeField, IntakePrefill, IntakeWarning, ObservationSeries, Severity } from '@/types/mdt';
 
 /**
  * Klíčové údaje pro úzký panel projektoru (T-512): šablona podle diagnózy z `IntakePrefill.fields`
@@ -24,6 +24,8 @@ export interface KeyFact {
   reason?: string;
   citations: EvidenceId[];
   group: FactGroup;
+  /** Pevná kategorie (T-338, D-024): z pole formuláře, laboratoř, nebo z varování (dotazník → pacient). */
+  category: FactCategory;
 }
 
 export interface KeyFacts {
@@ -40,7 +42,7 @@ const GENERAL = new Set([
   'preferences', 'allergies', 'weight', 'geri.g8',
 ]);
 
-const FIELD_ABBR: Record<string, string> = {
+export const FIELD_ABBR: Record<string, string> = {
   'dx.histology': 'Histologie',
   'staging.tnm': 'TNM',
   'staging.imaging': 'Zobrazení ≤ 6 t.',
@@ -105,6 +107,15 @@ const WARNING_KIND: Record<IntakeWarning['kind'], string> = {
   ai_uncertain: 'Nejistota AI',
 };
 
+/**
+ * Popisek a text varování bez zdvojení: „Chybí: Deficit DPD“ → („Chybí“, „Deficit DPD“), „Doporučeno: …“ →
+ * („Doporučeno“, …). Jinak popisek podle druhu varování a název beze změny.
+ */
+export function warningLabel(warning: Pick<IntakeWarning, 'kind' | 'title'>): { label: string; text: string } {
+  const m = /^(Chybí|Doporučeno|Rozpor|Mimo normu|Nejistota AI)\s*:\s*([\s\S]+)$/.exec(warning.title);
+  return m ? { label: m[1], text: m[2] } : { label: WARNING_KIND[warning.kind], text: warning.title };
+}
+
 const SEVERITY_RANK: Record<Severity, number> = { high: 0, moderate: 1, low: 2 };
 
 const number = (value: number) => value.toLocaleString('cs-CZ', { maximumFractionDigits: 2 });
@@ -155,6 +166,7 @@ function labFact(series: ObservationSeries): KeyFact | null {
     reason: `${outside ? 'mimo ref.' : 'ref.'} ${range}${shownUnit}`,
     citations: [last.citation],
     group: 'lab',
+    category: 'lab',
   };
 }
 
@@ -222,6 +234,7 @@ export function buildKeyFacts(intake: IntakePrefill | null | undefined, series: 
       reason: lab?.reason,
       citations: [f.citation, f.required_by].filter((c): c is EvidenceId => Boolean(c)),
       group: GENERAL.has(f.id) ? 'general' : 'diagnosis',
+      category: lab ? 'lab' : f.category ?? 'history',
     });
   }
 
@@ -252,15 +265,17 @@ export function buildKeyFacts(intake: IntakePrefill | null | undefined, series: 
       attach(row, warning);
       continue;
     }
+    const { label, text } = warningLabel(warning);
     alerts.push({
       id: `alert:${warning.id}`,
-      abbr: WARNING_KIND[warning.kind],
-      label: warning.title,
-      value: warning.title,
+      abbr: label,
+      label: text,
+      value: text,
       status: warning.severity === 'high' ? 'critical' : 'abnormal',
       reason: warning.detail,
       citations: warning.citations,
       group: 'alert',
+      category: warning.category ?? 'alerts',
     });
   }
 

@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queries';
 
 /**
  * Druhé okno pro projektor (T-512): úzký panel vedle snímku z PACS. Admin okno posílá vybraný případ
@@ -39,6 +41,14 @@ export function publishSelection(selection: ProjectorSelection) {
   channel.close();
 }
 
+/** Okno projektoru je jiná záložka s vlastní cache: po změně případu (pořadí údajů, T-332) si board načte znovu. */
+export function publishRefresh(board: number) {
+  if (typeof BroadcastChannel === 'undefined') return;
+  const channel = new BroadcastChannel(CHANNEL);
+  channel.postMessage({ type: 'refresh', board });
+  channel.close();
+}
+
 /** Otevře (nebo přepne) pojmenované úzké okno; blokované popupy vrátí false a odkaz se otevře v záložce. */
 export function openProjectorWindow(selection: ProjectorSelection | null): boolean {
   const win = window.open(projectorHref(selection), WINDOW_NAME, 'popup,width=420,height=1000');
@@ -49,16 +59,21 @@ export function openProjectorWindow(selection: ProjectorSelection | null): boole
 /** Okno projektoru: výběr z URL, pak každá zpráva z admin okna (stav se mění jen v callbacku). */
 export function useProjectorSelection(initial: ProjectorSelection | null) {
   const [selection, setSelection] = React.useState(initial);
+  const client = useQueryClient();
   React.useEffect(() => {
     if (typeof BroadcastChannel === 'undefined') return;
     const channel = new BroadcastChannel(CHANNEL);
-    channel.onmessage = (event: MessageEvent<ProjectorSelection>) => {
+    channel.onmessage = (event: MessageEvent<ProjectorSelection | { type: 'refresh'; board: number }>) => {
+      if (event.data && 'type' in event.data) {
+        if (event.data.type === 'refresh') void client.invalidateQueries({ queryKey: queryKeys.session(event.data.board) });
+        return;
+      }
       const next = parseSelection({ board: String(event.data?.board), case: String(event.data?.caseId), patient: event.data?.patient });
       if (!next) return;
       setSelection(next);
       window.history.replaceState(null, '', projectorHref(next));
     };
     return () => channel.close();
-  }, []);
+  }, [client]);
   return selection;
 }

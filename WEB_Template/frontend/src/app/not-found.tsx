@@ -10,10 +10,6 @@ import {
   Home,
   LayoutDashboard,
   ArrowLeft,
-  Bot,
-  Terminal,
-  ShieldCheck,
-  Search,
   Compass,
 } from 'lucide-react';
 

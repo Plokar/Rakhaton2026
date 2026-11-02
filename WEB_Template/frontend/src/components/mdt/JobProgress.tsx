@@ -10,15 +10,17 @@ const STATUS_LABEL: Record<GenerationJob['status'], string> = {
   error: 'Podklad se nepodařilo připravit',
 };
 
-/** Průběh generování podkladu: polling `/api/jobs/{id}/` à 1 s (D-004). */
+/** Průběh jobu (podklad, zapisovatel, shrnutí): polling `/api/jobs/{id}/` à 1 s (D-004). */
 export function JobProgress({
   jobId,
   onDone,
   onError,
+  runningLabel = STATUS_LABEL.running,
 }: {
   jobId: number;
   onDone: (job: GenerationJob) => void;
   onError: (message: string) => void;
+  runningLabel?: string;
 }) {
   const [job, setJob] = React.useState<GenerationJob | null>(null);
 
@@ -48,7 +50,7 @@ export function JobProgress({
   return (
     <div className="flex w-full max-w-sm flex-col gap-1.5" role="status" aria-live="polite">
       <p className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="font-medium">{STATUS_LABEL[job?.status ?? 'queued']}</span>
+        <span className="font-medium">{job?.status === 'running' ? runningLabel : STATUS_LABEL[job?.status ?? 'queued']}</span>
         <span className="text-xs tabular-nums text-muted-foreground">{progress} %</span>
       </p>
       <div className="h-1.5 overflow-hidden rounded-full bg-muted">

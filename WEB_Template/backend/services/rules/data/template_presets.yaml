@@ -1,0 +1,53 @@
+# Presety šablon klíčových údajů (T-338, docs/SABLONY_LEKARE.md R4, D-025).
+# Při zakládání uživatele se podle profese (odbornosti) předvyplní preset pro oblast; lékař ho hned upraví.
+# layout = {categories?: {order, hidden}, facts?: {order, hidden}}; klíče údajů: ID pole formuláře zařazení,
+# laboratoř `lab:<LOINC>`, upozornění `alert:<pravidlo>`. Údaj, který preset nezmiňuje, je viditelný.
+
+presets:
+  - id: pneumolog-plice
+    name: "Plicní onkologie (výběr pneumologa)"
+    note: "Seznam pneumologa ze schůzky 17. 10. 2026: diagnóza a staging, molekulární genetika, vyšetření a stav; upozornění, dotazníky, část laboratoře a ppo funkce skryté."
+    specialties: [pulmonologist]
+    area: PLI
+    layout:
+      categories:
+        order: [staging, molecular, imaging, function, history, lab, patient, alerts]
+        hidden: [patient, alerts]
+      facts:
+        order:
+          - staging.tnm
+          - dx.histology
+          - bm.egfr
+          - bm.alk
+          - bm.pdl1
+          - staging.pet
+          - staging.brain_mr
+          - staging.imaging
+          - staging.ebus
+          - spiro.fev1
+          - spiro.dlco
+          - weight
+          - geri.g8
+          - smoking
+          - treatment.history
+          - "lab:718-7"
+        hidden:
+          - spiro.vo2max
+          - spiro.ppo_fev1
+          - spiro.ppo_dlco
+          - comorbidities
+          - allergies
+          - lab.na
+          - "lab:2951-2"
+          - "lab:1988-5"
+          - "lab:2039-6"
+          - "lab:6690-2"
+          - "lab:751-8"
+          - "lab:777-3"
+
+  - id: vychozi
+    name: "Výchozí (vše viditelné, pořadí kategorií)"
+    note: "Kategorie v pořadí rozhodování, uvnitř nahoře to, co vyžaduje pozornost."
+    specialties: ["*"]
+    area: "*"
+    layout: {}

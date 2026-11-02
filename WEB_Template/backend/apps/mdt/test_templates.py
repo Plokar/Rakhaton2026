@@ -110,7 +110,8 @@ def test_chair_manages_roles_and_specialty(seeded):
     r = as_user('predseda').patch(f'/api/mdt/users/{chirurg.pk}/', {'role': 'mdt_doctor', 'specialty': 'radiologist'},
                                   format='json')
     assert r.json() | {'user_id': 0} == {'user_id': 0, 'username': 'chirurg', 'name': 'Chirurg', 'role': 'mdt_doctor',
-                                         'specialty': 'radiologist', 'practitioner_id': 'LEK-APP-chirurg'}
+                                         'specialty': 'radiologist', 'practitioner_id': 'LEK-APP-chirurg',
+                                         'first_name': 'Chirurg', 'last_name': '', 'title_before': '', 'title_after': ''}
     assert list(chirurg.groups.values_list('name', flat=True)) == ['mdt_doctor']
     assert as_user('predseda').patch(f'/api/mdt/users/{chirurg.pk}/', {'specialty': 'patient'},
                                      format='json').status_code == 400

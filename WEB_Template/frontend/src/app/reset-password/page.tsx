@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { authApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Zap, Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 
 function ResetPasswordContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const uid = searchParams.get('uid') || '';
   const token = searchParams.get('token') || '';

@@ -3,7 +3,8 @@
  * Automaticky posílá CSRF token a JWT httpOnly cookies.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Bez NEXT_PUBLIC_API_URL (Vercel) same-origin: /api/* přepošle next.config.ts rewrites na BACKEND_URL (D-003)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 class ApiError extends Error {
   constructor(
@@ -22,7 +23,7 @@ async function fetchCsrfToken(): Promise<string> {
   if (match) return match[1];
 
   try {
-    const res = await fetch(`${API_BASE}/api/auth/status/`, { credentials: 'include' });
+    await fetch(`${API_BASE}/api/auth/status/`, { credentials: 'include' });
     const matchAfter = document.cookie.match(/csrftoken=([^;]+)/);
     return matchAfter ? matchAfter[1] : '';
   } catch {
@@ -30,17 +31,52 @@ async function fetchCsrfToken(): Promise<string> {
   }
 }
 
+// ── Obnova přihlášení (T-336) ─────────────────────────────────────────────────
+// Access cookie platí 15 min, refresh cookie 7 dní (SIMPLE_JWT). Bez obnovy by aplikace po 15 min odhlásila.
+const REFRESH_ENDPOINT = '/api/auth/token/refresh/';
+const NO_RETRY = ['/api/auth/token/', REFRESH_ENDPOINT, '/api/auth/status/', '/api/auth/register/'];
+let refreshing: Promise<boolean> | null = null;
+
+/** Jiné okno (projektor, druhá záložka) mohlo token právě obnovit: refresh tokeny se rotují a starý je na blacklistu. */
+async function loggedInAfterAll(): Promise<boolean> {
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  const response = await fetch(`${API_BASE}/api/auth/status/`, { credentials: 'include' });
+  return response.ok && Boolean(((await response.json()) as { authenticated?: boolean }).authenticated);
+}
+
+/** Obnoví access cookie z refresh cookie; souběžná volání sdílí jeden požadavek. `false` = přihlášení vypršelo. */
+function refreshSession(): Promise<boolean> {
+  refreshing ??= fetch(`${API_BASE}${REFRESH_ENDPOINT}`, { method: 'POST', credentials: 'include' })
+    .then((response) => response.ok || (response.status === 401 && loggedInAfterAll()))
+    .catch(() => false)
+    .finally(() => {
+      refreshing = null;
+    });
+  return refreshing;
+}
+
+/** Přihlášení vypršelo i s obnovou: na přihlášení a zpět na stejnou stránku. */
+function redirectToLogin() {
+  if (typeof window === 'undefined' || window.location.pathname.startsWith('/login')) return;
+  // Plné přenačtení záměrně (mimo React, zahodí stav klienta); replace = stránka s chybou nezůstane v historii
+  const login = new URL('/login', window.location.origin);
+  login.searchParams.set('redirect', window.location.pathname + window.location.search);
+  window.location.replace(login.href);
+}
+
 async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {},
+  retried = false,
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
   const isModifying = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
     options.method?.toUpperCase() ?? '',
   );
 
+  // FormData (audio, PDF): Content-Type s hranicí doplní prohlížeč sám
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers,
   };
 
@@ -57,6 +93,12 @@ async function apiFetch<T>(
     headers,
     credentials: 'include', // JWT access_token cookie
   });
+
+  // Vypršelý access token: jednou obnovit a požadavek zopakovat (T-336)
+  if (response.status === 401 && !retried && !NO_RETRY.includes(endpoint)) {
+    if (await refreshSession()) return apiFetch<T>(endpoint, options, true);
+    redirectToLogin();
+  }
 
   if (!response.ok) {
     let errorData: unknown;
@@ -106,6 +148,11 @@ export interface RegisterData {
   last_name?: string;
   /** Povinná odbornost (`RoleId` bez `patient`, T-319); nový uživatel je člen komise. */
   specialty: Exclude<import('@/types/mdt').RoleId, 'patient'>;
+  /** T-338: tituly a šablona klíčových údajů už při registraci. */
+  title_before?: string;
+  title_after?: string;
+  templates?: Partial<Record<import('@/types/mdt').TemplateArea, import('@/types/mdt').ProjectorLayout>>;
+  preset?: string;
 }
 
 export interface AuthResponse {
@@ -412,4 +459,4 @@ export const aiApi = {
 /** Absolutní URL endpointu (odkazy ke stažení: export PDF / FHIR). */
 const apiUrl = (endpoint: string) => `${API_BASE}${endpoint}`;
 
-export { apiFetch, apiUrl, ApiError };
+export { apiFetch, apiUrl, ApiError, refreshSession };

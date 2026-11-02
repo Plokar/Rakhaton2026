@@ -8,11 +8,12 @@ import { cn } from '@/lib/utils';
 import type { Decision, EvidenceId, Light, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
 import { Citations } from './citations';
 import { CompatibilityLight } from './CompatibilityLight';
+import { NationalRuleNote } from './NationalRuleNote';
 import { PractitionerPicker } from './PractitionerPicker';
 import { ROLE_META } from './roles';
 
 /** Koho vybírá popup lékařů (T-328): nového přítomného, nebo vlastníka úkolu. */
-type PickerTarget = { kind: 'attendee' } | { kind: 'task'; index: number };
+type PickerTarget = { kind: 'attendee'; index?: number } | { kind: 'task'; index: number };
 
 type Sections = Decision['sections'];
 type Sourced = { text: string; source: Source };
@@ -45,6 +46,7 @@ const TASK_STATUS_LABEL: Record<Decision['tasks'][number]['status'], string> = {
 };
 const ATTENDEE_ROLES: (RoleId | 'chair')[] = [
   'chair', 'oncologist', 'surgeon', 'radiologist', 'pathologist', 'radiation_oncologist', 'pulmonologist', 'cardiologist',
+  'nuclear_medicine', 'palliative_care', 'geriatrician', 'geneticist', 'coordinator',
 ];
 const roleLabel = (r: RoleId | 'chair') => (r === 'chair' ? 'Předseda' : ROLE_META[r].label);
 
@@ -163,6 +165,32 @@ export function guidelineDeviation(s: Sections): string | null {
     : 'Závěr se odchyluje od doporučených postupů. Doplňte krátké zdůvodnění odchylky.';
 }
 
+/**
+ * Co před potvrzením závěru zbývá (stejný princip jako formulář zařazení): nic se nesmí zapomenout.
+ * Prázdný seznam = jde potvrdit. Odchylka od guidelines sama neblokuje, jen chce zdůvodnění (B2).
+ */
+export function decisionChecklist(decision: Decision, redFlagIds: string[]): string[] {
+  const s = decision.sections;
+  const todo: string[] = [];
+  if (!s.question.text.trim()) todo.push('Projednaná otázka');
+  if (!s.assessment.text.trim()) todo.push('Klinické zhodnocení');
+  const chosen = (s.options_considered ?? []).some((o) => o.chosen);
+  if (!chosen && !s.recommendation.some((r) => r.text.trim())) todo.push('Zvolený postup (zvažované možnosti) nebo krok doporučeného postupu');
+  if (!s.guideline_compliance) todo.push('V souladu s guidelines? Ano / Ne');
+  const deviation = guidelineDeviation(s);
+  if (deviation) todo.push('Zdůvodnění souladu s guidelines (zvolený postup „pozor“ / „vylučuje“ nebo odchylka)');
+  if (!s.conclusion.text.trim()) todo.push('Závěr MDT');
+  const unnamed = decision.attendees.filter((a) => !a.user_id && a.role !== 'chair');
+  if (unnamed.length) todo.push(`Přítomní: vybrat lékaře (${unnamed.map((a) => a.name || 'bez role').join(', ')})`);
+  decision.tasks.forEach((t, i) => {
+    const gaps = [!t.description.trim() && 'popis', !t.owner && 'komu', !t.due_date && 'termín'].filter(Boolean);
+    if (gaps.length) todo.push(`Úkol ${i + 1}: ${gaps.join(', ')}`);
+  });
+  const open = redFlagIds.filter((id) => !decision.red_flags_acknowledged.includes(id)).length;
+  if (open) todo.push(`Varovné signály vzít na vědomí: ${open}`);
+  return todo;
+}
+
 type OptionRow = { id: string; title: string; light: Light | null; citations: EvidenceId[]; considered: boolean; chosen: boolean };
 
 /**
@@ -204,8 +232,13 @@ function GuidelineCompliance({
         : rest,
     });
   };
+  // T-340: oddíly Modré knihy ČOS u pravidel zvolených postupů (práh / téma) → do souladu s doporučenými postupy
+  const chosenIds = new Set(rows.filter((r) => r.chosen).map((r) => r.id));
+  const chosenRules = options.filter((o) => chosenIds.has(o.id)).flatMap((o) => o.compatibility.rules.map((rule) => ({ option: o, rule })));
+  const national = chosenRules.filter(({ rule }) => rule.national?.length);
+  const nationalIds = [...new Set(national.flatMap(({ rule }) => (rule.national ?? []).map((n) => n.evidence_id)))];
   const setCompliant = (compliant: boolean) => {
-    const chosenCitations = rows.filter((r) => r.chosen).flatMap((r) => r.citations);
+    const chosenCitations = [...rows.filter((r) => r.chosen).flatMap((r) => r.citations), ...nationalIds];
     set({
       guideline_compliance: {
         compliant,
@@ -254,6 +287,29 @@ function GuidelineCompliance({
         <p className="text-sm text-muted-foreground">
           {readOnly ? 'Zvažované možnosti nebyly zapsány.' : 'Možnosti ze semaforu se načítají z podkladu případu.'}
         </p>
+      )}
+
+      {national.length > 0 && (
+        <div className="rounded-lg bg-sky-50/70 px-3 py-2 dark:bg-sky-400/10">
+          <p className="text-[13px] font-medium">Modrá kniha ČOS ke zvoleným postupům</p>
+          <ul className="mt-1 flex flex-col gap-1">
+            {national.map(({ option, rule }) => (
+              <li key={`${option.id}-${rule.rule_id}`} className="text-[13px] leading-snug">
+                <span className="text-muted-foreground">{option.title}: </span>{rule.text}
+                <NationalRuleNote rule={rule} />
+              </li>
+            ))}
+          </ul>
+          {!readOnly && compliance && nationalIds.some((id) => !compliance.citations.includes(id)) && (
+            <button
+              type="button"
+              className="mt-1 text-xs font-medium text-primary hover:underline"
+              onClick={() => set({ guideline_compliance: { ...compliance, citations: [...new Set([...compliance.citations, ...nationalIds])] } })}
+            >
+              Přidat oddíly Modré knihy do souladu
+            </button>
+          )}
+        </div>
       )}
 
       <fieldset className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-sm">
@@ -402,8 +458,13 @@ export function DecisionEditor({
         onOpenChange={(open) => !open && setPicker(null)}
         title={picker?.kind === 'task' ? 'Komu úkol přidělit' : 'Přidat přítomného'}
         excludeIds={picker?.kind === 'attendee' ? decision.attendees.map((a) => a.user_id) : []}
+        preferRole={picker?.kind === 'attendee' && picker.index !== undefined ? decision.attendees[picker.index]?.role : null}
         onSelect={(p) => {
-          if (picker?.kind === 'attendee') {
+          if (picker?.kind === 'attendee' && picker.index !== undefined) {
+            // řádek role z nastavení podkladu („Chirurg“) dostane konkrétního lékaře, role zůstává
+            const i = picker.index;
+            setTop({ attendees: decision.attendees.map((x, j) => (j === i ? { ...x, user_id: p.id, name: p.name } : x)) });
+          } else if (picker?.kind === 'attendee') {
             setTop({ attendees: [...decision.attendees, { user_id: p.id, name: p.name, role: p.role ?? 'oncologist' }] });
           } else if (picker?.kind === 'task') {
             const i = picker.index;
@@ -619,9 +680,20 @@ export function DecisionEditor({
         <ul className="space-y-1.5">
           {decision.attendees.map((a, i) => (
             <li key={i} className="flex flex-wrap items-center gap-2">
-              <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
-                {a.name || a.user_id || 'Bez jména'}
-              </span>
+              {a.user_id || readOnly ? (
+                <span className="min-w-0 flex-1 truncate text-sm" title={a.user_id || undefined}>
+                  {a.name || a.user_id || 'Bez jména'}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPicker({ kind: 'attendee', index: i })}
+                  className="inline-flex min-w-0 flex-1 items-center gap-1.5 truncate text-left text-sm text-primary hover:underline"
+                >
+                  <UserRoundSearch className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">{a.name ? `${a.name}: vybrat lékaře…` : 'Vybrat lékaře…'}</span>
+                </button>
+              )}
               <select
                 className={fieldClass}
                 value={a.role}

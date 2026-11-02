@@ -1,7 +1,10 @@
 """API MDT (ARCH §6.3). Oprávnění podle rolí (D-014, POZADAVKY_LEKARE §1)."""
 import base64
+import io
 import json
+import logging
 import re
+import zipfile
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -31,6 +34,8 @@ from . import roles
 from .config import DEFAULT_CONFIG, BriefConfigSerializer
 from .models import BriefConfig, Decision, MdtCase, MdtSession
 
+logger = logging.getLogger(__name__)
+
 
 # ── oprávnění ────────────────────────────────────────────────────────────────
 def _require(request, *allowed: str) -> None:
@@ -54,12 +59,15 @@ def _require_case_edit(request, case: MdtCase) -> None:
 
 # ── serializace ──────────────────────────────────────────────────────────────
 def _user(u) -> dict | None:
-    return u and {'user_id': u.pk, 'name': u.get_full_name() or u.username}
+    return u and {'user_id': u.pk, 'name': roles.display_name(u)}
 
 
 def _member(u) -> dict:
-    """`Me` (§8.6): role a odbornost uživatele."""
-    return {'user_id': u.pk, 'username': u.username, 'name': u.get_full_name() or u.username,
+    """`Me` (§8.6): role, odbornost a jméno s tituly (T-338)."""
+    profile = getattr(u, 'mdt_profile', None) if hasattr(u, 'mdt_profile') else None
+    return {'user_id': u.pk, 'username': u.username, 'name': roles.display_name(u),
+            'first_name': u.first_name, 'last_name': u.last_name,
+            'title_before': profile.title_before if profile else '', 'title_after': profile.title_after if profile else '',
             'role': roles.role(u), 'specialty': roles.specialty(u), 'practitioner_id': roles.practitioner_id(u)}
 
 
@@ -74,7 +82,19 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
             'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
+            'projector_layout': c.projector_layout or {}, 'requester_layout': _requester_layout(c, patient),
             'patient': patient}
+
+
+def _requester_layout(c: MdtCase, patient: dict | None) -> dict | None:
+    """Šablona zadávajícího lékaře pro oblast pacienta (T-338, D-025): výchozí rozložení okna projektoru,
+    dokud ho lékař u případu neupraví. Bez hlavičky pacienta (oblast neznámá) `None`."""
+    icd10 = ((patient or {}).get('diagnosis') or {}).get('icd10')
+    if not icd10 or c.created_by_id is None:
+        return None
+    from services.rules.fact_categories import area_for_icd10
+    from services.rules.fact_templates import template_for
+    return template_for(c.created_by, area_for_icd10([icd10]))
 
 
 def _datetime(value) -> timezone.datetime:
@@ -97,19 +117,32 @@ def _config(data, case: MdtCase) -> dict:
 
 # ── endpointy ────────────────────────────────────────────────────────────────
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def me(request):
-    """Role a odbornost přihlášeného (FR-U1)."""
+    """Role a odbornost přihlášeného (FR-U1). PATCH `{title_before?, title_after?}`: tituly si lékař upraví sám (T-338);
+    roli a odbornost mění předseda."""
+    if request.method == 'PATCH':
+        from .models import UserProfile
+        from .templates import clean_titles
+        titles = clean_titles(request.data)
+        if titles:
+            UserProfile.objects.update_or_create(user=request.user, defaults=titles)
+        return Response(_member(get_user_model().objects.get(pk=request.user.pk)))
     return Response(_member(request.user))
 
 
-@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
-@api_view(['GET'])
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def user_list(request):
-    """Uživatelé s rolí a odborností (`Me[]`, T-319). Číst smí předseda a lékař (T-326: zadávající lékař vybírá,
-    koho přizvat ke spolupráci); role a odbornost mění jen předseda (`user_detail`)."""
+    """GET: uživatelé s rolí a odborností (`Me[]`, T-319). Číst smí předseda a lékař (T-326: zadávající lékař vybírá,
+    koho přizvat ke spolupráci); role a odbornost mění jen předseda (`user_detail`). POST (předseda, T-338): založí
+    lékaře s profilem (jméno, tituly, profese, role) a šablonou údajů (`apps.mdt.templates.create_user`)."""
+    if request.method == 'POST':
+        _require(request, roles.ADMIN)
+        from .templates import create_user
+        return Response(_member(create_user(request)), status=201)
     _require(request, roles.ADMIN, roles.DOCTOR)
     users = get_user_model().objects.filter(is_active=True).order_by('username')
     return Response([_member(u) for u in users])
@@ -160,6 +193,16 @@ def user_detail(request, uid):
         raise ValidationError({'specialty': f'Jen {", ".join(roles.SPECIALTIES)}.'})
     if user.pk == request.user.pk and role not in (None, roles.ADMIN):
         raise ValidationError({'role': 'Sám sobě roli předsedy odebrat nejde.'})
+    from .models import UserProfile
+    from .templates import clean_titles
+    titles = clean_titles(request.data)                  # T-338: tituly a jméno upraví předseda
+    names = {k: str(request.data[k]).strip()[:150] for k in ('first_name', 'last_name') if k in request.data}
+    if names:
+        get_user_model().objects.filter(pk=user.pk).update(**names)
+        user.refresh_from_db()
+    if titles:
+        UserProfile.objects.update_or_create(user=user, defaults=titles)
+        user = get_user_model().objects.get(pk=user.pk)
     roles.assign(user, role=role, specialty=specialty)
     if specialty is not None:
         try:                                     # odbornost i u lékaře účtu v IRIS (LEK-APP-…, T-328)
@@ -279,6 +322,9 @@ def session_detail(request, sid):
     return _agenda_response(s)
 
 
+CLOSED_BOARD = {'detail': 'Board je uzavřený, pacienta na něj nejde zařadit ani přesunout.'}
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -289,6 +335,9 @@ def case_detail(request, cid):
     _require_case_edit(request, case)
     _validate_case_input(request, request.data, case)
     _validate_collaborators(request, request.data, case)
+    if request.data.get('session', case.session_id) != case.session_id and \
+            MdtSession.objects.filter(pk=request.data['session'], status='closed').exists():
+        return Response(CLOSED_BOARD, status=409)
     with transaction.atomic():
         written = _apply_case_input(request, case, request.data)
     return Response({**_case(case), 'fhir_written': written})
@@ -308,6 +357,17 @@ def _validate_case_input(request, data, case: MdtCase | None = None) -> None:
         _require(request, roles.ADMIN)
         if data['status'] not in dict(MdtCase.STATUS):
             raise ValidationError({'status': f'Jen {", ".join(dict(MdtCase.STATUS))}.'})
+    if 'projector_layout' in data:
+        _validate_projector_layout(data['projector_layout'])
+
+
+def _validate_projector_layout(layout) -> None:
+    """Okno pro projektor (T-333) se stejným tvarem jako šablona lékaře (T-338): `{categories?, facts?, blocks?}`."""
+    from services.rules.fact_templates import validate_layout
+    try:
+        validate_layout(layout)
+    except ValueError as e:
+        raise ValidationError({'projector_layout': str(e)}) from None
 
 
 def _validate_collaborators(request, data, case: MdtCase | None) -> None:
@@ -333,7 +393,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
         writeback.set_mdt_date(case.patient_fhir_id, case.service_request_fhir_id, timezone.localtime(target.date))
         case.session = target
         case.order = _next_order(target)               # T-324: na konec agendy nového boardu
-    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status'):
+    for field in ('ecog', 'intent', 'imaging_recent_checked', 'skipped_fields', 'status', 'projector_layout'):
         if field in data:
             setattr(case, field, data[field])
     known = {w['id'] for w in case.acknowledged_warnings}
@@ -355,7 +415,7 @@ def _apply_case_input(request, case: MdtCase, data, warnings: dict | None = None
     return writeback.write_intake(
         patient_id=case.patient_fhir_id, case_no=case.pk, service_request_id=case.service_request_fhir_id,
         ecog=ecog, intent=intent, acknowledged=list(enumerate(new_acks, start + 1)), warnings=warnings or {},
-        entered_by=request.user.get_full_name() or request.user.username, now=now)
+        entered_by=roles.display_name(request.user), now=now)
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -440,6 +500,22 @@ def _patient_resources(pid: str) -> list[dict]:
     return resources
 
 
+def _unresolved_intake(data, prefill: dict) -> list[str]:
+    """Zařazení projde jen s vyřešeným vším (stejná pravidla jako `IntakeForm`): ECOG, záměr C/P, kontrola snímku,
+    každý chybějící údaj přeskočený (doplněný už `prefill` nehlásí) a každé aktivní varování odkliknuté."""
+    todo = []
+    if data.get('ecog') is None:
+        todo.append('ECOG')
+    if data.get('intent') not in ('C', 'P'):
+        todo.append('záměr C/P')
+    if data.get('imaging_recent_checked') is not True:
+        todo.append('kontrola stáří snímku')
+    todo += [f'údaj „{f["label"]}“ (doplnit nebo přeskočit)' for f in prefill['fields'] if f['status'] in ('missing', 'pending')]
+    acked = set(data.get('acknowledge', []))
+    todo += [f'varování {w["id"]} (vzít na vědomí)' for w in prefill['warnings'] if w['id'] not in acked]
+    return todo
+
+
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -447,10 +523,14 @@ def case_create(request):
     """Zařazení pacienta do boardu (FR-P4): `{session, patient_id, ecog, intent, imaging_recent_checked,
     skipped_fields, acknowledge}`. Nominace už má případ (seed_mdt) → doplní ho a přesune (200), jinak založí (201)."""
     _require(request, roles.ADMIN, roles.DOCTOR)
-    data = request.data
+    # stav po zařazení určuje server (`ready`), odkliknutí se posílá jako `acknowledge` (T-329: formulář posílal
+    # `status: nominated` a lékař pak dostal 403, protože stav smí měnit jen předseda)
+    data = {k: v for k, v in request.data.items() if k not in ('status', 'acknowledged_warnings')}
     _validate_case_input(request, data)
     _validate_collaborators(request, data, None)
     session = get_object_or_404(MdtSession, pk=data.get('session'))
+    if session.status == 'closed':
+        return Response(CLOSED_BOARD, status=409)
     pid = data.get('patient_id')
     prefill = intake.intake_prefill(_patient_resources(pid), data.get('skipped_fields', []))
     question = next((f for f in prefill['fields'] if f['id'] == 'mdt.question'), {})
@@ -467,6 +547,8 @@ def case_create(request):
             writeback.set_mdt_date(pid, sr_id, timezone.localtime(session.date))
         else:
             _require_case_edit(request, case)
+        if unresolved := _unresolved_intake(data, prefill):      # po kontrole oprávnění; výjimka zruší i založení případu
+            raise ValidationError({'intake': f'Před zařazením zbývá: {"; ".join(unresolved)}.'})
         written = _apply_case_input(request, case, {**data, 'session': session.pk},
                                     warnings={w['id']: w for w in prefill['warnings']})
         if case.status in ('nominated', 'returned'):
@@ -485,12 +567,36 @@ def case_brief(request, cid):
         brief = case.briefs.first()
         if brief is None:
             return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
-        return Response({**brief.content, 'brief_id': brief.pk, 'created_at': brief.created_at})
+        content = brief.content
+        if (content.get('decision_support') or {}).get('treatment_options'):
+            from services.rules.national_rules import attach   # i podklad z doby před T-340 ukáže oporu v Modré knize
+            attach(content['decision_support']['treatment_options'])
+        return Response({**content, 'brief_id': brief.pk, 'created_at': brief.created_at})
     _require_case_edit(request, case)
-    job = GenerationJob.objects.create(case=case, kind='brief', params={'config': _config(request.data, case)},
-                                       created_by=request.user)
+    params = {'config': _config(request.data, case)}
+    if feedback := _brief_feedback(request):
+        params['feedback'] = feedback
+    job = GenerationJob.objects.create(case=case, kind='brief', params=params, created_by=request.user)
     jobs.start(job)
     return Response({'job_id': job.pk}, status=202)
+
+
+def _brief_feedback(request) -> dict | None:
+    """`{feedback: {text, sections?}}` při přegenerování: co AI udělala špatně a na co se zaměřit (T-323).
+    Text jde do LLM, proto pseudonymizace (lékař může omylem napsat jméno nebo RČ) a délkový limit."""
+    raw = request.data.get('feedback')
+    if not raw:
+        return None
+    from services.ai.pseudonymize import pseudonymize_text
+
+    text = pseudonymize_text(str(raw.get('text', '') if isinstance(raw, dict) else '').strip())
+    sections = raw.get('sections') or [] if isinstance(raw, dict) else None
+    if not isinstance(raw, dict) or not 3 <= len(text) <= 1000:
+        raise ValidationError({'feedback': 'Zpětná vazba: text 3–1000 znaků.'})
+    if not isinstance(sections, list) or any(s not in cfg.SECTION_ORDER for s in sections):
+        raise ValidationError({'feedback': 'Neplatná sekce (SectionId §8.1).'})
+    return {'text': text, 'sections': list(dict.fromkeys(sections)),
+            'by': roles.display_name(request.user), 'at': timezone.localtime().isoformat()}
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -557,7 +663,7 @@ def patient_import_confirm(request, pid):
     if not isinstance(proposal, dict) or proposal.get('patient_id') != pid:
         raise ValidationError({'patient_id': 'Návrh nepatří tomuto pacientovi.'})
     try:
-        resources = report_import.confirm(proposal, user_name=request.user.get_full_name() or request.user.username)
+        resources = report_import.confirm(proposal, user_name=roles.display_name(request.user))
     except (KeyError, ValueError) as e:
         raise ValidationError({'values': str(e)}) from None
     fhir.transaction({'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
@@ -636,11 +742,14 @@ def case_decision(request, cid):
         return Response(decision.content)
     _require_case_edit(request, case)
     if decision and decision.status == 'confirmed':
-        return Response({'detail': 'Závěr je potvrzený a zapsaný v IRIS, nelze ho měnit.'}, status=409)
+        return Response({'detail': 'Závěr je potvrzený a zamčený. Změna jde jen jako nová verze (předseda).'}, status=409)
+    # verzi a auditní stopu drží server, klient je nepřepíše (T-332)
+    kept = {k: decision.content.get(k) for k in ('version', 'revision_of', 'history')} if decision else {}
     try:
         content = DecisionSchema.model_validate(
             {**request.data, 'case_id': str(case.pk), 'status': 'draft', 'confirmed_by': None,
-             'confirmed_at': None, 'fhir_ids': None}).model_dump(mode='json')
+             'confirmed_at': None, 'fhir_ids': None, 'version': kept.get('version') or 1,
+             'revision_of': kept.get('revision_of'), 'history': kept.get('history') or []}).model_dump(mode='json')
     except SchemaError as e:
         return Response({'detail': 'Neplatný závěr (ARCH §8.4).', 'errors': e.errors(include_url=False)}, status=400)
     decision, _ = Decision.objects.update_or_create(case=case, defaults={'content': content})
@@ -663,12 +772,16 @@ def case_decision_confirm(request, cid):
             return Response({'detail': deviation, 'field': 'guideline_compliance'}, status=400)
         brief = case.briefs.first()
         red_flags = {f['id']: f for f in (brief.content.get('red_flags', []) if brief else [])}
+        if remaining := writeback.decision_gaps(decision.content, red_flags):   # stejně jako UI „Před potvrzením zbývá“
+            return Response({'detail': f'Před potvrzením zbývá: {"; ".join(remaining)}.', 'remaining': remaining},
+                            status=400)
         now = timezone.localtime()
-        confirmed_by = {'user_id': str(request.user.pk), 'name': request.user.get_full_name() or request.user.username}
+        confirmed_by = {'user_id': str(request.user.pk), 'name': roles.display_name(request.user)}
         try:
             ids = writeback.confirm_decision(
                 decision.content, patient_id=case.patient_fhir_id, service_request_id=case.service_request_fhir_id,
-                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now)
+                mdt_date=timezone.localtime(case.session.date), confirmed_by=confirmed_by, red_flags=red_flags, now=now,
+                mdt_id=decision.content.get('revision_of'))
         except (FhirError, LookupError) as e:
             return Response({'detail': f'IRIS zápis odmítl: {e}', 'outcome': getattr(e, 'outcome', None)}, status=502)
         decision.content = {**decision.content, 'status': 'confirmed', 'confirmed_by': confirmed_by,
@@ -678,6 +791,98 @@ def case_decision_confirm(request, cid):
         case.status = 'confirmed'
         case.save(update_fields=['status', 'updated_at'])
     return Response(decision.content)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_decision_revise(request, cid):
+    """Nová verze potvrzeného závěru (BONUS C, T-332): `{reason}` (předseda). Potvrzená verze přejde do `history`
+    s důvodem a autorem změny, závěr je znovu draft; po potvrzení se zapíše do stejné `Composition` (IRIS drží historii)."""
+    _require(request, roles.ADMIN)
+    reason = str(request.data.get('reason') or '').strip()
+    if not reason:
+        raise ValidationError({'reason': 'Uveďte, proč se potvrzený závěr mění (auditní stopa).'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    with transaction.atomic():
+        decision = get_object_or_404(Decision.objects.select_for_update(), case=case)
+        if decision.status != 'confirmed':
+            return Response({'detail': 'Novou verzi jde založit jen z potvrzeného závěru.'}, status=409)
+        content = decision.content
+        version = content.get('version') or 1
+        entry = {'version': version, 'composition': (content.get('fhir_ids') or {}).get('composition'),
+                 'confirmed_by': content.get('confirmed_by'), 'confirmed_at': content.get('confirmed_at'),
+                 'revised_by': {'user_id': str(request.user.pk),
+                                'name': roles.display_name(request.user)},
+                 'revised_at': timezone.localtime().isoformat(), 'reason': reason[:500]}
+        decision.content = DecisionSchema.model_validate({
+            **content, 'status': 'draft', 'confirmed_by': None, 'confirmed_at': None, 'fhir_ids': None,
+            'patient_summary': None, 'gp_report': None, 'version': version + 1,
+            'revision_of': entry['composition'], 'history': [*(content.get('history') or []), entry],
+        }).model_dump(mode='json')
+        decision.status, decision.confirmed_by, decision.confirmed_at, decision.fhir_ids = 'draft', None, None, {}
+        decision.save()
+        case.status = 'decided'
+        case.save(update_fields=['status', 'updated_at'])
+    return Response(decision.content)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_gp_report(request, cid):
+    """Zpráva pro praktického lékaře (T-332): vzniká spolu se shrnutím pro pacienta z potvrzeného závěru."""
+    decision = Decision.objects.filter(case_id=cid).first()
+    report = (decision.content if decision else {}).get('gp_report')
+    return Response(report) if report else Response({'detail': 'Zpráva pro praktického lékaře ještě není.'}, status=404)
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def case_ask(request, cid):
+    """Otázka nad případem (BONUS Q&A, T-332): `{question}` → odpověď jen z dat pacienta v IRIS, s citacemi."""
+    from services.ai.brief import _llm_call_log
+    from services.ai.case_qa import MAX_QUESTION, answer_question
+    from services.ai.context_builder import load_resources
+    from services.ai_service import provider_for_patient
+
+    question = str(request.data.get('question') or '').strip()
+    if not question:
+        raise ValidationError({'question': 'Napište otázku.'})
+    if len(question) > MAX_QUESTION:
+        raise ValidationError({'question': f'Otázka může mít nejvýš {MAX_QUESTION} znaků.'})
+    case = get_object_or_404(MdtCase, pk=cid)
+    try:
+        resources, studies = load_resources(case.patient_fhir_id)
+    except FhirError as e:
+        return Response({'detail': f'Data pacienta z IRIS se nepodařilo načíst: {e}'}, status=502)
+    return Response(answer_question(case.patient_fhir_id, question, resources, provider_for_patient(resources),
+                                    _llm_call_log, studies=studies))
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def case_similar(request, cid):
+    """Podobné případy (BONUS B2, T-332): předchozí závěry MDT jiných pacientů s obdobnou diagnózou, anonymizovaně."""
+    from services.ai.similar_cases import similar_cases
+
+    case = get_object_or_404(MdtCase, pk=cid)
+    try:
+        return Response(similar_cases(case.patient_fhir_id))
+    except FhirError as e:
+        return Response({'detail': f'Záznamy z IRIS se nepodařilo načíst: {e}'}, status=502)
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rule_catalog(request):
+    """Katalog pravidel varovných signálů pro nastavení podkladu (T-332): `[{id, title, source}]`."""
+    from services.rules.red_flags import RULE_CATALOG
+
+    return Response([{'id': rid, 'title': title, 'source': source or None} for rid, (title, source) in RULE_CATALOG.items()])
 
 
 def _attachment(content, content_type: str, filename: str) -> HttpResponse:
@@ -705,8 +910,15 @@ def case_export_fhir(request, cid):
 def case_export_pdf(request, cid):
     """PDF závěru; potvrzený závěr se poprvé uloží i jako `DocumentReference/Pxx-mdtNN-pdf` do IRIS."""
     decision = get_object_or_404(Decision.objects.select_related('case__session'), case_id=cid)
+    pdf, name = _decision_pdf(decision)
+    return _attachment(pdf, 'application/pdf', f'{name}.pdf')
+
+
+def _decision_pdf(decision: Decision, patient_list: list[dict] | None = None) -> tuple[bytes, str]:
+    """PDF závěru a název souboru; potvrzené PDF se poprvé uloží jako `DocumentReference` do IRIS."""
     case = decision.case
-    patient = next((p for p in patients.list_patients() if p['id'] == case.patient_fhir_id), None)
+    patient = next((p for p in (patient_list if patient_list is not None else patients.list_patients())
+                    if p['id'] == case.patient_fhir_id), None)
     pdf = export.decision_pdf(decision.content, title=case.session.title,
                               mdt_date=timezone.localtime(case.session.date), patient=patient)
     if decision.status == 'confirmed' and not decision.fhir_ids.get('document_reference_pdf'):
@@ -714,8 +926,86 @@ def case_export_pdf(request, cid):
         decision.fhir_ids = {**decision.fhir_ids, 'document_reference_pdf': rid}
         decision.content = {**decision.content, 'fhir_ids': decision.fhir_ids}
         decision.save(update_fields=['fhir_ids', 'content', 'updated_at'])
-    name = decision.fhir_ids.get('composition') or f'{case.patient_fhir_id}-navrh'
-    return _attachment(pdf, 'application/pdf', f'{name}.pdf')
+    return pdf, decision.fhir_ids.get('composition') or f'{case.patient_fhir_id}-navrh'
+
+
+def _record(s: MdtSession, by_id: dict[str, dict], ids: dict[str, dict]) -> dict:
+    """Záznam boardu (T-333): přítomní lékaři ze závěrů, pacienti se jménem / maskovaným RČ a stavem závěru."""
+    cases = list(s.cases.all())
+    decisions = {d.case_id: d for d in Decision.objects.filter(case__session=s).select_related('confirmed_by')}
+    attendees: dict[str, dict] = {}
+    rows = []
+    for c in cases:
+        d = decisions.get(c.pk)
+        for a in (d.content.get('attendees') or []) if d else []:
+            key = a.get('user_id') or a.get('name')
+            item = attendees.setdefault(key, {'id': a.get('user_id'), 'name': a.get('name'), 'role': a.get('role'),
+                                              'patients': []})
+            item['patients'].append(c.patient_fhir_id)
+        p = by_id.get(c.patient_fhir_id) or {}
+        dg = p.get('diagnosis')
+        rows.append({
+            'id': c.pk, 'order': c.order, 'patient_id': c.patient_fhir_id, 'status': c.status,
+            'display_name': p.get('display_name') or c.patient_fhir_id,
+            **(ids.get(c.patient_fhir_id) or {'name': None, 'rc': None}),
+            'diagnosis': {'icd10': dg['icd10'], 'text': dg['text']} if dg else None,
+            'decision': d and {
+                'status': d.status, 'record_id': d.fhir_ids.get('composition'),
+                'confirmed_at': d.confirmed_at and timezone.localtime(d.confirmed_at).isoformat(),
+                'confirmed_by': _user(d.confirmed_by)},
+            'exports': {'pdf': bool(d), 'fhir': bool(d and d.status == 'confirmed')},
+        })
+    confirmed = sum(1 for r in rows if r['decision'] and r['decision']['status'] == 'confirmed')
+    return {**_session(s), 'attendees': list(attendees.values()), 'cases': rows,
+            'counts': {'patients': len(rows), 'confirmed': confirmed}}
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def board_records(request):
+    """Záznam boardů (T-333, jen předseda): uzavřené boardy od nejnovějšího s přítomnými a pacienty."""
+    _require(request, roles.ADMIN)
+    sessions = list(MdtSession.objects.filter(status='closed').select_related('chair').prefetch_related('cases')
+                    .order_by('-date'))
+    if not sessions:
+        return Response([])
+    by_id, ids = {p['id']: p for p in patients.list_patients()}, patients.identities()
+    return Response([_record(s, by_id, ids) for s in sessions])
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def session_record(request, sid):
+    """Záznam jednoho boardu (T-333, jen předseda), i neuzavřeného: nabídka stažení po ukončení boardu."""
+    _require(request, roles.ADMIN)
+    s = get_object_or_404(MdtSession.objects.select_related('chair'), pk=sid)
+    return Response(_record(s, {p['id']: p for p in patients.list_patients()}, patients.identities()))
+
+
+@extend_schema(responses={(200, 'application/zip'): OpenApiTypes.BINARY}, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def session_export_zip(request, sid):
+    """Všechny výstupy boardu jedním souborem (T-333, jen předseda): PDF každého závěru a FHIR document
+    Bundle potvrzených (`Pxx/Pxx-mdtNN.pdf`, `Pxx/Pxx-mdtNN.fhir.json`)."""
+    _require(request, roles.ADMIN)
+    s = get_object_or_404(MdtSession, pk=sid)
+    decisions = list(Decision.objects.filter(case__session=s).select_related('case__session').order_by('case__order'))
+    if not decisions:
+        return Response({'detail': 'Žádný pacient boardu zatím nemá závěr.'}, status=409)
+    patient_list = patients.list_patients()
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for d in decisions:
+            pdf, name = _decision_pdf(d, patient_list)
+            zf.writestr(f'{d.case.patient_fhir_id}/{name}.pdf', pdf)
+            if d.status == 'confirmed':
+                bundle = export.document_bundle(d.fhir_ids, timezone.localtime())
+                zf.writestr(f'{d.case.patient_fhir_id}/{name}.fhir.json', json.dumps(bundle, ensure_ascii=False, indent=1))
+    day = timezone.localtime(s.date).strftime('%Y-%m-%d')
+    return _attachment(buffer.getvalue(), 'application/zip', f'board-{s.pk}-{day}.zip')
 
 
 def _with_case(items: list[dict]) -> list[dict]:

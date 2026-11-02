@@ -77,6 +77,16 @@ def anamnesis_items(context: PatientContext, provider: BaseAIProvider, log_call:
     return [{"id": f"anamnesis-{i:02d}", **item} for i, item in enumerate(items, 1)]
 
 
+def anamnesis_verbatim(context: PatientContext) -> list[dict]:
+    """Doslovné znění k dlouhé anamnéze (FR-A5: lékař přepne shrnutí AI ↔ doslovně). U krátké je `items` už doslovně,
+    proto prázdné."""
+    found = sections(context)
+    if sum(len(s["text"]) for s in found) <= max_chars():
+        return []
+    return [{"id": f"anamnesis-verbatim-{i:02d}", "kind": "claim", "text": f"{s['label']}: {s['text']}",
+             "citations": [s["citation"]], "_computed": True} for i, s in enumerate(found, 1)]
+
+
 def _first_sentence(text: str) -> str:
     match = FIRST_SENTENCE.match(text)
     return f"{match.group(1)} …" if match and len(match.group(1)) < len(text) else text

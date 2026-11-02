@@ -22,16 +22,16 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Přesměrování API callů na backend (v dev prostředí)
-  // V produkci řeší Traefik routing
+  // Django URL končí lomítkem: bez tohohle by Next /api/x/ přesměroval na /api/x (POST pak na backendu spadne)
+  skipTrailingSlashRedirect: true,
+
+  // Same-origin proxy (D-003): Vercel přepošle /api/* na backend, httpOnly cookies zůstanou na doméně frontendu
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000';
+    const backendUrl = (process.env.BACKEND_URL || 'http://localhost:8000').replace(/\/$/, '');
     return [
-      // Proxy API calls na Django backend (volitelné – lze řešit i přímo)
-      // {
-      //   source: '/api/:path*',
-      //   destination: `${apiUrl}/api/:path*`,
-      // },
+      // :path* lomítko na konci zahodí, proto zvlášť varianta s lomítkem
+      { source: '/api/:path*/', destination: `${backendUrl}/api/:path*/` },
+      { source: '/api/:path*', destination: `${backendUrl}/api/:path*` },
     ];
   },
 

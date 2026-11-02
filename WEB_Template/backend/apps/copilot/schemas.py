@@ -25,6 +25,7 @@ Light = Literal["green", "orange", "red", "grey", "skipped"]
 RoleId = Literal[
     "surgeon", "oncologist", "radiation_oncologist", "radiologist", "pathologist",
     "pulmonologist", "cardiologist", "patient",
+    "nuclear_medicine", "palliative_care", "geriatrician", "geneticist", "coordinator",
 ]
 SectionId = Literal[
     "summary", "timeline", "role_views", "red_flags", "decision_support", "trials",
@@ -43,6 +44,11 @@ class Claim(BaseModel):
         description="Nastavuje grounding validátor, ne LLM",
     )
     expected_source: str | None = Field(default=None, description='U "missing": kde by měl údaj být')
+    confidence: float | None = Field(
+        default=None, ge=0, le=1,
+        description="Míra jistoty: sémantická shoda tvrzení s citovaným textem (grounding v2, T-332); "
+                    "None = ověřeno jen čísly a daty (strukturovaná data, výpočet kódem)",
+    )
 
 
 class Criterion(BaseModel):
@@ -77,6 +83,7 @@ class BriefConfig(BaseModel):
     detail_level: DetailLevel
     language: Literal["cs", "sk", "en"]
     hide_unverified: bool
+    disabled_rules: list[str] = Field(default_factory=list, description="Pravidla varovných signálů vypnutá pro board (T-332)")
 
 
 # ── §8.2 Brief (podklad) ──────────────────────────────────────────────────────
@@ -162,6 +169,8 @@ class BriefSection(BaseModel):
     ai_generated: Literal[True] = True
     items: list[Claim]
     assessment: RoleAssessment | None = Field(default=None, description="Jen u role_views (FR-B7)")
+    verbatim: list[Claim] | None = Field(
+        default=None, description="Jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5)")
 
 
 class RedFlag(BaseModel):
@@ -302,6 +311,14 @@ class DerivedValue(BaseModel):
     inputs: list[EvidenceId]
 
 
+class NationalRuleRef(BaseModel):
+    """Oddíl Modré knihy ČOS k pravidlu semaforu (T-340, D-026), citace ověřená testem proti textu knihy."""
+    evidence_id: EvidenceId = Field(description='"EXT-MK-8.1.4.2-10"')
+    match: Literal["prah", "tema"] = Field(description="prah = parametr a hodnota / kritérium, tema = bez čísla")
+    quote: str = Field(description="Doslovná citace z oddílu")
+    note: str | None = None
+
+
 class CompatibilityRuleResult(BaseModel):
     rule_id: str = Field(description='"VS-PLI-01" (katalog docs/POZADAVKY_LEKARE.md §5.3)')
     status: Light
@@ -309,6 +326,9 @@ class CompatibilityRuleResult(BaseModel):
     patient_citations: list[EvidenceId]
     rule_citation: EvidenceId = Field(description='"PLI-3.1" | "RKT-06/Z4" | "EXT-…"')
     derived: DerivedValue | None = Field(default=None, description="Např. Cockcroft-Gault")
+    national_status: Literal["prah", "tema", "neuvadi"] | None = Field(
+        default=None, description="Opora pravidla v Modré knize ČOS (T-340); None = pravidlo mimo mapování")
+    national: list[NationalRuleRef] = Field(default_factory=list)
 
 
 class TreatmentCompatibility(BaseModel):
@@ -364,18 +384,33 @@ class BriefStats(BaseModel):
 
 class VerifierIssue(BaseModel):
     claim_id: str
-    verdict: Literal["unsupported", "uncertain"]
-    issue: str = Field(description="Co nesedí podle druhé AI, česky")
+    verdict: Literal["unsupported", "uncertain", "unchecked"]
+    issue: str
 
 
 class BriefVerifier(BaseModel):
-    """Kontrola druhou AI (T-331, ARCH §5.3 bod 7): jen tvrzení psaná LLM, která prošla groundingem."""
     status: Literal["ok", "partial", "error", "off"]
-    model: str | None = Field(default=None, description='"gpt-6-astra"')
-    checked: int
-    rejected: int = Field(description="Tvrzení, která druhá AI nepotvrdila → unverified")
-    unchecked: int = Field(description="Tvrzení bez verdiktu (vypnuto, selhání volání)")
+    model: str
+    checked: int = Field(ge=0)
+    rejected: int = Field(ge=0)
+    unchecked: int = Field(ge=0)
     issues: list[VerifierIssue]
+
+
+class NationalGuideline(BaseModel):
+    """Pasáž Modré knihy ČOS, kterou měl podklad k dispozici (národní doporučené postupy, citovatelná)."""
+    evidence_id: str = Field(description='"EXT-MK-4.6.3" (oddíl Modré knihy, další části "-2")')
+    title: str
+    url: str | None = Field(default=None, description="Odkaz na stránku PDF Modré knihy")
+    excerpt: str = Field(description="Začátek pasáže (do 280 znaků)")
+
+
+class BriefFeedback(BaseModel):
+    """Zpětná vazba lékaře k předchozí verzi, podle které podklad vznikl (T-323)."""
+    text: str = Field(description="Co bylo špatně / na co se zaměřit (pseudonymizováno)")
+    sections: list[SectionId] = Field(default_factory=list, description="Kterých částí se týká; prázdné = všech")
+    by: str
+    at: str = Field(description="ISO 8601")
 
 
 class Brief(BaseModel):
@@ -391,6 +426,9 @@ class Brief(BaseModel):
     decision_support: DecisionSupport | None = None
     verifier: BriefVerifier | None = None
     stats: BriefStats
+    feedback: BriefFeedback | None = Field(default=None, description="Přegenerováno podle zpětné vazby lékaře")
+    national_guidelines: list[NationalGuideline] | None = Field(
+        default=None, description="Modrá kniha ČOS k diagnóze pacienta (sada MK, Evidence ID EXT-MK-…)")
 
 
 # ── §8.4 Decision (závěr komise) ──────────────────────────────────────────────
@@ -507,6 +545,7 @@ class FhirIds(BaseModel):
     provenance: str
     document_reference_pdf: str | None = None
     document_reference_patient: str | None = Field(default=None, description='"P03-mdt02-pacient" (BON-4)')
+    document_reference_gp: str | None = Field(default=None, description='"P03-mdt02-pl": zpráva pro praktického lékaře (T-332)')
 
 
 class PatientSummary(BaseModel):
@@ -514,6 +553,17 @@ class PatientSummary(BaseModel):
     items: list[Claim]
     generated_at: str
     document_reference: str = Field(description='"P03-mdt02-pacient" v IRIS')
+
+
+class DecisionVersion(BaseModel):
+    """Dřívější potvrzená verze závěru v auditní stopě (BONUS C, T-332): kdo ji potvrdil, kdo a proč ji změnil."""
+    version: int
+    composition: str | None = Field(default=None, description="Composition v IRIS; nová verze má stejné ID a IRIS drží historii")
+    confirmed_by: ConfirmedBy | None = None
+    confirmed_at: str | None = None
+    revised_by: ConfirmedBy
+    revised_at: str
+    reason: str = Field(description="Proč komise potvrzený závěr měnila")
 
 
 class Decision(BaseModel):
@@ -530,10 +580,17 @@ class Decision(BaseModel):
     confirmed_at: str | None = None
     fhir_ids: FhirIds | None = Field(default=None, description="Po potvrzení")
     patient_summary: PatientSummary | None = Field(default=None, description="Po potvrzení (BON-4)")
+    gp_report: PatientSummary | None = Field(default=None, description="Zpráva pro praktického lékaře, po potvrzení (T-332)")
+    version: int = Field(default=1, ge=1, description="Verze záznamu; potvrzený závěr je zamčený, změna = nová verze")
+    revision_of: str | None = Field(default=None, description="Composition, kterou nová verze nahradí (stejné ID v IRIS)")
+    history: list[DecisionVersion] = Field(default_factory=list, description="Dřívější verze (auditní stopa)")
 
 
 # ── §8.6 Zařazení pacienta (MdtCase, IntakeWarning) ───────────────────────────
 WarningKind = Literal["missing", "out_of_range", "conflict", "ai_uncertain"]   # CHYBÍ · MIMO NORMU · ROZPOR · NEJISTOTA AI
+
+
+FactCategory = Literal["staging", "molecular", "imaging", "function", "history", "lab", "patient", "alerts"]
 
 
 class IntakeField(BaseModel):
@@ -543,6 +600,7 @@ class IntakeField(BaseModel):
     citation: EvidenceId | None = None
     status: Literal["present", "missing", "pending", "skipped"]
     required_by: EvidenceId | None = Field(default=None, description='Proč je údaj povinný: "KRC-1.1"')
+    category: FactCategory | None = Field(default=None, description="Kategorie klíčového údaje (T-338, D-024)")
 
 
 class IntakeWarning(BaseModel):
@@ -552,6 +610,7 @@ class IntakeWarning(BaseModel):
     title: str
     detail: str
     citations: list[EvidenceId]
+    category: FactCategory | None = Field(default=None, description="patient = z dotazníku PROMs, jinak alerts")
 
 
 class EcogPrefill(BaseModel):
@@ -628,6 +687,12 @@ class AcknowledgedWarning(BaseModel):
     at: str
 
 
+class ProjectorLayout(BaseModel):
+    """Pořadí na projektoru (T-332); prázdné = výchozí pořadí."""
+    sections: list[Literal["anamnesis", "facts", "template", "treatments"]] = Field(default_factory=list)
+    facts: list[str] = Field(default_factory=list, description="KeyFact.id v pořadí, zbytek za nimi výchozím pořadím")
+
+
 class MdtCase(BaseModel):
     """POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/"""
     id: int | None = None
@@ -643,6 +708,7 @@ class MdtCase(BaseModel):
     status: Literal["nominated", "ready", "in_discussion", "decided", "confirmed", "returned"]
     order: int | None = Field(default=None, description="Pořadí v agendě (jen čtení)")
     question: str | None = Field(default=None, description="Otázka pro MDT z nominace (jen čtení)")
+    projector_layout: ProjectorLayout | None = Field(default=None, description="Pořadí na projektoru (T-332), mění kdo smí upravit případ")
     patient: PatientListItem | None = Field(default=None, description="Jen v detailu boardu (hlavička z IRIS)")
 
 

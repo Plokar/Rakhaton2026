@@ -1,0 +1,13 @@
+{
+  "name": "medteam-prezentace",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build_deck.js"
+  },
+  "dependencies": {
+    "lucide-static": "1.54.0",
+    "pptxgenjs": "4.0.1",
+    "sharp": "0.34.4"
+  }
+}

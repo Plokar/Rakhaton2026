@@ -6,6 +6,7 @@ Vypíše jen výřez, který je potřeba (šetří tokeny):
   q.py dg C34                                   postupy pro diagnózu (MKN-10)
   q.py postup pli-chrt-durvalumab [k=v …]       semafor postupu: barva, proč, zdroj
   q.py fakta pli-chrt-durvalumab                jaké údaje postup potřebuje
+  q.py mk C18 [slovo …]                         Modrá kniha ČOS: oddíly kapitoly k diagnóze (EXT-MK-…)
   q.py studie C50 | KEYNOTE-189 | RKT-03 [k=v …]
   q.py pravidlo VS-RT-02
   q.py norma hemoglobin | PSA
@@ -1000,6 +1001,22 @@ def parse_facts(args: list[str]) -> dict:
     return facts
 
 
+def print_mk(code: str, words: list[str]) -> None:
+    """Modrá kniha ČOS: oddíly kapitoly pro diagnózu (MKN-10), volitelně jen ty se všemi slovy hledání."""
+    path = Path(__file__).resolve().parent / "modra_kniha" / "pasaze.jsonl"
+    if not path.is_file():
+        sys.exit("pasaze.jsonl chybí: python3 data/onko/modra_kniha/stahni.py")
+    code, needles = code.upper(), [w.lower() for w in words]
+    for line in path.read_text(encoding="utf-8").splitlines():
+        row = json.loads(line)
+        if not any(code.startswith(p) for p in row["icd_prefixes"] if p != "*") and code != "*":
+            continue
+        if needles and not all(n in (row["title"] + " " + row["text"]).lower() for n in needles):
+            continue
+        snippet = " ".join(row["text"].split())[:160]
+        print(f"{row['evidence_id']:<18} s.{row['page']:<4} {row['title'][:90]}\n{'':<24}{snippet}")
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[1] in ("-h", "--help"):
         print(__doc__)
@@ -1013,6 +1030,9 @@ def main(argv: list[str]) -> int:
         return 0
     if cmd == "odbornosti" and rest:
         print_odbornosti(rest[0], rest[1] if len(rest) > 1 else None)
+        return 0
+    if cmd == "mk" and rest:
+        print_mk(rest[0], rest[1:])
         return 0
     if cmd == "check":
         errors = check()

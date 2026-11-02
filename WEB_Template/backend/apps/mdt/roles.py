@@ -14,6 +14,9 @@ DEMO_USERS = {
     'predseda': (ADMIN, 'oncologist', 'Předseda komise (klinický onkolog)'),
     'onkolog': (DOCTOR, 'oncologist', 'Klinický onkolog'),
     'pneumolog': (DOCTOR, 'pulmonologist', 'Pneumolog'),
+    # další zadávající lékaři pro nové pacienty a import víc pacientů (T-335)
+    'onkolog-git': (DOCTOR, 'oncologist', 'Klinický onkolog (GIT)'),
+    'paliatr': (DOCTOR, 'palliative_care', 'Lékař paliativní péče'),
     'chirurg': (VIEWER, 'surgeon', 'Chirurg'),
     'radiolog': (VIEWER, 'radiologist', 'Radiolog'),
     'patolog': (VIEWER, 'pathologist', 'Patolog'),
@@ -22,6 +25,17 @@ DEMO_USERS = {
 # zadávající lékař podle pacienta (ARCH §6.2): P04 pneumolog, ostatní onkolog
 REQUESTER_BY_PATIENT = {'P04': 'pneumolog'}
 DEFAULT_REQUESTER = 'onkolog'
+
+
+def display_name(user) -> str:
+    """Jméno lékaře s tituly („MUDr. Petr Novák, Ph.D.“, T-338); bez jména uživatelské jméno."""
+    name = user.get_full_name() or user.username
+    try:
+        profile = user.mdt_profile
+    except UserProfile.DoesNotExist:
+        return name
+    before, after = profile.title_before.strip(), profile.title_after.strip()
+    return f"{before + ' ' if before else ''}{name}{', ' + after if after else ''}"
 
 
 def role(user) -> str | None:
@@ -35,7 +49,7 @@ def role(user) -> str | None:
 
 # odbornost lékaře = RoleId (ARCH §8.1) bez „hlasu pacienta“
 SPECIALTIES = ('oncologist', 'surgeon', 'radiation_oncologist', 'radiologist', 'pathologist', 'pulmonologist',
-               'cardiologist')
+               'cardiologist', 'nuclear_medicine', 'palliative_care', 'geriatrician', 'geneticist', 'coordinator')
 
 
 def specialty(user) -> str | None:
@@ -66,7 +80,7 @@ def ensure_practitioner(user) -> str:
     profile, _ = UserProfile.objects.get_or_create(user=user)
     pid = profile.practitioner_fhir_id or practitioners.app_practitioner_id(user.username)
     if pid.startswith(practitioners.APP_PREFIX):        # lékaře účtu aplikace udržujeme (jméno, odbornost)
-        fhir.put(practitioners.app_practitioner(pid, user.get_full_name() or user.username, profile.specialty,
+        fhir.put(practitioners.app_practitioner(pid, display_name(user), profile.specialty,
                                                 user.username))
     if profile.practitioner_fhir_id != pid:
         profile.practitioner_fhir_id = pid

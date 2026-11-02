@@ -36,6 +36,8 @@ const DEMO_ACCOUNTS: { username: string; specialty: RoleId; role: string; note?:
   { username: 'predseda', specialty: 'oncologist', role: 'Předseda komise', note: 'spravuje boardy a termíny' },
   { username: 'onkolog', specialty: 'oncologist', role: 'Zadávající lékař' },
   { username: 'pneumolog', specialty: 'pulmonologist', role: 'Zadávající lékař', note: 'pacient P04' },
+  { username: 'onkolog-git', specialty: 'oncologist', role: 'Zadávající lékař', note: 'GIT, noví pacienti' },
+  { username: 'paliatr', specialty: 'palliative_care', role: 'Zadávající lékař', note: 'paliativní péče' },
   { username: 'chirurg', specialty: 'surgeon', role: 'Člen komise' },
   { username: 'radiolog', specialty: 'radiologist', role: 'Člen komise' },
   { username: 'patolog', specialty: 'pathologist', role: 'Člen komise' },
@@ -127,7 +129,10 @@ export default function LoginForm() {
         </p>
       </aside>
 
-      <main className="flex w-full flex-col px-5 py-4 sm:px-10 lg:w-[480px] lg:shrink-0 lg:px-12 xl:w-[520px]">
+      <main
+        className="flex w-full flex-col px-5 py-4 sm:px-10 lg:w-[480px] lg:shrink-0 lg:px-12 xl:w-[520px]"
+        style={{ paddingBottom: 'calc(1rem + var(--cookie-banner-space, 0px))' }}
+      >
         <div className="flex items-center justify-between gap-3">
           <Brand className="lg:hidden" />
           <ThemeToggle className="ml-auto" />

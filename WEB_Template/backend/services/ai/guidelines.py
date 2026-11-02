@@ -20,18 +20,22 @@ class GuidelinesUnavailable(RuntimeError):
     """Tabulka `MDT.GuidelineChunk` chybí nebo nemá pasáže pro požadované sady (T-203)."""
 
 
+NATIONAL_SET = "MK"          # Modrá kniha ČOS (services/iris/indexing.modra_kniha_chunks)
+
+
 @dataclass(frozen=True)
 class GuidelinePassage:
-    evidence_id: str        # "KRC-2.4"
-    guideline_set: str      # "KRC"
+    evidence_id: str        # "KRC-2.4" | "EXT-MK-4.6.3"
+    guideline_set: str      # "KRC" | "MK"
     title: str              # "Restaging před resekcí jater"
     text: str
+    url: str | None = None  # u Modré knihy odkaz na stránku PDF
 
     @property
     def sort_key(self) -> tuple:
-        major, minor = self.evidence_id.split("-", 1)[1].split(".")
         order = GUIDELINE_SET_ORDER.index(self.guideline_set) if self.guideline_set in GUIDELINE_SET_ORDER else 99
-        return order, int(major), int(minor)
+        numbers = tuple(int(n) for n in re.findall(r"\d+", self.evidence_id.split("-", 1)[1]))
+        return (order, *numbers)
 
 
 def parse_guidelines(markdown: str) -> list[GuidelinePassage]:
@@ -78,3 +82,29 @@ def load_guidelines(guideline_sets: Iterable[str]) -> list[GuidelinePassage]:
     if missing:
         raise GuidelinesUnavailable(f"V MDT.GuidelineChunk chybí sady {sorted(missing)} (ingest T-203)")
     return sorted(passages, key=lambda p: p.sort_key)
+
+
+def national_passages(icd10: Iterable[str], query: str, *, tumor_k: int = 3, general_k: int = 1) -> list[GuidelinePassage]:
+    """Pasáže Modré knihy ČOS k pacientovi: vektorové hledání podle otázky a diagnózy, z kapitoly jeho nádoru
+    (rozsah MKN-10 kapitoly) ``tumor_k`` a z obecných kapitol (podpůrná léčba, toxicita…) ``general_k``.
+    Sada v IRIS chybí nebo hledání selže → prázdný seznam (podklad jede dál bez ní)."""
+    codes = [c.strip().upper() for c in icd10 if c]
+    if not codes or not query.strip():
+        return []
+    from services.iris import vector_store as vs
+
+    try:
+        rows = vs.search_guidelines(query, [NATIONAL_SET], top_k=80)
+    except Exception:                                   # IRIS / embedding nedostupné
+        return []
+    tumor, general = [], []
+    for row in rows:
+        prefixes = [p for p in (row.get("IcdPrefixes") or "").split(",") if p]
+        passage = GuidelinePassage(evidence_id=row["EvidenceId"], guideline_set=NATIONAL_SET, title=row["Title"],
+                                   text=row["Text"], url=row.get("Url"))
+        if any(code.startswith(p) for p in prefixes if p != "*" for code in codes):
+            if len(tumor) < tumor_k:
+                tumor.append(passage)
+        elif "*" in prefixes and len(general) < general_k:
+            general.append(passage)
+    return tumor + general

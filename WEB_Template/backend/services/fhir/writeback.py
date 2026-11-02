@@ -6,6 +6,7 @@ from datetime import datetime
 
 from services.fhir import client as fhir
 from services.fhir.ids import resource_type_for_id
+from services.fhir.ingest import prune
 from services.fhir.values import ref_id
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,9 @@ MODALITIES = {'chirurgie': 'Chirurgie', 'chemoterapie': 'Chemoterapie', 'rt': 'R
               'diagnostika': 'Diagnostika', 'sledovani': 'Sledování'}
 ROLES_CS = {'chair': 'předseda komise', 'surgeon': 'chirurg', 'oncologist': 'klinický onkolog',
             'radiation_oncologist': 'radiační onkolog', 'radiologist': 'radiolog', 'pathologist': 'patolog',
-            'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient'}
+            'pulmonologist': 'pneumolog', 'cardiologist': 'kardiolog', 'patient': 'pacient',
+            'nuclear_medicine': 'nukleární medicína', 'palliative_care': 'paliativní péče',
+            'geriatrician': 'geriatr', 'geneticist': 'klinický genetik', 'coordinator': 'koordinátor'}
 SEVERITY = {'high': 'high', 'moderate': 'moderate', 'low': 'low'}
 LIGHTS = {'green': 'nevylučuje', 'orange': 'pozor', 'red': 'vylučuje', 'grey': 'nelze posoudit', 'skipped': 'nehodnoceno'}
 RE_MDT = 'Plánované re-MDT'
@@ -133,6 +136,37 @@ def guideline_deviation(s: dict) -> str | None:
     return 'Závěr se odchyluje od doporučených postupů. Doplňte krátké zdůvodnění odchylky.'
 
 
+def decision_gaps(decision: dict, red_flag_ids) -> list[str]:
+    """Co před potvrzením závěru zbývá (stejná pravidla jako `decisionChecklist` v UI): nic se nesmí zapomenout.
+    Prázdný seznam = jde potvrdit. Odchylku od guidelines hlídá `guideline_deviation`."""
+    s = decision['sections']
+    todo = []
+    if not s['question']['text'].strip():
+        todo.append('Projednaná otázka')
+    if not s['assessment']['text'].strip():
+        todo.append('Klinické zhodnocení')
+    if not any(o.get('chosen') for o in s.get('options_considered') or []) \
+            and not any(r['text'].strip() for r in s.get('recommendation') or []):
+        todo.append('Zvolený postup (zvažované možnosti) nebo krok doporučeného postupu')
+    if not s.get('guideline_compliance'):
+        todo.append('V souladu s guidelines? Ano / Ne')
+    if not s['conclusion']['text'].strip():
+        todo.append('Závěr MDT')
+    unnamed = [a.get('name') or 'bez role' for a in decision.get('attendees') or []
+               if not a.get('user_id') and a.get('role') != 'chair']
+    if unnamed:
+        todo.append(f'Přítomní: vybrat lékaře ({", ".join(unnamed)})')
+    for i, t in enumerate(decision.get('tasks') or [], 1):
+        gaps = [name for name, ok in (('popis', t.get('description', '').strip()), ('komu', t.get('owner')),
+                                      ('termín', t.get('due_date'))) if not ok]
+        if gaps:
+            todo.append(f'Úkol {i}: {", ".join(gaps)}')
+    acked = set(decision.get('red_flags_acknowledged') or [])
+    if open_flags := [f for f in red_flag_ids if f not in acked]:
+        todo.append(f'Varovné signály vzít na vědomí: {len(open_flags)}')
+    return todo
+
+
 def build_decision_bundle(decision: dict, *, patient_id: str, service_request: dict, task: dict, mdt_id: str,
                           mdt_date: datetime, confirmed_by: dict, red_flags: dict[str, dict], now: datetime) -> tuple[dict, dict]:
     """Potvrzený závěr (Decision §8.4) → transaction Bundle + `fhir_ids`. Čistá funkce (testovatelná bez IRIS)."""
@@ -230,7 +264,9 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
     sources = [v['source'] for v in s.values() if isinstance(v, dict) and 'source' in v]
     composition = {
         'resourceType': 'Composition', 'id': mdt_id,
-        'identifier': {'system': f'{BASE}/sid/mdt-zaznam', 'value': mdt_id}, 'status': 'final',
+        # nová verze potvrzeného záznamu (T-332) je „amended“, IRIS drží předchozí verzi v historii
+        'identifier': {'system': f'{BASE}/sid/mdt-zaznam', 'value': mdt_id},
+        'status': 'amended' if decision.get('version', 1) > 1 else 'final',
         'type': _coding('mdt-typ-zaznamu', 'mdt-zaznam', 'Záznam MDT'),
         'category': [_coding('mdt-typ-projednani', decision['mdt_type'], MDT_TYPES[decision['mdt_type']]),
                      {'text': f'Zaměření MDT: {focus}'}],
@@ -264,11 +300,16 @@ def build_decision_bundle(decision: dict, *, patient_id: str, service_request: d
         ],
         **({'entity': [{'role': 'source', 'what': ref} for ref in cited]} if cited else {}),
     })
-    bundle = {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
-        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': r,
+    bundle = _transaction(resources)
+    return bundle, ids
+
+
+def _transaction(resources: list[dict]) -> dict:
+    """Transaction Bundle s `PUT`; `prune`, protože IRIS odmítne prázdné pole (např. závěr bez kroků → `CarePlan.activity: []`)."""
+    return {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
+        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': prune(r),
          'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources
     ]}
-    return bundle, ids
 
 
 def _participant(code: str, display: str) -> dict:
@@ -277,11 +318,12 @@ def _participant(code: str, display: str) -> dict:
 
 
 def confirm_decision(decision: dict, *, patient_id: str, service_request_id: str, mdt_date: datetime,
-                     confirmed_by: dict, red_flags: dict[str, dict], now: datetime) -> dict:
-    """Jeden transaction Bundle do IRIS. Vrací `fhir_ids`; při chybě `FhirError` a nic se nezapíše (transaction)."""
+                     confirmed_by: dict, red_flags: dict[str, dict], now: datetime, mdt_id: str | None = None) -> dict:
+    """Jeden transaction Bundle do IRIS. Vrací `fhir_ids`; při chybě `FhirError` a nic se nezapíše (transaction).
+    `mdt_id` = nová verze už potvrzeného záznamu (T-332): stejné ID, IRIS uchová předchozí verzi v historii."""
     bundle, ids = build_decision_bundle(
         decision, patient_id=patient_id, service_request=fhir.read('ServiceRequest', service_request_id),
-        task=nomination_task(patient_id, service_request_id), mdt_id=next_mdt_id(patient_id), mdt_date=mdt_date,
+        task=nomination_task(patient_id, service_request_id), mdt_id=mdt_id or next_mdt_id(patient_id), mdt_date=mdt_date,
         confirmed_by=confirmed_by, red_flags=red_flags, now=now,
     )
     fhir.transaction(bundle)
@@ -348,10 +390,7 @@ def build_intake_bundle(*, patient_id: str, case_no: int, service_request: dict,
             'activity': {'text': 'Ruční zadání při zařazení pacienta do MDT'},
             'agent': [{'type': _participant('author', 'Author'), 'who': author}],
         })
-    bundle = {'resourceType': 'Bundle', 'type': 'transaction', 'entry': [
-        {'fullUrl': f"{BASE}/{r['resourceType']}/{r['id']}", 'resource': r,
-         'request': {'method': 'PUT', 'url': f"{r['resourceType']}/{r['id']}"}} for r in resources
-    ]}
+    bundle = _transaction(resources)
     return bundle, [f"{r['resourceType']}/{r['id']}" for r in resources]
 
 

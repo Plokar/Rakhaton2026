@@ -159,7 +159,9 @@ def observations(rs: list[dict], codes: set[str] | None = None) -> list[dict]:
         value = q.get('value', o.get('valueInteger'))
         if value is None:
             continue
-        key = fhir_code(o.get('code'), 'loinc') or (m.group(1) if (m := _KIND.match(o['id'])) else o['id'])
+        kind = m.group(1) if (m := _KIND.match(o['id'])) else None
+        # hodnota ze vložené zprávy (`Pxx-impNN-…`) bez LOINC: řada podle názvu, ať se parametry nesmíchají
+        key = fhir_code(o.get('code'), 'loinc') or (f"text:{_text(o.get('code')).lower()}" if kind in (None, 'imp') else kind)
         s = series[key]
         s.setdefault('label', _text(o.get('code')))
         s.setdefault('unit', q.get('unit'))
@@ -192,6 +194,19 @@ def observations(rs: list[dict], codes: set[str] | None = None) -> list[dict]:
 def load_patient(pid: str) -> list[dict]:
     """Všechny resources pacienta z IRIS (bez `$everything`, viz `fhir.patient_everything`)."""
     return [r for items in fhir.patient_everything(pid).values() for r in items]
+
+
+def identities() -> dict[str, dict]:
+    """Jméno a maskované RČ z `Patient` pro záznam boardu (T-333, jen předseda). Do hlaviček podkladu
+    a na projektor nepatří (D-018); RČ jen jako „******/1234“ (T-323)."""
+    from services import rc as rc_module
+    out = {}
+    for p in fhir.search('Patient'):
+        name = next((n.get('text') or ' '.join([*n.get('given', []), n.get('family', '')]).strip()
+                     for n in p.get('name', [])), None)
+        rc = next((i.get('value', '') for i in p.get('identifier', []) if i.get('system') == rc_module.SYSTEM), '')
+        out[p['id']] = {'name': name or None, 'rc': f'******/{rc.split("/")[1]}' if '/' in rc else None}
+    return out
 
 
 def list_patients() -> list[dict]:

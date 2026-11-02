@@ -1,12 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, UserRoundPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page, PageHeader } from '@/components/layout/Page';
 import { Button } from '@/components/shadcn/button';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { InviteDialog } from '@/components/mdt/InviteDialog';
+import { NewDoctorDialog } from '@/components/mdt/NewDoctorDialog';
 import { can, MDT_ROLE_LABEL, useMe } from '@/components/mdt/me';
 import { ROLE_META } from '@/components/mdt/roles';
 import { apiErrorMessage, useUpdateUser, useUsersQuery } from '@/lib/queries';
@@ -27,6 +28,7 @@ export default function TeamPage() {
   const users = useUsersQuery(chair);
   const update = useUpdateUser();
   const [inviting, setInviting] = React.useState(false);
+  const [adding, setAdding] = React.useState(false);
 
   const change = (user: Me, input: { role?: MdtRole; specialty?: RoleId }) =>
     update.mutate(
@@ -45,9 +47,14 @@ export default function TeamPage() {
         meta="Role určuje, kdo smí zařazovat pacienty a spravovat zasedání. Odbornost řadí podklad „pro mě“."
         actions={
           chair && (
-            <Button size="lg" onClick={() => setInviting(true)}>
-              <UserPlus aria-hidden /> Pozvat kolegu
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button size="lg" variant="outline" onClick={() => setInviting(true)}>
+                <UserPlus aria-hidden /> Pozvat kolegu
+              </Button>
+              <Button size="lg" onClick={() => setAdding(true)}>
+                <UserRoundPlus aria-hidden /> Přidat lékaře
+              </Button>
+            </div>
           )
         }
       />
@@ -114,6 +121,7 @@ export default function TeamPage() {
         </div>
       )}
       <InviteDialog open={inviting} onClose={() => setInviting(false)} />
+      <NewDoctorDialog open={adding} onClose={() => setAdding(false)} />
     </Page>
   );
 }

@@ -19,6 +19,7 @@ from services.ai_service import BaseAIProvider, get_ai_provider
 from services.rules.red_flags import SEVERITY_ORDER, RedFlag
 
 PROMPT = (Path(__file__).parent / "prompts" / "red_flags.md").read_text(encoding="utf-8")
+MAX_LLM_FLAGS = 5
 
 
 class LlmRedFlag(BaseModel):
@@ -47,9 +48,13 @@ def detect_llm_red_flags(context: PatientContext, provider: BaseAIProvider | Non
         return [], result
 
     allowed = context.allowed_ids
+    # Rozpor, který pravidlo už hlásí (stejná dvojice zdrojů), je duplicita (ECOG lékař vs. pacient apod.)
+    known_pairs = [set(f.citations) for f in known]
     flags = []
     for i, item in enumerate(result["data"]["flags"], 1):
         citations = tuple(dict.fromkeys(c.strip() for c in item["citations"] if c.strip()))
+        if any(len(set(citations) & pair) >= 2 for pair in known_pairs):
+            continue
         verified = len(citations) >= 2 and all(c in allowed for c in citations)
         guideline = item.get("guideline")
         flags.append(RedFlag(
@@ -63,4 +68,5 @@ def detect_llm_red_flags(context: PatientContext, provider: BaseAIProvider | Non
             verification="verified" if verified else "unverified",
         ))
     flags.sort(key=lambda f: SEVERITY_ORDER.get(f.severity, 9))
-    return flags, result
+    # ponytail: pevný strop; víc RF-LLM bylo v praxi hlavně šum (P02: 22× „rozdíl“ u opakovaných hodnot)
+    return flags[:MAX_LLM_FLAGS], result

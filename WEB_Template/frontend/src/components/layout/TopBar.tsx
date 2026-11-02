@@ -67,6 +67,7 @@ const SECTIONS: { prefix: string; label: string; href: string }[] = [
   { prefix: '/dashboard/tasks', label: 'Úkoly', href: '/dashboard/tasks' },
   { prefix: '/dashboard/settings', label: 'Nastavení', href: '/dashboard/settings' },
   { prefix: '/dashboard/tym', label: 'Tým komise', href: '/dashboard/tym' },
+  { prefix: '/dashboard/zaznamy', label: 'Záznam boardů', href: '/dashboard/zaznamy' },
 ];
 
 export function CrumbSlotProvider({ slot, children }: { slot: HTMLElement | null; children: React.ReactNode }) {

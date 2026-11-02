@@ -58,7 +58,8 @@ def run(job_id: int) -> None:
             GenerationJob.objects.filter(pk=job_id).update(status='done', progress=100, result_id=result['result_id'])
             return
         config = job.params.get('config', {})
-        content = generate(job.case, config, progress)
+        feedback = job.params.get('feedback')        # zpětná vazba lékaře jde do promptů dotčených částí (T-323)
+        content = generate(job.case, {**config, '_feedback': feedback} if feedback else config, progress)
         brief = Brief.objects.create(case=job.case, config_snapshot=config, content=content,
                                      model=content.get('model', ''))
         GenerationJob.objects.filter(pk=job_id).update(status='done', progress=100, result_id=brief.pk)

@@ -29,6 +29,7 @@ TEXT_TYPES = ('DocumentReference', 'DiagnosticReport', 'Composition', 'ServiceRe
 EXPECTED_GUIDELINES = {'KRC': 9, 'PRS': 14, 'PLI': 10, 'OBC': 9}                         # DATASET §7, celkem 42
 EXTERNAL_SOURCES_FILE = Path(__file__).resolve().parent / 'data' / 'external_sources.json'
 EXTERNAL_SET = 'EXT'
+NATIONAL_SET = 'MK'                 # Modrá kniha ČOS (data/onko/modra_kniha/pasaze.jsonl), Evidence ID EXT-MK-…
 GUIDELINE_REGION = 'CZ'
 _ISO_DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
 
@@ -164,6 +165,33 @@ def external_chunks(path: Path = EXTERNAL_SOURCES_FILE) -> list[vs.GuidelineChun
             EvidenceId=item['evidence_id'], GuidelineSet=EXTERNAL_SET, Title=item['title'][:300],
             Source=item['source'][:200], Region=item['region'], IcdPrefixes=item['icd_prefixes'],
             Text=f"{item['text']} [{item['verified']}; pravidla {', '.join(item['rules'])}]", Url=item['url'],
+        ))
+    return out
+
+
+def modra_kniha_chunks(path: Path | None = None) -> list[vs.GuidelineChunk]:
+    """Pasáže Modré knihy ČOS (``data/onko/modra_kniha/pasaze.jsonl``, skript ``stahni.py``) → sada ``MK``.
+
+    Národní doporučené postupy: citují se jako ``EXT-MK-4.6.3`` (oddíl knihy) s odkazem na stránku PDF.
+    Bez souboru (báze není připojená) prázdný seznam, ingest jede dál."""
+    if path is None:
+        from services.rules.onko_kb import kb_dir
+        root = kb_dir()
+        path = root / 'modra_kniha' / 'pasaze.jsonl' if root else None
+    if path is None or not path.is_file():
+        return []
+    out = []
+    for line in path.read_text(encoding='utf-8').splitlines():
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        ref = parse_evidence_id(item['evidence_id'])
+        if ref is None or ref.kind != 'external':
+            raise ValueError(f"{item['evidence_id']}: neplatné Evidence ID Modré knihy (EXT-MK-…)")
+        out.append(vs.GuidelineChunk(
+            EvidenceId=item['evidence_id'], GuidelineSet=NATIONAL_SET, Title=item['title'][:300],
+            Source=item['source'][:200], Region=GUIDELINE_REGION, IcdPrefixes=','.join(item['icd_prefixes'])[:100],
+            Text=item['text'][:5000], Url=item.get('url'),
         ))
     return out
 

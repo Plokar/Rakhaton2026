@@ -22,7 +22,7 @@
   - **Django 5.2 + DRF** na **VPS** (`WEB_Template/backend`) v Dockeru s Traefikem;
   - vedle běží **InterSystems IRIS for Health** jako **nemocniční databáze** (FHIR R4 server + Vector Search);
   - PostgreSQL drží jen stav aplikace.
-- **AI:** **Google AI Studio (Gemini API, placený tier)**: LLM, embeddingy i přepis audia ([§5.7](#57-model-a-ochrana-údajů)).
+- **AI:** výchozí **NVIDIA** (`nemotron-3-super-120b-a12b` + embeddingy `nemotron-3-embed-1b`, OCR `nemotron-parse`), přepis audia **Groq Whisper**, alternativa **Gemini**; výběr v `.env` ([§5.7](#57-model-a-ochrana-údajů), T-323). V produkci NIM on-prem / EU.
 - **Data:** dataset od Asseco **už je FHIR R4**:
   - 6 pacientů, 1 091 resources;
   - 42 číslovaných pasáží guidelines;
@@ -218,7 +218,7 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | **FR-D1** | Možnosti léčby z **dodaných** guidelines s citací **ID pasáže** (`KRC-2.4`); AI nevybírá, předkládá alternativy. Patří k nim i podpůrná péče z OBC-2.x (včasná paliativní péče, geriatrické a nutriční vyšetření, genetické poradenství), když ji pacient splňuje. | MUST | AI, STD |
 | **FR-D2** | Screening studií `RKT-01…06`: pro každé kritérium `met` / `not_met` / `unknown` + citace (`RKT-03/V3` ↔ fakt pacienta); celkový stav | MUST | AI |
 | **FR-D3** | 2–3 klíčové otázky k diskusi | MUST | UX |
-| **FR-D4** | **Semafor souladu léčebného postupu se stavem pacienta** (🟢 nevylučuje · 🟠 pozor · 🔴 vylučuje · ⚪ nelze posoudit) po pravidlech s citací faktu pacienta i pravidla ([§5.9](#59-semafor-souladu-léčebných-postupů-se-stavem-pacienta)). Vždy se zobrazí všechny možnosti, barvu počítá kód, ne LLM (D-015). *(lékař)* | MUST | AI, UX |
+| **FR-D4** | **Semafor souladu léčebného postupu se stavem pacienta** (🟢 dobrý = stav postup nevylučuje · 🟠 pozor · 🔴 vylučuje · ⚪ nelze posoudit; štítek v UI „dobrý“) po pravidlech s citací faktu pacienta i pravidla ([§5.9](#59-semafor-souladu-léčebných-postupů-se-stavem-pacienta)). Vždy se zobrazí všechny možnosti, barvu počítá kód, ne LLM (D-015). *(lékař)* | MUST | AI, UX |
 | **FR-D5** | Katalog léčebných metod pro diagnózu: u každé metody odborník, který se k ní musí vyjádřit, a data, která má mít u sebe. *(lékař)* | SHOULD | UX |
 | **FR-C1** | Strukturovaný zápis rozhodnutí ve struktuře datasetu (Projednaná otázka, Klinické zhodnocení, Léčebný záměr, Doporučený postup, Doplňující diagnostika, Klinická studie, Plánované re-MDT, Závěr MDT) + přítomní. U neúplného případu příznak **podmíněné doporučení** (OBC-1.1), u duplicity malignit **priorita léčby a plán druhého nádoru** (OBC-1.4). | MUST | PROC, STD |
 | **FR-C2** | Úkoly (kdo, co, do kdy), kontrola, termín opětovného posouzení | MUST | PROC |
@@ -329,6 +329,10 @@ Sloupec **Krit.** odkazuje na kritéria z §1.7: UX, AI, CFG, STD, PROC. Značka
 | D-017 | **Úzké rozložení** (od 360 px, jeden sloupec) a **sekce odborností** s barvou odbornosti. Tři oddělené barevné systémy: semafor, odbornost, AI. | lékař má aplikaci v úzkém okně vedle PACS; všichni sledují jeden projektor |
 | D-018 | **Hlavička:** `Pxx · pohlaví · věk` (žádné jméno ani RČ), diagnóza + TNM, hlavní otázka, ECOG lékaře velký + ECOG pacienta, záměr **C/P** | orientace do 30 s, ECOG lékař i pacient (§1.3), pseudonymizace |
 | D-019 | **Nic se z podkladu neztratí:** odkliknuté varování jen umlčí upozornění při zařazení, přeskočený údaj se ukáže jako „Chybí (přeskočeno lékařem)“ | red flags a „údaj chybí“ (§1.4) |
+| D-023 | **Modrá kniha ČOS jako národní doporučené postupy** (sada `MK` v `MDT.GuidelineChunk`, Evidence ID `EXT-MK-<oddíl knihy>[-část]`, odkaz na stránku PDF). Pasáže vznikají skriptem `data/onko/modra_kniha/stahni.py` (PDF mimo git). Podklad vybere k diagnóze pacienta oddíly kapitoly podle MKN-10 vektorově podle otázky pro MDT; jsou v kontextu AI a B2 je smí citovat. Rozšiřuje D-016 z prahů semaforu na citovatelná doporučení, ne na fakta pacienta. | lékaři v ČR rozhodují podle Modré knihy; citace na oddíl a stránku |
+| D-024 | **Klíčové údaje v 8 pevných kategoriích** (`services/rules/fact_categories.py`): Diagnóza a staging · Molekulární genetika a biomarkery · Zobrazení a invazivní vyšetření · Funkční stav a výkonnost · Anamnéza a dosavadní léčba · Laboratoř · Pacient: dotazníky a preference · Upozornění a chybějící údaje. Kategorii určuje systém (`IntakeField.category`, `IntakeWarning.category`), ne lékař; varování z PROMs patří k pacientovi, ne mezi vyšetření | stejný údaj je u každého pacienta na stejném místě; výsledky vyšetření se nepletou s dotazníky (docs/SABLONY_LEKARE.md R1) |
+| D-025 | **Šablona údajů lékaře** (`FactTemplate`, oblast `PLI` / `PRS` / `KRC` / `OBC` podle MKN-10): lékař mění pořadí a viditelnost kategorií a údajů, ne jejich obsah ani kategorii. Klíče jsou stabilní napříč pacienty (`bm.egfr`, `lab:718-7`, `alert:RF-LAB`). Platí v jeho pohledech (osobní režim); okno komise a projektor ukazují úpravu u případu (`projector_layout`), jinak šablonu zadávajícího lékaře. Kritický údaj se ukáže i skrytý; skryté jsou jen sbalené („Skryté podle šablony (n)“), nic se neztratí (D-019). Presety v `services/rules/data/template_presets.yaml` (`pneumolog-plice` = seznam pneumologa) | každý lékař hledá údaje jinde; komise potřebuje jeden společný pohled (R2–R5) |
+| D-026 | **Modrá kniha ČOS u pravidel semaforu** (`data/onko/modra_kniha/pravidla.tsv`, kurátorské mapování): každé pravidlo má `prah` (oddíl s parametrem a hodnotou, doslovná citace), `tema` (stejná věc bez čísla) nebo `neuvadi`. Barvu nemění (D-015); citace jsou `EXT-MK-…` (D-023), doslovnost hlídá test. V závěru komise se oddíly zvolených postupů dají přidat do souladu s doporučeními | lékař vidí, o co se práh opírá v národních doporučeních; žádný vymyšlený práh (R7) |
 | D-020 | **Práce ve sprintech** = milníky M0–M4. Na konci sprintu merge do `master`, smoke test a přeplánování v PROGRESS.md. | víc lidí, strojů a agentů paralelně |
 
 ### 3.4 Nasazení
@@ -699,6 +703,7 @@ ORDER BY Score DESC
   | `KRC-2.4` | `KRC-2.4` | pasáž guidelines |
   | `RKT-03` / `RKT-03/V3` | `RKT-03/V3` | studie / kritérium |
   | `EXT-…` | `EXT-EMA-DPD-2020` | externí zdroj prahu (D-016); jen pro pravidla semaforu, nikdy pro fakta pacienta. **Katalog ID (13):** `WEB_Template/backend/services/iris/data/external_sources.json` (přepis docs/POZADAVKY_LEKARE.md §5.3, §6.1, §13), v IRIS `MDT.GuidelineChunk` se sadou `EXT` a `Url` |
+  | `EXT-MK-…` | `EXT-MK-4.6.3`, `EXT-MK-4.6.3-2` | Modrá kniha ČOS (D-023): oddíl knihy podle jejího číslování, další část oddílu `-2`; `MDT.GuidelineChunk` se sadou `MK`, `IcdPrefixes` z rozsahu MKN-10 kapitoly (`*` = obecná kapitola), `Url` = stránka PDF. Pasáže: `data/onko/modra_kniha/pasaze.jsonl` |
 
   Citace pro guidelines a kritéria studií ukazují na znění guideline nebo studie. Faktům pacienta se vždy cituje ID pacienta.
 - LLM dostane **jen povolená ID** (z evidence listu) a smí citovat **pouze je**.
@@ -717,12 +722,17 @@ Každé tvrzení (`claim`) z LLM projde kontrolami:
 4. **Sémantická podobnost (IRIS Vector Search):** embedding tvrzení (`FACT_VERIFICATION`) se porovná s embeddingem citovaného odstavce přes `VECTOR_COSINE`. Pod prahem je výsledek `unverified`. Práh nastavit podle evalu, výchozí 0,55.
 5. **Chybějící údaje:** deterministický checklist pro sekci (OBC-1.1 + povinné biomarkery podle diagnózy, viz [§5.4](#54-red-flags)). Co nemá evidenci nebo má hodnotu „nevyšetřeno“, doplní se jako `kind: "missing"`, i když ho LLM nezmínil.
 6. **UI:** `unverified` tvrzení se zobrazí s varováním (nebo se skryjí; přepínač `hide_unverified`). Cíl pro demo je **0 neověřených tvrzení**.
+7. **Druhá AI (T-331):** volitelný ověřovatel `gpt-6-astra` kontroluje pouze `kind=claim`, `verification=verified` bez `_computed` v souhrnu, anamnéze, pohledech rolí a `decision_support.treatment_options[].rationale`. Verdikty `unsupported` a `uncertain` mění tvrzení na `unverified`; nikdy neopravují text ani barvu semaforu. Výpadek nebo chybějící verdikt ponechá původní stav a zvýší `unchecked`.
 
 Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-evaluace)) a do pitche.
 
-**Implementace (T-106, T-213):**
+**Implementace (T-106, T-213, T-331):**
 
-- `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí `0.55`); chybějící vektor nebo nedostupné IRIS znamená `unverified`. Bod 4 běží jen u tvrzení, jejichž **všechny** citace mají vektor (odstavce `#n`, textové zprávy `DocumentReference` / `DiagnosticReport` / `Composition` / `ServiceRequest`, pasáže guidelines, kritéria studií). Strukturovaná data (`bm`, `tnm`, `dg`, `proc`, ECOG, labs) vektor nemají a stačí jim body 1–3 (Q23). Bod 4 se přeskočí i u tvrzení, která sestavil kód (`_computed`, např. RECIST), a odvozená čísla (`_derived`, např. % změny SLD) se v bodě 2 nekontrolují. Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
+- `services/ai/verifier.py:cross_check` posílá paralelně dávky nejvýše 20 tvrzení a plné citované zdroje z `grounding.source_text`. Každá dávka se audituje jako `brief.verifier`. `Brief.verifier` uvádí model, počty a problémy; `checked` je počet jednoznačně vrácených verdiktů, `rejected` zahrnuje unsupported i uncertain, `unchecked` jsou způsobilá tvrzení bez verdiktu (i při off). `ok` = všechny kontroly dokončené (může obsahovat zamítnutí), `partial` = část bez verdiktu, `error` = žádný použitelný verdikt, `off` = vypnuto. Interní klíče se odstraní a statistiky spočtou až poté.
+- `OpenAICompatProvider` používá urllib, `/chat/completions`, hlavičku `api-key`, JSON schema (`strict: false`), fallback při HTTP 400 bez temperature a potom JSON object se schématem v promptu; 408/429/5xx nejvýše tři HTTP pokusy celkem (včetně fallbacků). Podporuje pouze generate. `get_ai_provider` zůstává mock/gemini. Gateway mapuje výchozí model `gpt-6-astra` na deployment `gpt-6-astra-global`.
+- Ověřovatel respektuje D-021: bez syntetického tagu a bez `AI_REAL_PATIENT_DATA=True` se vypne. Global deployment hackathonu používat **jen pro syntetická data**; přepínač pro skutečná data není schválení tohoto endpointu. Pro skutečná data je nutný samostatně schválený endpoint/tier a umístění dat.
+
+- `services/ai/grounding.py` dělá body 1–4 a pro bod 5 jen kontroluje citace. Čísla porovnává s desetinnou čárkou i tečkou, bere data ISO i ve tvaru „21. 9.“ a čísla uvnitř tokenů (S3, cT3) ignoruje. Bod 4 volá `services/iris/vector_store.py:similarity` a používá `GROUNDING_MIN_SIMILARITY` (výchozí podle embedding modelu: Gemini / mock `0.55`, **NVIDIA `0.40`**; kalibrace T-323 na 135 + 135 párech z podkladů P01–P06: správná citace medián 0,67, cizí odstavec téhož pacienta 0,23, při 0,40 projde ~90 % správných a ~10 % cizích); chybějící vektor nebo nedostupné IRIS znamená `unverified`. Bod 4 běží jen u tvrzení, jejichž **všechny** citace mají vektor (odstavce `#n`, textové zprávy `DocumentReference` / `DiagnosticReport` / `Composition` / `ServiceRequest`, pasáže guidelines, kritéria studií). Strukturovaná data (`bm`, `tnm`, `dg`, `proc`, ECOG, labs) vektor nemají a stačí jim body 1–3 (Q23). Bod 4 se přeskočí i u tvrzení, která sestavil kód (`_computed`, např. RECIST), a odvozená čísla (`_derived`, např. % změny SLD) se v bodě 2 nekontrolují. Citace odstavce, který zdroj nemá (`P02-prom02#3` u dotazníku), se převede na celý zdroj; závorky kolem ID (`[P03-dg1]`) odstraní už validace výstupu LLM (`ai_service._clean_citations`). Důvody neověření posílá v `_grounding`, ty se před uložením odstraní. `kind: "missing"` potřebuje pouze platnou citaci.
 - `services/ai/brief.py:generate_brief(case, config, progress)` je generátor pro joby z T-107.
   - Hlavička (D-018), časová osa, chybějící údaje (z T-502, přeskočené jako „Chybí (přeskočeno lékařem)“) a red flags jsou deterministické z FHIR.
   - Souhrn píše Gemini (`prompts/summary.md` + pravidla zkratek z T-509), souběžně s RF-LLM.
@@ -750,6 +760,7 @@ Metriky z validátoru (podíl ověřených tvrzení) jdou do evalu ([§5.8](#58-
 | `RF-LAB` | Hb pokles ≥ 20 g/l nebo < 100, < 80: high *(konvence týmu)*; vzestup markeru ≥ 25 % proti nadiru *(konvence týmu)* = důvod k časnějšímu zobrazení, **nikdy „progrese“** (PRS-4.2); Na pod `referenceRange` (v datasetu 136 mmol/l) a klesá → vyšetřit SIADH (osmolalita séra a moči, natriurie) a upravit před léčbou (PLI-3.2); glykémie > 10 mmol/l při kortikoidech u DM *(konvence týmu)*; LVEF pokles ≥ 10 bodů nebo < 50 % | moderate / high | PLI-3.2, OBC-3.1, PRS-3.4, PRS-4.2 |
 | `RF-WEIGHT` | úbytek hmotnosti ≥ 5 % za 6 měsíců (`vaha` + PROMs `hmotnost`) nebo pokles albuminu | moderate | OBC-2.3 |
 | `RF-GERI` | věk ≥ 70 (extension `vek-k-datu-mdt`) a v dokumentaci chybí G8 / geriatrický screening | low | OBC-2.2 |
+| `RF-BMI` | BMI z poslední hmotnosti a **změřené** výšky (LOINC 8302-2; bez výšky se BMI nepočítá, u hmotnosti „BMI: chybí výška“) pod kritériem malnutrice GLIM: < 20 kg/m² do 70 let, < 22 kg/m² od 70 let (T-341) | moderate | `EXT-MK-31.3-2` |
 | `RF-LESION` | `Condition.verificationStatus = provisional` nebo zobrazení uvádí „nejasné / nelze vyloučit / k dořešení“ bez následné histologie | high | OBC-1.4, PLI-1.2 |
 | `RF-GENETIC` | indikace genetického poradenství (rodinná anamnéza v textu, BRCA z NGS nádoru bez germinálního testu) nesplněna | moderate | OBC-2.4, PRS-1.3, PRS-1.4 |
 | `RF-NOMINATION` | údaj v nominaci (`ServiceRequest.note`: ECOG, LVEF, toxicita) neodpovídá poslednímu strukturovanému měření; při duplicitě malignit nominace neuvádí všechny nádory | moderate | OBC-1.1, OBC-1.4 |
@@ -834,25 +845,31 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
   1. nahrajeme vlastní simulovanou diskusi komise k demo pacientovi (2–3 min, více mluvčích, audio `m4a`/`mp3`);
   2. případně napíšeme textový přepis.
 - **Přepis:**
-  - Gemini s audio vstupem (`gemini-3.8-flash`; v seznamu modelů je i `gemini-3.5-transcribe`, **ověřit**);
-  - prompt: mluvčí (role), časové značky `MM:SS`, výstup jako JSON segmenty (`response_schema`);
+  - výchozí **Groq Whisper** `whisper-large-v3` (`verbose_json`, čeština, slovník domény; 3 min nahrávky ≈ 3 s). Whisper mluvčí nerozlišuje: role úseků doplní LLM (`scribe.label_speakers`, „neuvedeno“, když to nejde poznat). Alternativa Gemini s audio vstupem (rozliší mluvčí sám);
+  - časové značky `MM:SS`, výstup jako segmenty (`Transcript`);
+  - **nahrávání přímo v jednání komise** (T-323): přepínač „Nahrávat diskusi“ v boku agendy nahrává pacienta na řadě (MediaRecorder, opus 32 kb/s), po přepnutí pacienta úsek sám odešle na `…/scribe/` → draft závěru;
   - limity: inline audio ≤ 20 MB na request, větší soubory přes Files API.
 - **Výstup:**
   - draft `Decision` (rozhodnutí, zdůvodnění, úkoly s vlastníkem a termínem, re-MDT) s citacemi na segmenty přepisu (`P03-mdt02-prepis#12`);
   - přepis se uloží jako `DocumentReference/Pxx-mdtNN-prepis`.
 - Vždy jen **draft**. Předseda edituje a potvrzuje.
 - **Implementace (T-305):** `POST /api/mdt/cases/{cid}/scribe/` (předseda, lékař; multipart `audio` ≤ 20 MB, nebo JSON `{transcript}` „MM:SS mluvčí: text“ / `{segments}`) → job `scribe` → `services/ai/scribe.py:generate_scribe`.
-  1. Audio přepíše `provider.transcribe` (Gemini, `Transcript`).
+  1. Audio přepíše `transcription_provider().transcribe` (Groq Whisper, jinak Gemini; `Transcript`), chybějící mluvčí doplní `label_speakers`.
   2. Přepis se uloží jako `DocumentReference/{next_mdt_id}-prepis` (text/plain, úsek = odstavec, takže `#n` = n-tý úsek a resolver citací ho umí); vazba `context.related` na nominaci `ServiceRequest`, protože `Composition` vznikne až potvrzením.
   3. LLM (`ScribeDraft`) z přepisu a kontextu pacienta sestaví draft `Decision`. Citace mimo přepis a kontext se zahodí, úkol bez termínu dostane termín re-MDT (jinak MDT + 14 dní), `study_ids` jen `RKT-nn`, `transcript_ref` = ID přepisu.
   4. Bez LLM (mock) se nic nevymýšlí: závěr = poslední slovo předsedy s citací, úkoly prázdné.
-  5. Potvrzený závěr zapisovatel nepřepíše (409). Živě s Gemini: nahrávka P03 (3:01) → 13 úseků a draft se 4 úkoly jako v `expected_decision` za 54 s.
+  5. Potvrzený závěr zapisovatel nepřepíše (409). Živě s Gemini: nahrávka P03 (3:01) → 13 úseků a draft se 4 úkoly za 54 s. **Živě s Groq + NVIDIA (T-323):** 18 úseků za 3,4 s, role mluvčích, draft se záměrem kurativní a 5 úkoly; přítomní z rolí mluvčích.
 
 ### 5.7 Model a ochrana údajů
 
-**Provider: Google AI Studio, Gemini API** (D-008). SDK `google-genai` (`from google import genai`).
+**Provideři (T-323, výběr v `.env`):**
 
-**Rozhraní provideru** (`WEB_Template/backend/services/ai_service.py`, T-012). `get_ai_provider()` vrátí `GeminiProvider` nebo `MockAIProvider` podle `AI_PROVIDER`. Jiné providery nejsou, data smí jen do Gemini. `gemini` bez klíče spadne na mock a výsledek má `is_mock: true`.
+- **LLM = `AI_PROVIDER`**, výchozí **`nvidia`**: NVIDIA API (`integrate.api.nvidia.com`, OpenAI-kompatibilní), model `NVIDIA_MODEL` = `nvidia/nemotron-3-super-120b-a12b`, strukturovaný výstup `response_format: json_schema`, bez přemýšlení (`chat_template_kwargs.enable_thinking=false`, ~3× rychlejší, `NVIDIA_THINKING=1` zapne). Alternativa `gemini` (Google AI Studio, SDK `google-genai`, D-008).
+- **Vektory v IRIS = `EMBEDDING_PROVIDER`** (výchozí = LLM): NVIDIA `nvidia/nemotron-3-embed-1b` @ **2048** (`input_type` passage / query), Gemini `gemini-embedding-001` @ 1536. Index drží vektory jednoho modelu a dimenze; jiná dimenze = `ensure_schema` založí tabulky znovu a `ingest_dataset --skip-fhir` je přepočítá. RAG i grounding tak fungují stejně s kterýmkoli LLM.
+- **Přepis audia = `TRANSCRIBE_PROVIDER`** (výchozí `groq`, je-li `GROQ_API_KEY`): Groq Whisper `whisper-large-v3` (`verbose_json`, čeština, slovník domény v `prompt`, úseky s `no_speech_prob` > 0,8 pryč); Whisper mluvčí nerozlišuje, role doplní LLM (`scribe.label_speakers`, jinak „neuvedeno“).
+- **OCR skenů PDF**: NVIDIA `nvidia/nemotron-parse` (`markdown_bbox`: typy prvků Page-header / Section-header / Text / Table), viz §6.3 import.
+
+**Rozhraní provideru** (`WEB_Template/backend/services/ai_service.py`, T-012, T-323). `get_ai_provider()` vrátí `NvidiaProvider`, `GeminiProvider`, `GroqProvider` nebo `MockAIProvider`; `embedding_provider()` a `transcription_provider()` vyberou providera pro vektory a audio. Provider bez klíče spadne na mock a výsledek má `is_mock: true`. **`AI_PROVIDER=mock` vypne i embeddingy a přepis** a testy ho vynucují v `conftest.py`, takže nic neodchází ven ani s klíči v `.env`.
 
 - `generate(prompt, system_prompt=…, response_schema=PydanticModel)` vrátí dict:
   - `status`, `response` (text), `data`, `model`, `tokens_in`, `tokens_out`, `latency_ms`, `prompt_hash` (pro `LlmCallLog`);
@@ -867,7 +884,11 @@ Odkliknutí varování při zařazení pacienta (FR-P4) red flag z podkladu **ne
 
 | Účel | Model (výchozí) | Pozn. |
 |---|---|---|
-| Generace sekcí, red flags (LLM), B2 | **`gemini-3.8-flash`** (stable, doporučený pro nové projekty) | rychlost kvůli NFR-1 |
+| Generace sekcí, red flags (LLM), B2, zapisovatel, import | **`nvidia/nemotron-3-super-120b-a12b`** (NVIDIA, výchozí) | bez přemýšlení kvůli NFR-1; `gemini-3.8-flash` jako alternativa |
+| Embeddingy (výchozí) | **`nvidia/nemotron-3-embed-1b`** @ 2048 + L2 | passage / query |
+| Přepis audia (výchozí) | **Groq `whisper-large-v3`** | 3 min nahrávky ≈ 3 s; mluvčí doplní LLM |
+| OCR skenů PDF | `nvidia/nemotron-parse` | stránka po stránce, hlavička / patička podle typu prvku |
+| Generace (Gemini) | `gemini-3.8-flash` | `AI_PROVIDER=gemini` |
 | Porovnání kvality v evalu | `gemini-4-argon` (flagship, 1M kontext) nebo `gemini-3.1-pro-preview` | rozhodne T-301 podle čísel |
 | Levné pomocné úlohy | `gemini-3.5-flash-lite` | např. normalizace textu, klasifikace symptomů |
 | Embeddingy | **`gemini-embedding-001`** @ 1536 + L2 normalizace | alternativa `gemini-embedding-2` (auto-normalizace, 8 192 tokenů, bez `task_type`) |
@@ -877,6 +898,7 @@ Model ID se mohou měnit. Před použitím ověřit na [ai.google.dev/gemini-api
 
 **Podmínky Gemini API, které nás přímo ovlivňují:**
 
+- **NVIDIA API Catalog a Groq (T-323)** jsou hostované služby mimo EU: stejně jako Gemini free tier **jen nad syntetickým datasetem hackathonu** (D-021). **Cesta do produkce s NVIDIA:** stejné modely jako **NIM kontejnery on-prem / v EU cloudu** (OpenAI-kompatibilní API, stačí `NVIDIA_BASE_URL`), data pacientů pak neopustí nemocnici; Whisper lze provozovat lokálně stejně.
 - **V EHP (tedy i v ČR) smí aplikace používat jen placené služby.** Bezplatný tier smí data používat ke zlepšování produktů a k lidské revizi a výslovně se do něj nemají posílat osobní údaje. Proto je nutné **zapnout billing v AI Studio** (Q9). **Výjimka týmu (D-021):** pro vývoj a demo nad syntetickým, veřejným datasetem hackathonu (žádné osobní údaje) smí běžet i free tier. Skutečná data pacientů nikdy, ta jen placený tier / Vertex AI EU.
 - **Pojistka v kódu (T-323):** `ai_service.provider_for_patient(resources)` dává LLM jen pacientovi s tagem `fiktivni-data` (dataset, testovací pacient založený se `synthetic`), jinak jen s `AI_REAL_PATIENT_DATA=True` (placený tier / Vertex AI EU). Bez toho vrátí `MockAIProvider`: z dat skutečného pacienta neodejde nic do LLM ani do embeddingů a aplikace jede deterministicky. Používá ji podklad (`build_brief`), zapisovatel, shrnutí pro pacienta, vložení zprávy (BON-7), vektory (`index_patient`) i nový pacient.
 - V placeném tieru Google prompty k trénování nepoužívá, loguje je ale omezenou dobu kvůli zneužití. Data mohou být dočasně uložena v jakékoli zemi.
@@ -916,7 +938,7 @@ Oficiální ground truth zatím **není** (organizátor ho zveřejní po odevzd�
 Požadavek lékaře (FR-D4, D-015). Barva **není doporučení**. Říká, jestli stav pacienta postup nevylučuje (např. pacientovi se špatnou spirometrií nelze odebrat plíci).
 
 - **Stavy:**
-  - 🟢 nevylučuje;
+  - 🟢 nevylučuje (štítek v UI „dobrý“);
   - 🟠 pozor: hraniční hodnota, relativní kontraindikace, nutné další vyšetření nebo rozpor;
   - 🔴 vylučuje (podle zdroje);
   - ⚪ nelze posoudit: chybí údaj nebo práh;
@@ -973,7 +995,7 @@ Požadavek lékaře (FR-P4). Zároveň je to fáze „před zasedáním“ ze za
 
 **Nový pacient z rodného čísla (T-323):** `services/new_patient.py`, `services/rc.py`, endpointy `apps/mdt/drafts.py`.
 
-1. Lékař zadá **RČ** (kontrola formátu, kontrolní číslice a data; odvodí se datum narození, pohlaví a věk) a vloží **text** nebo **soubory** (PDF, TXT, MD). Textové PDF čte `pypdf` lokálně, sken jen Gemini a jen podle D-021. Pacient se stejným RČ v IRIS → 409 s jeho ID (další zprávy přes BON-7).
+1. Lékař zadá **RČ** (kontrola formátu, kontrolní číslice a data; odvodí se datum narození, pohlaví a věk) a vloží **text** nebo **soubory** (PDF, TXT, MD). PDF čte stejný parser jako BON-7 (`services/ai/pdf_text.py`, textová vrstva lokálně bez LLM), sken přes OCR (NVIDIA `nemotron-parse`, jinak Gemini) jen podle D-021, jinak 400. Pacient se stejným RČ v IRIS → 409 s jeho ID (další zprávy přes BON-7).
 2. Vznikne **návrh** (`PatientDraft` v Postgresu, v IRIS zatím nic) s ID `Pnn` a dokumenty `Pnn-impNN`. Pravidla z textu předvyplní nominaci, každý údaj s citací odstavce: otázka pro MDT, histologie, předchozí léčba, komorbidity, preference (podle nadpisů jako v datasetu), diagnózy jen z kódů MKN-10 (onkologické), TNM, ECOG (rozmezí „0–1“ se nepředvyplní). S povoleným LLM přibudou hodnoty jako u BON-7 (ověřené proti odstavci).
 3. **Náhledy bez LLM:** `preview.detail` = celý podklad podrobně, `preview.narrow` = úzký pás podle šablony projektoru pro diagnózu (T-318), `preview.template` (klíčové údaje na projektor) a `preview.intake` (pole a varování kontroly úplnosti).
 4. Lékař návrh **upraví** (`PATCH`: pole nominace, diagnózy, TNM, ECOG, výběr hodnot, odebrání dokumentu, board, `synthetic`) nebo přidá podklady. Upravený údaj nemá citaci dokumentu; jde do textu nominace (`Pnn-zad01#n`), a cituje se ten.
@@ -1048,6 +1070,18 @@ Guidelines datasetu jsou závazný obsah aplikace (zadání: možnosti léčby z
 | PRS-4.1 | kostní metastázy: denosumab / zoledronát, Ca + D, stomatologie; RT nebo ortopedie | VS-PRS-12, VS-PRS-13 |
 | PRS-4.2 | nový lokalizovaný symptom → cílené zobrazení; vzestup markeru bez zobrazení není progrese | `RF-NEWSYMPTOM`, `RF-LAB` |
 
+### 5.12 Chatbot u zasedání (T-344)
+
+Vedle chatu lékařů (T-334) se lékař v jednání ptá AI. Odpověď je seznam tvrzení s citacemi, stejný `Claim` jako v podkladu (§8.1), takže klik na citaci otevře zdroj (`GET /api/evidence/`).
+
+- **Kontext** je stejný jako u podkladu (D-010): s pacientem na řadě celý pacient z IRIS, jeho sada guidelines, studie a výsledky deterministických pravidel. Bez pacienta (dotaz bez štítku) jen všechny sady guidelines (`KRC`, `PRS`, `PLI`, `OBC`) a všechny studie (`context_builder.general_context`).
+- **LLM:** jeden call se schématem `ChatbotOutput` (`claims` s citacemi, `missing`, `uncertain` = NEJISTOTA AI), prompt `services/ai/prompts/chatbot.md` + pravidla zkratek. Provider vybírá `chatbot_provider`: s `OPENAI_API_KEY` Azure OpenAI gateway týmu (`OpenAICompatProvider`, T-331) s modelem `gpt-6-1-sol-dz-eu` (EU Data Zone), jinak `AI_PROVIDER` (§9 `CHATBOT_PROVIDER`, `CHATBOT_MODEL`). Do LLM jde i posledních 6 zpráv rozhovoru o stejném pacientovi. Dotaz i historie projdou pseudonymizací (§5.7); skutečný pacient (bez tagu `fiktivni-data`) do LLM nejde bez `AI_REAL_PATIENT_DATA` (D-021). Volání se loguje jako `LlmCallLog` s účelem `chatbot`.
+- **Délka:** odpověď = 1–2 krátké věty (`MAX_CLAIMS = 2`), k tomu nejvýš jeden nejdůležitější chybějící údaj a jedna NEJISTOTA AI podle promptu. Chybějící údaje a nejistota se v kódu nekrátí, aby se varování neztratilo.
+- **Validace:** tvrzení i chybějící údaje projdou grounding validátorem (§5.3); citace mimo povolená ID, číslo nebo datum, které ve zdroji není, = `unverified`. Citace u `uncertain` se filtrují na povolená ID. LLM nedoporučuje léčbu ani neurčuje barvu semaforu.
+- **Bez odpovědi LLM** (chyba, prázdný výstup, `AI_PROVIDER=mock`) ukáže odpověď nejbližší místa v dokumentaci doslovně s citací, kterou přiřadil kód (`_computed`): slova dotazu bez diakritiky a koncovek, vzácnější slovo váží víc, při shodě novější záznam první. Poznámka v `text` řekne proč (NFR-5).
+- **Soukromí a audit:** rozhovor patří lékaři a boardu (`ChatbotMessage`), ostatní ho nevidí. Nic se neupravuje ani nemaže a odpověď AI není oficiální záznam. Uzavřený board je jen ke čtení.
+- **Implementace:** `services/ai/chatbot.py` (`answer`, `answer_from_context`, `chatbot_provider`, `nearest_sources`), API `apps/mdt/chatbot.py`, UI `components/mdt/meeting/ChatbotPanel.tsx` + `use-chatbot.ts`. V jednání tlačítko Chatbot vedle Chatu (zkratka A), panel vpravo. Když jsou otevřené chat i chatbot, jsou od 1680 px vedle sebe, jinak pod sebou v jednom sloupci; na úzkém displeji boční panel (vždy jen jeden).
+
 ---
 
 ## 6. Backend (Django) — struktura
@@ -1090,13 +1124,16 @@ Nové závislosti v `requirements.txt`:
 | Model | Pole (hlavní) |
 |---|---|
 | `MdtSession` (= board) | `date`, `title` (zaměření komise), `chair` (User), `status` (planned/in_progress/closed), `config` → `BriefConfig` (výchozí podklad nastavený předsedou); zakládá a mění jen `mdt_admin` |
-| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `collaborators` M2M (přizvaní ke spolupráci, T-326), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`) |
+| `MdtCase` | `session` FK, `order`, `patient_fhir_id` (`P03`), `service_request_fhir_id` (`P03-zad01`), `question`, `status` (nominated → ready → in_discussion → decided → confirmed; `returned` = vráceno k doplnění, OBC-1.1), `created_by` (zadávající lékař), `collaborators` M2M (přizvaní ke spolupráci, T-326), `ecog` (0–4), `intent` (`C` / `P`), `imaging_recent_checked`, `skipped_fields` JSON, `acknowledged_warnings` JSON (`{id, by, at}`), `projector_layout` JSON (pořadí na projektoru, T-332; od T-338 i kategorie) |
 | `BriefConfig` | `name`, `owner`, `is_preset`, `sections` JSON (`[{id, enabled, order, detail}]`), `roles_present` JSON, `detail_level` (brief/standard/detailed), `language`, `hide_unverified` |
 | `Brief` | `case` FK, `config_snapshot` JSON, `content` JSON (schéma [§8.2](#82-brief-podklad)), `model`, `created_at` |
 | `GenerationJob` | `case` FK, `kind` (brief/scribe/patient_summary), `status` (queued/running/done/error), `progress` (0–100), `result_id`, `error` |
 | `Decision` | `case` FK, `content` JSON (schéma [§8.4](#84-decision-závěr-komise)), `status` (draft/confirmed), `confirmed_by`, `confirmed_at`, `fhir_ids` JSON, `fhir_bundle` JSON |
 | `LlmCallLog` | `purpose`, `provider`, `model`, `prompt_hash`, `tokens_in`, `tokens_out`, `latency_ms`, `ok` |
-| `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
+| `UserProfile` | `user` 1:1, `specialty` (hodnoty `RoleId` z §8.1), `title_before`, `title_after` (tituly, max 40 znaků, T-338: jméno se všude píše „MUDr. Petr Novák, Ph.D.“); role = Django `Group` (`mdt_admin`, `mdt_doctor`, `mdt_viewer`) |
+| `FactTemplate` | šablona klíčových údajů lékaře (T-338, D-025): `user` FK, `area` (`PLI` / `PRS` / `KRC` / `OBC`), `layout` JSON (`ProjectorLayout` §8.6), `preset` (ID presetu, ze kterého vznikla), `updated_at`; unikátní `user` + `area` |
+| `SessionMessage` | chat lékařů u zasedání (T-334): `session` FK, `author` (User), `case` FK nullable (štítek pacienta na řadě), `text` (max 2000), `created_at`; neupravuje se ani nemaže |
+| `ChatbotMessage` | chatbot u zasedání (T-344, §5.12), soukromý rozhovor lékaře s AI: `session` FK, `user` (User), `case` FK nullable (pacient, na kterého se ptal), `role` `user`/`ai`, `text`, `claims` (JSON `Claim[]`), `uncertain` (JSON), `model`, `created_at`; neupravuje se ani nemaže (migrace `mdt/0011`) |
 
 `seed_mdt` vytvoří zasedání a případy **z nominací v IRIS**: `ServiceRequest.category` (zaměření komise) + `Task.restriction.period.start` (datum MDT). Vzniknou 4 zasedání:
 
@@ -1118,7 +1155,7 @@ Demo uživatelé (1-click přihlášení jako v templatu):
 
 ### 6.3 REST API
 
-Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/api/docs/`).
+Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/api/docs/`). Access cookie platí 15 min, refresh cookie 7 dní (rotace + blacklist). Frontend při 401 zavolá `POST /api/auth/token/refresh/` (refresh z httpOnly cookie, odpověď nastaví nové cookies), požadavek zopakuje a přihlášení obnovuje i průběžně každých 10 min; `proxy.ts` pustí na chráněnou stránku i jen s refresh cookie (T-336).
 
 | Metoda | Endpoint | Popis |
 |---|---|---|
@@ -1128,35 +1165,49 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/patients/{pid}/observations/?code=…[&source=sql]` | časové řady (labs, hmotnost, ECOG, PROMs skóre) pro grafy; `source=sql` čte kódované číselné `Observation` ze SQL pohledu `MDT.ObservationSeries` (T-309) |
 | GET | `/api/evidence/?id={EvidenceId}` | zdroj citace (text + zvýraznění / hodnota / pasáž guidelines / kritérium studie) |
 | GET, POST | `/api/mdt/sessions/` | zasedání; GET `?from=&to=` (YYYY-MM-DD včetně) omezí rozsah, `?expand=cases` přidá `cases: MdtCaseSummary[]` pro kalendář (§8.6, T-518): hlavička z IRIS jedním seznamem pacientů, připravenost jednou na pacienta |
-| GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`) |
+| GET | `/api/mdt/sessions/{sid}/` | detail + agenda (`MdtCase[]`); každý případ nese i `requester_layout` = šablonu zadávajícího lékaře pro oblast diagnózy (T-338, D-025) |
+| GET | `/api/mdt/sessions/{sid}/record/` | záznam boardu (T-333, jen `mdt_admin`): `BoardRecord` §8.6 — přítomní lékaři ze `Decision.attendees`, pacienti se jménem a maskovaným RČ z IRIS (jen tady, ne v hlavičkách, D-018), stav závěru a co jde stáhnout |
+| GET | `/api/mdt/sessions/{sid}/export.zip` | všechny výstupy boardu (T-333, jen `mdt_admin`): `Pxx/Pxx-mdtNN.pdf` u každého závěru (i návrhu) a `Pxx/Pxx-mdtNN.fhir.json` u potvrzeného; bez závěru 409. Potvrzené PDF se uloží do IRIS jako u `export.pdf` |
+| GET | `/api/mdt/records/` | záznam boardů (T-333, jen `mdt_admin`): uzavřené boardy (`status: closed`) od nejnovějšího → `BoardRecord[]`. Board ukončí předseda `PATCH /api/mdt/sessions/{sid}/ {status: "closed"}` (znovu otevřít `in_progress`) |
 | PUT | `/api/mdt/sessions/{sid}/order/` | pořadí pacientů v agendě (T-324), jen `mdt_admin`: `{cases: [cid, …]}` = všechny případy boardu v novém pořadí (jinak 400) → agenda; přesun případu na jiný board ho zařadí na konec |
 | PATCH, DELETE | `/api/mdt/sessions/{sid}/` | změna termínu a názvu boardu (jen `mdt_admin`) |
-| GET | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného |
+| GET, POST | `/api/mdt/sessions/{sid}/messages/` | chat lékařů u zasedání (T-334), čte a píše každý přihlášený člen komise: GET → `SessionMessage[]` od nejstarší (`?after=<id>` jen novější, jinak posledních 200); POST `{text, case_id?}` → 201 `SessionMessage`; `case_id` = případ z agendy tohoto boardu (jinak 400), prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení) |
+| GET | `/api/mdt/sessions/{sid}/stream/` | **Server-Sent Events** (`text/event-stream`, bez websocketů a bez pollingu): každá nová zpráva boardu jako `id: <ID>` + `data: SessionMessage`, komentář `: ping` každých 15 s, `retry: 3000`. Hlavička `Cache-Control: no-cache, no-transform`: proxy s kompresí (rewrite v Next.js při `next start`) by jinak stream zabalila do gzipu a bufferovala. `Last-Event-ID` (reconnect `EventSource`) nebo `?after=<id>` nejdřív doplní zmeškané. JWT z cookie (`EventSource` posílá cookies, ne hlavičky), jinak 401; neexistující board 404. Mezi procesy rozesílá channel layer (Redis) po commitu zprávy |
+| GET, POST | `/api/mdt/sessions/{sid}/chatbot/` | chatbot u zasedání (T-344, §5.12), každý přihlášený lékař, rozhovor je jen jeho: GET → vlastní `ChatbotMessage[]` u boardu od nejstarší (posledních 200); POST `{text, case_id?}` → 201 `[dotaz, odpověď AI]` (synchronně, jeden LLM call, 10–25 s). `case_id` = případ z agendy tohoto boardu (jinak 400), bez něj jen guidelines a studie; prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení). Selhání AI nevrací chybu: odpověď nese poznámku a případně nejbližší místa v dokumentaci |
+| GET, PATCH | `/api/mdt/me/` | role (`mdt_admin` / `mdt_doctor` / `mdt_viewer`), odbornost a `practitioner_id` (lékař v IRIS, T-328) přihlášeného; PATCH `{title_before?, title_after?}` = vlastní tituly (max 40 znaků, jinak 400; T-338) |
+| GET | `/api/mdt/templates/` | moje šablony údajů (T-338, D-025): `{templates: [{area, area_label, layout \| null, preset, updated_at}] (PLI, PRS, KRC, OBC), presets: [{id, name, note, specialties, area, layout}] (presety mé odbornosti první), suggested: {area: preset_id}}`; `layout: null` = výchozí pořadí |
+| PUT, DELETE | `/api/mdt/templates/{area}/` | PUT `{layout: ProjectorLayout, preset?}` uloží mou šablonu oblasti (ověření tvaru jako u `projector_layout`, kategorie jen `FactCategory`, jinak 400); DELETE ji zruší. Neznámá oblast 400 |
+| GET | `/api/mdt/templates/catalog/?area=PLI` | **bez přihlášení** (registrace): `{area, area_label, categories: [{id, label}], facts: [{key, label, abbr?, category}], presets}` = všechny údaje, které se v oblasti mohou objevit (pole formuláře zařazení pro ukázkovou diagnózu + podmíněná pole + laboratoř + typy upozornění); jen názvy, žádná data pacientů |
 | GET | `/api/mdt/practitioners/?q=&with_user=&limit=` | lékaři nemocnice z IRIS (FHIR `Practitioner`) pro popup výběru lékaře (T-328): přítomní, vlastník úkolu, spolupráce. `{id, name, specialty, role, user}`; hledání bez diakritiky ve jménu, odbornosti a ID, lékaři s účtem v aplikaci první |
-| POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319) |
-| GET | `/api/mdt/users/` | uživatelé s rolí a odborností (`Me[]`), `mdt_admin` a `mdt_doctor` (lékař vybírá, koho přizvat ke spolupráci, T-326) |
-| PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?, practitioner_id?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319). `practitioner_id` propojí účet s existujícím lékařem v IRIS (T-328), jinak má účet vlastního `LEK-APP-<účet>` (zakládá `seed_mdt` a registrace) |
-| GET, POST | `/api/mdt/patient-drafts/` | nový pacient (T-323, předseda, lékař): GET = rozpracované návrhy (lékař své, předseda všechny); POST JSON nebo multipart `{rc, text?, files[]?, synthetic?, session?}` → 201 `PatientDraft` (§8.6) s předvyplněnou nominací a náhledy; 400 neplatné RČ / soubor; 409 `{patient_id}` = RČ už v IRIS, 409 `{draft_id}` = rozpracovaný návrh se stejným RČ |
+| POST | `/api/auth/register/` | registrace (template) + **povinná `specialty`** (`RoleId` bez `patient`); nový uživatel je `mdt_viewer` (T-319). Nepovinně `title_before`, `title_after`, `templates: {area: ProjectorLayout}`, `preset` (krok 2 registrace = šablona údajů, T-338) |
+| GET, POST | `/api/mdt/users/` | GET: uživatelé s rolí a odborností (`Me[]`), `mdt_admin` a `mdt_doctor` (lékař vybírá, koho přizvat ke spolupráci, T-326). POST (jen `mdt_admin`, T-338): založení lékaře `{username, password, email?, first_name?, last_name, title_before?, title_after?, specialty, role?, templates?: {area: ProjectorLayout}, preset?}` → 201 `Me`; obsazené jméno, slabé heslo, chybějící příjmení nebo odbornost, neplatná šablona 400; lékař se založí i v IRIS (`Practitioner`) |
+| PATCH | `/api/mdt/users/{uid}/` | `{role?, specialty?, practitioner_id?, first_name?, last_name?, title_before?, title_after?}`, jen `mdt_admin`; sám sobě roli předsedy odebrat nejde (T-319). `practitioner_id` propojí účet s existujícím lékařem v IRIS (T-328), jinak má účet vlastního `LEK-APP-<účet>` (zakládá `seed_mdt` a registrace) |
+| GET, POST | `/api/mdt/patient-drafts/` | nový pacient (T-323, předseda, lékař): GET = rozpracované návrhy (lékař své, předseda všechny); POST JSON nebo multipart `{rc, text?, files[]?, synthetic?, session?}` → 201 `PatientDraft` (§8.6) s předvyplněnou nominací a náhledy; 400 neplatné RČ / soubor; 409 `{patient_id}` = RČ už v IRIS, 409 `{draft_id}` = rozpracovaný návrh se stejným RČ. **FHIR JSON (T-335):** `files[]` smí obsahovat soubory `.json` (Bundle, resource nebo seznam; jeden i víc pacientů) a k nim přepisy `.md` ve formátu datasetu; RČ je pak nepovinné (ověří se proti `Patient.gender` a roku narození, může být v přepisu). Sanitizace jako ingest, přečíslování na volné `Pnn` a ID podle konvence datasetu (i UUID a `urn:uuid` reference), kontrola referencí (mimo soubor jen sdílené typy, které jsou v IRIS); nominace ze strukturovaných dat s citací ID resource. Návrh nese `import: {file, total, renamed_from, counts, practitioners, synthetic, transcript, validation[]}` a `bundle` (jen server). Víc pacientů → návrh pro každého, odpověď = první návrh + `batch: [{id, patient_id, file, renamed_from}]`; RČ, text ani PDF nejdou (400). PATCH u importu nemění `diagnoses`, `tnm`, `ecog` (400, opravují se v souboru) |
 | GET, PATCH, DELETE | `/api/mdt/patient-drafts/{id}/` | návrh + náhledy (autor a předseda); PATCH `{fields?, values?, remove_documents?, synthetic?, session?}` → nové náhledy; DELETE zahodí návrh |
 | POST | `/api/mdt/patient-drafts/{id}/documents/` | další podklady (`text`, `files[]`), prázdná pole nominace se z nich doplní |
 | POST | `/api/mdt/patient-drafts/{id}/confirm/` | zápis do IRIS jednou transakcí + `Provenance`, vektory, `MdtCase` na boardu návrhu → 201 `{patient_id, case_id, synthetic, fhir_written}`; 400 `{missing}` bez otázky nebo diagnózy |
 | GET | `/api/mdt/patients/{pid}/intake/` | předvyplnění formuláře zařazení: povinné údaje s citacemi + varování (`IntakePrefill`, §8.6) |
-| POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (text z PDF přečte Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem. Nic se nezapisuje (předseda, lékař) |
-| POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-obsNN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}` |
-| POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1). Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
-| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); zápis do IRIS stejně jako u POST |
-| GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
+| POST | `/api/mdt/patients/{pid}/import/` | vstup zprávy (BON-7): JSON `{text}` nebo multipart `pdf` (PDF čte `services/ai/pdf_text.py`: textová vrstva `pdfplumber` po řádcích ze slov, tabulky s linkami jako „buňka | buňka“, bez opakované hlavičky / patičky a čísel stránek, věta přes zlom stránky a nadpisy oddílů drží odstavce; sken přes OCR `nemotron-parse`, jinak Gemini) → **návrh** `{patient_id, document_id: "Pxx-impNN", title, date, text, values[], rejected[]}`; každá hodnota má `citation` = odstavec zprávy a `source` = jeho znění (lékař ho vidí před potvrzením) a je ověřená (číslo musí být v odstavci), neověřené jsou v `rejected` s důvodem (`reasons`). Nic se nezapisuje (předseda, lékař) |
+| POST | `/api/mdt/patients/{pid}/import/confirm/` | potvrzení lékařem: tělo = návrh (případně jen vybrané `values`); server ho znovu ověří proti `text` a zapíše jednou transakcí `DocumentReference/Pxx-impNN` + `Observation/Pxx-impNN-<druh>NN` (`derivedFrom` → dokument, tag AI) + `Provenance` (lékař + `Device/mdt-copilot`), pak přepočítá vektory → 201 `{fhir_written}`. Bez hodnot se zapíše jen zpráva (text je pak citovatelný v podkladu); ID hodnot nesou druh jako dataset (`Pxx-impNN-lab01`, `-bm`, `-tnm`, `-ecog`, `-vit`) |
+| POST | `/api/mdt/cases/` | zařazení pacienta do boardu (FR-P4, `MdtCase` §8.6): `{session, patient_id, ecog, intent, imaging_recent_checked, skipped_fields, acknowledge}`; předseda a lékař. Nominace, která už případ má (`seed_mdt`), se doplní a přesune (200), jinak vznikne nový případ (201); stav → `ready`. Bez otázky pro MDT 400 (OBC-1.1), na uzavřený board (`status: closed`) 409. **Nic se nesmí zapomenout:** bez ECOG, záměru C/P, `imaging_recent_checked: true`, přeskočení každého chybějícího údaje a odkliknutí každého aktivního varování → 400 `{intake: "Před zařazením zbývá: …"}` (stejný seznam ukazuje formulář). Ruční ECOG, záměr a odkliknutá varování jdou do IRIS (§4.3) jednou transakcí s `Provenance/Pxx-caseNN-prov`; odpověď nese `fhir_written` |
+| PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST; `projector_layout` (T-333) upravuje zadávající, přizvaný lékař nebo předseda |
+| GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); `disabled_rules` jen ID z `GET /api/mdt/rules/` (T-332); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
 | GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
+| POST | `/api/mdt/cases/{cid}/ask/` | otázka nad případem (BONUS Q&A, T-332): `{question}` (≤ 500 znaků) → `{question, mode: "ai" \| "search", items: Claim[], answered_at}`; odpověď jen z pseudonymizovaného kontextu pacienta, každá věta s citací přes grounding validátor, co v datech není → `missing` „V dostupné dokumentaci se nenachází…“. Bez LLM (mock, výpadek) `mode: "search"` = řádky dokumentace doslova. Nic se neukládá |
+| GET | `/api/mdt/cases/{cid}/similar/` | podobné případy (BONUS B2, T-332): `{diagnosis, cases[]}` = předchozí `Composition` „Záznam MDT“ jiných pacientů se stejným kódem MKN-10 (`match: "code"`), pak stejnou kategorií (`"category"`), nejvýš 3; anonymizovaně (`patient` = pohlaví a věková dekáda), sekce otázka / záměr / postup / závěr a citace záznamu. Bez AI, inspirace, ne doporučení |
+| GET | `/api/mdt/rules/` | katalog pravidel varovných signálů (T-332): `[{id, title, source}]` pro `BriefConfig.disabled_rules` |
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
-| POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config}`, vrátí `{job_id}`; předseda, zadávající nebo přizvaný lékař (T-326) |
-| GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2) |
+| POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config, feedback?}`, vrátí `{job_id}`; předseda, zadávající nebo přizvaný lékař (T-326). **Zpětná vazba lékaře** (T-323): `feedback: {text, sections?: SectionId[]}` = co bylo v předchozí verzi špatně a na co se zaměřit; text 3–1000 znaků, pseudonymizovaný, jde do promptů vybraných částí (nic = všech, `services/ai/prompt_config.feedback_note`), uloží se v parametrech jobu a v `Brief.feedback` (kdo, kdy) |
+| GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2); pravidla semaforu v `decision_support` dostanou při čtení `national_status` a `national` (Modrá kniha, D-026), i když podklad vznikl dřív |
 | GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
 | GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, zadávající nebo přizvaný lékař, T-326) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
+| GET | `/api/mdt/cases/{cid}/gp-report/` | zpráva pro praktického lékaře (T-332): vzniká v jobu `patient-summary` spolu se shrnutím pro pacienta z **potvrzeného** závěru, každá věta s citací odstavce zápisu → `Decision.gp_report` + `DocumentReference/Pxx-mdtNN-pl` (v PDF i FHIR exportu); 404, dokud není |
 | POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3); předseda, zadávající nebo přizvaný lékař (T-326) |
 | GET, PUT | `/api/mdt/cases/{cid}/decision/` | draft závěru (schéma §8.4); PUT předseda, zadávající nebo přizvaný lékař (T-326) |
-| POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids`. Kontrola souladu s guidelines (zadání B2, T-326): zvolená možnost s „pozor“ / „vylučuje“ nebo `guideline_compliance.compliant = false` bez `reason` → 400 `{detail, field: "guideline_compliance"}` |
+| POST | `/api/mdt/cases/{cid}/decision/confirm/` | potvrzení: zápis FHIR transaction do IRIS, vrátí `fhir_ids`. Kontrola souladu s guidelines (zadání B2, T-326): zvolená možnost s „pozor“ / „vylučuje“ nebo `guideline_compliance.compliant = false` bez `reason` → 400 `{detail, field: "guideline_compliance"}`. Úplnost (T-342, stejná pravidla jako UI „Před potvrzením zbývá“, `writeback.decision_gaps`): otázka, zhodnocení, zvolená možnost nebo krok postupu, `guideline_compliance`, závěr, lékař u každého přítomného mimo předsedu, u úkolů popis + `owner` + `due_date`, každý red flag podkladu v `red_flags_acknowledged`; jinak 400 `{detail, remaining: [str]}` a nic se nezapíše |
+| POST | `/api/mdt/cases/{cid}/decision/revise/` | nová verze potvrzeného závěru (T-332, jen `mdt_admin`): `{reason}` (povinné) → potvrzená verze přejde do `Decision.history` (kdo potvrdil, kdo a proč mění), závěr je znovu draft s `version + 1` a `revision_of`; další potvrzení zapíše **stejnou** `Composition` se `status: amended` (IRIS drží předchozí verzi v historii). Potvrzený závěr jinak nejde měnit (PUT 409) |
 | GET | `/api/mdt/cases/{cid}/export.pdf` | PDF |
 | GET | `/api/mdt/cases/{cid}/export.fhir.json` | FHIR document Bundle |
 | GET | `/api/mdt/tasks/?status=…&patient=…&mine=1&drafts=1` | úkoly po zasedání (z FHIR `Task/Pxx-mdtNN-taskNN`, `MdtTask[]` §8.6), seřazené podle stavu a termínu; `mine` = přiřazené přihlášenému (jeho lékař v IRIS), `drafts` přidá úkoly z nepotvrzených závěrů (`draft: true`) (T-328) |
@@ -1174,19 +1225,20 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 |---|---|
 | `/` | přesměruje na `/dashboard` (veřejná landing page není) |
 | `/login` | z templatu + 1-click demo účty (předseda, chirurg, onkolog…) |
-| `/dashboard` | **kalendář zasedání** (UI v2, [NAVRH_UI §6](docs/NAVRH_UI.md#6-přehled--kalendář-zasedání)): 2 týdny, sloupce = dny, dlaždice zasedání s pacienty a připraveností; přesun pacienta drag & drop (myš, dotyk, klávesnice) i „Přesunout na…“ s „Vrátit“; „+“ na dlaždici zařadí pacienta (boční panel); klik na pacienta = rychlý přehled v bočním panelu; stav v `?tyden=&pacient=&komise=` |
+| `/dashboard` | **kalendář zasedání** (UI v2, [NAVRH_UI §6](docs/NAVRH_UI.md#6-přehled--kalendář-zasedání)): 2 týdny, sloupce = dny, dlaždice zasedání s pacienty a připraveností; přesun pacienta drag & drop (myš, dotyk, klávesnice) i „Přesunout na…“ s „Vrátit“; moji pacienti, se kterými smím hýbat (`created_by` = já, otevřený board), jsou jemně zvýraznění; „+“ na dlaždici zařadí pacienta (boční panel); klik na pacienta = rychlý přehled v bočním panelu; stav v `?tyden=&pacient=&komise=` |
 | `/dashboard/mdt` | **seznam zasedání** v řádcích (nadcházející, minulá); předseda zakládá board a posílá odkaz na registraci kolegovi |
-| `/dashboard/mdt/[sessionId]` | **jednání komise** ([NAVRH_UI §7](docs/NAVRH_UI.md#7-jednání-komise)): vlevo agenda (pořadí, projednáno, čas u pacienta), vpravo 30s rychlý přehled; zkratky ↑↓ / J K, D detail, Z závěr, P projektor, H projednáno; výběr pacienta se publikuje do `/projector` (BroadcastChannel); stav v `?pacient=` |
+| `/dashboard/mdt/[sessionId]` | **jednání komise** ([NAVRH_UI §7](docs/NAVRH_UI.md#7-jednání-komise)): vlevo agenda (pořadí, projednáno, čas u pacienta), vpravo 30s rychlý přehled; zkratky ↑↓ / J K, D detail, Z závěr, P projektor, H projednáno; výběr pacienta se publikuje do `/projector` (BroadcastChannel); stav v `?pacient=`; v boku pod agendou **„Nahrávat diskusi“** (BON-3, T-323): úsek pacienta na řadě se po přepnutí na dalšího (nebo vypnutí) sám odešle k přepisu (Whisper) a vznikne draft závěru, toast „Otevřít“ |
 | `/dashboard/mdt/[sessionId]/add` | **zařazení pacienta** (FR-P4) jako stránka, záloha k bočnímu panelu: předvyplnění z IRIS, Doplnit / Přeskočit, varování, ECOG + C/P, checkbox snímku |
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
 | `/dashboard/cases/[caseId]` | **detail pacienta** ([NAVRH_UI §8](docs/NAVRH_UI.md#8-detail-pacienta)): přilepená hlavička (D-018, PS lékař / pacient, C/P, varování, předchozí / další pacient boardu), navigace po sekcích; rychlý přehled a varovné signály otevřené, souhrn a časová osa (AI / události z IRIS), anamnéza, odbornosti, léčba a studie, hlas pacienta a otázky sbalené |
 | `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
-| `/projector` | **úzký panel pro projektor** vedle snímku z PACS (T-512, 320–420 px, bez navigace, chráněno v `proxy.ts`): hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P, anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z jednání komise (`/dashboard/mdt/[sessionId]`) |
+| `/projector` | **okno pro projektor** (T-512, bez navigace, chráněno v `proxy.ts`): přes celou šířku okna (T-343): úzké okno vedle snímku z PACS má karty pod sebou, od 48rem klíčové údaje vlevo (skupiny od 46rem ve dvou sloupcích) a anamnéza s postupy vpravo; hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P + počty „varovné signály“ (RF-*) a „upozornění k údajům“ (kontrola úplnosti), anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z jednání komise (`/dashboard/mdt/[sessionId]`). Klíčové údaje v kategoriích (D-024); pořadí bloků, kategorií a údajů podle `MdtCase.projector_layout` (T-332, dialog „Pořadí na projektoru“ v jednání, rychlém přehledu a detailu, s volbou „Uložit také jako moji šablonu“), jinak podle šablony zadávajícího lékaře (`requester_layout`, T-338); po uložení se okno obnoví přes BroadcastChannel |
 | `…/cases/demo`, `/brief/demo` | podklad P03 z fixtures (`data/fixtures/brief_P03.json` + zdroje citací `evidence_P03.json`), funguje bez backendu; obě stránky skládá `CaseBriefScreen` |
-| `/dashboard/cases/[caseId]/record` | **zápis závěru**: editor (sekce jako záznam MDT), úkoly, potvrzení, export |
-| `/dashboard/patients/[patientId]` | pacient: časová osa, labs/PROMs grafy, dokumenty, předchozí MDT |
+| `/dashboard/cases/[caseId]/record` | **zápis závěru**: AI zapisovatel (nahrávka nebo přepis → draft, BON-3), editor (sekce jako záznam MDT), úkoly, potvrzení, export; po potvrzení shrnutí pro pacienta (BON-4) |
+| `/dashboard/patients/[patientId]` | **karta pacienta** přímo z IRIS bez AI (`GET /api/patients/{pid}/`): diagnózy, TNM v čase, komorbidity, PS lékař / pacient, projednání v komisi, časová osa, labs/PROMs grafy; **Vložit zprávu** (BON-7, text nebo PDF → návrh → potvrzení → IRIS); odkaz z drobečku a menu detailu případu |
 | `/dashboard/tasks` | úkoly po zasedání |
-| `/dashboard/tym` | **tým komise** (T-319, jen předseda): členové, role a odbornost (`/api/mdt/users/`), odkaz na registraci; `/register` vyžaduje odbornost |
+| `/dashboard/zaznamy` | **záznam boardů** (T-333, jen předseda): ukončené boardy jako velké karty (název, datum, počet pacientů a potvrzených závěrů, rozbalovací přítomní lékaři), pacienti s ID, jménem nebo maskovaným RČ a stažením PDF / FHIR, ZIP celého boardu, hledání. Board ukončí předseda v jednání („Ukončit board“) a hned vyskočí nabídka stažení výstupů |
+| `/dashboard/tym` | **tým komise** (T-319, jen předseda): členové, role a odbornost (`/api/mdt/users/`), **Přidat lékaře** ve dvou krocích (jméno, tituly, profese → šablona údajů předvyplněná podle profese, T-338); `/register` vyžaduje odbornost a má stejný druhý krok (šablonu jde přeskočit). Vlastní tituly a šablonu po oblastech mění lékař v Nastavení („Moje šablona údajů“, `#sablona`) |
 
 Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**, **Úkoly** (počet po termínu) + nejbližší zasedání jedním klikem + okno projektoru; horní lišta s drobečky, hledáním Ctrl K (pacienti, zasedání, akce) a avatarem (Nastavení, Klávesové zkratky, Odhlásit). Sdílená cache dat je TanStack Query (`src/lib/queries.ts`, providery v `app/providers.tsx`). Template stránky `projects`, `storage`, `realtime` a `ai` jsou z navigace skryté (kód zůstává). Dev služby (Swagger, Mailhog, Traefik) v aplikaci nejsou, jen v README a `dev.ps1`.
 
@@ -1209,10 +1261,14 @@ Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**,
 | `SectionConfigurator` | zap/vyp sekce, drag & drop pořadí, role, detail; uložit preset |
 | `DecisionEditor` | sekce záznamu MDT (jako v datasetu), úkoly (owner, termín), re-MDT; AI předvyplnění odlišené |
 | `ConfirmDialog` | potvrzení: kdo potvrzuje, co se zapíše (výpis FHIR resources s ID `Pxx-mdtNN-…`) |
+| `ScribePanel` / `PatientSummaryPanel` (`DecisionAi.tsx`) | AI zapisovatel: nahrávka nebo přepis → job → draft závěru (BON-3); shrnutí pro pacienta z potvrzeného závěru (BON-4) |
+| `ImportReportSheet` | vložení zprávy: text / PDF → hodnoty se zněním odstavce, výběr, neověřené s důvodem → zápis do IRIS (BON-7) |
 | `JobProgress` | průběh generování (polling `/api/jobs/{id}`) |
 | `CompatibilityLight` | semafor 🟢/🟠/🔴/⚪ s ikonou a textem, rozbalení na pravidla s citacemi (FR-D4) |
 | `IntakeForm` + `IntakeWarning` | formulář zařazení: předvyplněné údaje s citací, Doplnit / Přeskočit, varování s „Beru na vědomí“, ECOG + C/P, checkbox snímku (FR-P4) |
-| `AnamnesisBlock` | anamnéza doslovně nebo jako shrnutí s citacemi, přepínač (FR-A5) |
+| `SectionClaims` (`ClaimList.tsx`) | tvrzení sekce; u dlouhé anamnézy přepínač „Shrnutí AI / Doslovně ze zpráv“ (`BriefSection.verbatim`, FR-A5) |
+| `DiscussionRecorder` | nahrávání diskuse v jednání komise po pacientech → zapisovatel (BON-3) |
+| `NewPatientForm` | nový pacient při zařazení (T-323, `patient-drafts`): RČ + text nebo soubory → návrh s citacemi (otázka, MKN-10, TNM, ECOG) → úpravy, další podklady → zápis do IRIS a případ na boardu; rozpracované návrhy jde otevřít znovu |
 | `ModalityCatalog` | léčebné metody pro diagnózu s odborníkem a daty k ruce (FR-D5) |
 | `ScaleCard` | Lung-RADS / Fleischner s kontrolou použitelnosti (BON-6) |
 | `BoardList` / `BoardEditor` | boardy, termíny (mění jen předseda), přesun pacientů (FR-P1) |
@@ -1252,11 +1308,12 @@ Shell (`app/dashboard/layout.tsx`, UI v2): sidebar **Přehled**, **Zasedání**,
 ### 8.1 Společné typy
 
 ```ts
-type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#4" | "KRC-2.4" | "RKT-03/V3" | "EXT-EMA-DPD-2020"
+type EvidenceId = string;                       // "P03-ecog03" | "P03-img03#4" | "KRC-2.4" | "RKT-03/V3" | "EXT-EMA-DPD-2020" | "EXT-MK-4.6.3"
 type Verification = "verified" | "unverified";
 type Severity = "high" | "moderate" | "low";
 type Light = "green" | "orange" | "red" | "grey" | "skipped";   // semafor souladu (§5.9)
-type RoleId = "surgeon" | "oncologist" | "radiation_oncologist" | "radiologist" | "pathologist" | "pulmonologist" | "cardiologist" | "patient";
+type RoleId = "surgeon" | "oncologist" | "radiation_oncologist" | "radiologist" | "pathologist" | "pulmonologist" | "cardiologist" | "patient"
+  | "nuclear_medicine" | "palliative_care" | "geriatrician" | "geneticist" | "coordinator";   // další role (BONUS B, T-332)
 type SectionId = "summary" | "timeline" | "role_views" | "red_flags" | "decision_support" | "trials" | "questions" | "anamnesis" | "modalities" | "mdt_question";
 
 interface Claim {
@@ -1266,6 +1323,7 @@ interface Claim {
   citations: EvidenceId[];                      // u "claim" ≥ 1
   verification: Verification;                   // nastavuje grounding validátor, ne LLM
   expected_source?: string;                     // u "missing": kde by měl údaj být
+  confidence?: number | null;                   // míra jistoty 0–1: sémantická shoda s citovaným textem (grounding v2, T-332); u strukturovaných dat chybí
 }
 
 interface Criterion {                           // společné pro studie i posouzení role
@@ -1308,7 +1366,15 @@ interface Brief {
   sections: BriefSection[];                     // textové sekce v pořadí podle config
   red_flags: RedFlag[];
   decision_support?: DecisionSupport;
+  verifier?: {
+    status: "ok" | "partial" | "error" | "off";
+    model: string;
+    checked: number; rejected: number; unchecked: number;
+    issues: { claim_id: string; verdict: "unsupported" | "uncertain" | "unchecked"; issue: string }[];
+  } | null;                                    // starší podklady pole nemají
   stats: { claims_total: number; claims_unverified: number; missing_total: number };   // ze všech Claim v podkladu (hlavička, sekce i B2), compute_stats()
+  feedback?: { text: string; sections: SectionId[]; by: string; at: string };          // přegenerováno podle zpětné vazby lékaře (T-323)
+  national_guidelines?: { evidence_id: EvidenceId; title: string; url: string | null; excerpt: string }[];  // Modrá kniha ČOS k diagnóze (T-337, D-023)
 }
 
 // sections[] obsahuje jen textové sekce: summary, timeline, anamnesis, role_views, modalities.
@@ -1321,6 +1387,7 @@ interface BriefSection {
   ai_generated: true;
   items: Claim[];
   assessment?: RoleAssessment;                  // jen u role_views (FR-B7)
+  verbatim?: Claim[];                           // jen u anamnesis, když items je shrnutí AI: doslovné znění s citací (FR-A5, T-323)
 }
 
 interface RoleAssessment {
@@ -1425,6 +1492,8 @@ interface CompatibilityRuleResult {
   patient_citations: EvidenceId[];              // ["P04-spiro04"]
   rule_citation: EvidenceId;                    // "PLI-3.1" | "RKT-06/Z4" | "EXT-…"
   derived?: { formula: string; inputs: EvidenceId[] };   // např. Cockcroft-Gault
+  national_status?: "prah" | "tema" | "neuvadi"; // Modrá kniha ČOS k pravidlu (T-340, D-026); barvu nemění
+  national?: { evidence_id: EvidenceId; match: "prah" | "tema"; quote: string; note: string | null }[];   // "EXT-MK-8.1.3.2-2", doslovná citace oddílu
 }
 
 interface TreatmentCompatibility {
@@ -1480,8 +1549,14 @@ interface Decision {
     composition: string;  careplan: string;  careteam: string;
     tasks: string[];  detected_issues: string[];  research_subjects: string[];
     provenance: string;  document_reference_pdf?: string;  document_reference_patient?: string;   // "P03-mdt02-pacient"
+    document_reference_gp?: string;   // "P03-mdt02-pl": zpráva pro praktického lékaře (T-332)
   };
   patient_summary?: { items: Claim[]; generated_at: string; document_reference: string };   // BON-4, po potvrzení
+  gp_report?: { items: Claim[]; generated_at: string; document_reference: string } | null;   // zpráva pro PL, po potvrzení (T-332)
+  version?: number;                             // 1, 2…: potvrzený závěr je zamčený, změna = nová verze (T-332)
+  revision_of?: string | null;                  // Composition, kterou nová verze nahradí (stejné ID)
+  history?: { version: number; composition?: string | null; confirmed_by?: { user_id: string; name: string } | null;
+              confirmed_at?: string | null; revised_by: { user_id: string; name: string }; revised_at: string; reason: string }[];
 }
 ```
 
@@ -1497,6 +1572,7 @@ interface BriefConfig {
   detail_level: "brief" | "standard" | "detailed";
   language: "cs" | "sk" | "en";
   hide_unverified: boolean;
+  disabled_rules?: string[];                    // pravidla varovných signálů vypnutá pro board (T-332); výchozí [] = všechna zapnutá
 }
 ```
 
@@ -1512,7 +1588,10 @@ interface IntakeField {
   citation?: EvidenceId;
   status: "present" | "missing" | "pending" | "skipped";
   required_by?: EvidenceId;                     // proč je údaj povinný: "KRC-1.1"
+  category: FactCategory;                       // kategorie klíčových údajů (T-338, D-024)
 }
+
+type FactCategory = "staging" | "molecular" | "imaging" | "function" | "history" | "lab" | "patient" | "alerts";
 
 interface IntakeWarning {
   id: string;                                   // stabilní (pravidlo + citace)
@@ -1521,6 +1600,7 @@ interface IntakeWarning {
   title: string;
   detail: string;
   citations: EvidenceId[];
+  category: "patient" | "alerts";               // z dotazníku PROMs → patient, jinak alerts (D-024)
 }
 
 interface IntakePrefill {                        // GET /api/mdt/patients/{pid}/intake/
@@ -1547,6 +1627,8 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   service_request_id: string;
   created_by?: { user_id: number; name: string };
   collaborators?: { user_id: number; name: string }[];   // přizvaní ke spolupráci: smějí případ upravovat jako zadávající (T-326)
+  projector_layout?: ProjectorLayout;           // okno komise a projektor (T-333); skrývá jen tam, podklad zůstává celý (D-019)
+  requester_layout?: ProjectorLayout | null;    // jen čtení: šablona zadávajícího pro oblast diagnózy (FactTemplate, jinak jeho OBC; T-338)
   ecog: number | null;
   intent: "C" | "P" | null;
   imaging_recent_checked: boolean;              // „Snímek mladší než 3 měsíce“
@@ -1558,7 +1640,16 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   patient?: PatientListItem | null;             // jen v detailu boardu (hlavička z IRIS, §8.2)
 }
 
-// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[] }.
+interface ProjectorLayout {                     // = layout šablony lékaře (FactTemplate, D-025); každá část nepovinná
+  blocks?: { order: ("anamnesis" | "facts" | "treatments")[]; hidden: (…)[] };
+  categories?: { order: FactCategory[]; hidden: FactCategory[] };
+  facts?: { order: string[]; hidden: string[] };   // klíč šablony: IntakeField.id, `lab:<LOINC>`, `alert:<pravidlo>`
+}
+// Přednost: úprava u případu (`projector_layout`, okno komise a projektor) → šablona zadávajícího (`requester_layout`) → výchozí.
+// V osobních pohledech (detail, rychlý přehled) platí šablona přihlášeného lékaře. Kritický údaj (high) je vidět vždy.
+
+// PATCH /api/mdt/cases/{cid}/ přijímá { session?, ecog?, intent?, imaging_recent_checked?, skipped_fields?, acknowledge?: string[], collaborators?: number[], projector_layout? }.
+// POST /api/mdt/cases/ (zařazení) přijímá `projector_layout` také: lékař ho upraví už ve formuláři zařazení (T-333).
 // `acknowledge` = ID varování; server přidá { id, by, at } do acknowledged_warnings, nikdy neodebírá (D-019).
 // Změna `session` zapíše datum nového boardu do Task.restriction.period.start v IRIS (FR-P1).
 
@@ -1568,6 +1659,8 @@ interface Me {                                  // GET /api/mdt/me/
   name: string;
   role: "mdt_admin" | "mdt_doctor" | "mdt_viewer";   // superuser = mdt_admin, bez skupiny = mdt_viewer
   specialty: RoleId | null;
+  first_name: string; last_name: string;
+  title_before: string; title_after: string;    // name = "MUDr. Petr Novák, Ph.D." (T-338)
 }
 
 type KbItemStatus = "present" | "mention" | "stale" | "missing" | "not_applicable";   // mention = jen zmínka („doporučeno“, „probíhá“)
@@ -1671,6 +1764,44 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
   chair: { user_id: number; name: string } | null;
   config_id: number | null;                     // výchozí BriefConfig boardu
 }
+
+interface BoardRecord extends MdtSession {      // GET /api/mdt/records/, /api/mdt/sessions/{sid}/record/ (T-333, jen mdt_admin)
+  attendees: { id: string | null; name: string; role: RoleId | "chair" | null; patients: string[] }[];  // z Decision.attendees
+  cases: {
+    id: number; order: number; patient_id: string; status: MdtCase["status"];
+    display_name: string;                       // "P03 · muž · 67 let"
+    name: string | null;                        // Patient.name z IRIS (dataset: "Pacient P03 (fiktivní)")
+    rc: string | null;                          // maskované RČ "******/1234" (T-323), jinak null
+    diagnosis: { icd10: string; text: string } | null;
+    decision: { status: "draft" | "confirmed"; record_id: string | null; confirmed_at: string | null;
+                confirmed_by: { user_id: number; name: string } | null } | null;
+    exports: { pdf: boolean; fhir: boolean };   // PDF u každého závěru, FHIR jen u potvrzeného
+  }[];
+  counts: { patients: number; confirmed: number };
+}
+
+interface SessionMessage {                      // GET/POST /api/mdt/sessions/{sid}/messages/, SSE …/stream/ (T-334)
+  id: number;
+  session: number;
+  author: { user_id: number; name: string } | null;
+  specialty: RoleId | null;                     // odbornost autora (UserProfile)
+  case: { id: number; patient_id: string } | null;  // štítek pacienta na řadě ("P03", D-018); null = k celému zasedání
+  text: string;
+  created_at: string;                           // místní čas ISO 8601
+}
+
+interface ChatbotMessage {                      // GET/POST /api/mdt/sessions/{sid}/chatbot/ (T-344, §5.12); POST vrací [dotaz, odpověď]
+  id: number;
+  session: number;
+  role: "user" | "ai";
+  case: { id: number; patient_id: string } | null;  // pacient, na kterého se lékař ptal ("P03", D-018); null = jen guidelines a studie
+  text: string;                                 // dotaz; u AI poznámka (např. „Jazykový model není zapnutý…“), jinak ""
+  claims: Claim[];                              // jen AI: tvrzení s citacemi, verification z grounding validátoru; "missing" = údaj chybí
+  uncertain: { text: string; citations: EvidenceId[] }[];   // jen AI: NEJISTOTA AI (rozmezí, zkratka, rozpor)
+  model: string | null;                         // jen AI: model, který odpověděl; null = odpověď bez LLM
+  created_at: string;                           // místní čas ISO 8601
+}
+
 ```
 
 ---
@@ -1685,18 +1816,33 @@ interface MdtSession {                          // GET /api/mdt/sessions/ → (M
 | `IRIS_HOST` / `IRIS_PORT` | backend | `iris` / `1972` |
 | `IRIS_NAMESPACE` | backend | `FHIRSERVER` |
 | `IRIS_USER` / `IRIS_PASSWORD` | backend | dev `SuperUser` / `SYS`, **na VPS jiné** |
-| `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4` |
+| `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4`; ACI `http://<PUBLIC_IP>:52773/fhir/r4`, postup [AZURE_IRIS.md](docs/AZURE_IRIS.md) |
 | `DATASET_DIR` | backend | `/data/dataset` (kontejner) · lokálně `../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1`; bez proměnné ho `ingest.dataset_dir()` najde v checkoutu repa (CI, testy) |
-| `AI_PROVIDER` | backend | `gemini` (prod) / `mock` (testy, CI) |
+| `AI_PROVIDER` | backend | **`nvidia`** (výchozí) / `gemini` / `mock` (testy, CI; vypne i embeddingy a přepis) |
+| `NVIDIA_API_KEY` | backend | NVIDIA API Catalog (jen syntetická data, D-021); nikdy do gitu ani do frontendu |
+| `NVIDIA_MODEL` / `NVIDIA_MODEL_STRONG` | backend | `nvidia/nemotron-3-super-120b-a12b` |
+| `NVIDIA_EMBEDDING_MODEL` / `NVIDIA_EMBEDDING_DIM` | backend | `nvidia/nemotron-3-embed-1b` / `2048` |
+| `NVIDIA_PARSE_MODEL` | backend | `nvidia/nemotron-parse` (OCR skenů PDF) |
+| `NVIDIA_THINKING` | backend | nenastaveno = bez přemýšlení (rychlé); `1` = přemýšlení zapnuté |
+| `NVIDIA_BASE_URL` | backend | `https://integrate.api.nvidia.com/v1`; v produkci NIM on-prem / EU |
+| `EMBEDDING_PROVIDER` | backend | nenastaveno = jako `AI_PROVIDER`; `nvidia` / `gemini` (jiná dimenze → přepočet vektorů) |
+| `TRANSCRIBE_PROVIDER` | backend | nenastaveno = `groq`, je-li `GROQ_API_KEY`, jinak LLM provider |
+| `GROQ_API_KEY` / `GROQ_TRANSCRIBE_MODEL` | backend | Groq / `whisper-large-v3` (limit 20 req/min, 7 200 s audia/h) |
+| `TRANSCRIBE_LANGUAGE` | backend | `cs` |
 | `GEMINI_API_KEY` | backend | Google AI Studio (free tier jen nad syntetickým datasetem, D-021; jinak placený tier); nikdy do gitu ani do frontendu |
 | `AI_REAL_PATIENT_DATA` | backend | `False` (výchozí): data pacientů bez tagu `fiktivni-data` do LLM ani embeddingů nejdou (D-021, `provider_for_patient`). `True` jen s placeným tierem / Vertex AI EU |
+| `VERIFIER_PROVIDER` | backend | `off` / `mock` / `openai` / `gemini`; bez nastavení `openai` při OPENAI_API_KEY, jinak `off`; chybějící klíč vypne kontrolu |
+| `VERIFIER_MODEL` | backend | `gpt-6-astra` (gateway deployment `gpt-6-astra-global`); pro gemini nastavit Gemini model |
+| `OPENAI_BASE_URL` | backend | `https://apim-rakathon-q7146n.azure-api.net/openai/v1` (syntetická data; Global). Alternativní EU deploymenty gateway: `gpt-6-luna`, `gpt-6.1-sol` |
+| `OPENAI_API_KEY` | backend | prázdné v šabloně; klíč týmu pouze lokálně v ignorovaném `WEB_Template/.env`, hlavička `api-key`, nikdy do gitu ani frontendu |
+| `CHATBOT_PROVIDER` / `CHATBOT_MODEL` | backend | chatbot (T-344, §5.12): `openai` nebo jiný provider (`mock`, `gemini`, `nvidia`…); bez nastavení `openai` při `OPENAI_API_KEY`, jinak `AI_PROVIDER`. Model u `openai` výchozí **`gpt-6-1-sol-dz-eu`** (EU Data Zone; na P03 21 s proti 47 s u `gpt-6-astra`, srovnatelná kvalita) |
 | `AI_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_MODEL_STRONG` | backend | `gemini-4-argon` (volitelně, pro porovnání a těžké sekce) |
 | `EMBEDDING_MODEL` / `EMBEDDING_DIM` | backend | `gemini-embedding-001` / `1536` |
 | `TRANSCRIBE_MODEL` | backend | `gemini-3.8-flash` |
 | `AI_TIMEOUT_S` | backend | `90` (timeout jednoho volání Gemini; SDK opakuje 408, 429 a 5xx, celkem 3 pokusy) |
 | `AI_THINKING_LEVEL` | backend | nenastaveno = výchozí podle modelu; `minimal` / `low` / `medium` / `high` (latence vs. kvalita, NFR-1, ladí T-302) |
-| `GROUNDING_MIN_SIMILARITY` | backend | `0.55` (ladit podle evalu) |
+| `GROUNDING_MIN_SIMILARITY` | backend | nenastaveno = podle embedding modelu (NVIDIA `0.40`, Gemini / mock `0.55`, kalibrace §5.3) |
 | `INTAKE_ANAMNESIS_MAX_CHARS` | backend | `600` (FR-A5: delší anamnéza se zkrátí na shrnutí) |
 | `COMPATIBILITY_RULES_FILE` | backend | `services/rules/data/compatibility_rules.yaml` (D-015) |
 | `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` | backend | Vercel doména(y) |

@@ -97,7 +97,7 @@ export function Citations({ ids, className }: { ids: EvidenceId[]; className?: s
   if (!ids.length) return null;
   return (
     <span className={cn('ml-1 inline-flex flex-wrap gap-0.5 align-baseline', className)}>
-      {ids.map((id) => (
+      {[...new Set(ids)].map((id) => (                       // model občas cituje totéž ID dvakrát
         <CitationChip key={id} id={id} />
       ))}
     </span>

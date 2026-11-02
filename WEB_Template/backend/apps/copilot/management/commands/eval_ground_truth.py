@@ -13,7 +13,7 @@ from django.core.management.base import BaseCommand
 from services.ai.brief import build_brief
 from services.ai.context_builder import context_from_resources, load_resources
 from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
-from services.ai_service import ai_model, get_ai_provider
+from services.ai_service import ai_model, ai_provider_name, get_ai_provider
 from services.eval import ground_truth
 from services.eval.evaluate import report, score
 from services.rules import red_flags as rules
@@ -27,12 +27,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--gt', help='adresář s Pxx.json (výchozí data/dev_ground_truth)')
         parser.add_argument('--patients', help='např. P03,P05 (výchozí všichni z ground truth)')
-        parser.add_argument('--model', help='AI_MODEL pro tento běh (např. gemini-4-argon)')
+        parser.add_argument('--model', help='model LLM pro tento běh (např. nvidia/nemotron-3-ultra-550b-a55b)')
         parser.add_argument('--out', help='soubor pro markdown (výchozí stdout)')
 
     def handle(self, *args, **opts):
-        if opts['model']:
-            os.environ['AI_MODEL'] = opts['model']
+        if opts['model']:            # model aktivního provideru (NVIDIA_MODEL / AI_MODEL)
+            os.environ['NVIDIA_MODEL' if ai_provider_name() == 'nvidia' else 'AI_MODEL'] = opts['model']
         gts = ground_truth.load(opts['gt'] or os.environ.get('GROUND_TRUTH_DIR') or None)
         wanted = opts['patients'].split(',') if opts['patients'] else list(gts)
         provider = get_ai_provider()

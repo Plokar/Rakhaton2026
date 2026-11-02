@@ -58,9 +58,11 @@ def cosine(a, b):
 
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch):
-    for name in ("AI_PROVIDER", "GEMINI_API_KEY", "AI_MODEL", "AI_MODEL_STRONG", "EMBEDDING_MODEL",
-                 "EMBEDDING_DIM", "TRANSCRIBE_MODEL", "AI_THINKING_LEVEL"):
+    for name in ("GEMINI_API_KEY", "AI_MODEL", "AI_MODEL_STRONG", "EMBEDDING_MODEL", "EMBEDDING_DIM",
+                 "TRANSCRIBE_MODEL", "AI_THINKING_LEVEL", "NVIDIA_API_KEY", "GROQ_API_KEY", "EMBEDDING_PROVIDER",
+                 "TRANSCRIBE_PROVIDER"):
         monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("AI_PROVIDER", "mock")          # výchozí NVIDIA by bez klíče stejně spadla na mock
 
 
 # ── Mock ──────────────────────────────────────────────────────────────────────
@@ -320,8 +322,11 @@ class TestGeminiProvider:
 
 # ── Factory ───────────────────────────────────────────────────────────────────
 class TestFactory:
-    def test_default_is_mock(self):
-        assert isinstance(get_ai_provider(), MockAIProvider)
+    def test_default_is_nvidia_or_mock_without_key(self, monkeypatch):
+        monkeypatch.delenv("AI_PROVIDER")
+        assert isinstance(get_ai_provider(), MockAIProvider)              # bez NVIDIA_API_KEY
+        monkeypatch.setenv("NVIDIA_API_KEY", "test-key")
+        assert get_ai_provider().provider_name == "nvidia"
 
     def test_gemini_without_key_falls_back_to_mock(self, monkeypatch):
         monkeypatch.setenv("AI_PROVIDER", "gemini")

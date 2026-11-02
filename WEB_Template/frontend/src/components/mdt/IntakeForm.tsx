@@ -4,15 +4,11 @@ import * as React from 'react';
 import { CircleCheck, CircleDashed, Info, RotateCcw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { IntakeField, IntakePrefill, IntakeWarning, Severity, WarningKind } from '@/types/mdt';
+import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity } from '@/types/mdt';
 import { Citations } from './citations';
+import { warningLabel } from './key-facts';
+import { ProjectorLayoutEditor } from './ProjectorLayoutEditor';
 
-const KIND_LABEL: Record<WarningKind, string> = {
-  missing: 'Chybí',
-  out_of_range: 'Mimo normu',
-  conflict: 'Rozpor',
-  ai_uncertain: 'Nejistota AI',
-};
 /** Pruh vlevo = závažnost varování (D-017), vždy s textem typu. */
 const SEVERITY_CLASS: Record<Severity, string> = {
   high: 'border-l-red-600 dark:border-l-red-500',
@@ -27,6 +23,8 @@ export type IntakeResult = {
   imaging_recent_checked: boolean;
   skipped_fields: string[];
   acknowledged: string[];
+  /** Okno pro projektor upravené při zařazení (T-333); bez úprav chybí. */
+  projector_layout?: ProjectorLayout;
 };
 
 /**
@@ -38,11 +36,15 @@ export function IntakeForm({
   prefill,
   submitting,
   onSubmit,
+  patientId,
 }: {
   prefill: IntakePrefill;
   submitting: boolean;
   onSubmit: (result: IntakeResult) => void;
+  /** Pacient pro úpravu okna pro projektor (T-333); bez něj se sekce nezobrazí. */
+  patientId?: string;
 }) {
+  const [layout, setLayout] = React.useState<ProjectorLayout>({});
   const [skipped, setSkipped] = React.useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = React.useState<Set<string>>(new Set());
   const [ecog, setEcog] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
@@ -58,7 +60,17 @@ export function IntakeForm({
   const done = prefill.warnings.filter((w) => acknowledged.has(w.id) || silenced(w));
   const question = fields.find((f) => f.id === 'mdt.question');
   const missingQuestion = !question || question.status !== 'present';
-  const canSubmit = !missingQuestion && ecog !== null && intent !== null;
+  // Zařazení projde až po vyřešení všeho: každý chybějící údaj doplněn nebo vědomě přeskočen,
+  // každé varování vzato na vědomí, ECOG, záměr C/P a kontrola stáří snímku.
+  const unresolvedFields = fields.filter((f) => (f.status === 'missing' || f.status === 'pending') && !skipped.has(f.id));
+  const remaining: string[] = [
+    ...unresolvedFields.map((f) => `Údaj „${f.label}“: doplnit nebo přeskočit`),
+    ...(active.length > 0 ? [`Varování k potvrzení: ${active.length}`] : []),
+    ...(ecog === null ? ['ECOG'] : []),
+    ...(intent === null ? ['Záměr C/P'] : []),
+    ...(imaging ? [] : ['Kontrola stáří snímku']),
+  ];
+  const canSubmit = !missingQuestion && remaining.length === 0;
 
   const toggleSkip = (f: IntakeField) =>
     setSkipped((prev) => {
@@ -80,6 +92,7 @@ export function IntakeForm({
           imaging_recent_checked: imaging,
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
+          ...(layout.blocks || layout.facts || layout.categories ? { projector_layout: layout } : {}),
         });
       }}
     >
@@ -154,8 +167,8 @@ export function IntakeForm({
               <div className="flex flex-wrap items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">
-                    <span className="mr-1.5 text-xs font-medium text-muted-foreground">{KIND_LABEL[w.kind]}</span>
-                    {w.title}
+                    <span className="mr-1.5 text-xs font-medium text-muted-foreground">{warningLabel(w).label}</span>
+                    {warningLabel(w).text}
                   </p>
                   <p className="mt-0.5 text-[13px] leading-snug">
                     {w.detail}
@@ -234,7 +247,7 @@ export function IntakeForm({
             ))}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            {prefill.intent_prefill ? 'Předvyplněno z poslední MDT.' : 'Minulá MDT rozhodnutí odložila, vyberte C nebo P.'}
+            {prefill.intent_prefill ? 'Předvyplněno z poslední MDT.' : 'Záměr z předchozí MDT není (nový pacient nebo odložené rozhodnutí), vyberte C nebo P.'}
           </p>
         </div>
       </section>
@@ -242,7 +255,7 @@ export function IntakeForm({
       <label className="flex items-start gap-2.5 text-sm">
         <input type="checkbox" className="mt-0.5 size-4 accent-primary" checked={imaging} onChange={(e) => setImaging(e.target.checked)} />
         <span>
-          Snímek mladší než 3 měsíce
+          Zkontroloval(a) jsem stáří snímku (doporučeno do 3 měsíců)
           <span className="mt-0.5 block text-xs text-muted-foreground">
             Připomínka. Pro radikální léčbu a změnu linie musí být staging ≤ 6 týdnů (OBC-1.2), před resekcí jater ≤ 4–6 týdnů
             (KRC-2.4); kontrola stagingu běží automaticky.
@@ -250,8 +263,28 @@ export function IntakeForm({
         </span>
       </label>
 
+      {patientId && (
+        <details className="rounded-lg border border-border bg-card px-3 py-2">
+          <summary className="cursor-pointer text-sm font-semibold">
+            Okno pro projektor <span className="font-normal text-muted-foreground">(volitelné: skrýt nebo přeskládat údaje)</span>
+          </summary>
+          <div className="mt-3">
+            <ProjectorLayoutEditor patientId={patientId} value={layout} onChange={setLayout} />
+          </div>
+        </details>
+      )}
+
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
-        {!canSubmit && !missingQuestion && <span className="text-xs text-muted-foreground">Zadejte ECOG a záměr C/P.</span>}
+        {!canSubmit && !missingQuestion && (
+          <div className="mr-auto text-xs text-muted-foreground" aria-live="polite">
+            <p className="font-medium">Před zařazením zbývá:</p>
+            <ul className="list-disc pl-4">
+              {remaining.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <Button type="submit" disabled={!canSubmit} isLoading={submitting}>
           Zařadit do boardu
         </Button>

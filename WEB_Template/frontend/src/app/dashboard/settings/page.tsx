@@ -2,24 +2,21 @@
 
 export const dynamic = 'force-dynamic';
 
+import { MyTemplateCard } from '@/components/mdt/MyTemplateCard';
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { authApi } from '@/lib/api';
 import {
-  User,
-  Lock,
   Sun,
   Moon,
   Laptop,
   CheckCircle2,
   AlertCircle,
-  Key,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -153,6 +150,8 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <MyTemplateCard />
 
         {/* Personal info */}
         <Card>

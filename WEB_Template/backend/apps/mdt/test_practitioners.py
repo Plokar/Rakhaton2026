@@ -27,7 +27,8 @@ def test_demo_accounts_are_doctors_in_iris(case):
 
 def test_directory_search(case):
     everyone = as_user('chirurg').get('/api/mdt/practitioners/?limit=500').json()
-    assert len(everyone) == 57 + 7 and everyone[0]['user'] is not None          # lékaři s účtem nahoře
+    from apps.mdt.roles import DEMO_USERS
+    assert len(everyone) == 57 + len(DEMO_USERS) and everyone[0]['user'] is not None   # lékaři s účtem nahoře
     found = as_user('chirurg').get('/api/mdt/practitioners/?q=radiacni onkolog').json()  # bez diakritiky
     assert found and all(x['role'] == 'radiation_oncologist' for x in found)
     assert {x['id'] for x in found} >= {'LEK-APP-radioterapeut', 'LEK-P01-07'}

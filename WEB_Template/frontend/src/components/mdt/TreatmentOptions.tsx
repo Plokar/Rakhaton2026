@@ -5,6 +5,7 @@ import { Calculator, ChevronRight, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CompatibilityRuleResult, TreatmentOption } from '@/types/mdt';
 import { Citations } from './citations';
+import { NationalRuleNote } from './NationalRuleNote';
 import { ClaimItem, ClaimList } from './ClaimList';
 import { CompatibilityLight, LightIcon } from './CompatibilityLight';
 import { RoleBadge } from './RoleSection';
@@ -103,6 +104,7 @@ function RuleRow({ rule }: { rule: CompatibilityRuleResult }) {
           {rule.text}
           <Citations ids={[...rule.patient_citations, rule.rule_citation]} />
         </p>
+        <NationalRuleNote rule={rule} />
         <p className="flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
           <span translate="no">{rule.rule_id}</span>
           {rule.derived && (

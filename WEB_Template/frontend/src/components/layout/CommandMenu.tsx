@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, Keyboard, LayoutGrid, ListChecks, MonitorUp, Moon, Settings, Sun, UserRound, UsersRound } from 'lucide-react';
+import { Archive, CalendarDays, Keyboard, LayoutGrid, ListChecks, MonitorUp, Moon, Settings, Sun, UserRound, UsersRound } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { dayLabel, pragueDay, timeLabel, todayPrague } from '@/components/mdt/dates';
 import { openProjectorWindow } from '@/components/mdt/projector';
@@ -100,6 +100,9 @@ export function CommandMenu({
           </CommandItem>
           <CommandItem value="tým komise členové role odbornost" onSelect={() => run(() => router.push('/dashboard/tym'))}>
             <UsersRound aria-hidden /> Tým komise
+          </CommandItem>
+          <CommandItem value="záznam boardů archiv uzavřené výstupy pdf fhir" onSelect={() => run(() => router.push('/dashboard/zaznamy'))}>
+            <Archive aria-hidden /> Záznam boardů
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Akce">

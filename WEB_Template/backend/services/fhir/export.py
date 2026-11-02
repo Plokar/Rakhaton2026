@@ -34,7 +34,7 @@ def document_bundle(fhir_ids: dict, now: datetime) -> dict:
     record = [('Composition', fhir_ids['composition']), ('CarePlan', fhir_ids['careplan']), ('CareTeam', fhir_ids['careteam'])]
     record += [('Task', i) for i in fhir_ids['tasks']] + [('DetectedIssue', i) for i in fhir_ids['detected_issues']]
     record += [('ResearchSubject', i) for i in fhir_ids['research_subjects']] + [('Provenance', fhir_ids['provenance'])]
-    for key in ('document_reference_pdf', 'document_reference_patient'):
+    for key in ('document_reference_pdf', 'document_reference_patient', 'document_reference_gp'):
         if fhir_ids.get(key):
             record.append(('DocumentReference', fhir_ids[key]))
     resources = {f'{t}/{i}': fhir.read(t, i) for t, i in record}
@@ -89,6 +89,11 @@ def decision_pdf(decision: dict, *, title: str, mdt_date: datetime, patient: dic
         story.append(p(f"{patient['display_name']} · {dg.get('icd10', '')} {dg.get('text', '')}".strip()))
     if decision['status'] != 'confirmed':
         story.append(p('NÁVRH – nepotvrzeno předsedou komise', warn))
+    for old in decision.get('history') or []:                 # T-332: auditní stopa verzí
+        who = (old.get('confirmed_by') or {}).get('name', '–')
+        story.append(p(f"Verze {old['version']} (potvrdil {who}, {(old.get('confirmed_at') or '')[:16].replace('T', ' ')}) "
+                       f"nahrazena verzí {old['version'] + 1}: {old['reason']} – změnil {old['revised_by']['name']}, "
+                       f"{old['revised_at'][:16].replace('T', ' ')}"))
     story.append(Spacer(1, 4 * mm))
 
     def section(name, text, source='human'):
@@ -118,6 +123,8 @@ def decision_pdf(decision: dict, *, title: str, mdt_date: datetime, patient: dic
     section('Závěr MDT', s['conclusion']['text'], s['conclusion']['source'])
     if decision.get('patient_summary'):                       # BON-4 (T-306)
         section('Shrnutí pro pacienta', ' '.join(i['text'] for i in decision['patient_summary']['items']), 'ai')
+    if decision.get('gp_report'):                             # T-332
+        section('Zpráva pro praktického lékaře', ' '.join(i['text'] for i in decision['gp_report']['items']), 'ai')
 
     if decision['tasks']:
         story.append(p('Úkoly', h2))

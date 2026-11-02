@@ -8,6 +8,13 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def no_live_verifier(monkeypatch):
+    """A developer's gateway key must never enable external review in tests."""
+    monkeypatch.setenv('VERIFIER_PROVIDER', 'off')
+    monkeypatch.delenv('OPENAI_API_KEY', raising=False)
+
+
+@pytest.fixture(autouse=True)
 def no_live_iris_sql(request, monkeypatch):
     """Unit testy nesmí sahat na živé IRIS SQL (v CI není): stejné chování lokálně i v CI.
 
@@ -17,6 +24,8 @@ def no_live_iris_sql(request, monkeypatch):
         return
     from services.fhir import client
     from services.iris import db
+
+    monkeypatch.setenv('AI_PROVIDER', 'mock')      # ani s klíči v .env (výchozí NVIDIA) nic neodchází ven (AGENTS.md)
 
     def offline(*args, **kwargs):
         raise ConnectionError('IRIS v unit testech není (CI); použij fixture fake_iris / fake_fhir nebo -m integration')

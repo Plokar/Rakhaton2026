@@ -16,11 +16,14 @@ class BriefConfig(models.Model):
     detail_level = models.CharField(max_length=10, choices=DETAIL_LEVELS, default='standard')
     language = models.CharField(max_length=2, default='cs')
     hide_unverified = models.BooleanField(default=False)
+    # Pravidla varovných signálů vypnutá pro board (T-332, `red_flags.RULE_CATALOG`); výchozí jsou zapnutá všechna.
+    disabled_rules = models.JSONField(default=list, blank=True)
 
     def snapshot(self) -> dict:
         return {
             'id': str(self.pk), 'name': self.name, 'sections': self.sections, 'roles_present': self.roles_present,
             'detail_level': self.detail_level, 'language': self.language, 'hide_unverified': self.hide_unverified,
+            'disabled_rules': self.disabled_rules,
         }
 
     def __str__(self):
@@ -59,6 +62,9 @@ class MdtCase(models.Model):
                                    related_name='created_cases')
     # Přizvaní ke spolupráci (T-326): smějí případ upravovat jako zadávající lékař; přizývá předseda nebo zadávající.
     collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='mdt_collaborations')
+    # Okno pro projektor upravené zadávajícím lékařem (T-333): {blocks: {order, hidden}, facts: {order, hidden}}.
+    # Skrývá jen v projektoru, podklad a detail zůstávají celé (D-019).
+    projector_layout = models.JSONField(default=dict, blank=True)
     ecog = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MaxValueValidator(4)])
     intent = models.CharField(max_length=1, choices=INTENT, null=True, blank=True)
     imaging_recent_checked = models.BooleanField(default=False)
@@ -74,14 +80,78 @@ class MdtCase(models.Model):
         return f'{self.patient_fhir_id} @ {self.session}'
 
 
+class SessionMessage(models.Model):
+    """Zpráva v chatu lékařů u zasedání (T-334). Neupravuje se ani nemaže: je to diskuse ke klinickému rozhodnutí."""
+    MAX_LENGTH = 2000
+    session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='messages')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                               related_name='mdt_messages')
+    # štítek pacienta, který byl při psaní na řadě (null = zpráva k celému zasedání)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='messages')
+    text = models.TextField(max_length=MAX_LENGTH)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.author} @ {self.session}: {self.text[:40]}'
+
+
+class ChatbotMessage(models.Model):
+    """Dotaz lékaře a odpověď AI v chatbotu u zasedání (T-344). Rozhovor je soukromý (lékař + board).
+    Neupravuje se ani nemaže: audit, co AI komu odpověděla. Odpověď AI není oficiální záznam (zlaté pravidlo)."""
+    ROLES = [('user', 'Lékař'), ('ai', 'AI')]
+    session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='chatbot_messages')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                             related_name='mdt_chatbot_messages')
+    # pacient, na kterého se lékař ptal (null = obecný dotaz na guidelines a studie)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='chatbot_messages')
+    role = models.CharField(max_length=4, choices=ROLES)
+    text = models.TextField(blank=True)                          # dotaz; u AI poznámka (např. bez jazykového modelu)
+    claims = models.JSONField(default=list, blank=True)          # AI: Claim[] (§8.1) po grounding validátoru
+    uncertain = models.JSONField(default=list, blank=True)       # AI: NEJISTOTA AI [{text, citations}]
+    model = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f'{self.role} {self.user} @ {self.session}: {self.text[:40]}'
+
+
 class UserProfile(models.Model):
     """Odbornost uživatele (hodnoty `RoleId`, ARCH §8.1). Role = Django `Group` (D-014)."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')
     specialty = models.CharField(max_length=30, blank=True)     # "oncologist" | "surgeon" | "pulmonologist"…
     practitioner_fhir_id = models.CharField(max_length=64, blank=True)   # lékař v IRIS „LEK-…“ (T-328)
+    title_before = models.CharField(max_length=40, blank=True)   # „MUDr.“, „doc. MUDr.“ (T-338)
+    title_after = models.CharField(max_length=40, blank=True)    # „Ph.D.“
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'
+
+
+class FactTemplate(models.Model):
+    """Šablona klíčových údajů lékaře pro oblast (T-338, D-025, docs/SABLONY_LEKARE.md).
+
+    `layout` = `{categories?: {order, hidden}, facts?: {order, hidden}, blocks?: {order, hidden}}`, klíče údajů
+    stabilní napříč pacienty (`bm.egfr`, `lab:718-7`, `alert:RF-LAB`). Skrývá jen zobrazení, podklad zůstává celý.
+    """
+    AREAS = [('PLI', 'Plíce'), ('PRS', 'Prs'), ('KRC', 'Kolorektum'), ('OBC', 'Ostatní diagnózy')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fact_templates')
+    area = models.CharField(max_length=3, choices=AREAS)
+    layout = models.JSONField(default=dict, blank=True)
+    preset = models.CharField(max_length=40, blank=True)          # z jakého presetu vznikla (jen informace)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'area'], name='fact_template_user_area')]
+        ordering = ['user', 'area']
+
+    def __str__(self):
+        return f'{self.user} {self.area}'
 
 
 class Decision(models.Model):

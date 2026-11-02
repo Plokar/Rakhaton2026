@@ -89,6 +89,7 @@ class Command(BaseCommand):
         for warning in indexing.guideline_count_warnings(guidelines):
             self.stdout.write(self.style.WARNING(f'⚠ {warning}'))
         guidelines += indexing.external_chunks()        # EXT-… pro semafor (T-504, D-016)
+        guidelines += indexing.modra_kniha_chunks()     # Modrá kniha ČOS, EXT-MK-… (národní doporučené postupy)
         paragraphs = {p.label: len(indexing.evidence_chunks(p.label, p.resources)) for p in patients}
         expected = {                                    # kolik řádků z datasetu vznikne (zápisy aplikace přidají další)
             f'{vs.SCHEMA}.EvidenceChunk': sum(paragraphs.values()),
@@ -98,12 +99,13 @@ class Command(BaseCommand):
         if offline:
             self.stdout.write(
                 f'Vektory (nic neodesláno): odstavce {paragraphs} = {sum(paragraphs.values())}, '
-                f'guidelines {len(guidelines)} (z toho EXT {sum(g.GuidelineSet == "EXT" for g in guidelines)}), '
+                f'guidelines {len(guidelines)} (z toho EXT {sum(g.GuidelineSet == "EXT" for g in guidelines)}, '
+                f'Modrá kniha {sum(g.GuidelineSet == "MK" for g in guidelines)}), '
                 f'kritéria studií {expected[f"{vs.SCHEMA}.TrialCriterion"]}.'
             )
             return
 
-        provider = ai_service.get_ai_provider()
+        provider = ai_service.embedding_provider()
         model = vs.embedding_model_id(provider)
         if self.if_empty:
             have = {table: by_model.get(model, 0) for table, by_model in vs.counts().items()}
@@ -112,8 +114,8 @@ class Command(BaseCommand):
                 return
         if provider.is_mock:
             self.stdout.write(self.style.WARNING(
-                '⚠ AI_PROVIDER=mock: vektory jsou hashované (jen lexikální podobnost). Pro Gemini nastav '
-                'AI_PROVIDER=gemini + GEMINI_API_KEY (placený tier, Q9) a spusť znovu s --skip-fhir.'
+                '⚠ Embeddingy mock: vektory jsou hashované (jen lexikální podobnost). Pro skutečný model nastav '
+                'EMBEDDING_PROVIDER (nvidia / gemini) s klíčem a spusť znovu s --skip-fhir.'
             ))
         changes = vs.ensure_schema(recreate)
         if changes:

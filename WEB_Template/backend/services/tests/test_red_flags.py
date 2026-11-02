@@ -262,6 +262,16 @@ def test_llm_flags_are_validated(p03_context):
     assert flags[0].severity == "high"
 
 
+def test_llm_flags_without_duplicates_of_rules_and_capped(p03_context):
+    """RF-LLM se stejnou dvojicí zdrojů jako pravidlo je duplicita; víc než 5 RF-LLM je šum (P02 dal 22)."""
+    ecog = next(f for f in p03_context.red_flags if f.rule == "RF-ECOG")
+    duplicate = {"title": "Rozdíl v ECOG", "description": "x", "severity": "high", "citations": list(ecog.citations)}
+    noise = [{"title": f"Rozdíl {i}", "description": "x", "severity": "low", "citations": ["P03-doc07#2", "P03-img03"]}
+             for i in range(8)]
+    flags, _ = detect_llm_red_flags(p03_context, MockAIProvider(responses={"LlmRedFlags": {"flags": [duplicate, *noise]}}))
+    assert "Rozdíl v ECOG" not in [f.title for f in flags] and len(flags) == 5
+
+
 def test_llm_mock_default_returns_no_flags(p03_context):
     flags, result = detect_llm_red_flags(p03_context, MockAIProvider())
     assert flags == [] and result["status"] == "success"

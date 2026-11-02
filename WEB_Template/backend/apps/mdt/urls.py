@@ -1,15 +1,24 @@
 from django.urls import path
 
-from . import drafts, views
+from . import chat, chatbot, drafts, templates, views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
     path('users/', views.user_list, name='user-list'),
     path('practitioners/', views.practitioner_list, name='practitioner-list'),
+    path('templates/', templates.template_list, name='template-list'),
+    path('templates/catalog/', templates.template_catalog, name='template-catalog'),
+    path('templates/<str:area>/', templates.template_detail, name='template-detail'),
     path('users/<int:uid>/', views.user_detail, name='user-detail'),
     path('sessions/', views.session_list, name='session-list'),
     path('sessions/<int:sid>/', views.session_detail, name='session-detail'),
     path('sessions/<int:sid>/order/', views.session_order, name='session-order'),
+    path('sessions/<int:sid>/record/', views.session_record, name='session-record'),
+    path('sessions/<int:sid>/export.zip', views.session_export_zip, name='session-export-zip'),
+    path('records/', views.board_records, name='board-records'),
+    path('sessions/<int:sid>/messages/', chat.session_messages, name='session-messages'),
+    path('sessions/<int:sid>/stream/', chat.session_stream, name='session-stream'),
+    path('sessions/<int:sid>/chatbot/', chatbot.session_chatbot, name='session-chatbot'),
     path('configs/', views.config_list, name='config-list'),
     path('configs/<int:cfg_id>/', views.config_detail, name='config-detail'),
     path('tasks/', views.task_list, name='task-list'),
@@ -25,6 +34,11 @@ urlpatterns = [
     path('cases/<int:cid>/', views.case_detail, name='case-detail'),
     path('cases/<int:cid>/decision/', views.case_decision, name='case-decision'),
     path('cases/<int:cid>/decision/confirm/', views.case_decision_confirm, name='case-decision-confirm'),
+    path('cases/<int:cid>/decision/revise/', views.case_decision_revise, name='case-decision-revise'),
+    path('cases/<int:cid>/gp-report/', views.case_gp_report, name='case-gp-report'),
+    path('cases/<int:cid>/ask/', views.case_ask, name='case-ask'),
+    path('cases/<int:cid>/similar/', views.case_similar, name='case-similar'),
+    path('rules/', views.rule_catalog, name='rule-catalog'),
     path('cases/<int:cid>/export.fhir.json', views.case_export_fhir, name='case-export-fhir'),
     path('cases/<int:cid>/export.pdf', views.case_export_pdf, name='case-export-pdf'),
     path('cases/<int:cid>/brief/', views.case_brief, name='case-brief'),

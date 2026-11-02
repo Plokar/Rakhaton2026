@@ -1,0 +1,25 @@
+{
+  "name": "mdt-copilot-film",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "capture": "node scripts/capture.mjs",
+    "render": "remotion render src/index.ts MedTeamFilm out/medteam-film.mp4",
+    "still": "remotion still src/index.ts MedTeamFilm"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.532",
+    "@remotion/media": "^4.0.532",
+    "@remotion/motion-blur": "4.0.532",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "playwright": "1.56.1",
+    "typescript": "6.0.3"
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "height": 11241,
+  "sections": [
+    {
+      "id": "prehled",
+      "title": "Rychlý přehled",
+      "x": 632,
+      "y": 197,
+      "w": 1144,
+      "h": 1983
+    },
+    {
+      "id": "pro-me",
+      "title": "Pro vás · klinický onkolog",
+      "x": 632,
+      "y": 2204,
+      "w": 1144,
+      "h": 843
+    },
+    {
+      "id": "souhrn",
+      "title": "Souhrn a časová osa",
+      "x": 632,
+      "y": 3070,
+      "w": 1144,
+      "h": 1005
+    },
+    {
+      "id": "lecba",
+      "title": "Léčba a studie",
+      "x": 632,
+      "y": 4099,
+      "w": 1144,
+      "h": 2382
+    },
+    {
+      "id": "varovani",
+      "title": "Varovné signály",
+      "x": 632,
+      "y": 6506,
+      "w": 1144,
+      "h": 897
+    },
+    {
+      "id": "odbornosti",
+      "title": "Odbornosti",
+      "x": 632,
+      "y": 7427,
+      "w": 1144,
+      "h": 1216
+    },
+    {
+      "id": "role-oncologist",
+      "title": "Klinický onkolog",
+      "x": 632,
+      "y": 7488,
+      "w": 1144,
+      "h": 997
+    },
+    {
+      "id": "otazky",
+      "title": "Otázky k diskusi",
+      "x": 632,
+      "y": 8667,
+      "w": 1144,
+      "h": 291
+    },
+    {
+      "id": "anamneza",
+      "title": "Anamnéza",
+      "x": 632,
+      "y": 8982,
+      "w": 1144,
+      "h": 377
+    },
+    {
+      "id": "podobne",
+      "title": "Podobné případy",
+      "x": 632,
+      "y": 9383,
+      "w": 1144,
+      "h": 613
+    },
+    {
+      "id": "pacient",
+      "title": "Hlas pacienta",
+      "x": 632,
+      "y": 10020,
+      "w": 1144,
+      "h": 750
+    },
+    {
+      "id": "role-patient",
+      "title": "Hlas pacienta",
+      "x": 632,
+      "y": 10081,
+      "w": 1144,
+      "h": 681
+    },
+    {
+      "id": "dotaz",
+      "title": "Zeptat se na případ",
+      "x": 632,
+      "y": 10794,
+      "w": 1144,
+      "h": 304
+    }
+  ],
+  "ask": {
+    "x": 632,
+    "y": 10794,
+    "w": 1144,
+    "h": 304
+  },
+  "answer": {
+    "x": 632,
+    "y": 10969,
+    "w": 1144,
+    "h": 121
+  },
+  "tiles": [
+    {
+      "file": "tile_0.png",
+      "y": 0,
+      "h": 3000
+    },
+    {
+      "file": "tile_1.png",
+      "y": 3000,
+      "h": 3000
+    },
+    {
+      "file": "tile_2.png",
+      "y": 6000,
+      "h": 3000
+    },
+    {
+      "file": "tile_3.png",
+      "y": 9000,
+      "h": 2241
+    }
+  ]
+}

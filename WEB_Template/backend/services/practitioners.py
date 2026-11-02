@@ -15,10 +15,14 @@ APP_SYSTEM = "https://rakathon.example.org/fhir/sid/uzivatel-mdt-copilot"
 # odbornost z textu kvalifikace → RoleId (§8.1); pořadí: specifičtější dřív („radiační onkolog“ před „onkolog“)
 ROLE_KEYWORDS = (("radiační onkolog", "radiation_oncologist"), ("radioterap", "radiation_oncologist"),
                  ("onkolog", "oncologist"), ("chirurg", "surgeon"), ("radiolog", "radiologist"),
-                 ("patolog", "pathologist"), ("pneumolog", "pulmonologist"), ("kardiolog", "cardiologist"))
+                 ("patolog", "pathologist"), ("pneumolog", "pulmonologist"), ("kardiolog", "cardiologist"),
+                 ("nukleární", "nuclear_medicine"), ("paliativ", "palliative_care"), ("geriatr", "geriatrician"),
+                 ("genetik", "geneticist"), ("koordinát", "coordinator"))
 ROLE_LABEL = {"oncologist": "klinický onkolog", "surgeon": "chirurg", "radiation_oncologist": "radiační onkolog",
               "radiologist": "radiolog", "pathologist": "patolog", "pulmonologist": "pneumolog",
-              "cardiologist": "kardiolog"}
+              "cardiologist": "kardiolog", "nuclear_medicine": "nukleární medicína",
+              "palliative_care": "paliativní péče", "geriatrician": "geriatr", "geneticist": "klinický genetik",
+              "coordinator": "koordinátor"}
 
 
 def _plain(text: str) -> str:

@@ -6,16 +6,24 @@ import { useRouter } from 'next/navigation';
 import { parseAsInteger, useQueryState } from 'nuqs';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
+  Bot,
+  CheckCheck,
   ChevronDown,
   ChevronUp,
   CircleCheck,
+  ClipboardCheck,
+  FileDown,
   FileText,
+  GripVertical,
+  LayoutList,
+  MessagesSquare,
   MonitorUp,
   MoreHorizontal,
   NotebookPen,
   Pencil,
   Play,
   Plus,
+  RotateCcw,
   SlidersHorizontal,
   Trash2,
   Undo2,
@@ -34,17 +42,20 @@ import {
 } from '@/components/shadcn/dropdown-menu';
 import { Kbd } from '@/components/shadcn/kbd';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/shadcn/resizable';
+import { Sheet, SheetContent, SheetTitle } from '@/components/shadcn/sheet';
 import { useSidebar } from '@/components/shadcn/sidebar';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { mdtApi } from '@/lib/mdt-api';
-import { agendaOrder, apiErrorMessage, useCaseStatus, useSaveSession, useSessionQuery } from '@/lib/queries';
+import { agendaOrder, apiErrorMessage, useAgendaOrder, useCaseStatus, useSaveSession, useSessionQuery, useSessionStatus } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
-import { AddPatientSheet } from '../AddPatientSheet';
+import { AddPatientSheet, intakePending } from '../AddPatientSheet';
 import { BoardDialog } from '../BoardDialog';
+import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
 import { dayLabel, timeLabel } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
@@ -52,7 +63,12 @@ import { isDiscussed, shortPatient, spokenPatient } from '../patient';
 import { openProjectorWindow, publishSelection } from '../projector';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
+import { ChatbotPanel } from './ChatbotPanel';
+import { SessionChat } from './SessionChat';
 import { formatDuration, useCaseTimer } from './use-case-timer';
+import { DiscussionRecorder } from './DiscussionRecorder';
+import { useChatbot } from './use-chatbot';
+import { useSessionChat } from './use-session-chat';
 
 type Case = MdtCase & { id: number };
 
@@ -82,7 +98,27 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const wide = useMediaQuery('(min-width: 1024px)');
   const chair = can.manageBoards(me);
   const [adding, setAdding] = React.useState(false);
+  const [completing, setCompleting] = React.useState<string | null>(null);
   const [collaborating, setCollaborating] = React.useState(false);
+  const [editingProjector, setEditingProjector] = React.useState(false);
+  const chat = useSessionChat(sessionId, me);
+  const reorder = useAgendaOrder(sessionId);
+  const [moved, setMoved] = React.useState('');
+  const bot = useChatbot(sessionId);
+  // Chat a chatbot vedle přehledu jen ve třísloupcovém jednání; jinak (úzký displej, prázdná agenda) jako boční
+  // panel, a pak jen jeden z nich. Oba otevřené vedle sebe až od 1680 px, jinak pod sebou v jednom sloupci,
+  // ať přehledu pacienta zůstane místo.
+  const roomy = useMediaQuery('(min-width: 1680px)');
+  const inlineChat = cases.length > 0 && wide;
+  const stacked = chat.open && bot.open && !roomy;
+  const toggleChat = () => {
+    if (!chat.open && !inlineChat) bot.setOpen(false);
+    chat.setOpen(!chat.open);
+  };
+  const toggleBot = () => {
+    if (!bot.open && !inlineChat) chat.setOpen(false);
+    bot.setOpen(!bot.open);
+  };
   useFocusLayout();
 
   React.useEffect(() => {
@@ -105,6 +141,19 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
       },
     );
   };
+  /** T-324: předseda přeskládá agendu (přetažení nebo Alt+↑/↓); pořadí uloží server, při chybě se vrátí. */
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= cases.length || from === to) return;
+    const ids = cases.map((c) => c.id);
+    const [id] = ids.splice(from, 1);
+    ids.splice(to, 0, id);
+    const item = cases[from];
+    reorder.mutate(ids, {
+      onSuccess: () => setMoved(`${item.patient_id} je na ${to + 1}. místě agendy.`),
+      onError: (err) => toast.error(apiErrorMessage(err, 'Pořadí agendy se nepodařilo uložit.')),
+    });
+  };
+  const canReorder = chair && session.data?.status !== 'closed' && cases.length > 1;
   const projector = () => {
     if (current) openProjectorWindow({ board: sessionId, caseId: current.id, patient: current.patient_id });
     else openProjectorWindow(null);
@@ -117,6 +166,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   useHotkeys('z', () => current && router.push(`/dashboard/cases/${current.id}/record`), hk, [current]);
   useHotkeys('p', projector, hk, [current]);
   useHotkeys('h', toggleDiscussed, hk, [current, chair]);
+  useHotkeys('c', toggleChat, hk, [chat.open, bot.open, inlineChat]);
+  useHotkeys('a', toggleBot, hk, [chat.open, bot.open, inlineChat]);
 
   if (session.isLoading) return <MeetingSkeleton />;
   if (session.isError || !session.data) {
@@ -132,6 +183,13 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
 
   const board = session.data;
   const discussed = cases.filter(isDiscussed).length;
+  const panelProps = {
+    current,
+    closed: board.status === 'closed',
+    onSelectCase: (caseId: number) => void setParam(caseId),
+  };
+  const chatProps = { ...panelProps, chat };
+  const botProps = { ...panelProps, bot };
 
   const main = current ? (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 lg:px-8">
@@ -140,6 +198,18 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           <Undo2 className="mt-0.5 size-4 shrink-0" aria-hidden />
           Případ je vrácený k doplnění podkladů (OBC-1.1). Zadávající lékař doplní chybějící údaje v dokumentaci.
         </p>
+      )}
+      {intakePending(current) && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/40 dark:bg-amber-400/10 dark:text-amber-200">
+          <ClipboardCheck className="size-4 shrink-0" aria-hidden />
+          <span className="min-w-0 flex-1">
+            Zařazení čeká na dokončení: kontrola úplnosti, ECOG, záměr C/P a varování.
+            {!can.editCase(me, current) && ` Dokončí ho zadávající lékař${current.created_by ? ` (${current.created_by.name})` : ''}.`}
+          </span>
+          {can.editCase(me, current) && board.status !== 'closed' && (
+            <Button size="sm" onClick={() => setCompleting(current.patient_id)}>Dokončit zařazení</Button>
+          )}
+        </div>
       )}
       <CaseQuickViewWide
         key={current.id}
@@ -167,10 +237,12 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
             onToggleDiscussed={toggleDiscussed}
             busy={status.isPending}
             onCollaborate={can.inviteToCase(me, current) ? () => setCollaborating(true) : undefined}
+            onEditProjector={can.editCase(me, current) ? () => setEditingProjector(true) : undefined}
           />
         }
       />
       {collaborating && <CollaboratorsDialog key={`collab-${current.id}`} item={current} open onOpenChange={setCollaborating} />}
+      {editingProjector && <ProjectorLayoutDialog key={`pjl-${current.id}`} item={current} open onOpenChange={setEditingProjector} />}
     </div>
   ) : (
     <div className="flex flex-1 items-center justify-center p-6">
@@ -200,24 +272,88 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         total={total}
         onProjector={projector}
         onAdd={() => setAdding(true)}
+        chatOpen={chat.open}
+        unread={chat.unread}
+        onChat={toggleChat}
+        botOpen={bot.open}
+        onBot={toggleBot}
       />
-      {cases.length > 0 && wide ? (
+      {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
-          <ResizablePanel defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
-            <MeetingRail cases={cases} current={current} elapsed={elapsed} onSelect={select} />
+          <ResizablePanel id="agenda" defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+            <MeetingRail
+              cases={cases}
+              current={current}
+              elapsed={elapsed}
+              onSelect={select}
+              onMove={canReorder ? move : undefined}
+              announcement={moved}
+              recorder={<DiscussionRecorder cases={cases} current={current} />}
+            />
           </ResizablePanel>
           <ResizableHandle withHandle aria-label="Šířka agendy" />
-          <ResizablePanel className="min-h-0">
+          <ResizablePanel id="prehled" className="min-h-0">
             <div className="relative h-full overflow-y-auto">{main}</div>
           </ResizablePanel>
+          {stacked ? (
+            <>
+              <ResizableHandle withHandle aria-label="Šířka chatu a chatbota" />
+              <ResizablePanel id="chaty" defaultSize={380} minSize={300} maxSize={520} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                <ResizablePanelGroup orientation="vertical">
+                  <ResizablePanel id="chat-nahore" defaultSize="45%" minSize="20%" className="min-h-0">
+                    <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+                  </ResizablePanel>
+                  <ResizableHandle withHandle aria-label="Výška chatu" />
+                  <ResizablePanel id="chatbot-dole" defaultSize="55%" minSize="20%" className="min-h-0">
+                    <ChatbotPanel {...botProps} onClose={() => bot.setOpen(false)} />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </ResizablePanel>
+            </>
+          ) : (
+            <>
+              {chat.open && (
+                <>
+                  <ResizableHandle withHandle aria-label="Šířka chatu" />
+                  <ResizablePanel id="chat" defaultSize={340} minSize={280} maxSize={480} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                    <SessionChat {...chatProps} onClose={() => chat.setOpen(false)} />
+                  </ResizablePanel>
+                </>
+              )}
+              {bot.open && (
+                <>
+                  <ResizableHandle withHandle aria-label="Šířka chatbota" />
+                  <ResizablePanel id="chatbot" defaultSize={360} minSize={280} maxSize={520} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
+                    <ChatbotPanel {...botProps} onClose={() => bot.setOpen(false)} />
+                  </ResizablePanel>
+                </>
+              )}
+            </>
+          )}
         </ResizablePanelGroup>
       ) : (
         <div className="relative min-h-0 flex-1 overflow-y-auto">
           {cases.length > 0 && <AgendaPicker cases={cases} current={current} onSelect={select} />}
+          {cases.length > 0 && <DiscussionRecorder cases={cases} current={current} className="border-b bg-card" />}
           {main}
         </div>
       )}
+      {!inlineChat && (
+        <Sheet open={chat.open} onOpenChange={chat.setOpen}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+            <SessionChat {...chatProps} Title={SheetTitle} />
+          </SheetContent>
+        </Sheet>
+      )}
+      {!inlineChat && (
+        <Sheet open={bot.open} onOpenChange={bot.setOpen}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
+            <ChatbotPanel {...botProps} Title={SheetTitle} />
+          </SheetContent>
+        </Sheet>
+      )}
       <AddPatientSheet session={adding ? board : null} onClose={() => setAdding(false)} />
+      <AddPatientSheet session={completing ? board : null} patientId={completing} onClose={() => setCompleting(null)} />
     </div>
   );
 }
@@ -247,6 +383,11 @@ function MeetingHeader({
   total,
   onProjector,
   onAdd,
+  chatOpen,
+  unread,
+  onChat,
+  botOpen,
+  onBot,
 }: {
   board: MdtSessionDetail;
   discussed: number;
@@ -254,12 +395,20 @@ function MeetingHeader({
   total: number;
   onProjector: () => void;
   onAdd: () => void;
+  chatOpen: boolean;
+  unread: number;
+  onChat: () => void;
+  botOpen: boolean;
+  onBot: () => void;
 }) {
   const router = useRouter();
   const me = useMe();
   const save = useSaveSession();
+  const sessionStatus = useSessionStatus();
   const [editing, setEditing] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [closing, setClosing] = React.useState(false);
+  const [outputs, setOutputs] = React.useState<'closed' | 'view' | null>(null);
   const chair = can.manageBoards(me);
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
 
@@ -280,10 +429,34 @@ function MeetingHeader({
           <span className="font-medium text-foreground">{discussed} / {count}</span> projednáno · {formatDuration(total)}
         </p>
       )}
-      <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline" size="lg" onClick={onProjector} title="Okno pro projektor (P)">
-          <MonitorUp aria-hidden /> Projektor
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <Button variant={chatOpen ? 'secondary' : 'outline'} size="lg" onClick={onChat} aria-pressed={chatOpen} aria-label="Chat" title="Chat lékařů zasedání (C)">
+          <MessagesSquare aria-hidden /> <span className="hidden sm:inline">Chat</span>
+          {unread > 0 && (
+            <>
+              <span aria-hidden className="min-w-5 rounded-full bg-primary px-1.5 text-xs leading-5 tabular-nums text-primary-foreground">
+                {unread > 99 ? '99+' : unread}
+              </span>
+              <span className="sr-only">{unread} nepřečtených</span>
+            </>
+          )}
         </Button>
+        <Button variant={botOpen ? 'secondary' : 'outline'} size="lg" onClick={onBot} aria-pressed={botOpen} aria-label="Chatbot" title="Chatbot: dotazy na AI s odpověďmi se zdroji (A)">
+          <Bot aria-hidden /> <span className="hidden sm:inline">Chatbot</span>
+        </Button>
+        <Button variant="outline" size="lg" onClick={onProjector} aria-label="Projektor" title="Okno pro projektor (P)">
+          <MonitorUp aria-hidden /> <span className="hidden sm:inline">Projektor</span>
+        </Button>
+        {chair && board.status !== 'closed' && count > 0 && (
+          <Button variant="outline" size="lg" onClick={() => setClosing(true)} aria-label="Ukončit board" title="Ukončit board a stáhnout výstupy">
+            <CheckCheck aria-hidden /> <span className="hidden sm:inline">Ukončit board</span>
+          </Button>
+        )}
+        {chair && board.status === 'closed' && (
+          <Button variant="outline" size="lg" onClick={() => setOutputs('view')}>
+            <FileDown aria-hidden /> Výstupy
+          </Button>
+        )}
         {can.generateBrief(me) && board.status !== 'closed' && (
           <Button size="lg" onClick={onAdd}>
             <Plus aria-hidden /> Zařadit
@@ -302,6 +475,21 @@ function MeetingHeader({
                 <DropdownMenuItem onClick={() => setEditing(true)}>
                   <Pencil aria-hidden /> Upravit board
                 </DropdownMenuItem>
+                {board.status === 'closed' && (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      sessionStatus.mutate(
+                        { id: board.id, status: 'in_progress' },
+                        {
+                          onSuccess: () => toast('Board je znovu otevřený'),
+                          onError: (err) => toast.error(apiErrorMessage(err, 'Board se nepodařilo otevřít.')),
+                        },
+                      )
+                    }
+                  >
+                    <RotateCcw aria-hidden /> Znovu otevřít board
+                  </DropdownMenuItem>
+                )}
                 {count === 0 && (
                   <>
                     <DropdownMenuSeparator />
@@ -327,6 +515,10 @@ function MeetingHeader({
         />
       )}
       <DeleteBoardDialog board={deleting ? board : null} onClose={() => setDeleting(false)} />
+      {closing && <CloseBoardDialog board={board} open onOpenChange={setClosing} onClosed={() => setOutputs('closed')} />}
+      {outputs && (
+        <BoardOutputsDialog sessionId={board.id} open justClosed={outputs === 'closed'} onOpenChange={(next) => !next && setOutputs(null)} />
+      )}
     </div>
   );
 }
@@ -370,12 +562,22 @@ function MeetingRail({
   current,
   elapsed,
   onSelect,
+  onMove,
+  announcement = '',
+  recorder,
 }: {
   cases: Case[];
   current: Case | null;
   elapsed: Record<string, number>;
   onSelect: (item: Case) => void;
+  /** Jen předseda (T-324): přetažení nebo Alt+↑/↓ změní pořadí agendy. */
+  onMove?: (from: number, to: number) => void;
+  announcement?: string;
+  /** Nahrávání diskuse (BON-3) v boku pod agendou. */
+  recorder: React.ReactNode;
 }) {
+  const [drag, setDrag] = React.useState<number | null>(null);
+  const [over, setOver] = React.useState<number | null>(null);
   return (
     <nav aria-label="Agenda zasedání" className="flex h-full min-h-0 flex-col bg-card">
       <ol className="relative min-h-0 flex-1 overflow-y-auto p-2">
@@ -384,9 +586,44 @@ function MeetingRail({
           const done = isDiscussed(item);
           const seconds = elapsed[item.id] ?? 0;
           return (
-            <li key={item.id}>
+            <li
+              key={item.id}
+              draggable={Boolean(onMove)}
+              onDragStart={(e) => {
+                setDrag(i);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragOver={(e) => {
+                if (drag === null) return;
+                e.preventDefault();
+                setOver(i);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (drag !== null && drag !== i) onMove?.(drag, i);
+                setDrag(null);
+                setOver(null);
+              }}
+              onDragEnd={() => {
+                setDrag(null);
+                setOver(null);
+              }}
+              className={cn(
+                'group/agenda relative rounded-lg',
+                onMove && 'cursor-grab active:cursor-grabbing',
+                drag === i && 'opacity-50',
+                over === i && drag !== null && drag !== i && (drag < i ? 'shadow-[inset_0_-2px_0_var(--color-primary)]' : 'shadow-[inset_0_2px_0_var(--color-primary)]'),
+              )}
+            >
               <button
                 type="button"
+                onKeyDown={(e) => {
+                  if (!onMove || !e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onMove(i, e.key === 'ArrowUp' ? i - 1 : i + 1);
+                }}
+                aria-keyshortcuts={onMove ? 'Alt+ArrowUp Alt+ArrowDown' : undefined}
                 onClick={() => onSelect(item)}
                 aria-current={active ? 'true' : undefined}
                 aria-label={`${i + 1}. ${spokenPatient(item)}${done ? ', projednáno' : ''}${active ? ', na řadě' : ''}`}
@@ -396,7 +633,12 @@ function MeetingRail({
                   done && !active && 'text-muted-foreground',
                 )}
               >
-                <span className="pt-px text-right text-[13px] tabular-nums text-muted-foreground">{i + 1}</span>
+                <span className="relative pt-px text-right text-[13px] tabular-nums text-muted-foreground">
+                  <span className={cn(onMove && 'group-hover/agenda:invisible')}>{i + 1}</span>
+                  {onMove && (
+                    <GripVertical className="absolute top-0.5 right-0 hidden size-4 group-hover/agenda:block" aria-hidden />
+                  )}
+                </span>
                 <span className="min-w-0">
                   <span translate="no" className={cn('block truncate text-sm font-medium', done && !active && 'font-normal')}>
                     {shortPatient(item)}
@@ -404,6 +646,7 @@ function MeetingRail({
                   <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span translate="no">{item.patient?.diagnosis?.icd10 ?? '–'}</span>
                     <ReadinessMark caseId={item.id} />
+                    {intakePending(item) && <span className="font-medium text-amber-700 dark:text-amber-400">k dokončení</span>}
                   </span>
                 </span>
                 <span className="flex flex-col items-end gap-0.5 pt-px">
@@ -427,9 +670,12 @@ function MeetingRail({
           );
         })}
       </ol>
+      {recorder}
       <p className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
         <Kbd>↑</Kbd> <Kbd>↓</Kbd> pacient · <Kbd>?</Kbd> zkratky
+        {onMove && <span className="mt-1 block">Pořadí: přetáhněte, nebo <Kbd>Alt</Kbd>+<Kbd>↑</Kbd>/<Kbd>↓</Kbd></span>}
       </p>
+      <p className="sr-only" aria-live="polite">{announcement}</p>
     </nav>
   );
 }
@@ -469,6 +715,7 @@ function CaseToolbar({
   onToggleDiscussed,
   busy,
   onCollaborate,
+  onEditProjector,
 }: {
   item: Case;
   index: number;
@@ -480,6 +727,8 @@ function CaseToolbar({
   busy: boolean;
   /** Přizvat ke spolupráci (T-326): jen předseda nebo zadávající lékař. */
   onCollaborate?: () => void;
+  /** Upravit okno pro projektor (T-333): zadávající, přizvaný lékař nebo předseda. */
+  onEditProjector?: () => void;
 }) {
   const done = isDiscussed(item);
   return (
@@ -512,6 +761,12 @@ function CaseToolbar({
             {/* popisek až na široké ploše, jinak se lišta zalomí (1440 px s agendou) */}
             <span className="hidden @5xl:inline">Spolupráce</span>
             {item.collaborators?.length ? <span className="tabular-nums">{item.collaborators.length}</span> : null}
+          </Button>
+        )}
+        {onEditProjector && (
+          <Button variant="outline" size="lg" onClick={onEditProjector} aria-label="Upravit okno pro projektor" title="Upravit okno pro projektor: skrýt nebo přeskládat údaje">
+            <LayoutList aria-hidden />
+            <span className="hidden @5xl:inline">Okno projektoru</span>
           </Button>
         )}
       </span>

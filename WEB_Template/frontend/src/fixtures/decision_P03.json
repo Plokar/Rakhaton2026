@@ -91,6 +91,11 @@
         "MMR/MSI"
       ],
       "source": "ai"
+    },
+    "guideline_compliance": {
+      "compliant": true,
+      "reason": "",
+      "citations": []
     }
   },
   "tasks": [

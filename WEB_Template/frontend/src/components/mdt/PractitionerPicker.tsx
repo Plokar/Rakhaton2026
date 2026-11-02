@@ -13,7 +13,8 @@ import {
 } from '@/components/shadcn/command';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { apiErrorMessage, usePractitionersQuery } from '@/lib/queries';
-import type { Practitioner } from '@/types/mdt';
+import type { Practitioner, RoleId } from '@/types/mdt';
+import { ROLE_META } from './roles';
 
 /** Bez diakritiky a velikosti písmen: „radiacni“ najde „radiační“. */
 const plain = (text: string) => text.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
@@ -37,6 +38,7 @@ export function PractitionerPicker({
   description = 'Lékaři nemocnice z IRIS. Hledejte podle jména, odbornosti nebo kódu.',
   excludeIds = [],
   withUserOnly = false,
+  preferRole,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,12 +49,17 @@ export function PractitionerPicker({
   excludeIds?: string[];
   /** Jen lékaři s účtem v aplikaci (např. přizvání ke spolupráci). */
   withUserOnly?: boolean;
+  /** Odbornost pozice (řádek přítomných „Chirurg“): lékaři této odbornosti nahoře ve vlastní skupině. */
+  preferRole?: RoleId | 'chair' | null;
 }) {
   const directory = usePractitionersQuery(open);
   const excluded = new Set(excludeIds);
   const items = (directory.data ?? []).filter((p) => !excluded.has(p.id) && (!withUserOnly || p.user));
-  const withAccount = items.filter((p) => p.user);
-  const others = items.filter((p) => !p.user);
+  const role = preferRole && preferRole !== 'chair' ? preferRole : null;
+  const preferred = role ? items.filter((p) => p.role === role).toSorted((a, b) => Number(Boolean(b.user)) - Number(Boolean(a.user))) : [];
+  const rest = items.filter((p) => !preferred.includes(p));
+  const withAccount = rest.filter((p) => p.user);
+  const others = rest.filter((p) => !p.user);
 
   const pick = (p: Practitioner) => {
     onSelect(p);
@@ -86,7 +93,8 @@ export function PractitionerPicker({
           ) : (
             <>
               <CommandEmpty>Žádný lékař neodpovídá hledání.</CommandEmpty>
-              {withAccount.length > 0 && <CommandGroup heading="S účtem v aplikaci">{withAccount.map(row)}</CommandGroup>}
+              {preferred.length > 0 && role && <CommandGroup heading={`Odbornost: ${ROLE_META[role].label}`}>{preferred.map(row)}</CommandGroup>}
+              {withAccount.length > 0 && <CommandGroup heading={preferred.length ? 'Ostatní s účtem v aplikaci' : 'S účtem v aplikaci'}>{withAccount.map(row)}</CommandGroup>}
               {others.length > 0 && <CommandGroup heading="Další lékaři nemocnice">{others.map(row)}</CommandGroup>}
             </>
           )}

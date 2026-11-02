@@ -17,12 +17,14 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get('access_token');
   const isAuthenticated = !!accessToken;
+  // Access cookie platí 15 min; s platnou refresh cookie si ji stránka obnoví sama (T-336, lib/api.ts)
+  const canRenew = !!request.cookies.get('refresh_token');
 
   // Přesměrovat nepřihlášené z chráněných stránek na login
   const isProtected = PROTECTED_PATHS.some((path) =>
     pathname.startsWith(path),
   );
-  if (isProtected && !isAuthenticated) {
+  if (isProtected && !isAuthenticated && !canRenew) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);

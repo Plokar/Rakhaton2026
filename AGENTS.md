@@ -19,7 +19,7 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 - `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`: dataset od Asseco (= `DATASET_DIR`). **Neměnit**, opravy patří do sanitizace v ingestu.
 - `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele, `onko/` = znalostní báze (postupy podle diagnózy, studie, kritéria semaforu, normy). Ptej se přes `python3 data/onko/q.py`, celé TSV do promptu nenačítej.
 - `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), později `EVAL.md` a `DEMO.md`.
-- `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej Gemini**.
+- `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej náš provider** (`services/ai_service.py`: NVIDIA / Gemini).
   - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDT Copilot“ má přednost před textem skillu (ARCH §4.8).
   - `impeccable` (T-016): `/impeccable audit | critique | polish | distill | harden | clarify | adapt <cíl>` nad `WEB_Template/frontend` (`--target`). Hook detektoru jen lokálně (`/impeccable hooks on`).
   - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDT Copilot“ má přednost.
@@ -42,10 +42,10 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_da
 
 - **Commit:** `T-xxx: co se změnilo`. Commituj malé kroky a často. Nikdy `push --force` do `master`. Před claimem i před každým push `git pull --rebase origin master`. Jeden agent = jeden úkol = jedna větev.
 - **Secrets:** nikdy necommituj `.env`, API klíče ani hesla. Ve frontendu nesmí být žádné LLM klíče.
-- **LLM:** Google AI Studio (Gemini API).
+- **LLM (T-323):** výchozí **NVIDIA** (`AI_PROVIDER=nvidia`, `nvidia/nemotron-3-super-120b-a12b`), embeddingy NVIDIA `nemotron-3-embed-1b` @ 2048, přepis audia **Groq Whisper**; alternativa Gemini (`AI_PROVIDER=gemini`). Volat jen přes `get_ai_provider()` / `embedding_provider()` / `transcription_provider()`.
   - V testech a CI jen `AI_PROVIDER=mock`.
   - Reálná volání: **free tier jen nad syntetickým datasetem hackathonu** (D-021, Q9); skutečná pacientská data nikdy, ta jen placený tier / Vertex AI EU.
-  - Model ID drž v env (`AI_MODEL`…), nehardcoduj je. Výchozí `AI_MODEL=gemini-3.8-flash` (nejlepší poměr ceny a výkonu), `gemini-4-argon` jen pro srovnání v evalu.
+  - Model ID drž v env (`NVIDIA_MODEL`, `AI_MODEL`…), nehardcoduj je. Klíče (`NVIDIA_API_KEY`, `GROQ_API_KEY`, `GEMINI_API_KEY`) jen v lokálním `.env`. Testy vynucují `mock` v `conftest.py`, nic neodchází ven.
 - **Kontrakty** (API §6.3, JSON §8): změna jde nejdřív do ARCHITEKTURA.md, ve stejném PR jako kód, a do Deníku v PROGRESS.md jako `⚠️ KONTRAKT`.
 - **Dataset → FHIR:**
   - bundly jsou `collection` a do IRIS se nahrávají jako `transaction` s `PUT Type/id`;
@@ -54,7 +54,7 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_da
   - text je v `attachment.data` / `presentedForm.data` jako base64;
   - neznámé search parametry IRIS tiše ignoruje, proto filtry ověř.
 - **Za běhu čti data jen z IRIS**, nikdy z JSON nebo `.md` souborů datasetu (ty jsou jen pro ingest, testy a čtení člověkem).
-- **Citace (Evidence ID) = ID z datasetu:** `P03-img03`, `P03-img03#2` (odstavec), `KRC-2.4` (guidelines), `RKT-03/V3` (kritérium studie). Jediná výjimka je `EXT-…` pro externí zdroj prahu u pravidel semaforu (D-016), nikdy pro fakta pacienta. Nevymýšlej jiné formáty.
+- **Citace (Evidence ID) = ID z datasetu:** `P03-img03`, `P03-img03#2` (odstavec), `KRC-2.4` (guidelines), `RKT-03/V3` (kritérium studie). Jediná výjimka je `EXT-…` pro externí zdroj prahu u pravidel semaforu (D-016) a `EXT-MK-…` pro oddíl Modré knihy ČOS (D-023, `data/onko/modra_kniha`), nikdy pro fakta pacienta. Nevymýšlej jiné formáty.
 - **IRIS DB-API:** spojení vždy zavírej (Community Edition má limit spojení). SQL parametry předávej přes `?`. Používej `SELECT TOP n`, ne `LIMIT`.
 - **AI výstupy:** každé tvrzení musí mít citaci a chybějící údaj se hlásí jako `missing`, nikdy se nedomýšlí. AI text musí být v UI odlišený a nic se nestane oficiálním záznamem bez potvrzení lékařem.
   - **Semafor** u léčebných postupů počítá jen kód, s citací faktu pacienta i pravidla (D-015). LLM barvu nepřiřazuje. Vždy se zobrazí všechny možnosti, i červené, a nikdy se nepíše „doporučujeme“.

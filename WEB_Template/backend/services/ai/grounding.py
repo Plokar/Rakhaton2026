@@ -27,6 +27,15 @@ from services.ai.context_builder import PatientContext
 
 log = logging.getLogger(__name__)
 DEFAULT_MIN_SIMILARITY = 0.55
+# Práh závisí na embedding modelu. NVIDIA nemotron-3-embed (T-323, 135 + 135 párů z podkladů P01–P06): správná
+# citace medián 0,67, cizí odstavec téhož pacienta 0,23; 0,40 propustí ~90 % správných a ~10 % cizích.
+MIN_SIMILARITY_BY_EMBEDDING = {"nvidia": 0.40}
+
+
+def default_min_similarity() -> float:
+    from services.ai_service import embedding_provider_name
+
+    return MIN_SIMILARITY_BY_EMBEDDING.get(embedding_provider_name(), DEFAULT_MIN_SIMILARITY)
 
 NUMBER = re.compile(r"(?<![\w.,])\d+(?:[.,]\d+)?(?![\w])")
 ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
@@ -97,25 +106,35 @@ def check_claim(claim: dict, context: PatientContext) -> GroundingResult:
     return GroundingResult(not reasons, reasons)
 
 
+def _known_citations(citations: list[str], allowed: set[str]) -> list[str]:
+    """Odstavec, který zdroj nemá (model cituje „P02-prom02#3“ u dotazníku bez odstavců), se cituje jako celý
+    zdroj; úplně neznámé ID zůstane a tvrzení neprojde."""
+    fixed = [c.split("#", 1)[0] if c not in allowed and c.split("#", 1)[0] in allowed else c for c in citations]
+    return list(dict.fromkeys(fixed))
+
+
 def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
     """Nastaví `verification` včetně sémantické kontroly přes IRIS Vector Search.
 
     Důvody neověření vrátí v `_grounding` (mimo kontrakt). Chybějící údaje nepopisují
     klinický fakt a zůstávají kontrolované pouze podle citací.
     """
+    default = default_min_similarity()
     try:
-        min_similarity = float(os.environ.get("GROUNDING_MIN_SIMILARITY", DEFAULT_MIN_SIMILARITY))
+        min_similarity = float(os.environ.get("GROUNDING_MIN_SIMILARITY", default))
     except (TypeError, ValueError):
-        min_similarity = DEFAULT_MIN_SIMILARITY
+        min_similarity = default
     if not 0 <= min_similarity <= 1:
-        min_similarity = DEFAULT_MIN_SIMILARITY
+        min_similarity = default
 
     out = []
     for claim in claims:
+        claim = {**claim, "citations": _known_citations(claim.get("citations") or [], context.allowed_ids)}
         result = check_claim(claim, context)
-        citations = claim.get("citations") or []
+        citations = claim["citations"]
         semantic = (claim.get("kind") != "missing" and not claim.get("_computed")
                     and all(has_vector(context, c) for c in citations))
+        confidence = None
         if result.verified and semantic:
             try:
                 from services.iris.vector_store import similarity
@@ -123,6 +142,8 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
                 scores = similarity(claim.get("text", ""), citations)
                 valid_scores = [score for score in scores.values()
                                 if isinstance(score, (int, float)) and math.isfinite(score)]
+                if valid_scores:                       # míra jistoty pro UI (T-332): nejlepší shoda se zdrojem
+                    confidence = round(min(max(max(valid_scores), 0.0), 1.0), 2)
                 if not valid_scores:
                     result = GroundingResult(False, ["citované zdroje nemají dostupné vektory"])
                 elif max(valid_scores) < min_similarity:
@@ -135,6 +156,8 @@ def verify_claims(claims: list[dict], context: PatientContext) -> list[dict]:
                 log.warning("Grounding v2 nedostupný: %s", exc)
                 result = GroundingResult(False, ["sémantickou podobnost se nepodařilo ověřit"])
         item = {**claim, "verification": "verified" if result.verified else "unverified"}
+        if confidence is not None:
+            item["confidence"] = confidence
         if result.reasons:
             item["_grounding"] = result.reasons
         out.append(item)

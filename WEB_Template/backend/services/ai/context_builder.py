@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Sequence
 
-from services.ai.guidelines import GuidelinePassage, load_guidelines
+from services.ai.guidelines import NATIONAL_SET, GuidelinePassage, load_guidelines
 from services.ai.pseudonymize import Pseudonymizer
 from services.ai.text import resource_paragraphs
 from services.fhir.ids import derived_from_ids
@@ -150,10 +150,14 @@ class PatientContext:
 
     def render(self, highlight: Sequence[str] = ()) -> str:
         """Text kontextu pro LLM. `highlight` = ID odstavců seřazená vektorovým hledáním (T-102)."""
-        out = [
-            f"# Podklady pacienta {self.patient_id} k MDT {self.facts.get('mdt_date') or '(datum neuvedeno)'}",
-            "Formát řádku: [ID zdroje] datum text. ID s „#n“ je n-tý odstavec textu daného zdroje.",
-        ]
+        if self.patient_id:
+            out = [
+                f"# Podklady pacienta {self.patient_id} k MDT {self.facts.get('mdt_date') or '(datum neuvedeno)'}",
+                "Formát řádku: [ID zdroje] datum text. ID s „#n“ je n-tý odstavec textu daného zdroje.",
+            ]
+        else:
+            out = ["# Doporučené postupy a klinické studie (bez konkrétního pacienta)",
+                   "Formát řádku: [ID zdroje] text."]
         by_id = {line.id: line for line in self.evidence}
         top = [by_id[i] for i in highlight if i in by_id]
         if top:
@@ -205,12 +209,7 @@ def context_from_resources(patient_id: str, resources: Iterable[dict], *, studie
     """Čistá transformace FHIR resources → `PatientContext` (testovatelná bez IRIS)."""
     resources = _unique(resources)
     red_flags = list(red_flags)
-    pseudo = Pseudonymizer()
-    for r in resources:
-        if r.get("resourceType") in ("Patient", "Practitioner"):
-            for name in r.get("name", []):
-                pseudo.add_name(name.get("text"), r["id"])
-                pseudo.add_name(" ".join(name.get("given", []) + [name.get("family", "")]).strip(), r["id"])
+    pseudo = pseudonymizer_for(resources)
 
     facts = _facts(patient_id, resources)
     sets = guideline_sets_for(_diagnosis_codes(resources))
@@ -230,13 +229,34 @@ def context_from_resources(patient_id: str, resources: Iterable[dict], *, studie
         patient_id=patient_id,
         evidence=[line for _, lines in blocks for line in lines],
         guideline_sets=sets,
-        guidelines=sorted((g for g in guidelines if g.guideline_set in sets), key=lambda g: g.sort_key),
+        # sada podle diagnózy + Modrá kniha ČOS (už vybraná k diagnóze pacienta, `guidelines.national_passages`)
+        guidelines=sorted((g for g in guidelines if g.guideline_set in sets or g.guideline_set == NATIONAL_SET),
+                          key=lambda g: g.sort_key),
         trials=_trials(studies, sets, _lung_histology(resources) if "PLI" in sets else None),
         facts=facts,
         rule_results=[f.render_line() for f in red_flags] + list(rule_results),
         red_flags=red_flags,
         pseudonymized=pseudo.replacements,
     )
+
+
+def pseudonymizer_for(resources: Iterable[dict]) -> Pseudonymizer:
+    """Pseudonymizace se jmény pacienta a lékařů z resources (jméno → ID), i pro text mimo kontext (dotaz lékaře)."""
+    pseudo = Pseudonymizer()
+    for r in resources:
+        if r.get("resourceType") in ("Patient", "Practitioner"):
+            for name in r.get("name", []):
+                pseudo.add_name(name.get("text"), r["id"])
+                pseudo.add_name(" ".join(name.get("given", []) + [name.get("family", "")]).strip(), r["id"])
+    return pseudo
+
+
+def general_context(studies: Iterable[dict] = (), guidelines: Iterable[GuidelinePassage] = ()) -> PatientContext:
+    """Kontext bez pacienta (chatbot bez štítku, T-344): všechny sady guidelines a všechny studie, žádná fakta pacienta."""
+    guidelines = sorted(guidelines, key=lambda g: g.sort_key)
+    sets = list(dict.fromkeys(g.guideline_set for g in guidelines))
+    return PatientContext(patient_id="", evidence=[], guideline_sets=sets, guidelines=guidelines,
+                          trials=_trials(studies, sets), facts={})
 
 
 # ── Pomocné funkce ────────────────────────────────────────────────────────────

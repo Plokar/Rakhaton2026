@@ -18,6 +18,7 @@ python3 data/onko/q.py doporuc P04 [--json]      # co v podkladech chybí → va
 python3 data/onko/q.py pohled chirurg [P03]      # co jde lékaři nahoru; bez pacienta = všichni P01–P06
 python3 data/onko/q.py odbornosti C50 kardiolog  # koho co zajímá a proč
 python3 data/onko/q.py check                     # integrita (test: services/eval/test_onko_kb.py)
+python3 data/onko/q.py mk C18 resekce metastáz   # Modrá kniha ČOS: oddíly kapitoly k diagnóze (EXT-MK-…, strana PDF)
 ```
 
 `Pxx` čte bundle z datasetu jen pro vývoj a testy. Aplikace má za běhu data jen z IRIS.
@@ -110,3 +111,10 @@ Vyhodnocení (POZADAVKY §5.1, D-015): nejdřív 🔴, pak 🟠, pak 🟢. Když
 - Aplikace (semafor T-503) má jako zdroj pravdy `services/rules/data/compatibility_rules.yaml` + `compatibility.py`. Báze je jeho nadmnožina se stejnými ID a zdroji (`[app]` ve výpisu q.py). Soulad hlídá test `services/eval/test_onko_kb.py`.
 - Napojení báze na aplikaci je úkol T-316: generický vyhodnocovač podmínek, katalog postupů z `postupy.tsv` a nové `EXT-…` do `external_sources.json`.
 - Za běhu aplikace čte fakta pacienta jen z IRIS. `rkt.tsv` je jen kompaktní pohled na `studie/` datasetu.
+
+## Modrá kniha ČOS (T-337, D-023)
+
+`modra_kniha/pasaze.jsonl`: 1240 oddílů 32. aktualizace Modré knihy České onkologické společnosti (platnost od
+1. 3. 2026) podle jejího číslování (`EXT-MK-4.6.3`, další části `-2`), s rozsahem MKN-10 kapitoly a stránkou PDF.
+Přegenerování: `python3 data/onko/modra_kniha/stahni.py` (PDF z linkos.cz se stáhne do `modra_kniha/`, do gitu
+nepatří). Ingest je nahraje do IRIS jako sadu `MK`; podklad k diagnóze pacienta vybere relevantní oddíly.

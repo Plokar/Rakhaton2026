@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronLeft, ChevronRight, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, LayoutList, MonitorUp, MoreHorizontal, NotebookPen, PanelRightOpen, RefreshCw, TriangleAlert, UserRound } from 'lucide-react';
 import { PageCrumbs } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/shadcn/dropdown-menu';
@@ -15,22 +15,30 @@ import { agendaOrder, apiErrorMessage, useBriefQuery, useCaseLocation, useForMeQ
 import { cn } from '@/lib/utils';
 import type { Brief, BriefSection, MdtCase, MdtSessionDetail, SectionId, TimelineEvent } from '@/types/mdt';
 import { AiBlock } from '../AiBlock';
-import { Citations } from '../citations';
-import { ClaimItem, ClaimList } from '../ClaimList';
+import { CitationProvider, Citations, collectCitations } from '../citations';
+import { ClaimItem, ClaimList, SectionClaims } from '../ClaimList';
 import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-source';
-import { GenerateBrief, useBriefJob } from '../GenerateBrief';
+import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
-import { CaseQuickViewBody, fixtureQuickViewSources, quickHeader, useQuickViewSources, type QuickViewSources } from '../quick-view';
+import {
+  CaseQuickViewBody, dataNoticesLabel, fixtureQuickViewSources, quickHeader, redFlagsLabel, useQuickViewSources, type QuickViewSources,
+} from '../quick-view';
 import { RedFlagList } from '../RedFlagList';
 import { ROLE_META } from '../roles';
 import { RoleSection } from '../RoleSection';
+import { SourceDrawer } from '../SourceDrawer';
 import { Timeline } from '../Timeline';
 import { TreatmentOptions } from '../TreatmentOptions';
 import { TrialScreening } from '../TrialScreening';
 import { DetailSection, SectionNav, SectionsProvider, type SectionDef } from './DetailSection';
 import { ForMePanel } from './ForMePanel';
 import { MyTasks } from '../MyTasks';
+import { NationalGuidelines } from '../NationalGuidelines';
+import { CaseAsk } from '../CaseAsk';
+import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
+import { SimilarCases } from '../SimilarCases';
+import { VerifierPanel } from '../VerifierPanel';
 
 /** Případ `demo` = podklad P03 z fixtures, bez backendu (ARCH §7.3). */
 export const DEMO_CASE = 'demo';
@@ -109,7 +117,7 @@ const DETAIL_SECTION: Partial<Record<SectionId, string>> = {
   trials: 'lecba',
   questions: 'otazky',
 };
-const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'pacient', 'otazky'];
+const DEFAULT_ORDER = ['varovani', 'souhrn', 'anamneza', 'odbornosti', 'lecba', 'podobne', 'pacient', 'otazky', 'dotaz'];
 
 /** Rychlý přehled zůstává první (ARCH §7.3), pak podle `sections` (předseda nebo odbornost), pak zbytek. */
 function detailOrder(sections: SectionId[], forMe: boolean): string[] {
@@ -146,6 +154,11 @@ function DetailLayout({
 }) {
   const me = useMe();
   const isDemo = caseKey === DEMO_CASE;
+  // Citace v sekcích pod rychlým přehledem (souhrn, léčba, varování, odbornosti…) otevírají zdroj ve stejném
+  // panelu jako přehled; rychlý přehled má vlastní (QuickViewRoot). Dřív v detailu klik na citaci nic neudělal.
+  const [sourceId, setSourceId] = React.useState<string | null>(null);
+  const citationOrder = React.useMemo(() => collectCitations([brief, timeline ?? []]), [brief, timeline]);
+  const closeSource = React.useCallback(() => setSourceId(null), []);
   // T-326: podklad generuje zadávající lékař, přizvaný lékař nebo předseda
   const canGenerate = !isDemo && (item ? can.editCase(me, item) : can.manageBoards(me));
   const hideUnverified = brief?.config.hide_unverified ?? false;
@@ -208,6 +221,11 @@ function DetailLayout({
           {brief ? (
             <div className="flex flex-col gap-5">
               <RedFlagList flags={redFlags} />
+              {(brief.config.disabled_rules?.length ?? 0) > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Pravidla vypnutá v nastavení boardu: <span translate="no">{brief.config.disabled_rules?.join(', ')}</span>.
+                </p>
+              )}
               {alerts.length > 0 && (
                 <AiBlock title="Alergie, implantáty a předchozí výkony" status={brief.status} headingLevel="h3">
                   <ul className="flex flex-col gap-1.5">
@@ -218,7 +236,7 @@ function DetailLayout({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Varovné signály z rozporů mezi zdroji vzniknou s podkladem. Varování z kontroly úplnosti jsou v rychlém přehledu.
+              Varovné signály z rozporů mezi zdroji vzniknou s podkladem. Upozornění k údajům z kontroly úplnosti jsou v rychlém přehledu.
             </p>
           )}
         </DetailSection>
@@ -241,7 +259,7 @@ function DetailLayout({
                 <div className="flex flex-col gap-5">
                   {sectionsOf(brief, 'anamnesis').map((s) => (
                     <AiBlock key={s.title} title={s.title || 'Anamnéza'} status={brief?.status} headingLevel="h3">
-                      <ClaimList claims={s.items} hideUnverified={hideUnverified} />
+                      <SectionClaims section={s} hideUnverified={hideUnverified} />
                     </AiBlock>
                   ))}
                   {brief && brief.header.comorbidities.length > 0 && (
@@ -286,7 +304,7 @@ function DetailLayout({
           }
         : null,
     lecba:
-      brief && (ds || sectionsOf(brief, 'modalities').length)
+      brief && (ds || sectionsOf(brief, 'modalities').length || brief.national_guidelines?.length)
         ? {
             def: { id: 'lecba', label: 'Léčba a studie' },
             node: (
@@ -308,6 +326,7 @@ function DetailLayout({
                       </AiBlock>
                     </>
                   )}
+                  <NationalGuidelines items={brief.national_guidelines} />
                 </div>
               </DetailSection>
             ),
@@ -347,6 +366,28 @@ function DetailLayout({
             ),
           }
         : null,
+    podobne:
+      !isDemo && item?.id
+        ? {
+            def: { id: 'podobne', label: 'Podobné případy' },
+            node: (
+              <DetailSection id="podobne" title="Podobné případy">
+                <SimilarCases caseId={item.id} />
+              </DetailSection>
+            ),
+          }
+        : null,
+    dotaz:
+      !isDemo && item?.id
+        ? {
+            def: { id: 'dotaz', label: 'Zeptat se na případ' },
+            node: (
+              <DetailSection id="dotaz" title="Zeptat se na případ">
+                <CaseAsk caseId={item.id} />
+              </DetailSection>
+            ),
+          }
+        : null,
   };
 
   const chairSections = (brief?.config.sections ?? []).filter((s) => s.enabled).toSorted((a, b) => a.order - b.order).map((s) => s.id);
@@ -355,11 +396,15 @@ function DetailLayout({
   const sections = shown.map((b) => b.def);
 
   return (
+    <CitationProvider order={citationOrder} activeId={sourceId} onOpen={setSourceId}>
     <SectionsProvider initialOpen={['prehled', 'pro-me', 'varovani']}>
       <PageCrumbs
         items={[
           ...(session ? [{ label: session.title, href: `/dashboard/mdt/${session.id}` }] : []),
-          { label: item?.patient_id ?? brief?.patient_id ?? sources.patientId },
+          {
+            label: item?.patient_id ?? brief?.patient_id ?? sources.patientId,
+            href: isDemo ? undefined : `/dashboard/patients/${encodeURIComponent(sources.patientId)}`,
+          },
         ]}
       />
       <StickyCaseHeader caseKey={caseKey} sources={sources} session={session} item={item} brief={brief} canGenerate={canGenerate} sections={sections} />
@@ -393,6 +438,8 @@ function DetailLayout({
             <React.Fragment key={b.def.id}>{b.node}</React.Fragment>
           ))}
 
+          {brief?.feedback && <FeedbackNote feedback={brief.feedback} />}
+          {brief && <VerifierPanel verifier={brief.verifier} />}
           {brief && (
             <p className="border-t border-border pt-4 text-xs text-muted-foreground">
               Podklad připravila AI ({brief.model}). Rozhoduje lékař, oficiálním záznamem se stane až po potvrzení. Tvrzení{' '}
@@ -403,6 +450,8 @@ function DetailLayout({
         </div>
       </div>
     </SectionsProvider>
+    <SourceDrawer evidenceId={sourceId} loadSource={sources.loadSource} onClose={closeSource} />
+    </CitationProvider>
   );
 }
 
@@ -473,6 +522,8 @@ function StickyCaseHeader({
   const isDemo = caseKey === DEMO_CASE;
   const highWarnings = header.warnings.filter((w) => w.severity === 'high').length;
   const job = useBriefJob(caseKey);
+  const [regenerating, setRegenerating] = React.useState(false);
+  const [editingProjector, setEditingProjector] = React.useState(false);
   const flags = brief?.red_flags.length ?? 0;
 
   return (
@@ -500,7 +551,7 @@ function StickyCaseHeader({
               {header.tnm && <> · <span translate="no">{header.tnm}</span></>}
             </p>
           </div>
-          <dl className="flex items-center gap-4 text-sm">
+          <dl className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             <div className="flex items-baseline gap-1.5" title="Performance status (ECOG): lékař, pacient (PROMs)">
               <dt className="text-xs text-muted-foreground">PS</dt>
               <dd className="text-lg font-semibold tabular-nums">{header.physicianPs ?? '–'}</dd>
@@ -513,11 +564,19 @@ function StickyCaseHeader({
               <dt className="text-xs text-muted-foreground">C/P</dt>
               <dd className="text-lg font-semibold">{header.intent ?? '–'}</dd>
             </div>
-            {(flags > 0 || highWarnings > 0) && (
-              <a href="#varovani" className="inline-flex items-center gap-1 text-[13px] font-medium hover:underline hover:underline-offset-4">
-                <TriangleAlert className={cn('size-4', highWarnings || brief?.red_flags.some((f) => f.severity === 'high') ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400')} aria-hidden />
-                <span className="tabular-nums">{flags || header.warnings.length}</span> varování
-              </a>
+            {(flags > 0 || header.warnings.length > 0) && (
+              // dvě čísla, dva názvy (T-343): varovné signály podkladu a upozornění k údajům z kontroly úplnosti
+              // pod sebou, aby se hlavička vešla na jeden řádek
+              <div className="grid basis-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-1.5 text-[13px] font-medium leading-snug sm:basis-auto">
+                <dt className="sr-only">Varování</dt>
+                <TriangleAlert className={cn('row-span-2 size-4', highWarnings || brief?.red_flags.some((f) => f.severity === 'high') ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400')} aria-hidden />
+                {flags > 0 && (
+                  <dd className="col-start-2"><a href="#varovani" className="tabular-nums hover:underline hover:underline-offset-4">{redFlagsLabel(flags)}</a></dd>
+                )}
+                {header.warnings.length > 0 && (
+                  <dd className="col-start-2"><a href="#prehled" title={dataNoticesLabel(header.warnings.length, highWarnings)} className="tabular-nums hover:underline hover:underline-offset-4">{dataNoticesLabel(header.warnings.length)}</a></dd>
+                )}
+              </div>
             )}
           </dl>
           <div className="flex items-center gap-1.5">
@@ -551,9 +610,19 @@ function StickyCaseHeader({
                 <DropdownMenuItem onClick={() => { if (!briefWindow(caseKey)) router.push(`/brief/${caseKey}`); }}>
                   <PanelRightOpen aria-hidden /> Úzké okno vedle PACS
                 </DropdownMenuItem>
+                {!isDemo && (
+                  <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${encodeURIComponent(sources.patientId)}`)}>
+                    <UserRound aria-hidden /> Karta pacienta, vložit zprávu
+                  </DropdownMenuItem>
+                )}
                 {canGenerate && brief && (
-                  <DropdownMenuItem onClick={() => void job.start()} disabled={job.running || job.starting}>
-                    <RefreshCw aria-hidden /> Přegenerovat podklad
+                  <DropdownMenuItem onClick={() => setRegenerating(true)} disabled={job.running || job.starting}>
+                    <RefreshCw aria-hidden /> Přegenerovat s připomínkou…
+                  </DropdownMenuItem>
+                )}
+                {canGenerate && item && (
+                  <DropdownMenuItem onClick={() => setEditingProjector(true)}>
+                    <LayoutList aria-hidden /> Upravit okno pro projektor…
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -561,6 +630,8 @@ function StickyCaseHeader({
           </div>
         </div>
         {job.progress}
+        <RegenerateDialog open={regenerating} onClose={() => setRegenerating(false)} onSubmit={(feedback) => void job.start(feedback)} />
+        {editingProjector && item && <ProjectorLayoutDialog item={item} open onOpenChange={setEditingProjector} />}
         <div className="xl:hidden">
           <SectionNav sections={sections} variant="tabs" />
         </div>

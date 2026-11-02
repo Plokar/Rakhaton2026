@@ -75,6 +75,17 @@ def test_confirm_writes_mdt02_to_iris(case, decision):
     assert as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json').status_code == 409
 
 
+def test_confirm_minimal_decision_without_empty_arrays(case, decision):
+    """Závěr bez doporučených kroků, re-MDT a úkolů (např. draft zapisovatele): IRIS odmítá `activity: []`."""
+    s = {k: v for k, v in decision['sections'].items() if k not in ('re_mdt', 'trial', 'extra_diagnostics')}
+    chosen = [{'id': 'resekce', 'title': 'Resekce jaterních metastáz', 'light': 'green', 'chosen': True}]
+    minimal = {**decision, 'sections': {**s, 'recommendation': [], 'options_considered': chosen},
+               'tasks': [], 'red_flags_acknowledged': []}
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', minimal, format='json')
+    assert as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/').status_code == 200
+    assert 'activity' not in client.read('CarePlan', 'P03-mdt02-careplan')
+
+
 def test_next_number_after_existing(case, decision):
     """P05 má mdt01 a mdt02 → další je mdt03."""
     from services.fhir.writeback import next_mdt_id
@@ -176,3 +187,61 @@ def test_guideline_deviation_rule():
     assert 'A' in guideline_deviation({'options_considered': [{'id': 'a', 'title': 'A', 'light': 'red', 'chosen': True}]})
     assert guideline_deviation({'guideline_compliance': {'compliant': False, 'reason': ''}})
     assert guideline_deviation({'guideline_compliance': {'compliant': True, 'reason': ''}}) is None
+
+
+def test_decision_gaps_rule(decision):
+    """Server hlídá totéž co UI „Před potvrzením zbývá“: úplný závěr nic nehlásí, každá mezera se vypíše."""
+    from services.fhir.writeback import decision_gaps
+    assert decision_gaps(decision, decision['red_flags_acknowledged']) == []
+    s = decision['sections']
+    empty = {**decision, 'attendees': [{'user_id': '', 'name': 'Chirurg', 'role': 'surgeon'}],
+             'tasks': [{'id': 't1', 'description': ' ', 'owner': '', 'due_date': None}],
+             'sections': {**s, 'question': {**s['question'], 'text': ''}, 'assessment': {**s['assessment'], 'text': ' '},
+                          'conclusion': {**s['conclusion'], 'text': ''}, 'recommendation': [],
+                          'guideline_compliance': None}}
+    gaps = decision_gaps(empty, ['RF-A', *decision['red_flags_acknowledged']])
+    assert gaps == ['Projednaná otázka', 'Klinické zhodnocení',
+                    'Zvolený postup (zvažované možnosti) nebo krok doporučeného postupu',
+                    'V souladu s guidelines? Ano / Ne', 'Závěr MDT', 'Přítomní: vybrat lékaře (Chirurg)',
+                    'Úkol 1: popis, komu, termín', 'Varovné signály vzít na vědomí: 1']
+
+
+def test_incomplete_decision_is_not_confirmed(case, decision):
+    """Neúplný závěr server odmítne (400 + seznam), i když UI obejdeme; nic se nezapíše do IRIS."""
+    s = decision['sections']
+    incomplete = {**decision, 'sections': {**s, 'conclusion': {**s['conclusion'], 'text': ''}}}
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', incomplete, format='json')
+    r = as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
+    assert r.status_code == 400 and r.json()['remaining'] == ['Závěr MDT']
+    assert 'Před potvrzením zbývá' in r.json()['detail']
+    case.refresh_from_db()
+    assert case.status != 'confirmed'
+
+
+def test_board_record_and_zip(case, decision):
+    """T-333: po ukončení boardu záznam s přítomnými a pacienty, ZIP s PDF a FHIR; jen předseda."""
+    import io
+    import zipfile
+    sid = case.session_id
+    assert as_user('onkolog').get(f'/api/mdt/sessions/{sid}/record/').status_code == 403
+    assert as_user('predseda').get(f'/api/mdt/sessions/{sid}/export.zip').status_code == 409   # bez závěru
+    as_user('predseda').put(f'/api/mdt/cases/{case.pk}/decision/', decision, format='json')
+    as_user('predseda').post(f'/api/mdt/cases/{case.pk}/decision/confirm/')
+    assert as_user('predseda').get('/api/mdt/records/').json() == []                         # board ještě běží
+    assert as_user('predseda').patch(f'/api/mdt/sessions/{sid}/', {'status': 'closed'}, format='json').status_code == 200
+
+    [record] = as_user('predseda').get('/api/mdt/records/').json()
+    assert record['id'] == sid and record['status'] == 'closed'
+    assert record['counts']['confirmed'] == 1 and record['counts']['patients'] == len(record['cases'])
+    assert {a['id'] for a in record['attendees']} >= {'LEK-P03-06', 'LEK-P03-01'}
+    p03 = next(c for c in record['cases'] if c['patient_id'] == 'P03')
+    assert p03['name'] == 'Pacient P03 (fiktivní)' and p03['rc'] is None
+    assert p03['decision']['record_id'] == 'P03-mdt02' and p03['exports'] == {'pdf': True, 'fhir': True}
+    assert all(c['exports'] == {'pdf': False, 'fhir': False} for c in record['cases'] if c['patient_id'] != 'P03')
+    assert as_user('onkolog').get('/api/mdt/records/').status_code == 403
+
+    r = as_user('predseda').get(f'/api/mdt/sessions/{sid}/export.zip')
+    assert r['Content-Type'] == 'application/zip'
+    names = zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+    assert names == ['P03/P03-mdt02.pdf', 'P03/P03-mdt02.fhir.json']
+    assert client.read('DocumentReference', 'P03-mdt02-pdf')                               # PDF uložené do IRIS

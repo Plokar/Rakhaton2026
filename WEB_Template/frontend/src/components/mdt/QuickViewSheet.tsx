@@ -2,13 +2,15 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { MonitorUp } from 'lucide-react';
+import { LayoutList, MonitorUp } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from '@/components/shadcn/sheet';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { useCaseLocation } from '@/lib/queries';
 import { cn } from '@/lib/utils';
+import { can, useMe } from './me';
 import { openProjectorWindow } from './projector';
+import { ProjectorLayoutDialog } from './ProjectorLayoutEditor';
 import { CaseQuickViewNarrow, useQuickViewSources } from './quick-view';
 
 /**
@@ -20,6 +22,8 @@ export function QuickViewSheet({ caseId, onClose }: { caseId: number | null; onC
   const [shownId, setShownId] = React.useState(caseId);
   if (caseId !== null && caseId !== shownId) setShownId(caseId);
 
+  const me = useMe();
+  const [arranging, setArranging] = React.useState(false);
   const { session, item, loading } = useCaseLocation(shownId);
   const sources = useQuickViewSources({
     sessionId: session?.id ?? null,
@@ -55,6 +59,18 @@ export function QuickViewSheet({ caseId, onClose }: { caseId: number | null; onC
                 >
                   <MonitorUp aria-hidden />
                 </Button>
+                {can.editCase(me, item) && (
+                  <Button
+                    variant="ghost"
+                    size="icon-lg"
+                    aria-label="Upravit okno pro projektor"
+                    title="Upravit okno pro projektor: skrýt nebo přeskládat údaje"
+                    onClick={() => setArranging(true)}
+                  >
+                    <LayoutList aria-hidden />
+                  </Button>
+                )}
+                {arranging && <ProjectorLayoutDialog item={item} open onOpenChange={setArranging} />}
                 <SheetClose render={<Button variant="ghost" size="lg" className="ml-auto" />}>Zavřít</SheetClose>
               </div>
             }

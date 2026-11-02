@@ -22,11 +22,11 @@ from pydantic import BaseModel, Field
 
 from services.ai.abbreviations import prompt_rules
 from services.ai.context_builder import PatientContext, context_from_resources, load_resources
-from services.ai.anamnesis import anamnesis_items
+from services.ai.anamnesis import anamnesis_items, anamnesis_verbatim
 from services.ai.decision_support import build_decision_support
 from services.ai.diagnosis_data import modality_items
 from services.ai.grounding import verify_claims
-from services.ai.guidelines import GuidelinesUnavailable, load_guidelines
+from services.ai.guidelines import NATIONAL_SET, GuidelinesUnavailable, load_guidelines, national_passages
 from services.ai.red_flags_llm import detect_llm_red_flags
 from services.ai.prompt_config import output_limit, prompt_settings
 from services.ai.roles import load_roles, role_section
@@ -57,10 +57,11 @@ DEFAULT_CONFIG = {
     "detail_level": "standard",
     "language": "cs",
     "hide_unverified": False,
+    "disabled_rules": [],
 }
-LLM_SECTIONS = {"summary", "anamnesis", "role_views"}       # sekce, jejichž tvrzení píše LLM (kontroluje druhá AI)
 TITLES = {"summary": "Souhrn případu", "timeline": "Časová osa", "anamnesis": "Anamnéza",
           "modalities": "Léčebné metody a odborníci"}
+LLM_SECTIONS = {"summary", "anamnesis", "role_views"}
 
 
 # ── Výstup LLM (response_schema) ──────────────────────────────────────────────
@@ -80,18 +81,21 @@ def generate_brief(case, config: dict, progress: Callable[[int], None], *,
     progress(5)
     resources, studies = load_resources(case.patient_fhir_id)
     progress(25)
-    sets = guideline_sets_for(rules.PatientData(resources).icd10)
+    data = rules.PatientData(resources)
+    sets = guideline_sets_for(data.icd10)
     try:
         passages = load_guidelines(sets)
     except GuidelinesUnavailable as exc:          # blok A guidelines nutně nepotřebuje
         log.warning("Guidelines nejsou k dispozici: %s", exc)
         passages = []
     notices = guideline_notices(sets, passages, resources)
+    passages = passages + national_passages(data.icd10, _national_query(data))       # Modrá kniha ČOS
     if log_call is None:
         log_call = _llm_call_log
     return build_brief(
         case.patient_fhir_id, resources, studies=studies, guidelines=passages, config=config,
-        provider=provider, case_id=str(case.pk), skipped_fields=getattr(case, "skipped_fields", None) or [],
+        provider=provider, verifier=get_verifier_provider(resources), case_id=str(case.pk),
+        skipped_fields=getattr(case, "skipped_fields", None) or [],
         intent_letter=getattr(case, "intent", None), progress=progress, log_call=log_call, notices=notices,
     )
 
@@ -119,16 +123,17 @@ def guideline_notices(sets: Iterable[str], passages: Iterable, resources: list[d
 
 def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dict] = (), guidelines: Iterable = (),
                 config: dict | None = None, provider: BaseAIProvider | None = None, case_id: str = "",
+                verifier: BaseAIProvider | None = None,
                 skipped_fields: Iterable[str] = (), intent_letter: str | None = None,
                 progress: Callable[[int], None] = lambda _: None,
                 log_call: Callable[[str, dict], Any] = lambda purpose, result: None,
-                notices: Iterable[dict] = (), verifier: BaseAIProvider | None = None) -> dict:
-    """Čisté jádro: FHIR resources → `Brief` (§8.2). `notices` = „údaj chybí“ o guidelines (`guideline_notices`).
-    `verifier` = provider druhé AI; bez něj `get_verifier_provider()` podle `VERIFIER_PROVIDER` (T-331)."""
+                notices: Iterable[dict] = ()) -> dict:
+    """Čisté jádro: FHIR resources → `Brief` (§8.2). `notices` = „údaj chybí“ o guidelines (`guideline_notices`)."""
     notices = list(notices)
     config = _merge_config(config)
     provider = provider or provider_for_patient(resources)        # D-021
-    flags = rules.evaluate(resources, config.get("roles_present"))
+    disabled = set(config.get("disabled_rules") or [])                   # T-332: pravidla vypnutá předsedou
+    flags = rules.evaluate(resources, config.get("roles_present"), disabled=disabled)
     context = context_from_resources(patient_id, resources, studies=studies, guidelines=guidelines, red_flags=flags,
                                      rule_results=[n["text"] for n in notices])
     data = PatientData(resources)
@@ -143,7 +148,8 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
     kb = kb_for_patient(resources, context.allowed_ids) if needs_decision_support or "modalities" in enabled else []
     with ThreadPoolExecutor(max_workers=4 + len(roles)) as pool:          # všechna LLM volání paralelně (NFR-1)
         summary_future = pool.submit(_summary_items, context, provider, log_call, config) if "summary" in enabled else None
-        llm_flags_future = pool.submit(_llm_flags, context, provider, log_call, config) if "red_flags" in enabled else None
+        llm_flags_future = (pool.submit(_llm_flags, context, provider, log_call, config)
+                            if "red_flags" in enabled and "RF-LLM" not in disabled else None)
         role_futures = [pool.submit(role_section, role, context, data, compatibility, provider, log_call, config)
                         for role in roles]
         anamnesis_future = (pool.submit(anamnesis_items, context, provider, log_call, config)
@@ -162,29 +168,30 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         if not section.get("enabled", True):
             continue
         if section["id"] == "role_views":
-            sections += [{**rs, "items": verify_claims(rs["items"], context)} for rs in role_sections]
+            sections += [{**rs, "items": verify_claims(rs["items"], context)}
+                         for rs in role_sections]
             continue
         if section["id"] not in TITLES:
             continue
+        verbatim = []
         if section["id"] == "summary":
             items = summary_items + _missing_items(resources, skipped_fields) + notices
-        elif section["id"] == "anamnesis":            # FR-A5 (T-507)
+        elif section["id"] == "anamnesis":            # FR-A5 (T-507): shrnutí AI + doslovné znění k přepnutí
             items = anamnesis
+            verbatim = anamnesis_verbatim(context)
         elif section["id"] == "modalities":           # FR-D5 (T-506)
             items = modality_items(context, compatibility + kb, {r: c["title"] for r, c in load_roles().items()})
         else:
             items = _timeline_items(data, context)
         sections.append({"id": section["id"], "title": TITLES[section["id"]], "ai_generated": True,
-                         "items": verify_claims(items, context)})
-    progress(85)
-
-    # Druhá AI (T-331): tvrzení psaná LLM znovu proti citovaným zdrojům; časová osa, metody a hlavička jsou z FHIR
-    llm_claims = [c for s in sections if s["id"] in LLM_SECTIONS for c in s["items"]]
+                         "items": verify_claims(items, context),
+                         **({"verbatim": [_public(c) for c in verify_claims(verbatim, context)]} if verbatim else {})})
+    to_check = [c for s in sections if s["id"] in LLM_SECTIONS for c in s["items"]]
     if decision_support:
-        llm_claims += [c for option in decision_support["treatment_options"] for c in option["rationale"]]
-    verifier = cross_check(llm_claims, context, verifier if verifier is not None else get_verifier_provider(resources),
-                           log_call)
-    sections = [{**s, "items": [_public(c) for c in s["items"]]} for s in sections]
+        to_check += [c for option in decision_support["treatment_options"] for c in option["rationale"]]
+    verifier_result = cross_check(to_check, context, verifier, log_call)
+    for section in sections:
+        section["items"] = [_public(c) for c in section["items"]]
     if decision_support:
         for option in decision_support["treatment_options"]:
             option["rationale"] = [_public(c) for c in option["rationale"]]
@@ -202,24 +209,39 @@ def build_brief(patient_id: str, resources: list[dict], *, studies: Iterable[dic
         "patient_id": patient_id,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "model": getattr(provider, "model_name", None) or _model_name(provider),
-        "config": config,
+        "config": {k: v for k, v in config.items() if not k.startswith("_")},     # `_feedback` mimo snapshot §8.5
         "status": "draft",
         "header": header,
         "sections": sections,
         "red_flags": red_flags,
         "decision_support": decision_support,
-        "verifier": verifier,
+        "verifier": verifier_result,
         "stats": {
             "claims_total": sum(1 for c in claims if c["kind"] == "claim"),
             "claims_unverified": sum(1 for c in claims if c["kind"] == "claim" and c["verification"] == "unverified"),
             "missing_total": sum(1 for c in claims if c["kind"] == "missing"),
         },
+        **({"feedback": config["_feedback"]} if config.get("_feedback") else {}),
+        **({"national_guidelines": national} if (national := _national_guidelines(context.guidelines)) else {}),
     }
     progress(100)
     return brief
 
 
 # ── Pomocné funkce ────────────────────────────────────────────────────────────
+def _national_query(data) -> str:
+    """Dotaz do Modré knihy: otázka pro MDT, diagnózy a TNM (bez identifikátorů pacienta)."""
+    question = next((c.get("text") for c in data.request.get("reasonCode") or [] if c.get("text")), "")
+    diagnoses = " ".join((c.get("code") or {}).get("text") or "" for c in data.oncologic)
+    return f"{question} {diagnoses}".strip()
+
+
+def _national_guidelines(guidelines: Iterable) -> list[dict]:
+    """Pasáže Modré knihy ČOS, které měl podklad k dispozici (citovatelné, s odkazem na stránku PDF)."""
+    return [{"evidence_id": g.evidence_id, "title": g.title, "url": g.url,
+             "excerpt": " ".join(g.text.split())[:280]} for g in guidelines if g.guideline_set == NATIONAL_SET]
+
+
 def _merge_config(config: dict | None) -> dict:
     """Konfigurace z presetu (§8.5) doplněná o výchozí hodnoty; prázdný seznam = nenastaveno."""
     return {**DEFAULT_CONFIG, **{k: v for k, v in (config or {}).items() if v is not None and v != []}}

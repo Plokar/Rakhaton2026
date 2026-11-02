@@ -155,19 +155,20 @@ export function SessionCalendar() {
   );
 
   const chipFor = (session: MdtSessionListItem, item: MdtCase & { id: number }) => {
-    const movable = wide && isOpen(session) && can.editCase(me, item);
+    const canMove = isOpen(session) && can.editCase(me, item);
     return (
       <PatientChip
         key={item.id}
         item={item}
         session={session}
-        draggable={movable}
+        draggable={wide && canMove}
+        mine={canMove && item.created_by?.user_id === me?.user_id}
         dimmed={dragging?.item.id === item.id}
         layoutId={animateMoves ? `chip-${item.id}` : undefined}
         actions={{
           onOpen: () => void setOpenCase(item.id),
           onPrefetch: () => prefetchQuickView(client, { sessionId: session.id, caseId: item.id, patientId: item.patient_id }),
-          moveTargets: isOpen(session) && can.editCase(me, item) ? openBoards.filter((t) => t.id !== session.id) : [],
+          moveTargets: canMove ? openBoards.filter((t) => t.id !== session.id) : [],
           onMove: (target) => doMove(item, session, target),
           onCollaborate: can.inviteToCase(me, item) ? () => setCollabCase(item) : undefined,
         }}

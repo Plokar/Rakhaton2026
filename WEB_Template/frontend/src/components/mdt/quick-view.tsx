@@ -41,6 +41,7 @@ import { AREA_LABEL, areaForIcd10, arrangeFacts, hasLayout } from './fact-layout
 import { buildKeyFacts, type KeyFact } from './key-facts';
 import { NationalRuleNote, nationalSummary } from './NationalRuleNote';
 import { useSlideRemote } from './projector';
+import { ReviewMark } from './review';
 import { pageBlocks, useSlidePages, type SlideSegment, type SlideUnit } from './slide-pager';
 import { SourceDrawer, type SourceLoader } from './SourceDrawer';
 
@@ -1274,7 +1275,7 @@ function ProjectorFactCell({ fact }: { fact: KeyFact }) {
 }
 
 function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
-  const { header, sources, ecogWarnings } = useQuickView();
+  const { header, sources, ecogWarnings, item } = useQuickView();
   const psTitle = header.psDiffers
     ? ecogWarnings.map((w) => w.title).join(' · ') || 'PS lékaře a pacienta se liší o 1 a víc (OBC-1.3)'
     : 'Performance status (ECOG) podle lékaře, pod ním podle pacienta (PROMs)';
@@ -1319,6 +1320,7 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
         </dl>
       </div>
       <WarningCounts colored className="text-[13px] font-semibold" />
+      {item?.id != null && <ReviewMark caseId={item.id} className="text-[13px]" />}
     </header>
   );
 }

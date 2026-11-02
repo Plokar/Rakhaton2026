@@ -30,6 +30,8 @@ import type {
   Practitioner,
   ProcedureCompatibility,
   Readiness,
+  CaseReview,
+  MyReview,
   TaskStatus,
   MdtSession,
   MdtSessionDetail,
@@ -368,6 +370,13 @@ export const mdtApi = {
 
   /** Kontrola připravenosti případu (BON-1): skóre úplnosti, nevyřešené údaje, zastaralý staging. */
   getReadiness: (caseId: number) => apiFetch<Readiness>(`/api/mdt/cases/${caseId}/readiness/`),
+
+  /** Kontrola před zasedáním (T-349): co přibylo od zařazení a stav kontroly. */
+  getReview: (caseId: number) => apiFetch<CaseReview>(`/api/mdt/cases/${caseId}/review/`),
+  /** Zadávající lékař potvrdí, že nové výsledky viděl. */
+  checkReview: (caseId: number) => apiFetch<CaseReview>(`/api/mdt/cases/${caseId}/review/`, { method: 'POST' }),
+  /** Moje kontroly před zasedáním, které čekají (upozornění v aplikaci). */
+  getMyReviews: () => apiFetch<MyReview[]>('/api/mdt/reviews/'),
 
   /** Semafor souladu všech postupů se stavem pacienta (FR-D4), i červené. */
   getCompatibility: (caseId: number) =>

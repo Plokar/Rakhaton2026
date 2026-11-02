@@ -70,6 +70,11 @@ class MdtCase(models.Model):
     imaging_recent_checked = models.BooleanField(default=False)
     skipped_fields = models.JSONField(default=list, blank=True)          # [IntakeField.id]
     acknowledged_warnings = models.JSONField(default=list, blank=True)   # [{id, by, at}]
+    # Kontrola před zasedáním (T-349): zadávající lékař viděl, co přibylo od zařazení. Bez ní zůstane pacient
+    # na MDT, jen podsvícený („kontrola neproběhla“).
+    checked_at = models.DateTimeField(null=True, blank=True)
+    checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name='checked_cases')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

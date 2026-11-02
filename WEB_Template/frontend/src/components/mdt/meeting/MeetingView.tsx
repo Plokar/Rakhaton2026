@@ -54,6 +54,7 @@ import { agendaOrder, apiErrorMessage, useAgendaOrder, useCaseStatus, useSaveSes
 import { cn } from '@/lib/utils';
 import type { MdtCase, MdtSessionDetail } from '@/types/mdt';
 import { AddPatientSheet, intakePending } from '../AddPatientSheet';
+import { REVIEW_ROW, ReviewMark, ReviewNotice, useNeedsReview } from '../review';
 import { BoardDialog } from '../BoardDialog';
 import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
@@ -207,6 +208,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           Případ je vrácený k doplnění podkladů (OBC-1.1). Zadávající lékař doplní chybějící údaje v dokumentaci.
         </p>
       )}
+      <ReviewNotice caseId={current.id} patient={current.patient_id} session={board} className="mb-4" />
       {intakePending(current) && (
         <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/40 dark:bg-amber-400/10 dark:text-amber-200">
           <ClipboardCheck className="size-4 shrink-0" aria-hidden />
@@ -647,6 +649,7 @@ function MeetingRail({
                 over === i && drag !== null && drag !== i && (drag < i ? 'shadow-[inset_0_-2px_0_var(--color-primary)]' : 'shadow-[inset_0_2px_0_var(--color-primary)]'),
               )}
             >
+              {!active && <ReviewTint caseId={item.id} />}
               <button
                 type="button"
                 onKeyDown={(e) => {
@@ -660,7 +663,7 @@ function MeetingRail({
                 aria-current={active ? 'true' : undefined}
                 aria-label={`${i + 1}. ${spokenPatient(item)}${done ? ', projednáno' : ''}${active ? ', na řadě' : ''}`}
                 className={cn(
-                  'grid w-full grid-cols-[1.25rem_minmax(0,1fr)_auto] items-start gap-x-2 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'relative grid w-full grid-cols-[1.25rem_minmax(0,1fr)_auto] items-start gap-x-2 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   active ? 'bg-primary/10 ring-1 ring-inset ring-primary/30' : 'hover:bg-muted',
                   done && !active && 'text-muted-foreground',
                 )}
@@ -680,6 +683,7 @@ function MeetingRail({
                     <ReadinessMark caseId={item.id} />
                     {intakePending(item) && <span className="font-medium text-amber-700 dark:text-amber-400">k dokončení</span>}
                   </span>
+                  <ReviewMark caseId={item.id} short className="mt-0.5" />
                 </span>
                 <span className="flex flex-col items-end gap-0.5 pt-px">
                   {active ? (
@@ -713,6 +717,11 @@ function MeetingRail({
 }
 
 /** Úzká obrazovka: agenda jako výběr nahoře, přehled na celou šířku (NAVRH_UI §7.5). */
+/** Podbarvení řádku agendy pod tlačítkem: pacient bez kontroly před zasedáním (T-349). */
+function ReviewTint({ caseId }: { caseId: number }) {
+  return useNeedsReview(caseId) ? <span aria-hidden className={cn('pointer-events-none absolute inset-0 rounded-lg', REVIEW_ROW)} /> : null;
+}
+
 function AgendaPicker({ cases, current, onSelect }: { cases: Case[]; current: Case | null; onSelect: (item: Case) => void }) {
   return (
     <div className="border-b border-border bg-card px-4 py-2.5">

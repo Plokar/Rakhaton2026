@@ -8,6 +8,7 @@ import zipfile
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -81,6 +82,7 @@ def _case(c: MdtCase, patient: dict | None = None) -> dict:
             'service_request_id': c.service_request_fhir_id, 'question': c.question, 'status': c.status,
             'ecog': c.ecog, 'intent': c.intent, 'imaging_recent_checked': c.imaging_recent_checked,
             'skipped_fields': c.skipped_fields, 'acknowledged_warnings': c.acknowledged_warnings,
+            'checked_at': c.checked_at.isoformat() if c.checked_at else None,
             'created_by': _user(c.created_by), 'collaborators': [_user(u) for u in c.collaborators.all()],
             'projector_layout': c.projector_layout or {}, 'requester_layout': _requester_layout(c, patient),
             'patient': patient}
@@ -426,6 +428,62 @@ def patient_intake(request, pid):
     resources = _patient_resources(pid)
     skipped = [s for s in request.query_params.get('skipped', '').split(',') if s]
     return Response(intake.intake_prefill(resources, skipped))
+
+
+def _review(case: MdtCase, resources: list[dict] | None = None, now=None) -> dict:
+    """`CaseReview` (§8.6, T-349): co přibylo od zařazení a stav kontroly před zasedáním."""
+    from services.rules.review import review_state
+
+    state = review_state(
+        resources if resources is not None else _patient_resources(case.patient_fhir_id),
+        service_request_id=case.service_request_fhir_id, meeting=case.session.date, now=now or timezone.now(),
+        created=case.created_at, checked_at=case.checked_at, session_status=case.session.status)
+    return {**state, 'case_id': case.pk, 'checked_by': _user(case.checked_by), 'can_check': None}
+
+
+@extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def case_review(request, cid):
+    """Kontrola před zasedáním (T-349). GET = nové výsledky od zařazení a stav (`upcoming | due | checked |
+    missed`); POST = zadávající lékař (přizvaný, předseda) potvrdí, že výsledky viděl. Nic nemění v IRIS."""
+    case = get_object_or_404(MdtCase.objects.select_related('session', 'checked_by'), pk=cid)
+    if request.method == 'POST':
+        _require_case_edit(request, case)
+        case.checked_at, case.checked_by = timezone.now(), request.user
+        case.save(update_fields=['checked_at', 'checked_by', 'updated_at'])
+    return Response({**_review(case), 'can_check': can_edit_case(request.user, case)})
+
+
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def review_list(request):
+    """Moje kontroly před zasedáním (T-349): případy, které jsem zařadil nebo ke kterým jsem přizván, s otevřeným
+    zasedáním do `REVIEW_HOURS` hodin; jen stav `due` (upozornění v aplikaci). Předseda vidí i ostatní (`?all=1`)."""
+    from services.rules.review import REVIEW_HOURS
+
+    now = timezone.now()
+    cases = (MdtCase.objects.select_related('session', 'checked_by')
+             .filter(session__date__gt=now, session__date__lte=now + timezone.timedelta(hours=REVIEW_HOURS))
+             .exclude(session__status='closed'))
+    if not (request.query_params.get('all') in ('1', 'true') and roles.role(request.user) == roles.ADMIN):
+        cases = cases.filter(Q(created_by=request.user) | Q(collaborators=request.user)).distinct()
+    by_id = {p['id']: p for p in patients.list_patients()} if cases else {}
+    out = []
+    for case in cases.order_by('session__date', 'order'):
+        try:
+            state = _review(case, now=now)
+        except FhirError:
+            continue                                    # pacient v IRIS není: kontrola nejde spočítat
+        if state['status'] != 'due':
+            continue
+        patient = by_id.get(case.patient_fhir_id) or {}
+        out.append({**state, 'can_check': can_edit_case(request.user, case), 'patient_id': case.patient_fhir_id,
+                    'display_name': patient.get('display_name') or case.patient_fhir_id,
+                    'session': {'id': case.session_id, 'title': case.session.title,
+                                'date': timezone.localtime(case.session.date).isoformat()}})
+    return Response(out)
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['mdt'])

@@ -1193,6 +1193,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | PATCH | `/api/mdt/cases/{cid}/` | přesun do jiného boardu, ECOG, záměr, checkbox, odkliknutí varování (zadávající lékař svého pacienta, přizvaný lékař, `mdt_admin` jakéhokoli); `status` (např. `returned`) jen `mdt_admin`; `collaborators: user_id[]` mění jen `mdt_admin` nebo zadávající lékař (T-326, neznámé ID → 400); přesun na uzavřený board 409; zápis do IRIS stejně jako u POST; `projector_layout` (T-333) upravuje zadávající, přizvaný lékař nebo předseda |
 | GET, POST, PUT | `/api/mdt/configs/` · `/api/mdt/configs/{cid}/` | presety konfigurace (`BriefConfig` §8.5); zakládá a mění jen `mdt_admin`; `sections[].id` jen `SectionId`, `roles_present` jen `RoleId` (jde do promptů, jinak 400); `disabled_rules` jen ID z `GET /api/mdt/rules/` (T-332); presety „Standardní podklad“ a „Stručně (30 s)“ zakládá `seed_mdt` |
 | GET | `/api/mdt/cases/{cid}/readiness/` | kontrola připravenosti (BON-1) |
+| GET, POST | `/api/mdt/cases/{cid}/review/` | kontrola před zasedáním (T-349): GET `CaseReview` (co přibylo od nominace, stav), POST potvrdí kontrolu (zadávající, přizvaný, předseda; jinak 403) |
+| GET | `/api/mdt/reviews/` | moje kontroly ve stavu `due` (zasedání do 48 h, zařadil jsem nebo jsem přizván) pro upozornění v aplikaci; předseda `?all=1` |
 | GET | `/api/mdt/cases/{cid}/template/` | doporučená šablona projektoru podle diagnózy a situace pacienta z IRIS (`CaseTemplate` §8.6, T-318): `BriefConfig` + `config_id` presetu, klíčové údaje na projektor se stavem a citací, studie, varování katalogu údajů; 404 bez báze `data/onko` nebo diagnózy |
 | GET | `/api/mdt/cases/{cid}/for-me/?specialty=` | pohled „pro mě“ (`SpecialtyView` §8.6, T-319): pořadí sekcí, údaje a varování odbornosti, její postupy a proč ji zajímají; odbornost z `UserProfile.specialty`, jinak `?specialty=` (`RoleId`), jinak 400. Pořadí předsedy (`BriefConfig`) se nemění |
 | POST | `/api/mdt/cases/{cid}/ask/` | otázka nad případem (BONUS Q&A, T-332): `{question}` (≤ 500 znaků) → `{question, mode: "ai" \| "search", items: Claim[], answered_at}`; odpověď jen z pseudonymizovaného kontextu pacienta, každá věta s citací přes grounding validátor, co v datech není → `missing` „V dostupné dokumentaci se nenachází…“. Bez LLM (mock, výpadek) `mode: "search"` = řádky dokumentace doslova. Nic se neukládá |
@@ -1620,6 +1622,25 @@ interface Readiness {                             // GET /api/mdt/cases/{cid}/re
   stale_staging: { id: string; age_days: number; citation?: EvidenceId }[];
 }
 
+// Kontrola před zasedáním (T-349, services/rules/review.py): 48 h před zasedáním zadávající lékař potvrdí, že viděl,
+// co přibylo od nominace. Zápisy aplikace (ECOG při zařazení, vložená zpráva, záznam MDT) se nepočítají.
+// Bez kontroly pacient na MDT zůstává, jen je v kalendáři, agendě a na projektoru podsvícený.
+interface CaseReview {                            // GET/POST /api/mdt/cases/{cid}/review/
+  case_id: number;
+  status: "upcoming" | "due" | "checked" | "missed";   // missed = zasedání začalo bez kontroly
+  since: string;                                  // datum nominace (ServiceRequest.authoredOn), YYYY-MM-DD
+  due_from: string;                               // zasedání − 48 h, ISO
+  checked_at: string | null;
+  checked_by: { user_id: number; name: string } | null;
+  new_results: { citation: EvidenceId; type: string; kind: string; date: string; label: string; value: string;
+                 unseen: boolean }[];             // nejnovější první; unseen = po poslední kontrole
+  unseen_count: number;
+  can_check: boolean;
+}
+interface MyReview extends CaseReview {           // GET /api/mdt/reviews/ (jen status "due")
+  patient_id: string; display_name: string; session: { id: number; title: string; date: string };
+}
+
 interface MdtCase {                             // POST /api/mdt/cases/, PATCH /api/mdt/cases/{cid}/
   id?: number;
   session: number;                              // board
@@ -1634,6 +1655,7 @@ interface MdtCase {                             // POST /api/mdt/cases/, PATCH /
   imaging_recent_checked: boolean;              // „Snímek mladší než 3 měsíce“
   skipped_fields: string[];                     // IntakeField.id
   acknowledged_warnings: { id: string; by: number; at: string }[];
+  checked_at?: string | null;                   // kontrola před zasedáním potvrzena (T-349, jen čtení)
   status: "nominated" | "ready" | "in_discussion" | "decided" | "confirmed" | "returned";   // returned = vráceno k doplnění (OBC-1.1)
   order?: number;                               // pořadí v agendě (jen čtení)
   question?: string;                            // otázka pro MDT z nominace (jen čtení)

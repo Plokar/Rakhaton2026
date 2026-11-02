@@ -583,6 +583,8 @@ export interface MdtCase {
   /** IntakeField.id */
   skipped_fields: string[];
   acknowledged_warnings: { id: string; by: number; at: string }[];
+  /** Kontrola před zasedáním potvrzena (T-349, jen čtení; mění POST …/review/). */
+  checked_at?: string | null;
   /** returned = vráceno k doplnění (OBC-1.1). */
   status: 'nominated' | 'ready' | 'in_discussion' | 'decided' | 'confirmed' | 'returned';
   /** Pořadí v agendě (jen čtení). */
@@ -809,6 +811,47 @@ export interface Readiness {
   /** missing, pending nebo skipped; se zachovaným stavem (D-019). */
   unresolved: IntakeField[];
   stale_staging: { id: string; age_days: number; citation?: EvidenceId }[];
+}
+
+/** Stav kontroly před zasedáním (T-349): upcoming = víc než 48 h do zasedání, due = čeká na zadávajícího lékaře,
+ *  checked = potvrzeno a nic nového, missed = zasedání začalo bez kontroly (pacient zůstává, jen podsvícený). */
+export type ReviewStatus = 'upcoming' | 'due' | 'checked' | 'missed';
+
+/** Výsledek, který přibyl v IRIS po zařazení (laboratoř, zobrazení, zpráva…). */
+export interface ReviewResult {
+  /** Evidence ID resource ("P19-lvef01") */
+  citation: EvidenceId;
+  type: string;
+  /** "Výsledek" | "Zpráva" | "Dokument" | … */
+  kind: string;
+  /** YYYY-MM-DD */
+  date: string;
+  label: string;
+  value: string;
+  /** Přišlo po poslední kontrole (nebo kontrola ještě nebyla). */
+  unseen: boolean;
+}
+
+/** GET/POST /api/mdt/cases/{cid}/review/ (T-349) */
+export interface CaseReview {
+  case_id: number;
+  status: ReviewStatus;
+  /** Od kdy se počítá (datum nominace, YYYY-MM-DD). */
+  since: string;
+  /** Od kdy kontrola běží (48 h před zasedáním, ISO). */
+  due_from: string;
+  checked_at: string | null;
+  checked_by: { user_id: number; name: string } | null;
+  new_results: ReviewResult[];
+  unseen_count: number;
+  can_check: boolean;
+}
+
+/** GET /api/mdt/reviews/ → moje kontroly před zasedáním ve stavu `due` (upozornění v aplikaci). */
+export interface MyReview extends CaseReview {
+  patient_id: string;
+  display_name: string;
+  session: { id: number; title: string; date: string };
 }
 
 export type TaskStatus = 'requested' | 'in-progress' | 'completed';

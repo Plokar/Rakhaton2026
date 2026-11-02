@@ -31,6 +31,7 @@ import { dayLabel, timeLabel } from '../dates';
 import { shortPatient, spokenPatient } from '../patient';
 import { openProjectorWindow } from '../projector';
 import { ReadinessMark } from '../ReadinessBadge';
+import { REVIEW_ROW, ReviewMark, useNeedsReview } from '../review';
 import { chipId, type ChipDragData } from './dnd';
 
 export interface ChipActions {
@@ -62,6 +63,7 @@ export function ChipFace({ item, overlay = false }: { item: MdtCase; overlay?: b
         </span>
       )}
       {item.id != null && <ReadinessMark caseId={item.id} className="ml-auto" />}
+      {item.id != null && !overlay && <ReviewMark caseId={item.id} short className="basis-full" />}
     </span>
   );
 }
@@ -103,6 +105,7 @@ export const PatientChip = React.memo(function PatientChip({
   const projector = () => openProjectorWindow({ board: session.id, caseId: item.id, patient: item.patient_id });
   const detail = () => router.push(`/dashboard/cases/${item.id}`);
   const label = spokenPatient(item);
+  const unchecked = useNeedsReview(item.id);         // T-349: kontrola před zasedáním neproběhla
 
   return (
     <ContextMenu>
@@ -113,9 +116,11 @@ export const PatientChip = React.memo(function PatientChip({
             layoutId={layoutId}
             className={cn(
               'group/chip relative rounded-md transition-colors',
-              mine
-                ? 'bg-primary/8 ring-1 ring-inset ring-primary/20 hover:bg-primary/14 has-[:focus-visible]:bg-primary/14'
-                : 'hover:bg-muted/70 has-[:focus-visible]:bg-muted/70',
+              unchecked
+                ? REVIEW_ROW
+                : mine
+                  ? 'bg-primary/8 ring-1 ring-inset ring-primary/20 hover:bg-primary/14 has-[:focus-visible]:bg-primary/14'
+                  : 'hover:bg-muted/70 has-[:focus-visible]:bg-muted/70',
             )}
           />
         }

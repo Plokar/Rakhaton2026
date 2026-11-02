@@ -35,6 +35,8 @@ export const queryKeys = {
   brief: (caseId: number | string) => ['case', String(caseId), 'brief'] as const,
   compatibility: (caseId: number | string) => ['case', String(caseId), 'compatibility'] as const,
   readiness: (caseId: number | string) => ['case', String(caseId), 'readiness'] as const,
+  review: (caseId: number | string) => ['case', String(caseId), 'review'] as const,
+  myReviews: ['reviews', 'mine'] as const,
   intake: (patientId: string) => ['patient', patientId, 'intake'] as const,
   patient: (patientId: string) => ['patient', patientId, 'detail'] as const,
   observations: (patientId: string) => ['patient', patientId, 'observations'] as const,
@@ -111,6 +113,33 @@ export function useReadinessQuery(caseId: number | null | undefined) {
     queryFn: () => mdtApi.getReadiness(caseId as number),
     enabled: Boolean(caseId),
     staleTime: 60_000,
+  });
+}
+
+/** Kontrola před zasedáním (T-349): stav a nové výsledky od zařazení; obnovuje se po minutě (okno 48 h běží). */
+export function useReviewQuery(caseId: number | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.review(caseId ?? ''),
+    queryFn: () => mdtApi.getReview(caseId as number),
+    enabled: Boolean(caseId),
+    staleTime: 60_000,
+  });
+}
+
+/** Moje kontroly, které čekají (upozornění nahoře v aplikaci). */
+export function useMyReviewsQuery(enabled = true) {
+  return useQuery({ queryKey: queryKeys.myReviews, queryFn: mdtApi.getMyReviews, enabled, staleTime: 60_000, refetchInterval: 5 * 60_000 });
+}
+
+export function useCheckReview() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (caseId: number) => mdtApi.checkReview(caseId),
+    onSuccess: (review) => {
+      client.setQueryData(queryKeys.review(review.case_id), review);
+      void client.invalidateQueries({ queryKey: queryKeys.myReviews });
+      void client.invalidateQueries({ queryKey: ['session'] });
+    },
   });
 }
 

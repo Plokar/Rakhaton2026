@@ -3,6 +3,7 @@
 Publikovaná verze: https://claude.ai/artifact/WGEfKPE5QQxcHRAWFw1qDM (soukromá, sdílení přes menu Share).
 
 - `deck/`: zdroj slidů (formát Artifact Slides). Obrázky jsou na serveru jako `/_blob/…`, lokální kopie jsou v `images/`.
+- Fonty: Montserrat (nadpisy) a Inter (text), stejné jako v aplikaci a ve videu.
 - Tagline: „Designed by Doctor, Made by Students“ (úvodní a závěrečný slide).
 
 ## Slidy a projev (~60 s, text je i v poznámkách řečníka)

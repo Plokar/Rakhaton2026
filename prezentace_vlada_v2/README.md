@@ -40,3 +40,16 @@ Na slidech jsou modelové odhady výslovně označené. Pilot je má změřit.
 1. **Úvod (pravá polovina, na výšku 3:4):** „Bright, airy hospital meeting room in daylight, five doctors of different specialties (white coats, scrubs) discussing a case around a round light-wood table with a laptop and a large wall screen showing CT scans, large windows, white and pale blue tones, soft natural light, calm and optimistic, editorial photography, shallow depth of field, no visible text, no logos.“
 2. **Hory papírů (na výšku 1:1):** „Tired oncologist in a white coat at a bright white desk buried under tall stacks of paper medical records and folders, daylight from a window, clean minimalist hospital office, white and light grey palette with a hint of blue, realistic editorial photography, no readable text.“
 3. **Závěr (pravá třetina, na výšku 3:4):** „Bright minimalist desk split in two: left side a messy pile of paper medical files, right side a clean empty desk with a single tablet showing a simple patient overview, morning sunlight, white and pale blue tones, high-key photography, no readable text, no logos.“
+
+## Slide 7: kolika lidem můžeme pomoci (propočet)
+
+| Obor | Pacientů ročně | Zdroj | Stav |
+|---|---|---|---|
+| Onkologie (MDT) | 65 242 | ČSÚ 2023, nové zhoubné novotvary bez C44 | Z vyhledávání |
+| Cévní mozkové příhody | 23 121 | ÚZIS, hospitalizace s CMP 2021 (via České noviny) | Starší rok, ověřit |
+| Kardiochirurgie (Heart Team) | 7 572 | ÚZIS, Národní kardiochirurgický registr 2021 | Starší rok |
+| Transplantace | 952 | KST, rekordní rok (datum nejasné, 2019 nebo později) | Ověřit na kst.cz |
+| **Součet: rozhodnutí týmu lékařů** | **96 887** | součet | Konzervativní, bez TAVI, PCI, pediatrie aj. |
+| Celá nemocnice | 1 296 397 | ČSÚ 2024: 703 503 žen + 592 894 mužů hospitalizovaných v akutní péči | Z vyhledávání |
+
+Animace (x-embed): počítadlo roste po krocích 65 242 → 88 363 → 95 935 → 96 887 → 1 296 397, s každým krokem naskočí ikonka oboru. Export do PPTX/PDF ukáže konečný stav.

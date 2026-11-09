@@ -90,7 +90,10 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
         },
-        'CONN_MAX_AGE': 60,  # Connection pooling
+        # Daphne/ASGI: každý požadavek běží v jiném vlákně, perzistentní spojení se nevracejí a hromadí
+        # se až do „too many clients already“ (T-353). Django pro ASGI doporučuje 0.
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '0')),
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 

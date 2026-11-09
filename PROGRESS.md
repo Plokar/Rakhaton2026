@@ -303,6 +303,9 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | T-349 | **Kontrola před zasedáním:** upozornění zadávajícímu lékaři, co přibylo od zařazení (nové výsledky), potvrzení kontroly; nezkontrolovaný pacient zůstává na MDT podsvícený | API + UI | T-347 | API + test, upozornění a podsvícení v kalendáři i jednání | `@Maty+claude` | ✅ |
 | T-350 | **Use case od zařazení po úkoly:** zařazení → chybějící údaje (doplnit / přeskočit / do úkolů) → náhled podle šablony → kontrola → jednání (projektor, mobil, chatbot) → závěr → úkoly ostatním lékařům; doladit mezery a zpřehlednit | API + UI | T-349 | celý průchod v prohlížeči bez slepých míst | `@Maty+claude` | ✅ |
 | T-351 | **Víc komisí a pacientů:** 4 nové komise (neuroonkologická, hematoonkologická, melanom a kožní nádory, sarkomy a GIST) a 40 pacientů P33–P72; celkem 10 komisí, 24 zasedání 3. 11.–4. 12. 2026; data druhé vlny posunutá k termínu zasedání | Data | T-347 | seed založí 24 zasedání, testy kohorty, postup nasazení na VPS v README | `@Maty+claude` | ✅ |
+| T-353 | **Provoz VPS – přihlášení 500:** backend (Daphne/ASGI) s `CONN_MAX_AGE=60` hromadil spojení do Postgresu až do „too many clients already“; healthcheck narážel na anon throttle (429) | Provoz | T-351 | přihlášení `predseda` na produkci, `/dashboard` bez 5xx, `/api/health/` 200, spojení do DB nerostou | `@Maty+claude` | ✅ |
+| T-355 | **100 nových demo pacientů P73–P172** v 10 komisích, zasedání 10. 11.–18. 12. 2026; fiktivní jména a RČ (D-021) | Data | T-353 | `ingest_dataset` + `seed_mdt`, testy kohorty, README | `@Maty+claude` | 🟨 |
+| T-356 | **Přidání pacienta podle RČ nebo jména:** `GET /api/patients/?q=` (RČ s/bez lomítka, jméno bez diakritiky, Pxx), pole v `AddPatientSheet`; jméno a RČ jen v dialogu (D-018) | API + UI | T-355 | testy s mock IRIS, lint, tsc, build, ověřeno v prohlížeči | `@Maty+claude` | 🟨 |
 
 ### M4 — Freeze a demo (do So 11:00)
 

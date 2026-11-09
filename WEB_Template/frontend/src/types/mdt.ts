@@ -721,6 +721,39 @@ export interface MdtSession {
   config_id: number | null;
 }
 
+/**
+ * Živé zasedání (T-354): co je právě na projektoru a kdo je na zasedání. GET/PUT /api/mdt/sessions/{sid}/live/,
+ * změny živě ve streamu boardu jako `event: live`. Pacient jen jako `Pxx` (D-018).
+ */
+export interface LiveState {
+  session: number;
+  status: MdtSession['status'];
+  /** Pacient na projektoru; `position` = pořadí v agendě (od 1). `null` = projektor zatím nic neukazuje. */
+  case: { id: number; patient_id: string; status: MdtCase['status']; position: number | null; count: number } | null;
+  /** Slide projektoru (od 0); `null` = projektor neběží nebo slidy nehlásí. */
+  slide: { index: number; total: number; label: string } | null;
+  updated_at: string | null;
+  by: { user_id: number; name: string } | null;
+  /** Lékaři ohlášení za posledních 5 min. */
+  present: { user_id: number; name: string; specialty: RoleId | null }[];
+}
+
+/** GET /api/mdt/live/ (T-354): dnešní a probíhající zasedání; `current` = kde lékař je, jinak kde má být. */
+export interface MyLive {
+  now: string;
+  current: number | null;
+  sessions: (Pick<MdtSession, 'id' | 'date' | 'title' | 'status' | 'chair'> & {
+    /** Lékař tu má být: předseda, zadávající nebo přizvaný lékař pacienta v agendě. */
+    expected: boolean;
+    reasons: ('chair' | 'requester' | 'collaborator')[];
+    /** Lékař je ohlášený na tomto zasedání. */
+    here: boolean;
+    my_patients: string[];
+    can_present: boolean;
+    live: LiveState;
+  })[];
+}
+
 /** Přítomný lékař v záznamu boardu (z `Decision.attendees` všech závěrů boardu, T-333). */
 export interface BoardRecordAttendee {
   /** Lékař v IRIS „LEK-…“, jinak volný kód. */

@@ -11,6 +11,8 @@ import type {
   RuleInfo,
   SimilarCases,
   ChatbotMessage,
+  LiveState,
+  MyLive,
   PatientChatbotAnswer,
   MdtRole,
   MyTemplates,
@@ -245,6 +247,19 @@ export const mdtApi = {
 
   /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
   sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
+
+  /** SSE stream boardu bez doplnění zpráv chatu: živé zasedání čte jen `event: live` (T-354). */
+  liveStreamUrl: (sessionId: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/`),
+
+  /** Živé zasedání (T-354): dnešní a probíhající zasedání, kde lékař má být, kde je a co je na projektoru. */
+  getMyLive: () => apiFetch<MyLive>('/api/mdt/live/'),
+  getLive: (sessionId: number) => apiFetch<LiveState>(`/api/mdt/sessions/${sessionId}/live/`),
+  /** Předseda: co je na projektoru (pacient z agendy, volitelně slide). První zápis přepne board na „probíhá“. */
+  putLive: (sessionId: number, input: { case_id: number | null; slide?: { index: number; total: number; label?: string } | null }) =>
+    apiFetch<LiveState>(`/api/mdt/sessions/${sessionId}/live/`, { method: 'PUT', body: JSON.stringify(input) }),
+  /** Ohlášení „jsem na zasedání“ (opakovat každé 2 min); DELETE = odchod. */
+  joinSession: (sessionId: number) => apiFetch<LiveState>(`/api/mdt/sessions/${sessionId}/presence/`, { method: 'POST' }),
+  leaveSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/presence/`, { method: 'DELETE' }),
 
   /** Chatbot u zasedání (T-344): vlastní rozhovor s AI u boardu, posledních 200 zpráv od nejstarší. */
   getChatbotMessages: (sessionId: number) => apiFetch<ChatbotMessage[]>(`/api/mdt/sessions/${sessionId}/chatbot/`),

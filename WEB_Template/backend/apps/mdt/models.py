@@ -39,7 +39,7 @@ class MdtSession(models.Model):
                               related_name='chaired_sessions')
     status = models.CharField(max_length=12, choices=STATUS, default='planned')
     config = models.ForeignKey(BriefConfig, null=True, blank=True, on_delete=models.SET_NULL)
-    # Živé zasedání (T-354): co je právě na projektoru. Nastavuje jednání komise u předsedy, čtou mobily a web
+    # Živé zasedání (T-357): co je právě na projektoru. Nastavuje jednání komise u předsedy, čtou mobily a web
     # ostatních lékařů (stream boardu, `event: live`), aby lékař jedním klepnutím viděl detail pacienta na slidu.
     live_case = models.ForeignKey('MdtCase', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     live_slide = models.PositiveSmallIntegerField(null=True, blank=True)      # 0 = první slide
@@ -95,7 +95,7 @@ class MdtCase(models.Model):
 
 
 class SessionPresence(models.Model):
-    """Lékař je na zasedání (T-354): aplikace nebo web živého zasedání se ohlašuje (`POST …/presence/`).
+    """Lékař je na zasedání (T-357): aplikace nebo web živého zasedání se ohlašuje (`POST …/presence/`).
     Přítomný = ohlášení za posledních `live.PRESENCE_TTL`; odchod = smazání."""
     session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='presences')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_presences')

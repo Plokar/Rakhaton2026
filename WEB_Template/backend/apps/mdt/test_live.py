@@ -1,4 +1,4 @@
-"""Živé zasedání (T-354): pacient na projektoru, přítomní lékaři, kde lékař má být, rozeslání do streamu boardu."""
+"""Živé zasedání (T-357): pacient na projektoru, přítomní lékaři, kde lékař má být, rozeslání do streamu boardu."""
 import asyncio
 import json
 from datetime import timedelta

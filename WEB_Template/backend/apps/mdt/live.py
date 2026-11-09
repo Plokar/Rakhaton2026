@@ -1,4 +1,4 @@
-"""Živé zasedání (T-354, ARCH §6.3): kde lékař má být, kde je a který pacient je právě na projektoru.
+"""Živé zasedání (T-357, ARCH §6.3): kde lékař má být, kde je a který pacient je právě na projektoru.
 
 Lékař na zasedání sáhne po mobilu, když ho zajímá něco, co na projektoru není. Aplikace proto ví:
 
@@ -72,7 +72,7 @@ def _publish(sid: int, payload: dict) -> None:
     try:
         async_to_sync(get_channel_layer().group_send)(_group(sid), {'type': 'chat.live', 'live': payload})
     except Exception:  # noqa: BLE001
-        log.warning('T-354: živý stav boardu %s se nepodařilo rozeslat', sid, exc_info=True)
+        log.warning('T-357: živý stav boardu %s se nepodařilo rozeslat', sid, exc_info=True)
 
 
 def _broadcast(session: MdtSession) -> dict:

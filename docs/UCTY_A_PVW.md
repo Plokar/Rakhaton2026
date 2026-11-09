@@ -20,16 +20,19 @@
 - Je **jeden správce všech MDT** (všech komisí a zasedání nemocnice).
 - Má na starosti **všechny účty**: zakládá je, posílá pozvánky, mění roli, odbornost a komise, blokuje účty a obnovuje přístup.
 - Lékaři se sami neregistrují. Do aplikace se dostanou jen přes **pozvánku od správce** (§2).
-- Dnes tuto práci dělá role `mdt_admin` (předseda, D-014) na stránce Tým komise (`/dashboard/tym`, T-319, T-338).
-  Jestli správce zůstane totožný s předsedou, nebo bude samostatná role (`mdt_manager`), je otevřená otázka Q29.
-  Do rozhodnutí platí: **správce = `mdt_admin`**.
+- **Správce je samostatná role `mdt_manager`** (rozhodnuto 9. 11., Q29). Spravuje účty, komise a pozvánky,
+  ale sám nepotvrzuje závěry. Předseda komise (`mdt_admin`, D-014) zůstává klinická role.
+- **Jeden člověk může mít obě role** (správce i předseda). Role jsou Django `Group`, uživatel může být ve více skupinách.
+- Dnes účty spravuje `mdt_admin` na stránce Tým komise (`/dashboard/tym`, T-319, T-338). Tato oprávnění přejdou na
+  `mdt_manager`. Demo účet předsedy dostane obě role, aby demo fungovalo beze změny.
 
 ## 2. Pozvánky a lékaři z jiných nemocnic
 
 1. Správce vyplní pozvánku: jméno, tituly, e-mail, odbornost, roli (`mdt_doctor` / `mdt_viewer`), **nemocnici**
    a komise, kterých se lékař účastní.
-2. Vznikne **jednorázový odkaz** s náhodným tokenem a omezenou platností (návrh: 7 dní). Správce ho lékaři pošle
-   (zkopíruje, nebo e-mailem; v dev jde e-mail jen do Mailhogu). Do databáze se ukládá jen hash tokenu.
+2. Vznikne **jednorázový odkaz** s náhodným tokenem a omezenou platností (návrh: 7 dní). Do databáze se ukládá jen
+   hash tokenu. **Doručení (rozhodnuto 9. 11.): obojí.** Aplikace odkaz pošle e-mailem (v dev jen do Mailhogu)
+   a správce ho zároveň může zkopírovat a poslat sám (Teams, SMS…).
 3. Lékař otevře odkaz, nastaví si heslo a projde **průvodcem nastavení** (§3). Použitý nebo prošlý odkaz nefunguje,
    správce může pozvánku zrušit nebo poslat znovu.
 4. **Lékař z jiné nemocnice:** správce u pozvánky vybere „externí lékař“ a jeho nemocnici
@@ -56,6 +59,17 @@ Jméno, tituly, odbornost a nemocnice předvyplněné z pozvánky. Lékař je zk
 - Technicky je to stávající šablona údajů lékaře (`FactTemplate`, po oblastech diagnózy). Platí pravidla D-024 a D-025:
   kategorie určuje systém, závažný údaj se ukáže i skrytý, skryté se jen sbalí.
 
+### Kdo je „pozvaný na MDT“ (rozhodnuto 9. 11.)
+
+Platí **obojí**:
+
+- **stálý člen komise:** správce lékaře přiřadí ke komisi (např. plicní). Lékař je pozvaný na všechna její zasedání.
+  U jednoho zasedání ho jde vyřadit (nepřijde);
+- **přizvaný na zasedání:** předseda nebo správce může k jednomu zasedání přizvat lékaře, který členem komise není
+  (např. kardiolog jen na jeden termín).
+
+Podle toho se ukazují požadavky lékaře (krok 3) a jeho normy na PVW (krok 4).
+
 ### Krok 3: Moje požadavky na podklad
 
 - Lékař vybere údaje, které **vyžaduje**, když je na MDT pozvaný. Vybírá z katalogu údajů (klíče `bm.egfr`,
@@ -72,7 +86,7 @@ Jméno, tituly, odbornost a nemocnice předvyplněné z pozvánky. Lékař je zk
 
 - Lékař nastaví normy, které **závisí na něm**: prahy a kritéria, podle kterých se jeho odbornost rozhoduje.
   Například chirurg: FLR ≥ 30 %, ECOG ≤ 1 pro resekci; radiační onkolog: FEV1 ≥ 40 % pro radikální RT.
-- Norma je **strukturovaná**, ne volný text: údaj z katalogu, operátor, hodnota a jednotka, ke kterému postupu nebo
+- Norma je **strukturovaná** (rozhodnuto 9. 11.), ne volný text: údaj z katalogu, operátor, hodnota a jednotka, ke kterému postupu nebo
   oblasti patří, poznámka a nepovinně zdroj (Evidence ID guidelines nebo `EXT-MK-…`).
 - **Na PVW:** u pacienta, kde je lékař pozvaný, se norma ukáže jako řádek s autorem a hodnotou pacienta, například
   „Norma MUDr. Novák: FLR ≥ 30 % · pacient 28 % (P03-img03)“.
@@ -96,8 +110,8 @@ Jméno, tituly, odbornost a nemocnice předvyplněné z pozvánky. Lékař je zk
 
 | Nové | Úkol |
 |---|---|
-| pozvánky s jednorázovým odkazem, registrace jen přes pozvánku | T-355 |
-| lékaři z jiných nemocnic a omezení na jejich komise | T-356 |
+| role správce `mdt_manager`, pozvánky s jednorázovým odkazem (e-mail i kopie), registrace jen přes pozvánku | T-355 |
+| komise se členy, přizvaní a vyřazení u zasedání, lékaři z jiných nemocnic a omezení na jejich komise | T-356 |
 | průvodce nastavením po prvním přihlášení (kroky 1–4) | T-357 |
 | požadavky lékaře → upozornění zadávajícímu lékaři | T-358 |
 | normy lékaře na PVW | T-359 |
@@ -107,7 +121,10 @@ Jméno, tituly, odbornost a nemocnice předvyplněné z pozvánky. Lékař je zk
 - `Invitation`: `token_hash`, `email`, jméno a tituly, `role`, `specialty`, `organization` (nemocnice), `is_external`,
   `committees` (komise), `expires_at`, `used_at`, `revoked_at`, `created_by`.
 - `UserProfile`: + `organization`, `is_external`, `committees`, `onboarding_done`.
-- **Komise** dnes nemá vlastní model (zasedání `MdtSession` mají jen `title`). Pro omezení externích lékařů a pro
-  „pozvaný na MDT“ bude potřeba buď model komise s členy, nebo pozvaní u zasedání. Rozhodne T-356.
+- **Komise** dnes nemá vlastní model (zasedání `MdtSession` mají jen `title`). Nově `Committee` (`name`, `members` M2M)
+  a u zasedání `MdtSession.committee`, `invited` (přizvaní jen na toto zasedání) a `excluded` (členové, kteří
+  tentokrát nepřijdou). Pozvaní na zasedání = `members − excluded + invited`. Externí lékař vidí jen komise,
+  kde je členem, a zasedání, kam je přizvaný.
+- Role `mdt_manager` (Django `Group`), demo předseda má `mdt_admin` i `mdt_manager`.
 - `DoctorRequirement`: `user`, `area` (`PLI` / `PRS` / `KRC` / `OBC`…), `fields` (klíče katalogu údajů), `note`.
 - `DoctorNorm`: `user`, `area`, `field`, `op`, `value`, `unit`, `procedure` (postup ze semaforu, nepovinně), `note`, `source`.

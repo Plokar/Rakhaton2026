@@ -273,7 +273,7 @@ IMPORT_TAG = {"system": TAG_SYSTEM, "code": "import-fhir-json", "display": "Impo
 PATIENT_SID = "https://rakathon.example.org/fhir/sid/pacient"
 SHARED_TYPES = frozenset({"Organization", "Practitioner", "PractitionerRole", "Location", "Medication",
                           "Questionnaire", "ResearchStudy", "Group", "Device"})
-_DATASET_PID = re.compile(r"P\d{2}")
+_DATASET_PID = re.compile(r"P\d{2,3}")
 _ECOG_LOINC = "89247-1"
 
 
@@ -541,12 +541,12 @@ _MD_SEX = re.compile(r"Pohlaví:\**\s*(žena|muž)", re.I)
 _MD_YEAR = re.compile(r"rok narození:\**\s*(\d{4})", re.I)
 _MD_DG = re.compile(r"\[([A-Za-z0-9_.-]+)\]`?\s*\*\*([CDEIZ]\d{2}(?:\.\d{1,2})?)\*\*")
 _MD_QUESTION = re.compile(r"\*\*Otázka pro MDT\*\*\s*\|\s*\**(.+?)\**\s*\|")
-_MD_PATIENT = re.compile(r"Patient/(P\d{2}|[A-Za-z0-9-]+)`")
+_MD_PATIENT = re.compile(r"Patient/(P\d{2,3}|[A-Za-z0-9-]+)`")
 
 
 def transcript_patient(md: str) -> str | None:
     """ID pacienta, ke kterému přepis patří (`Patient/P01`, jinak `P01` v nadpisu)."""
-    m = _MD_PATIENT.search(md) or re.search(r"^#.*?\b(P\d{2})\b", md, re.M)
+    m = _MD_PATIENT.search(md) or re.search(r"^#.*?\b(P\d{2,3})\b", md, re.M)
     return m[1] if m else None
 
 
@@ -736,10 +736,10 @@ def missing_for_confirm(draft: dict) -> list[str]:
 
 def next_patient_id(taken: Iterable[str]) -> str:
     """Další volné `Pnn` (konvence ID datasetu, `services/fhir/ids.py`)."""
-    numbers = [int(t[1:]) for t in taken if re.fullmatch(r"P\d{2}", t)]
+    numbers = [int(t[1:]) for t in taken if re.fullmatch(r"P\d{2,3}", t)]
     number = max(numbers, default=0) + 1
-    if number > 99:
-        raise DraftError("Došla ID pacientů P01–P99.")
+    if number > 999:
+        raise DraftError("Došla ID pacientů P01–P999.")
     return f"P{number:02d}"
 
 

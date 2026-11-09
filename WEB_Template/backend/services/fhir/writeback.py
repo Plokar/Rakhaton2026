@@ -88,7 +88,7 @@ def _cited_resources(evidence_ids) -> list[dict]:
     for eid in evidence_ids:
         base = eid.split('#', 1)[0]
         rtype = resource_type_for_id(base)
-        if rtype and re.match(r'^P\d{2}-', base):
+        if rtype and re.match(r'^P\d{2,3}-', base):
             out[base] = _ref(rtype, base)
     return list(out.values())
 

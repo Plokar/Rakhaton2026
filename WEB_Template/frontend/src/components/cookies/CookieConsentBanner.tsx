@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useCookieConsent } from '@/contexts/CookieContext';
 import { Button } from '@/components/ui/button';
 
@@ -12,7 +13,10 @@ import { Button } from '@/components/ui/button';
 export function CookieConsentBanner() {
   const { showBanner, isLoaded, acceptAll, acceptNecessaryOnly, openSettings } = useCookieConsent();
   const ref = React.useRef<HTMLDivElement>(null);
-  const visible = isLoaded && showBanner;
+  // Okno projektoru jde na plátno komise: lišta by zakryla údaje i hlavní otázku. Souhlas se dá v hlavním okně
+  // (stejný prohlížeč, stejná cookie); projektor sám jen čte, nic volitelného nenačítá.
+  const onProjector = usePathname()?.startsWith('/projector') ?? false;
+  const visible = isLoaded && showBanner && !onProjector;
 
   // T-329: lišta nesmí zakrýt hlavní akci (Přihlásit se na 1440 × 900 i na mobilu). Výšku i s odsazením zveřejní
   // jako `--cookie-banner-space`, stránky si podle ní nechají dole místo (globals.css, přihlášení, registrace).

@@ -36,7 +36,7 @@ import { CitationProvider, Citations, collectCitations, useCitationOpen } from '
 import { CompatibilityLight, LightIcon, LIGHT_META } from './CompatibilityLight';
 import { dayLabel, timeLabel } from './dates';
 import { FactIcon, FactLegend, FACT_META } from './FactIcon';
-import { formatDate } from './format';
+import { formatDate, formatDatesInText } from './format';
 import { KbItemRow } from './KbItem';
 import { AREA_LABEL, areaForIcd10, arrangeFacts, hasLayout } from './fact-layout';
 import { buildKeyFacts, type KeyFact } from './key-facts';
@@ -460,7 +460,8 @@ function FactRow({ fact, forced = false, muted = false }: { fact: KeyFact; force
       title={[fact.label, fact.reason].filter(Boolean).join(' · ')}
     >
       <FactIcon status={fact.status} className="mt-0.5" />
-      <span className="line-clamp-2 text-[13px] font-semibold leading-5">
+      {/* dlouhé jedno slovo („Multiparametrická“) se v úzkém sloupci rozdělí, místo aby se uřízlo */}
+      <span className="line-clamp-2 hyphens-auto text-[13px] font-semibold leading-5 [overflow-wrap:anywhere]">
         {fact.abbr}
         <span className="sr-only">: {fact.label}, {meta.label}</span>
       </span>
@@ -647,7 +648,7 @@ export function KeyFactsGrid() {
       fact.reason,
       forced ? 'ukázáno přes šablonu, protože je závažné' : null,
     ].filter(Boolean).join(' · ');
-    const source = fact.citations.find((c) => /^P\d{2}/.test(c)) ?? fact.citations[0];
+    const source = fact.citations.find((c) => /^P\d{2,3}/.test(c)) ?? fact.citations[0];
     return (
       <li key={fact.id} className={cn('min-w-0 grow bg-card', CELL_BASIS[units])}>
         <Tooltip>
@@ -975,7 +976,7 @@ export function AnamnesisPanel({
       <p className="text-[15px] leading-relaxed">
         {section.items.map((claim) => (
           <React.Fragment key={claim.id}>
-            {claim.kind === 'missing' ? <span className="text-muted-foreground">Chybí: {claim.text}</span> : claim.text}
+            {claim.kind === 'missing' ? <span className="text-muted-foreground">Chybí: {claim.text}</span> : formatDatesInText(claim.text)}
             <Citations ids={claim.citations} />{' '}
           </React.Fragment>
         ))}
@@ -1264,7 +1265,7 @@ function ProjectorFactCell({ fact }: { fact: KeyFact }) {
     fact.status !== 'recorded' && fact.status !== 'normal' ? meta.label : null,
     reason,
   ].filter(Boolean).join(' · ');
-  const source = fact.citations.find((c) => /^P\d{2}/.test(c)) ?? fact.citations[0];
+  const source = fact.citations.find((c) => /^P\d{2,3}/.test(c)) ?? fact.citations[0];
   return (
     <li className={cn('min-w-0 grow bg-card', CELL_BASIS[pjUnits(fact)])}>
       <Tooltip>
@@ -1525,7 +1526,7 @@ function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[
           parts.forEach((part, i) => out.push(note(`facts-${g.category}-${i}`, block, (
             <div className="@container">
               <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-medium leading-4 text-muted-foreground">
-                <span>{g.label}{i > 0 && ' (pokračování)'}</span>
+                <span>{g.category === 'alerts' ? 'Upozornění' : g.label}{i > 0 && ' (pokračování)'}</span>
                 <span className="tabular-nums">{g.facts.length}</span>
               </h3>
               <ul className="flex flex-wrap gap-px overflow-hidden rounded-xl border border-border bg-border">

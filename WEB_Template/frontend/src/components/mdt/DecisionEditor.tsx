@@ -442,6 +442,8 @@ export function DecisionEditor({
   redFlags,
   options = [],
   requesterUserId = null,
+  intentUnset = false,
+  onIntentChosen,
 }: {
   decision: Decision;
   onChange: (d: Decision) => void;
@@ -451,6 +453,9 @@ export function DecisionEditor({
   options?: ProcedureCompatibility[];
   /** Zadávající lékař (účet): dostane úkoly re-MDT a sdělení závěru pacientovi (T-350). */
   requesterUserId?: number | null;
+  /** Záměr zatím nikdo nezvolil (podklad ho nemá): pole je prázdné a závěr nejde potvrdit, nic se nepředvybírá. */
+  intentUnset?: boolean;
+  onIntentChosen?: () => void;
 }) {
   const s = decision.sections;
   const practitioners = usePractitionersQuery(!readOnly);
@@ -502,10 +507,15 @@ export function DecisionEditor({
         <Field label="Léčebný záměr">
           <select
             className={fieldClass}
-            value={s.intent}
+            value={intentUnset ? '' : s.intent}
             disabled={readOnly}
-            onChange={(e) => set({ intent: e.target.value as Sections['intent'] })}
+            aria-invalid={intentUnset || undefined}
+            onChange={(e) => {
+              onIntentChosen?.();
+              set({ intent: e.target.value as Sections['intent'] });
+            }}
           >
+            {intentUnset && <option value="" disabled>Vyberte záměr…</option>}
             {Object.entries(INTENT_LABEL).map(([v, l]) => (
               <option key={v} value={v}>{l}</option>
             ))}

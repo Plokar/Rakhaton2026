@@ -40,7 +40,7 @@ _PREFIX = (
     ("lab.", "lab"),
 )
 # Varování z dotazníků PROMs (pacient sám uvádí) patří k pacientovi, ne mezi výsledky vyšetření.
-_PROMS_CITATION = re.compile(r"^P\d{2}-prom\d+")
+_PROMS_CITATION = re.compile(r"^P\d{2,3}-prom\d+")
 
 
 def field_category(field_id: str) -> str:

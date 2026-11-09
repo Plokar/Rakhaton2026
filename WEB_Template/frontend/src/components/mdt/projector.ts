@@ -28,7 +28,7 @@ export function parseSelection(params: Record<string, string | string[] | undefi
   const board = Number(first(params.board));
   const caseId = Number(first(params.case));
   const patient = first(params.patient);
-  return Number.isInteger(board) && board > 0 && Number.isInteger(caseId) && caseId > 0 && patient && /^P\d{2}$/.test(patient)
+  return Number.isInteger(board) && board > 0 && Number.isInteger(caseId) && caseId > 0 && patient && /^P\d{2,3}$/.test(patient)
     ? { board, caseId, patient }
     : null;
 }

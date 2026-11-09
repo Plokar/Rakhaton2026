@@ -70,3 +70,19 @@ def test_patient_id_for():
 ])
 def test_parse_evidence_id(eid, expected):
     assert parse_evidence_id(eid) == expected
+
+
+def test_three_digit_patient_ids():
+    """Demo pacienti nad P99 (P100–P172): stejná konvence ID jako P01–P99."""
+    from services.fhir.ids import parse_evidence_id, patient_id_for, resource_type_for_id
+    from services.new_patient import next_patient_id
+    from services.tasks import TASK_ID
+
+    assert resource_type_for_id('P100') == 'Patient'
+    assert patient_id_for('P100') == 'P100'
+    assert patient_id_for('P100-lab01-hb') == 'P100'
+    assert patient_id_for('LEK-P100-01') == 'P100'
+    assert parse_evidence_id('P100-img03#2') is not None
+    assert TASK_ID.match('P100-mdt01-task1')
+    assert next_patient_id(['P01', 'P99']) == 'P100'
+    assert next_patient_id(['P01', 'P172']) == 'P173'

@@ -104,7 +104,7 @@ class Command(BaseCommand):
 
     # ── vektory ──
     def _vectors(self, root, report, offline, recreate):
-        patients = [p for p in report.parts if re.fullmatch(r'P\d{2}', p.label)]
+        patients = [p for p in report.parts if re.fullmatch(r'P\d{2,3}', p.label)]
         studies = next((p.resources for p in report.parts if p.label == 'studie'), [])
         guidelines = indexing.guideline_chunks(root)
         for warning in indexing.guideline_count_warnings(guidelines):

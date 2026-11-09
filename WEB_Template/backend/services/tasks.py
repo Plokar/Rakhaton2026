@@ -8,8 +8,8 @@ from services.fhir import client as fhir
 from services.fhir.writeback import RE_MDT
 from services.fhir.values import ref_id
 
-TASK_ID = re.compile(r'^(P\d{2})-(mdt\d+)-task\d+$')
-PREP_ID = re.compile(r'^(P\d{2})-(zad\d+)-prep(\d+)$')
+TASK_ID = re.compile(r'^(P\d{2,3})-(mdt\d+)-task\d+$')
+PREP_ID = re.compile(r'^(P\d{2,3})-(zad\d+)-prep(\d+)$')
 PREP_PREFIX = 'Doplnit před MDT: '
 
 

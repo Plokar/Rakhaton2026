@@ -75,6 +75,15 @@ class SummaryOutput(BaseModel):
 
 
 # ── Veřejné API ───────────────────────────────────────────────────────────────
+
+def _missing_text(w: dict) -> str:
+    """„Albumin: údaj chybí v podkladech. Potřebné: …“ (detail znalostní báze začíná stejnou větou, ta se neopakuje)."""
+    detail = w["detail"].strip()
+    for repeated in ("V podkladech nenalezeno.", "V podkladech nenalezeno"):
+        detail = detail.removeprefix(repeated).strip()
+    head = f"{w['title'].removeprefix('Chybí: ')}: údaj chybí v podkladech"
+    return f"{head}. {detail.rstrip('.')}" if detail else head
+
 def generate_brief(case, config: dict, progress: Callable[[int], None], *,
                    provider: BaseAIProvider | None = None, log_call: Callable[[str, dict], Any] | None = None) -> dict:
     """Job generátoru (T-107): načte pacienta z IRIS a vrátí `Brief` (§8.2)."""
@@ -349,7 +358,7 @@ def _missing_items(resources: list[dict], skipped_fields: Iterable[str]) -> list
         patient = [c for c in w["citations"] if c in resource_ids]
         sources = [c for c in w["citations"] if c not in resource_ids]
         items.append({"id": f"miss-{w['id']}", "kind": "missing",
-                      "text": f"{w['title'].removeprefix('Chybí: ')}: údaj chybí v podkladech ({w['detail'].rstrip('.')})",
+                      "text": _missing_text(w),
                       "citations": patient,
                       "expected_source": f"povinné podle {', '.join(sources)}" if sources else None})
     return [{k: v for k, v in item.items() if v is not None} for item in items]

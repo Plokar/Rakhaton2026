@@ -91,6 +91,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const [revising, setRevising] = React.useState(false);
   const [reason, setReason] = React.useState('');
   const [openId, setOpenId] = React.useState<EvidenceId | null>(null);
+  const [intentChosen, setIntentChosen] = React.useState(false);
   const close = React.useCallback(() => setOpenId(null), []);
   const location = useCaseLocation(isDemo ? null : Number(caseId));
 
@@ -98,6 +99,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const brief = briefData.data ?? null;
   const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me, location.item?.question));
   const confirmed = current?.status === 'confirmed';
+  // Nový závěr bez záměru v podkladu: „odlozeno“ je jen technická výchozí hodnota, lékař musí záměr zvolit sám.
+  const intentUnset = !intentChosen && !confirmed && !decisionData.data && !brief?.header.intent;
   // T-326: upravuje zadávající lékař, přizvaný lékař nebo předseda (backend to ověří znovu)
   const mayEditCase = location.item ? can.editCase(me, location.item) : can.manageBoards(me);
   const canEdit = !confirmed && (isDemo || mayEditCase);
@@ -163,6 +166,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
   };
 
   const confirm = async () => {
+    if (intentUnset) throw new Error('Před potvrzením zvolte léčebný záměr.');
     if (!current?.sections.question.text.trim() || !current.sections.conclusion.text.trim()) {
       throw new Error('Před potvrzením vyplňte projednanou otázku a závěr MDT.');
     }
@@ -335,6 +339,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
               redFlags={brief?.red_flags ?? []}
               options={optionsData.data ?? []}
               requesterUserId={location.item?.created_by?.user_id ?? null}
+              intentUnset={intentUnset}
+              onIntentChosen={() => setIntentChosen(true)}
             />
           </section>
           <SourceDrawer
@@ -351,7 +357,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
           decision={current}
           patientId={brief?.patient_id ?? 'Pxx'}
           confirmer={me?.name ?? 'předseda'}
-          remaining={decisionChecklist(current, (brief?.red_flags ?? []).map((f) => f.id))}
+          remaining={[...(intentUnset ? ['Léčebný záměr'] : []), ...decisionChecklist(current, (brief?.red_flags ?? []).map((f) => f.id))]}
           onClose={() => setConfirming(false)}
           onConfirm={confirm}
         />

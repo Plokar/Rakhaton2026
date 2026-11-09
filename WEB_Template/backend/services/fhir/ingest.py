@@ -73,7 +73,7 @@ def dataset_dir(path: str | os.PathLike | None = None) -> Path:
 
 
 def patient_ids(root: Path) -> list[str]:
-    return sorted(p.name for p in (root / 'pacienti').iterdir() if re.fullmatch(r'P\d{2}', p.name))
+    return sorted(p.name for p in (root / 'pacienti').iterdir() if re.fullmatch(r'P\d{2,3}', p.name))
 
 
 def _read_json(path: Path) -> dict:
@@ -375,7 +375,7 @@ def ingest(
         part.upload = upload(part.resources, part.label, bundle_type)
         log(f'{part.label}: odesláno {part.upload.sent}, odpověď {dict(part.upload.statuses)}')
     for part in report.parts:
-        pid = part.label if re.fullmatch(r'P\d{2}', part.label) else None
+        pid = part.label if re.fullmatch(r'P\d{2,3}', part.label) else None
         part.checks = verify(part.resources, part.label, pid)
         bad = [c for c in part.checks if not c.ok]
         log(f'{part.label}: kontrola počtů {"OK" if not bad else f"{len(bad)} nesedí"}')

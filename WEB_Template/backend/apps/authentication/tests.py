@@ -35,3 +35,17 @@ def test_rotated_refresh_cannot_be_reused(logged_in):
 
 def test_refresh_without_cookie_is_401():
     assert APIClient().post(REFRESH).status_code in (400, 401)
+
+
+# ── Pilot (T-355): samoregistrace vypnutá ───────────────────────────────────────
+
+@pytest.mark.django_db
+def test_registration_disabled_in_pilot(settings):
+    from django.contrib.auth.models import User
+    from rest_framework.test import APIClient
+    settings.MDT_ALLOW_REGISTRATION = False
+    response = APIClient().post('/api/auth/register/', {
+        'username': 'cizi', 'email': 'cizi@example.cz', 'password': 'Silne-Heslo-2026', 'password2': 'Silne-Heslo-2026',
+    }, format='json')
+    assert response.status_code == 403
+    assert not User.objects.filter(username='cizi').exists()

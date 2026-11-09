@@ -2,6 +2,15 @@
 from .settings import *  # noqa
 
 DEBUG = False
+MDT_STRICT_SECRETS = True        # apps.mdt.roles: žádné výchozí heslo demo účtů
+# Samoregistrace jen výslovně (registrovaný účet = viewer, vidí všechny pacienty); pilot: účty zakládá koordinátor
+MDT_ALLOW_REGISTRATION = os.environ.get('MDT_ALLOW_REGISTRATION', 'False') == 'True'  # noqa: F405
+
+# Pilot a produkce nestartují s klíčem z repa: podepisuje JWT, kdo ho zná, přihlásí se jako kdokoli.
+from django.core.exceptions import ImproperlyConfigured  # noqa: E402
+
+if SECRET_KEY.startswith(('django-insecure', 'CHANGE-ME')) or len(SECRET_KEY) < 50:  # noqa: F405
+    raise ImproperlyConfigured('DJANGO_SECRET_KEY: nastavte náhodný klíč (aspoň 50 znaků), výchozí z repa nejde použít.')
 
 ALLOWED_HOSTS = os.environ.get(  # noqa
     'ALLOWED_HOSTS',

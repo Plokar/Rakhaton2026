@@ -170,3 +170,38 @@ def test_collaborators_validation(seeded):
     # zadávající lékař sám sebe nepřizývá (právo už má)
     me = p04.created_by_id
     assert as_user('pneumolog').patch(url, {'collaborators': [me]}, format='json').json()['collaborators'] == []
+
+
+# ── Pilot: heslo demo účtů mimo DEBUG ───────────────────────────────────────────
+
+@pytest.mark.parametrize('password', [None, 'demo123456', 'CHANGE-ME-DEMO-PASSWORD', 'kratke'])
+def test_pilot_rejects_weak_demo_password(settings, monkeypatch, password):
+    from django.core.exceptions import ImproperlyConfigured
+    from apps.mdt.roles import demo_password
+    settings.MDT_STRICT_SECRETS = True
+    if password is None:
+        monkeypatch.delenv('MDT_DEMO_PASSWORD', raising=False)
+    else:
+        monkeypatch.setenv('MDT_DEMO_PASSWORD', password)
+    with pytest.raises(ImproperlyConfigured):
+        demo_password()
+
+
+def test_pilot_accepts_strong_demo_password(settings, monkeypatch):
+    from apps.mdt.roles import demo_password
+    settings.MDT_STRICT_SECRETS = True
+    monkeypatch.setenv('MDT_DEMO_PASSWORD', 'Pilot-MDT-2026-silne')
+    assert demo_password() == 'Pilot-MDT-2026-silne'
+
+
+@pytest.mark.django_db
+def test_reset_demo_passwords(settings, monkeypatch):
+    from apps.mdt.roles import ensure_demo_users
+    monkeypatch.setenv('MDT_DEMO_PASSWORD', 'demo123456')
+    ensure_demo_users()
+    settings.MDT_STRICT_SECRETS = True
+    monkeypatch.setenv('MDT_DEMO_PASSWORD', 'Pilot-MDT-2026-silne')
+    users = ensure_demo_users()                         # bez resetu se heslo existujícího účtu nemění
+    assert users['predseda'].check_password('demo123456')
+    users = ensure_demo_users(reset_passwords=True)
+    assert users['predseda'].check_password('Pilot-MDT-2026-silne')

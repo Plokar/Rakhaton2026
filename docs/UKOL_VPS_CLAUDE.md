@@ -28,6 +28,16 @@
 
 ## Úkol 1: oprav chybu 500 při přihlášení (priorita)
 
+> ⚠️ **Před `git pull` a restartem backendu** (od T-355): `settings_prod` nenaběhne s výchozím nebo krátkým
+> `DJANGO_SECRET_KEY` (< 50 znaků) a `seed_mdt` s výchozím nebo kratším `MDT_DEMO_PASSWORD` (< 12 znaků).
+> Nejdřív zkontroluj `WEB_Template/.env`, aniž bys hodnoty vypsal:
+> ```bash
+> python3 -c "import re;e=dict(re.findall(r'^(\w+)=(.*)$',open('WEB_Template/.env').read(),re.M));k=e.get('DJANGO_SECRET_KEY','');p=e.get('MDT_DEMO_PASSWORD','');print('klíč OK' if len(k)>=50 and not k.startswith(('django-insecure','CHANGE-ME')) else 'klíč ŠPATNĚ','| heslo OK' if len(p)>=12 and p not in('demo123456','CHANGE-ME-DEMO-PASSWORD') else '| heslo ŠPATNĚ')"
+> ```
+> Když je něco „ŠPATNĚ“, vygeneruj novou hodnotu (`python3 -c "import secrets; print(secrets.token_urlsafe(50))"`)
+> a zapiš ji do `.env` (zálohu `.env` předem). Nový klíč odhlásí všechny přihlášené, to je v pořádku.
+> 🛑 Nové heslo demo účtů sděl uživateli mimo chat (ne do commitu ani logu).
+
 1. Stav:
    ```bash
    cd WEB_Template && git -C .. pull --rebase origin master
@@ -89,6 +99,27 @@ Dnes se pacient do zasedání přidává výběrem ze seznamu `Pxx` (`components
    projektor, podklad, chat i export dál ukazují `Pxx · pohlaví · věk`. RČ nesmí do logů, URL ani do
    promptu LLM (hledání posílej v těle POST nebo jako query bez logování; zkontroluj `LOGGING`).
 5. Lint, `tsc`, backend testy a build zelené. Ověř v prohlížeči: přidání pacienta podle RČ i podle jména.
+
+## Úkol 4: nasazení pilotního provozu (fiktivní data)
+
+Postup a kontrolní seznam je v [docs/PILOT.md](PILOT.md) §2 a §6. Na serveru:
+
+1. `.env`: `DJANGO_SECRET_KEY` (≥ 50 znaků), `MDT_DEMO_PASSWORD` (≥ 12 znaků, ne `demo123456`),
+   `IRIS_PASSWORD`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD` nevýchozí, `AI_REAL_PATIENT_DATA=False`,
+   `MDT_ALLOW_REGISTRATION` nenastavené nebo `False`.
+   Zálohu `.env` před změnou, hodnoty nevypisuj.
+2. `docker compose up -d --build backend`, pak
+   `docker compose exec backend python manage.py seed_mdt --reset-demo-passwords` (demo účty dostanou nové heslo).
+3. Ověř, že ven nejsou vystavené porty IRIS (52773, 1972), Postgres a Redis: `docker compose ps` a `ss -tlnp`
+   (jen `127.0.0.1` nebo bez publikace). Když je něco na `0.0.0.0`, 🛑 napiš uživateli, co a proč změnit.
+4. Zálohy: `sudo mkdir -p /var/backups/mdtcore`, jednou ručně `WEB_Template/scripts/backup.sh`, zkontroluj
+   `SHA256SUMS`, pak cron `15 3 * * *` (docs/PILOT.md §6). 🛑 Obnovu ze zálohy zkoušej jen po souhlasu
+   uživatele (přepíše data), ideálně na kopii.
+5. 🛑 Uživateli napiš, co nastavit ve Vercelu: `NEXT_PUBLIC_PILOT_MODE=true`,
+   `NEXT_PUBLIC_PILOT_FEEDBACK_URL=<mailto nebo formulář>`, odstranit `NEXT_PUBLIC_DEMO_PASSWORD`, redeploy.
+6. Ověř: `/api/health/` → 200, přihlášení na produkční doméně, pruh „Pilotní provoz“ v aplikaci, na přihlášení
+   nejsou 1-click demo účty.
+7. Výsledek zapiš do docs/PILOT.md §2 (zaškrtni, co je hotové) a do Deníku v PROGRESS.md.
 
 ## Na konci
 

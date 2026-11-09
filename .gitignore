@@ -21,3 +21,6 @@ __pycache__/
 
 # Modrá kniha ČOS: PDF se stahuje skriptem data/onko/modra_kniha/stahni.py, v gitu jsou jen pasáže
 data/onko/modra_kniha/*.pdf
+
+# Redis snapshot z lokálního běhu
+dump.rdb

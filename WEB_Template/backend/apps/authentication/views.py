@@ -78,6 +78,11 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
+        # Pilot / produkce (T-355): účty zakládá koordinátor (Tým → Přidat lékaře). Registrovaný uživatel by dostal
+        # roli viewer a viděl by všechny pacienty.
+        if not getattr(settings, 'MDT_ALLOW_REGISTRATION', True):
+            return Response({'detail': 'Registrace je vypnutá. Účet vám založí koordinátor pilotu.'},
+                            status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()

@@ -24,12 +24,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ApiError } from '@/lib/api';
+import { PILOT_MODE } from '@/lib/pilot';
 import { cn } from '@/lib/utils';
 import type { Light, RoleId } from '@/types/mdt';
 
 // Demo účty zakládá `seed_mdt` (T-501) nad fiktivními daty. 1-click přihlášení heslo záměrně zveřejňuje;
 // na produkci se musí shodovat s MDT_DEMO_PASSWORD backendu.
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'demo123456';
+// V pilotu (NEXT_PUBLIC_PILOT_MODE) se demo sekce neukáže a heslo se do JS nedostane: každý lékař má vlastní účet.
+const DEMO_PASSWORD = PILOT_MODE ? '' : process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'demo123456';
 
 /** Odbornost = barevný štítek (D-017), role v komisi = text vedle. */
 const DEMO_ACCOUNTS: { username: string; specialty: RoleId; role: string; note?: string }[] = [
@@ -140,8 +142,14 @@ export default function LoginForm() {
 
         <div className="mx-auto my-auto w-full max-w-sm py-6">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Přihlášení</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Pro ukázku vyberte roli. Vlastním účtem se přihlásíte níže.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {PILOT_MODE
+              ? 'Pilotní provoz s fiktivními pacienty. Přihlaste se účtem, který vám založil koordinátor pilotu.'
+              : 'Pro ukázku vyberte roli. Vlastním účtem se přihlásíte níže.'}
+          </p>
+          {PILOT_MODE && <div className="h-5" aria-hidden />}
 
+          {!PILOT_MODE && (
           <section aria-labelledby="demo-accounts" className="mt-5">
             <div className="flex items-baseline justify-between gap-3">
               <h2 id="demo-accounts" className="text-sm font-medium text-foreground">Demo účty</h2>
@@ -164,12 +172,15 @@ export default function LoginForm() {
               ))}
             </ul>
           </section>
+          )}
 
+          {!PILOT_MODE && (
           <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground" aria-hidden>
             <span className="h-px flex-1 bg-border" />
             nebo vlastním účtem
             <span className="h-px flex-1 bg-border" />
           </div>
+          )}
 
           {error && (
             <p
@@ -193,7 +204,7 @@ export default function LoginForm() {
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
-                placeholder="např. predseda…"
+                placeholder={PILOT_MODE ? 'jmeno.prijmeni' : 'např. predseda…'}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 aria-invalid={Boolean(error) && !username.trim()}
@@ -252,6 +263,7 @@ export default function LoginForm() {
             </Button>
           </form>
 
+          {!PILOT_MODE && (
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Nemáte účet?{' '}
             <Link
@@ -261,6 +273,7 @@ export default function LoginForm() {
               Zaregistrujte se
             </Link>
           </p>
+          )}
         </div>
 
         {process.env.NODE_ENV === 'development' && (

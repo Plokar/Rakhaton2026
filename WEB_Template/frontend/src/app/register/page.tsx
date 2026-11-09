@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ApiError, type RegisterData } from '@/lib/api';
+import { PILOT_MODE } from '@/lib/pilot';
 import { cn } from '@/lib/utils';
 import type { ProjectorLayout, TemplateArea } from '@/types/mdt';
 
@@ -37,7 +38,28 @@ function registerError(err: unknown): string {
  * 2) šablona klíčových údajů předvyplněná podle profese (pneumolog = výběr pro plíce), jde upravit i přeskočit.
  * Nový účet je člen komise; roli předsedy nebo zadávajícího lékaře nastaví předseda v Týmu komise.
  */
+/** Pilot (T-355): samoregistrace je vypnutá i na backendu (MDT_ALLOW_REGISTRATION), účty zakládá koordinátor. */
 export default function RegisterPage() {
+  return PILOT_MODE ? <RegistrationClosed /> : <RegisterForm />;
+}
+
+function RegistrationClosed() {
+  return (
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4">
+      <div className="max-w-sm text-center">
+        <h1 className="text-xl font-semibold text-foreground">Registrace je v pilotu vypnutá</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Účty lékařů pilotu zakládá koordinátor. Pokud účet ještě nemáte, ozvěte se mu.
+        </p>
+        <Link href="/login" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
+          Zpět na přihlášení
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
   const { register, user } = useAuth();
 

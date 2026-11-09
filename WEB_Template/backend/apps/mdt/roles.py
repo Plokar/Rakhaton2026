@@ -1,7 +1,9 @@
 """Role a demo účty (D-014, ARCH §6.2, POZADAVKY_LEKARE §1)."""
 import os
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.models import Group
 
 from .models import UserProfile
@@ -97,15 +99,31 @@ def users_by_practitioner() -> dict[str, dict]:
             for p in UserProfile.objects.exclude(practitioner_fhir_id='').select_related('user')}
 
 
-def ensure_demo_users() -> dict:
-    """Skupiny + demo účty (heslo `MDT_DEMO_PASSWORD`, výchozí jako demo účty templatu). Idempotentní."""
+DEV_DEMO_PASSWORD = 'demo123456'
+# výchozí heslo z repa a zástupné hodnoty z `.env.prod.example` nesmí do pilotu ani produkce
+WEAK_DEMO_PASSWORDS = {DEV_DEMO_PASSWORD, 'CHANGE-ME-DEMO-PASSWORD', ''}
+
+
+def demo_password() -> str:
+    """Heslo demo účtů: `MDT_DEMO_PASSWORD`. V pilotu a produkci (`MDT_STRICT_SECRETS`, settings_prod) musí být
+    nastavené, alespoň 12 znaků a ne výchozí z repa; v dev a testech platí výchozí `demo123456`."""
+    strict = getattr(settings, 'MDT_STRICT_SECRETS', False)
+    password = os.environ.get('MDT_DEMO_PASSWORD', '' if strict else DEV_DEMO_PASSWORD)
+    if strict and (password in WEAK_DEMO_PASSWORDS or len(password) < 12):
+        raise ImproperlyConfigured(
+            'MDT_DEMO_PASSWORD: v pilotu a produkci nastavte vlastní heslo demo účtů (aspoň 12 znaků, ne výchozí z repa).')
+    return password
+
+
+def ensure_demo_users(reset_passwords: bool = False) -> dict:
+    """Skupiny + demo účty (heslo `MDT_DEMO_PASSWORD`). Idempotentní; heslo existujícího účtu změní jen `reset_passwords`."""
     groups = {name: Group.objects.get_or_create(name=name)[0] for name in ROLES}
-    password = os.environ.get('MDT_DEMO_PASSWORD', 'demo123456')
+    password = demo_password()
     users = {}
     for username, (group, spec, full_name) in DEMO_USERS.items():
         user, created = get_user_model().objects.get_or_create(
             username=username, defaults={'first_name': full_name, 'email': f'{username}@mdt.local'})
-        if created:
+        if created or reset_passwords:
             user.set_password(password)
             user.save()
         user.groups.add(groups[group])

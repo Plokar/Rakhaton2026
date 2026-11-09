@@ -10,8 +10,12 @@ from services.mdt_seed import load_nominations
 class Command(BaseCommand):
     help = 'Demo účty a role, zasedání MDT a případy z ServiceRequest + Task v IRIS. Přesunutý případ nechá na novém boardu.'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--reset-demo-passwords', action='store_true',
+                            help='Nastaví všem demo účtům heslo z MDT_DEMO_PASSWORD (před pilotem: pryč s výchozím heslem).')
+
     def handle(self, *args, **options):
-        users = roles.ensure_demo_users()
+        users = roles.ensure_demo_users(reset_passwords=options['reset_demo_passwords'])
         for user in users.values():                    # T-328: účet ↔ lékař v IRIS („moje úkoly“, výběr lékaře)
             roles.ensure_practitioner(user)
         ensure_presets(users['predseda'])

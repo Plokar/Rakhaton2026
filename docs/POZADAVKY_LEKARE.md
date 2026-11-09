@@ -57,6 +57,8 @@ Porovnáno s prezentací zadání (13 slidů s poznámkami řečníka). Číslo 
 | **Zadávající lékař** | ošetřující lékař, který pacienta nominuje | zařadí pacienta do boardu ([§2.2](#22-formulář-zařadit-pacienta-do-boardu)), doplní nebo přeskočí údaje, odklikne varování, zadá ECOG a záměr C/P, zaškrtne připomínku snímku, **přesouvá své pacienty mezi boardy** | měnit cizí případy, potvrzovat závěr |
 | **Prohlížející** | členové komise | číst podklad, bloky si u sebe sbalit nebo přeskládat (lokálně) | měnit data a výchozí nastavení podkladu |
 
+> **Doplněno 9. 11. (D-027, D-028):** nad rolemi je **jeden správce MDT**, který spravuje všechny účty a posílá lékařům pozvánky odkazem (i lékařům z jiných nemocnic). Každý lékař si při prvním přihlášení nastaví must-have **PVW** (projektor view = okno pro projektor), požadavky na podklad a své normy pro řešení. Detail: [UCTY_A_PVW.md](UCTY_A_PVW.md).
+
 **Implementace** (ARCH §6.2):
 
 - Django `Group`: `mdt_admin`, `mdt_doctor`, `mdt_viewer`.

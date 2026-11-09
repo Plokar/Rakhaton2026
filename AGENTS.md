@@ -11,6 +11,11 @@ Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + v�
 5. U obrazovek, semaforu, varování a zařazení pacienta přečti **[docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md)**: požadavky lékaře sladěné se zadáním, katalog pravidel, škály a zkratky.
 6. Vezmi si úkol podle protokolu: stav ⬜, závislosti ✅. Udělej **claim commit** a pak pracuj ve větvi `t-xxx-…`. Když na jednom stroji pracuje víc agentů, má každý vlastní `git worktree` (PROGRESS §1, „Sprinty a paralelní práce“).
 
+## Slovník (zkratky týmu)
+
+- **PVW = projektor view** = okno pro projektor: panel, který se při zasedání MDT promítá na projektoru celé komisi (`/projector`, slidy T-348, rozložení `MdtCase.projector_layout`, jinak šablona zadávajícího lékaře D-025). Když uživatel napíše „PVW“, myslí tohle.
+- **Správce MDT** = jeden správce všech komisí a všech účtů. Lékaři se do aplikace dostanou jen přes jeho pozvánku (odkaz), i lékaři z jiných nemocnic. Každý lékař si při prvním přihlášení nastaví svůj must-have PVW, požadavky na podklad (upozorní zadávajícího lékaře, když je pozvaný) a své normy pro řešení (vidět na PVW). Detail a pravidla: **[docs/UCTY_A_PVW.md](docs/UCTY_A_PVW.md)** (D-027, D-028).
+
 ## Mapa repa
 
 - `WEB_Template/frontend/`: Next.js 16 (→ Vercel). **Před psaním frontend kódu přečti `WEB_Template/frontend/AGENTS.md`**, protože Next 16 má breaking changes.
@@ -18,7 +23,7 @@ Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + v�
 - IRIS for Health (FHIR R4 + Vector Search): služba `iris` v docker-compose, viz ARCHITEKTURA §4.
 - `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`: dataset od Asseco (= `DATASET_DIR`). **Neměnit**, opravy patří do sanitizace v ingestu.
 - `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele, `onko/` = znalostní báze (postupy podle diagnózy, studie, kritéria semaforu, normy). Ptej se přes `python3 data/onko/q.py`, celé TSV do promptu nenačítej.
-- `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), později `EVAL.md` a `DEMO.md`.
+- `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), účty, pozvánky a nastavení lékaře pro PVW (`UCTY_A_PVW.md`), `EVAL.md` a `DEMO.md`.
 - `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej náš provider** (`services/ai_service.py`: NVIDIA / Gemini).
   - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDTcore“ má přednost před textem skillu (ARCH §4.8).
   - `impeccable` (T-016): `/impeccable audit | critique | polish | distill | harden | clarify | adapt <cíl>` nad `WEB_Template/frontend` (`--target`). Hook detektoru jen lokálně (`/impeccable hooks on`).

@@ -55,6 +55,11 @@
 1. Rozšiř generátor `data/demo_pacienti/generate.py` (styl druhé vlny přes `pt()`, T-351) o **100 pacientů
    P73–P172**. Rozlož je do stávajících 10 komisí a na termíny zasedání od 10. 11. do 18. 12. 2026
    (doplň zasedání v `seed_mdt`, ať má každé 4–8 případů).
+   ⚠️ **Nejdřív ID nad P99:** kód na 16 místech předpokládá `P` + přesně dvě číslice (regex `P\d{2}`), např.
+   `components/mdt/projector.ts` (okno projektoru by pacienta P100 vůbec neotevřelo), `citations.tsx`, `quick-view.tsx`,
+   `services/fhir/ids.py`, `ingest.py`, `writeback.py`, `new_patient.py`, `tasks.py`, `rules/fact_categories.py`,
+   `ingest_dataset.py`. Najdi je (`grep -rn 'P\\d{2}' WEB_Template --include=*.py --include=*.ts --include=*.tsx`), změň na
+   `P\d{2,3}` a přidej test s pacientem P100. Teprve pak generuj.
 2. Pestrost: všechny diagnózy z katalogu (`data/onko/q.py`), různá stadia, ECOG 0–3, záměr C i P. Zhruba
    pětina pacientů má záměrně mezery (chybí PROMs, preference, laboratoř) a desetina „nové výsledky“ po zařazení.
 3. **Data jsou fiktivní** (D-021): žádná skutečná jména ani rodná čísla. Pro úkol 3 dostane každý pacient:

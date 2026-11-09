@@ -1187,8 +1187,8 @@ const PJ_PILL: Record<Light, string> = {
 
 // ── Rozložení okna pro projektor (T-333): zadávající lékař skryje nebo přeskládá karty a údaje ─────────
 
+/** Anamnéza do okna projektoru nepatří (výpověď pacienta zůstává v podkladu a v detailu případu). */
 export const PROJECTOR_BLOCKS: { id: ProjectorBlock; label: string }[] = [
-  { id: 'anamnesis', label: 'Anamnéza' },
   { id: 'facts', label: 'Klíčové údaje' },
   { id: 'treatments', label: 'Léčebné postupy' },
 ];
@@ -1236,17 +1236,33 @@ function pjUnits(fact: KeyFact): CellUnits {
   return length <= 11 ? 2 : length <= 22 ? 3 : length <= 32 ? 4 : 6;
 }
 
+/**
+ * Okno projektoru ukazuje jen to, co je: chybějící, čekající a přeskočené údaje ani varování „Chybí: …“
+ * na projektor nejdou. V podkladu, v detailu případu a v úkolech zůstávají beze změny (D-019).
+ */
+export function shownOnProjector(fact: KeyFact): boolean {
+  if (fact.status === 'missing' || fact.status === 'pending' || fact.status === 'skipped') return false;
+  return !(fact.group === 'alert' && fact.abbr === 'Chybí');
+}
+
+/** Na projektoru bez doslovné výpovědi pacienta („Pacient uvádí: „…““): plné znění je ve zdroji citace. */
+function projectorReason(reason: string | undefined): string | undefined {
+  const short = reason?.replace(/Pacient(?:ka)? uvádí:\s*„[^“]*“\.?\s*/g, '').trim();
+  return short || undefined;
+}
+
 function ProjectorFactCell({ fact }: { fact: KeyFact }) {
   const open = useCitationOpen();
   const meta = FACT_META[fact.status];
   const { value, cell } = factCell(fact);
   const critical = fact.status === 'critical';
-  const shown = critical && fact.reason ? `${cell} · ${fact.reason}` : cell;
+  const reason = projectorReason(fact.reason);
+  const shown = critical && reason ? `${cell} · ${reason}` : cell;
   const tip = [
     `${fact.label}: ${value}`,
     fact.date ? `ze dne ${formatDate(fact.date)}` : null,
     fact.status !== 'recorded' && fact.status !== 'normal' ? meta.label : null,
-    fact.reason,
+    reason,
   ].filter(Boolean).join(' · ');
   const source = fact.citations.find((c) => /^P\d{2}/.test(c)) ?? fact.citations[0];
   return (
@@ -1257,7 +1273,7 @@ function ProjectorFactCell({ fact }: { fact: KeyFact }) {
             <button
               type="button"
               onClick={() => source && open?.(source)}
-              aria-label={`${fact.label}: ${value}, ${meta.label}${fact.reason ? `. ${fact.reason}` : ''}${source ? '. Otevřít zdroj' : ''}`}
+              aria-label={`${fact.label}: ${value}, ${meta.label}${reason ? `. ${reason}` : ''}${source ? '. Otevřít zdroj' : ''}`}
               className={cn(
                 'flex h-full w-full min-w-0 items-center gap-1.5 px-2 py-1 text-left text-[13px] leading-5 transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                 critical && 'bg-red-100/80 text-red-950 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-100',
@@ -1487,7 +1503,8 @@ function chunk<T>(items: T[], size: number): T[][] {
 
 /** Jednotky slidů v pořadí bloků lékaře: skupiny údajů po částech, postupy po čtyřech, anamnéza celá. */
 function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[] {
-  const { facts, sources } = useQuickView();
+  const { facts: allFacts, sources } = useQuickView();
+  const facts = allFacts.filter(shownOnProjector);
   const layout = React.useContext(ProjectorLayoutContext);
   const extra = React.useContext(ProjectorExtraContext);
   const { groups, hiddenCount } = arrangeFacts(facts, layout, defaultFactOrder);

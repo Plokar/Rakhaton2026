@@ -12,7 +12,6 @@ import { AREA_LABEL, editorGroups, type LayoutItem } from './fact-layout';
 import { FIELD_ABBR } from './key-facts';
 
 const BLOCKS: { id: ProjectorBlock; label: string }[] = [
-  { id: 'anamnesis', label: 'Anamnéza' },
   { id: 'facts', label: 'Klíčové údaje' },
   { id: 'treatments', label: 'Léčebné postupy' },
 ];
@@ -104,7 +103,7 @@ export function FactLayoutEditor({ items, value, onChange, blocks = false, hideV
   const hiddenFacts = value.facts?.hidden ?? [];
   const setCategories = (order: FactCategory[], hidden: FactCategory[]) => onChange({ ...value, categories: { order, hidden } });
   const blockRows = (() => {
-    const order = [...new Set([...(value.blocks?.order ?? []), ...BLOCKS.map((b) => b.id)])];
+    const order = [...new Set([...(value.blocks?.order ?? []), ...BLOCKS.map((b) => b.id)])].filter((id) => BLOCKS.some((b) => b.id === id));
     const hidden = value.blocks?.hidden ?? [];
     return { order, hidden };
   })();

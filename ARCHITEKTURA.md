@@ -1162,6 +1162,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | Metoda | Endpoint | Popis |
 |---|---|---|
 | GET | `/api/patients/` | seznam pacientů (z FHIR `Patient` + primární `Condition`) |
+| POST | `/api/patients/search/` | **hledání pro dialog přidání pacienta (T-356):** tělo `{"q": "…"}`; `q` = RČ s lomítkem i bez (`655315/1234` = `6553151234`, celé RČ, systémy ÚZIS i `…/sid/rc-fiktivni`), část jména bez ohledu na diakritiku a velikost písmen (všechna slova), nebo `Pxx`; nejvýš 20 výsledků `PatientSearchItem[]` (§8.2) se **jménem a RČ jen pro tento dialog** (D-018: hlavička, projektor, podklad, chat i export dál `Pxx · pohlaví · věk`). Hledá ve FHIR (`Patient?identifier=`, `Patient?name=`) a výsledek ověří v kódu (IRIS neznámé parametry ignoruje). RČ jde jen v těle POST, nikdy v URL (access log Daphne, Vercel, Cloudflare) ani do LLM |
+| GET | `/api/patients/?q=<text>` | totéž hledání pro jméno nebo `Pxx`; `q`, které vypadá jako RČ, vrátí **400** (RČ jen přes `POST search/`); bez `q` celý seznam |
 | GET | `/api/patients/{pid}/` | detail: demografie, diagnózy, komorbidity, TNM, ECOG |
 | GET | `/api/patients/{pid}/timeline/` | události časové osy s Evidence ID |
 | GET | `/api/patients/{pid}/observations/?code=…[&source=sql]` | časové řady (labs, hmotnost, ECOG, PROMs skóre) pro grafy; `source=sql` čte kódované číselné `Observation` ze SQL pohledu `MDT.ObservationSeries` (T-309) |
@@ -1419,6 +1421,16 @@ interface TimelineEvent {                       // GET /api/patients/{pid}/timel
   type: "diagnosis" | "procedure" | "medication" | "imaging" | "pathology" | "lab" | "proms" | "mdt" | "document";
   label: string;
   citation: EvidenceId;
+}
+
+interface PatientSearchItem {                   // POST /api/patients/search/ {q} → PatientSearchItem[] (≤ 20, T-356)
+  id: string;                                   // "P100"
+  display_name: string;                         // "P100 · žena · 61 let"
+  sex: 'male' | 'female' | 'other' | 'unknown';
+  age: number | null;
+  name: string | null;                          // "Jana Nováková (fiktivní)" – jen dialog přidání (D-018)
+  rc: string | null;                            // "655315/9913" – jen dialog přidání, nikdy URL, log ani LLM
+  birth_date: string | null;
 }
 
 interface PatientListItem {                     // GET /api/patients/ → PatientListItem[]

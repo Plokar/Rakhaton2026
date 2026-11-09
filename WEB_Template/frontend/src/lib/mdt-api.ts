@@ -3,6 +3,7 @@
  */
 import { apiFetch, apiUrl } from '@/lib/api';
 import type {
+  PatientSearchItem,
   BoardRecord,
   Brief,
   BriefConfig,
@@ -346,6 +347,9 @@ export const mdtApi = {
 
   /** Pacienti z IRIS (hlavička bez jména a RČ). */
   getPatients: () => apiFetch<PatientListItem[]>('/api/patients/'),
+  /** Hledání podle RČ, jména nebo Pxx (T-356): dotaz v těle POST, aby RČ nebylo v URL ani v access logu. */
+  searchPatients: (q: string) =>
+    apiFetch<PatientSearchItem[]>('/api/patients/search/', { method: 'POST', body: JSON.stringify({ q }) }),
 
   /** Nový pacient z RČ (T-323): rozpracované návrhy, založení z textu / souborů, úpravy, zápis do IRIS. */
   getPatientDrafts: () =>

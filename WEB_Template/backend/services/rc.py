@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from datetime import date
 
 SYSTEM = "https://ncez.mzcr.cz/fhir/sid/rcis"        # identifikátor RČ v českém FHIR (ÚZIS)
+FICTIONAL_SYSTEM = "https://rakathon.example.org/fhir/sid/rc-fiktivni"   # demo pacienti P13+ (T-355, D-021)
+SYSTEMS = (SYSTEM, FICTIONAL_SYSTEM)
 _FORMAT = re.compile(r"^\s*(\d{6})\s*/?\s*(\d{3,4})\s*$")
 
 

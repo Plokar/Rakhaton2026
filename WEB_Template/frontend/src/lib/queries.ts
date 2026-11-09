@@ -95,6 +95,17 @@ export function usePatientsQuery(enabled = true) {
   return useQuery({ queryKey: queryKeys.patients, queryFn: () => mdtApi.getPatients(), enabled, staleTime: 5 * 60_000 });
 }
 
+/** Hledání pacienta v dialogu přidání (T-356); jméno a RČ z výsledku nesmí jinam (D-018), cache jen krátce. */
+export function usePatientSearchQuery(q: string, enabled = true) {
+  return useQuery({
+    queryKey: ['patient-search', q] as const,
+    queryFn: () => mdtApi.searchPatients(q),
+    enabled: enabled && q.length > 0,
+    staleTime: 30_000,
+    gcTime: 60_000,
+  });
+}
+
 export function usePatientQuery(patientId: string) {
   return useQuery({ queryKey: queryKeys.patient(patientId), queryFn: () => mdtApi.getPatient(patientId) });
 }

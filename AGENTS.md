@@ -23,6 +23,7 @@ Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + v�
   - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDTcore“ má přednost před textem skillu (ARCH §4.8).
   - `impeccable` (T-016): `/impeccable audit | critique | polish | distill | harden | clarify | adapt <cíl>` nad `WEB_Template/frontend` (`--target`). Hook detektoru jen lokálně (`/impeccable hooks on`).
   - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDTcore“ má přednost.
+  - T-352: `nextjs-shadcn`, `next-best-practices`, `nextjs-performance`, `frontend-ui-engineering` a `performance-optimization` (vzhled a výkon aplikace), `frontend-slides` (HTML prezentace) a `pptx` (PowerPoint pro pitch). Jejich blok „V MDTcore“ má přednost.
   - **UI v2** ([docs/NAVRH_UI.md](docs/NAVRH_UI.md)): shell v `app/dashboard/layout.tsx`, data přes TanStack Query (`src/lib/queries.ts`), 30s přehled `components/mdt/quick-view.tsx` je společný pro kalendář, jednání, detail i projektor.
 
 ## Příkazy

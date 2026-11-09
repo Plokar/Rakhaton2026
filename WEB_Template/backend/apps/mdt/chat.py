@@ -156,8 +156,14 @@ async def _events(sid: int, after: int | None):
                 await asyncio.sleep(1)
                 receiving = asyncio.ensure_future(layer.receive(channel))
                 continue
-            m = receiving.result()['message']
+            event = receiving.result()
             receiving = asyncio.ensure_future(layer.receive(channel))
+            if event.get('type') == 'chat.live':
+                # T-354: pacient na projektoru a přítomní lékaři; pojmenovaná událost bez `id` (Last-Event-ID
+                # zůstává ID poslední zprávy chatu, `onmessage` chatu ji nedostane)
+                yield f'event: live\ndata: {json.dumps(event["live"], ensure_ascii=False)}\n\n'
+                continue
+            m = event['message']
             if after is None or m['id'] > after:
                 after = m['id']
                 yield _sse(m)
@@ -170,7 +176,8 @@ async def _events(sid: int, after: int | None):
 
 @require_GET
 async def session_stream(request, sid):
-    """SSE `text/event-stream`: nové zprávy chatu boardu (`id` = ID zprávy, `data` = `SessionMessage`).
+    """SSE `text/event-stream`: nové zprávy chatu boardu (`id` = ID zprávy, `data` = `SessionMessage`)
+    a změny živého zasedání (`event: live`, `data` = `LiveState`, T-354).
     `Last-Event-ID` (EventSource po výpadku) nebo `?after=<id>` nejdřív doplní zprávy, které klient nemá."""
     user = await sync_to_async(_authenticate)(request)
     if user is None:

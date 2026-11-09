@@ -2,23 +2,31 @@
 
 import * as React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shadcn/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage, queryKeys, useIntakeQuery, useObservationsQuery } from '@/lib/queries';
-import type { MdtCase, ProjectorLayout } from '@/types/mdt';
+import { cn } from '@/lib/utils';
+import type { EvidenceId, MdtCase, ProjectorExtra, ProjectorLayout } from '@/types/mdt';
+import { AiTag } from './AiBlock';
+import { CitationProvider, Citations } from './citations';
 import { FactIcon } from './FactIcon';
 import { FactLayoutEditor } from './FactLayoutEditor';
 import { AREA_LABEL, areaForIcd10, hasLayout, templateKey, type LayoutItem } from './fact-layout';
 import { buildKeyFacts } from './key-facts';
 import { useMe } from './me';
+import { MAX_EXTRA, PatientChatDialog, PatientChatFocus } from './PatientChatDialog';
 import { shortPatient } from './patient';
 import { CaseQuickViewProjector, useQuickViewSources } from './quick-view';
+import { SourceDrawer } from './SourceDrawer';
 
 /**
  * Úprava okna pro projektor u případu (T-333): kategorie a údaje skrýt nebo přeskládat (T-338). Skrývá se jen
  * v projektoru, podklad i detail zůstávají celé (D-019). Bez úpravy platí šablona zadávajícího lékaře.
+ * „Doplnit z karty“ (T-345): chatbot nad kartou pacienta, nalezené tvrzení se zdrojem jde do okna. Při zařazení je
+ * chatbot vedle formuláře (tlačítko do něj skočí), jinak se otevře v dialogu uprostřed.
  */
 export function ProjectorLayoutEditor({
   patientId,
@@ -47,15 +55,80 @@ export function ProjectorLayoutEditor({
       })),
     [intake.data, observations.data],
   );
+  const [asking, setAsking] = React.useState(false);
+  const focusChat = React.useContext(PatientChatFocus);
+  const extra = value.extra ?? [];
+  const setExtra = (next: ProjectorExtra[]) => onChange({ ...value, extra: next });
   return (
-    <FactLayoutEditor
-      items={items}
-      value={value}
-      onChange={onChange}
-      blocks
-      hideVerb="Skrýt v okně pro projektor"
-      loading={intake.isLoading || observations.isLoading}
-    />
+    <>
+      <FactLayoutEditor
+        items={items}
+        value={value}
+        onChange={onChange}
+        blocks
+        hideVerb="Skrýt v okně pro projektor"
+        loading={intake.isLoading || observations.isLoading}
+        addon={extra.length > 0 && <ExtraList items={extra} onRemove={(id) => setExtra(extra.filter((x) => x.id !== id))} />}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!focusChat?.()) setAsking(true);
+            }}
+            title="Najít údaj v kartě pacienta (chatbot) a doplnit ho do okna pro projektor"
+          >
+            <Plus aria-hidden /> Doplnit z karty
+          </Button>
+        }
+      />
+      <PatientChatDialog
+        patientId={patientId}
+        open={asking}
+        onOpenChange={setAsking}
+        extra={extra}
+        onAdd={(item) => {
+          setExtra([...extra, item]);
+          toast.success('Doplněno do okna pro projektor', { description: item.text });
+        }}
+      />
+    </>
+  );
+}
+
+/** Údaje doplněné z karty pacienta: v okně pod klíčovými údaji, každý se zdrojem; odebírají se jednotlivě. */
+function ExtraList({ items, onRemove }: { items: ProjectorExtra[]; onRemove: (id: string) => void }) {
+  return (
+    <section>
+      <h3 className="text-sm font-semibold">
+        Doplněno z karty pacienta <span className="font-normal text-muted-foreground">({items.length} z {MAX_EXTRA})</span>
+      </h3>
+      <p className="mb-2 text-xs text-muted-foreground">V okně pro projektor pod klíčovými údaji, každý se zdrojem. Podklad se nemění.</p>
+      <ul className="flex flex-col gap-1">
+        {items.map((x) => (
+          <li
+            key={x.id}
+            className={cn('flex items-start gap-2 rounded-lg border border-border bg-card px-2 py-1.5 text-sm', x.ai && 'border-l-2 border-l-ai/60')}
+          >
+            <p className="min-w-0 flex-1 leading-snug">
+              {x.ai && <AiTag className="mr-1.5 align-baseline" />}
+              {x.text}
+              <Citations ids={x.citations} />
+            </p>
+            <button
+              type="button"
+              onClick={() => onRemove(x.id)}
+              aria-label={`Odebrat z okna pro projektor: ${x.text}`}
+              title="Odebrat z okna pro projektor"
+              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -72,8 +145,13 @@ function asTemplate(layout: ProjectorLayout): ProjectorLayout {
 export function ProjectorLayoutDialog({ item, open, onOpenChange }: { item: MdtCase; open: boolean; onOpenChange: (open: boolean) => void }) {
   const client = useQueryClient();
   const me = useMe();
-  const startFrom = hasLayout(item.projector_layout) ? item.projector_layout! : item.requester_layout ?? {};
+  // Bez úpravy u případu se vychází ze šablony zadávajícího; doplněné z karty pacienta (T-345) zůstávají.
+  const caseExtra = item.projector_layout?.extra ?? [];
+  const startFrom = hasLayout(item.projector_layout)
+    ? item.projector_layout!
+    : { ...(item.requester_layout ?? {}), ...(caseExtra.length ? { extra: caseExtra } : {}) };
   const [draft, setDraft] = React.useState<ProjectorLayout>(() => startFrom);
+  const [sourceId, setSourceId] = React.useState<EvidenceId | null>(null);
   const [alsoMine, setAlsoMine] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const sources = useQuickViewSources({ sessionId: item.session, caseId: item.id ?? null, patientId: item.patient_id });
@@ -107,7 +185,7 @@ export function ProjectorLayoutDialog({ item, open, onOpenChange }: { item: MdtC
     if (item.id === undefined) return;
     setSaving(true);
     try {
-      await mdtApi.updateCase(item.id, { projector_layout: {} });
+      await mdtApi.updateCase(item.id, { projector_layout: caseExtra.length ? { extra: caseExtra } : {} });
       await client.invalidateQueries({ queryKey: queryKeys.session(item.session) });
       toast.success(`Okno podle šablony ${iAmRequester ? 'vaší' : 'zadávajícího lékaře'}`);
       onOpenChange(false);
@@ -124,7 +202,7 @@ export function ProjectorLayoutDialog({ item, open, onOpenChange }: { item: MdtC
         <DialogHeader>
           <DialogTitle>Okno pro projektor · {shortPatient(item)}</DialogTitle>
           <DialogDescription>
-            Skryjte, co komise na projektoru nepotřebuje, a přetažením seřaďte kategorie a údaje. Vpravo je náhled.{' '}
+            Skryjte, co komise na projektoru nepotřebuje, a přetažením seřaďte kategorie a údaje. Vlevo je náhled.{' '}
             {hasLayout(item.projector_layout)
               ? 'U pacienta je vlastní úprava.'
               : item.requester_layout
@@ -132,12 +210,15 @@ export function ProjectorLayoutDialog({ item, open, onOpenChange }: { item: MdtC
                 : 'Teď platí výchozí pořadí.'}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="max-h-[60vh] overflow-y-auto pr-1">
-            <ProjectorLayoutEditor patientId={item.patient_id} value={draft} onChange={setDraft} />
-          </div>
+        <div className="grid gap-5 md:grid-cols-[420px_minmax(0,1fr)]">
           <div className="hidden h-[60vh] overflow-hidden rounded-xl border border-border md:block" aria-label="Náhled okna pro projektor">
             <CaseQuickViewProjector sources={sources} caseId={item.id ?? null} titleAs="h2" layout={draft} />
+          </div>
+          <div className="max-h-[60vh] overflow-y-auto pr-1">
+            <CitationProvider order={[]} activeId={sourceId} onOpen={setSourceId}>
+              <ProjectorLayoutEditor patientId={item.patient_id} value={draft} onChange={setDraft} />
+              <SourceDrawer evidenceId={sourceId} loadSource={mdtApi.getEvidence} onClose={() => setSourceId(null)} />
+            </CitationProvider>
           </div>
         </div>
         <DialogFooter className="flex-wrap items-center gap-2 sm:justify-between">

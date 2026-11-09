@@ -85,13 +85,17 @@ export function SortableRows({ rows, onMove, onToggle, hideVerb = 'Skrýt' }: {
  * Editor rozložení údajů (T-338): kategorie (pořadí, skrytí) a údaje v nich (pořadí, skrytí), u okna projektoru
  * i karty. Kategorie určuje systém, lékař mění jen pořadí a viditelnost (D-024). Skryté v podkladu zůstává.
  */
-export function FactLayoutEditor({ items, value, onChange, blocks = false, hideVerb = 'Skrýt', loading = false }: {
+export function FactLayoutEditor({ items, value, onChange, blocks = false, hideVerb = 'Skrýt', loading = false, addon, actions }: {
   items: LayoutItem[];
   value: ProjectorLayout;
   onChange: (next: ProjectorLayout) => void;
   blocks?: boolean;
   hideVerb?: string;
   loading?: boolean;
+  /** Sekce pod kategoriemi (okno u případu: údaje doplněné z karty pacienta, T-345). */
+  addon?: React.ReactNode;
+  /** Tlačítka vedle „Obnovit výchozí“ (okno u případu: doplnit z karty pacienta, T-345). */
+  actions?: React.ReactNode;
 }) {
   const groups = editorGroups(items, value);
   const categoryOrder = groups.map((g) => g.category);
@@ -172,10 +176,15 @@ export function FactLayoutEditor({ items, value, onChange, blocks = false, hideV
           ))}
         </>
       )}
+      {addon}
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" variant="outline" size="sm" onClick={() => onChange({})}>
-          <RotateCcw aria-hidden /> Obnovit výchozí
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {/* výchozí pořadí a viditelnost; doplněné z karty pacienta zůstávají, ty se odebírají každý zvlášť */}
+          <Button type="button" variant="outline" size="sm" onClick={() => onChange(value.extra?.length ? { extra: value.extra } : {})}>
+            <RotateCcw aria-hidden /> Obnovit výchozí
+          </Button>
+          {actions}
+        </div>
         <p className="text-xs text-muted-foreground">Skryté údaje jsou o klik dál, závažný údaj se ukáže vždy. Podklad zůstává celý.</p>
       </div>
     </div>

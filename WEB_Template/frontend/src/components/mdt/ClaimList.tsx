@@ -40,7 +40,7 @@ export function ClaimItem({ claim }: { claim: Claim }) {
  * Míra jistoty (BONUS zadání §3.3, T-332): sémantická shoda tvrzení s citovaným textem z grounding validátoru.
  * U strukturovaných dat (laboratoř, TNM) chybí, ta se ověřují čísly a daty přímo ve zdroji.
  */
-function Confidence({ value }: { value?: number | null }) {
+export function Confidence({ value }: { value?: number | null }) {
   if (value === undefined || value === null) return null;
   const percent = Math.round(value * 100);
   return (

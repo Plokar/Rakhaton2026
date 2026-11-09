@@ -37,10 +37,31 @@ def _ids(value, allowed=None) -> bool:
             and all(isinstance(x, str) and 0 < len(x) <= 120 and (allowed is None or x in allowed) for x in value))
 
 
-def validate_layout(layout) -> dict:
-    """`{categories?, facts?, blocks?}`, každá část `{order: [id], hidden: [id]}`; jinak ValueError."""
-    if not isinstance(layout, dict) or set(layout) - {"categories", "facts", "blocks"}:
-        raise ValueError("Objekt s klíči categories, facts a blocks.")
+MAX_EXTRA = 12              # údajů doplněných z karty pacienta do okna pro projektor (T-345)
+EXTRA_KEYS = {"id", "text", "citations", "ai"}
+
+
+def _extra(value) -> bool:
+    """`[{id, text, citations, ai}]`: tvrzení z chatbotu nad kartou, každé s citací (Evidence ID)."""
+    return (isinstance(value, list) and len(value) <= MAX_EXTRA
+            and all(isinstance(x, dict) and set(x) <= EXTRA_KEYS and {"id", "text", "citations"} <= set(x)
+                    and isinstance(x["id"], str) and 0 < len(x["id"]) <= 40
+                    and isinstance(x["text"], str) and 0 < len(x["text"].strip()) <= 500
+                    and isinstance(x["citations"], list) and 0 < len(x["citations"]) <= 10
+                    and all(isinstance(c, str) and 0 < len(c) <= 120 for c in x["citations"])
+                    and isinstance(x.get("ai", False), bool) for x in value)
+            and len({x["id"] for x in value}) == len(value))
+
+
+def validate_layout(layout, *, extra: bool = False) -> dict:
+    """`{categories?, facts?, blocks?}`, každá část `{order: [id], hidden: [id]}`; jinak ValueError.
+
+    `extra=True` (okno u případu, T-345) povolí i `extra`: údaje doplněné z karty pacienta; šablona lékaře je nemá."""
+    keys = {"categories", "facts", "blocks"} | ({"extra"} if extra else set())
+    if not isinstance(layout, dict) or set(layout) - keys:
+        raise ValueError(f"Objekt s klíči {', '.join(sorted(keys))}.")
+    if "extra" in layout and not _extra(layout["extra"]):
+        raise ValueError(f"extra: nejvýš {MAX_EXTRA} údajů {{id, text, citations: [Evidence ID], ai?}}, každý s citací.")
     for key, allowed in (("categories", CATEGORY_IDS), ("blocks", BLOCKS), ("facts", None)):
         part = layout.get(key)
         if part is None:

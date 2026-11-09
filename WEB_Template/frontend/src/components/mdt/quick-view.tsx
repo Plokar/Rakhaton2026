@@ -26,6 +26,7 @@ import type {
   ObservationSeries,
   ProcedureCompatibility,
   ProjectorBlock,
+  ProjectorExtra,
   ProjectorLayout,
   TemplateArea,
 } from '@/types/mdt';
@@ -1220,6 +1221,9 @@ export function orderedFacts(facts: KeyFact[], layout?: ProjectorLayout | null):
 
 /** Rozložení pro okno projektoru: z případu, nebo náhled rozpracovaného v editoru. */
 const ProjectorLayoutContext = React.createContext<ProjectorLayout | null>(null);
+/** Údaje doplněné z karty pacienta (T-345): z rozpracovaného rozložení, jinak z případu. */
+const NO_EXTRA: ProjectorExtra[] = [];
+const ProjectorExtraContext = React.createContext<ProjectorExtra[]>(NO_EXTRA);
 
 /**
  * Šířka buňky v okně projektoru: závažný údaj má celý řádek (podbarvení přes celou šířku); buňky mají větší
@@ -1322,6 +1326,34 @@ function ProjectorHeader({ as: Title }: { as: 'h1' | 'h2' }) {
       <WarningCounts colored className="text-[13px] font-semibold" />
       {item?.id != null && <ReviewMark caseId={item.id} className="text-[13px]" />}
     </header>
+  );
+}
+
+/** Doplněno z karty pacienta (T-345): tvrzení z chatbotu, které lékař přidal; text od AI má fialový pruh a štítek. */
+function ProjectorExtraList({ items }: { items: ProjectorExtra[] }) {
+  return (
+    <div>
+      <h3 className="mx-0.5 mb-1 flex justify-between text-[11px] font-medium leading-4 text-muted-foreground">
+        <span>Doplněno z karty pacienta</span>
+        <span className="tabular-nums">{items.length}</span>
+      </h3>
+      <ul className="flex flex-col gap-px overflow-hidden rounded-xl border border-border bg-border">
+        {items.map((x) => (
+          <li key={x.id} className={cn('bg-card px-2.5 py-1.5 text-[13px] leading-snug', x.ai && 'border-l-2 border-l-ai/60')}>
+            {x.ai && (
+              <span
+                className="mr-1.5 rounded bg-ai-soft px-1 text-[11px] font-medium text-ai"
+                title="Text napsala AI z dokumentace pacienta, do okna ho přidal lékař"
+              >
+                AI
+              </span>
+            )}
+            {x.text}
+            <Citations ids={x.citations} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -1457,6 +1489,7 @@ function chunk<T>(items: T[], size: number): T[][] {
 function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[] {
   const { facts, sources } = useQuickView();
   const layout = React.useContext(ProjectorLayoutContext);
+  const extra = React.useContext(ProjectorExtraContext);
   const { groups, hiddenCount } = arrangeFacts(facts, layout, defaultFactOrder);
   const exact = Boolean(layout?.facts?.order?.length);              // pořadí zadávajícího platí přesně, bez dobalování
   const options = sources.compatibility.data;
@@ -1484,6 +1517,7 @@ function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[
             </div>
           ))));
         }
+        if (extra.length) out.push(note('facts-extra', block, <ProjectorExtraList items={extra} />));
         if (hiddenCount > 0) {
           out.push(note('facts-hidden', block, (
             <p className="mx-0.5 text-[11px] text-muted-foreground">Skryto zadávajícím lékařem: {hiddenCount} (v podkladu zůstávají).</p>
@@ -1494,7 +1528,10 @@ function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[
       if (sources.compatibility.loading) out.push(note('tx-loading', block, <SkeletonRows rows={4} />));
       else if (sources.compatibility.failed) {
         out.push(note('tx-failed', block, <p role="alert" className="text-sm text-destructive">Soulad postupů se nepodařilo načíst. Obnovte okno (F5).</p>));
-      } else if (!options?.length) {
+      } else if (options === undefined) {
+        // náhled při zařazení (T-345): soulad se počítá u případu, ten ještě není
+        out.push(note('tx-preview', block, <p className="text-sm text-muted-foreground">Semafor postupů se spočítá po zařazení pacienta.</p>));
+      } else if (!options.length) {
         out.push(note('tx-empty', block, <p className="text-sm text-muted-foreground">Pro diagnózu nejsou v katalogu žádné postupy.</p>));
       } else {
         chunk(options, PJ_TREATMENT_CHUNK).forEach((part, i) => out.push(note(`tx-${i}`, block, (
@@ -1600,15 +1637,18 @@ function ProjectorBody({
 }) {
   const { item, sources } = useQuickView();
   const effective = layout ?? committeeLayout(item).layout;
+  const extra = (layout ?? item?.projector_layout)?.extra ?? NO_EXTRA;
   const hasAnamnesis = Boolean(sources.brief.data?.sections.find((s) => s.id === 'anamnesis')?.items.length);
   const blocks = orderedBlocks(effective).filter((b) => !b.hidden && (b.id !== 'anamnesis' || hasAnamnesis)).map((b) => b.id);
   return (
     <ProjectorLayoutContext.Provider value={effective}>
-      <article className={cn('flex h-full min-h-0 flex-col gap-2 bg-muted p-2', className)} aria-label="Přehled případu pro projektor">
-        <ProjectorHeader as={titleAs} />
-        <ProjectorSlides blocks={blocks} remote={remote ?? null} />
-        <ProjectorQuestion />
-      </article>
+      <ProjectorExtraContext.Provider value={extra}>
+        <article className={cn('flex h-full min-h-0 flex-col gap-2 bg-muted p-2', className)} aria-label="Přehled případu pro projektor">
+          <ProjectorHeader as={titleAs} />
+          <ProjectorSlides blocks={blocks} remote={remote ?? null} />
+          <ProjectorQuestion />
+        </article>
+      </ProjectorExtraContext.Provider>
     </ProjectorLayoutContext.Provider>
   );
 }

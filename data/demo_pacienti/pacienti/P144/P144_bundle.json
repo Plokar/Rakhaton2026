@@ -1,0 +1,1002 @@
+{
+  "resourceType": "Bundle",
+  "id": "P144-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P144",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P144",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P144"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "620202/9955"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "David Vaněk (fiktivní)",
+            "family": "Vaněk",
+            "given": [
+              "David"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1962-02-02",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 64
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P144-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P144-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P144-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P144-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P144-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P144-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P144-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P144-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P144-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P144-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P144-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P144-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P144-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P144-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C91.1",
+              "display": "Chronická lymfocytární leukémie B-buněčného typu"
+            }
+          ],
+          "text": "Chronická lymfocytární leukémie B-buněčného typu"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "onsetDateTime": "2025-04-10",
+        "bodySite": [
+          {
+            "text": "krev, kostní dřeň, uzliny"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "9823/3",
+                  "display": "Chronická lymfocytární leukémie"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C91.1"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "Binet B, aktivní onemocnění (iwCLL)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P144-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P144-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I48.9",
+              "display": "Fibrilace síní"
+            }
+          ],
+          "text": "Fibrilace síní"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "onsetDateTime": "2022-11"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P144-med01",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P144-med01",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "B01AF02",
+              "display": "apixaban"
+            }
+          ],
+          "text": "apixaban"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "5 mg p.o. 2× denně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P144-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P144-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P144-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2025-04-10",
+        "issued": "2025-04-10T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P144-03"
+          }
+        ],
+        "conclusion": "Průtoková cytometrie: CLL fenotyp, CD5+ CD23+..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UHLFr3Rva292w6EgY3l0b21ldHJpZTogQ0xMIGZlbm90eXAsIENENSsgQ0QyMysu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2025-04-10"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P144-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P144-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-21",
+        "issued": "2026-11-21T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P144-02"
+          }
+        ],
+        "conclusion": "CT: generalizovaná lymfadenopatie do 4 cm, splenomegalie..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1Q6IGdlbmVyYWxpem92YW7DoSBseW1mYWRlbm9wYXRpZSBkbyA0IGNtLCBzcGxlbm9tZWdhbGllLg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-21"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P144-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P144-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "date": "2026-11-23T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P144-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA2NCBsZXQsIHByb2dyZXNpdm7DrSBseW1mYWRlbm9wYXRpZSBhIMO6bmF2YSwgemR2b2plbsOtIGx5bWZvY3l0xa8gemEgNSBtxJtzw61jxa8uIEVDT0cgMS4=",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-23"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-21",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P144-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "Binet B, aktivní onemocnění (iwCLL)",
+        "focus": [
+          {
+            "reference": "Condition/P144-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-23",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P144-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P144-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-23",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 81,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2025-04-10",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P144-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "IGHV"
+        },
+        "valueString": "nemutovaný"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2025-04-10",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P144-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "del(17p)/TP53"
+        },
+        "valueString": "neprokázána"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 108,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 112,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P144-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P144-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P144-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P144-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P144-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Hematoonkologická komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "authoredOn": "2026-11-24T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P144-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Chronická lymfocytární leukémie s nemutovaným IGHV, aktivní onemocnění: venetoklax s obinutuzumabem, nebo BTK inhibitor?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: CLL fenotyp, CD5+ CD23+."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: Fibrilace síní. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Preferuje léčbu s pevně danou délkou."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P144-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P144-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P144-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P144-zad01"
+        },
+        "for": {
+          "reference": "Patient/P144"
+        },
+        "authoredOn": "2026-11-24T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P144-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-14T13:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P144-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P144-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P144"
+        },
+        "authored": "2026-11-22T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P144"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 81
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

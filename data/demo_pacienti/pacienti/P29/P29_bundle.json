@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P29"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "670721/9981"
           }
         ],
         "name": [
           {
-            "text": "Pacient P29 (fiktivní)"
+            "use": "official",
+            "text": "Jiří Černý (fiktivní)",
+            "family": "Černý",
+            "given": [
+              "Jiří"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1967",
+        "birthDate": "1967-07-21",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

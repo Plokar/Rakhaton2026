@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P39"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "630723/9994"
           }
         ],
         "name": [
           {
-            "text": "Pacient P39 (fiktivní)"
+            "use": "official",
+            "text": "Miroslav Kříž (fiktivní)",
+            "family": "Kříž",
+            "given": [
+              "Miroslav"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1963",
+        "birthDate": "1963-07-23",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P20"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "735822/9978"
           }
         ],
         "name": [
           {
-            "text": "Pacient P20 (fiktivní)"
+            "use": "official",
+            "text": "Irena Kopecká (fiktivní)",
+            "family": "Kopecká",
+            "given": [
+              "Irena"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1973",
+        "birthDate": "1973-08-22",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

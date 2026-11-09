@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P19"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "555719/9967"
           }
         ],
         "name": [
           {
-            "text": "Pacient P19 (fiktivní)"
+            "use": "official",
+            "text": "Ivana Navrátilová (fiktivní)",
+            "family": "Navrátilová",
+            "given": [
+              "Ivana"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1955",
+        "birthDate": "1955-07-19",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

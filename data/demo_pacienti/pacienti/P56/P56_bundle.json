@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P56"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "575418/9980"
           }
         ],
         "name": [
           {
-            "text": "Pacient P56 (fiktivní)"
+            "use": "official",
+            "text": "Marie Svobodová (fiktivní)",
+            "family": "Svobodová",
+            "given": [
+              "Marie"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1957",
+        "birthDate": "1957-04-18",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

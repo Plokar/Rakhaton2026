@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P34"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "825208/9934"
           }
         ],
         "name": [
           {
-            "text": "Pacient P34 (fiktivní)"
+            "use": "official",
+            "text": "Dana Růžičková (fiktivní)",
+            "family": "Růžičková",
+            "given": [
+              "Dana"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1982",
+        "birthDate": "1982-02-08",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

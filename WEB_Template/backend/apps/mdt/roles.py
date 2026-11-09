@@ -1,5 +1,6 @@
 """Role a demo účty (D-014, ARCH §6.2, POZADAVKY_LEKARE §1)."""
 import os
+import re
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -30,6 +31,18 @@ REQUESTER_BY_PATIENT = {'P04': 'pneumolog',
                         **{f'P{n}': 'pneumolog' for n in (*range(13, 17), 41, 42, 43, 56, 57)},
                         **{f'P{n}': 'onkolog-git' for n in (*range(21, 25), 39, 40, 52, 69, 70)}}
 DEFAULT_REQUESTER = 'onkolog'
+# T-355: další demo pacienti podle komise (hrudní → pneumolog, GIT → onkolog-git), mapa pacientů má přednost
+REQUESTER_BY_BOARD = {'Hrudní – karcinom plic': 'pneumolog',
+                      'GIT – kolorektální karcinom / hepatobiliární': 'onkolog-git'}
+
+
+def requester(patient_id: str, board_title: str = '') -> str:
+    """Demo účet zadávajícího lékaře případu (`seed_mdt`). Podle komise jen třetí vlna (P73+), dataset a starší
+    demo pacienti dál podle mapy a výchozího onkologa (na tom stojí oprávnění v testech)."""
+    if patient_id in REQUESTER_BY_PATIENT:
+        return REQUESTER_BY_PATIENT[patient_id]
+    third_wave = bool(re.fullmatch(r'P\d+', patient_id or '')) and int(patient_id[1:]) >= 73
+    return REQUESTER_BY_BOARD.get(board_title, DEFAULT_REQUESTER) if third_wave else DEFAULT_REQUESTER
 
 
 def display_name(user) -> str:

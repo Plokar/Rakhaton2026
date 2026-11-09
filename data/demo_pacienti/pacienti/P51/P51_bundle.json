@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P51"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "685903/9924"
           }
         ],
         "name": [
           {
-            "text": "Pacient P51 (fiktivní)"
+            "use": "official",
+            "text": "Jitka Vlčková (fiktivní)",
+            "family": "Vlčková",
+            "given": [
+              "Jitka"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1968",
+        "birthDate": "1968-09-03",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

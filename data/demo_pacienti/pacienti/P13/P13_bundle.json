@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P13"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "580101/9906"
           }
         ],
         "name": [
           {
-            "text": "Pacient P13 (fiktivní)"
+            "use": "official",
+            "text": "Jan Novák (fiktivní)",
+            "family": "Novák",
+            "given": [
+              "Jan"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1958",
+        "birthDate": "1958-01-01",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

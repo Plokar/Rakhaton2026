@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P24"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "600206/9931"
           }
         ],
         "name": [
           {
-            "text": "Pacient P24 (fiktivní)"
+            "use": "official",
+            "text": "Josef Šimek (fiktivní)",
+            "family": "Šimek",
+            "given": [
+              "Josef"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1960",
+        "birthDate": "1960-02-06",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

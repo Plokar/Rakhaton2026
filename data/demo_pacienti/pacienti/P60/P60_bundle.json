@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P60"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "555802/9928"
           }
         ],
         "name": [
           {
-            "text": "Pacient P60 (fiktivní)"
+            "use": "official",
+            "text": "Anna Novotná (fiktivní)",
+            "family": "Novotná",
+            "given": [
+              "Anna"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1955",
+        "birthDate": "1955-08-02",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -93,7 +93,7 @@ services:
       IRIS_PASSWORD: ${IRIS_PASSWORD:?IRIS_PASSWORD v .env (ne výchozí SYS)}
       FHIR_BASE_URL: ${FHIR_BASE_URL:-http://iris:52773/fhir/r4}
       DATASET_DIR: /data/dataset
-      DEMO_DATASET_DIR: /data/demo_pacienti                 # demo pacienti P13–P32 (komise v listopadu)
+      DEMO_DATASET_DIR: /data/demo_pacienti                 # fiktivní demo pacienti P13–P172 (T-355)
       ONKO_KB_DIR: /data/onko
       ONKO_DATASET_DIR: /data/dataset
       ONKO_GUIDELINES_DIR: /data/dataset/guidelines

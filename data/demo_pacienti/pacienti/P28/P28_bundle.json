@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P28"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "590618/9971"
           }
         ],
         "name": [
           {
-            "text": "Pacient P28 (fiktivní)"
+            "use": "official",
+            "text": "Tomáš Konečný (fiktivní)",
+            "family": "Konečný",
+            "given": [
+              "Tomáš"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1959",
+        "birthDate": "1959-06-18",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

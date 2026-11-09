@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P40"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "555826/9904"
           }
         ],
         "name": [
           {
-            "text": "Pacient P40 (fiktivní)"
+            "use": "official",
+            "text": "Martina Štěpánková (fiktivní)",
+            "family": "Štěpánková",
+            "given": [
+              "Martina"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1955",
+        "birthDate": "1955-08-26",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P55"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "605315/9970"
           }
         ],
         "name": [
           {
-            "text": "Pacient P55 (fiktivní)"
+            "use": "official",
+            "text": "Veronika Poláková (fiktivní)",
+            "family": "Poláková",
+            "given": [
+              "Veronika"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1960",
+        "birthDate": "1960-03-15",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

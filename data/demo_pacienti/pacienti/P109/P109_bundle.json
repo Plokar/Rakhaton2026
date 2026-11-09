@@ -1,0 +1,695 @@
+{
+  "resourceType": "Bundle",
+  "id": "P109-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P109",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P109",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P109"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "600709/9967"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Antonín Urban (fiktivní)",
+            "family": "Urban",
+            "given": [
+              "Antonín"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1960-07-09",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 66
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P109-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P109-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P109-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P109-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P109-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P109-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P109-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P109-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P109-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P109-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P109-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P109-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P109-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P109-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C61",
+              "display": "Zhoubný novotvar předstojné žlázy"
+            }
+          ],
+          "text": "Zhoubný novotvar předstojné žlázy"
+        },
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "onsetDateTime": "2023-01-15",
+        "bodySite": [
+          {
+            "text": "st. p. radikální prostatektomii 2023"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8550/3",
+                  "display": "Acinární adenokarcinom prostaty"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C61"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "pT3a pN0 R1, ISUP 3, biochemický relaps"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P109-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P109-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "effectiveDateTime": "2023-01-15",
+        "issued": "2023-01-15T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P109-03"
+          }
+        ],
+        "conclusion": "Radikální prostatektomie 2023: Gleason 4+3, pT3a, pozitivní okraj apexu..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UmFkaWvDoWxuw60gcHJvc3RhdGVrdG9taWUgMjAyMzogR2xlYXNvbiA0KzMsIHBUM2EsIHBveml0aXZuw60gb2tyYWogYXBleHUu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2023-01-15"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P109-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P109-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "effectiveDateTime": "2026-11-14",
+        "issued": "2026-11-14T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P109-02"
+          }
+        ],
+        "conclusion": "PSMA PET/CT: bez patologické akumulace..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UFNNQSBQRVQvQ1Q6IGJleiBwYXRvbG9naWNrw6kgYWt1bXVsYWNlLg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-14"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P109-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P109-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "date": "2026-11-16T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P109-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA2NiBsZXQsIGtvbnRpbmVudG7DrSwgYmV6IG9idMOtxb7DrS4gUFNBIHN0b3Vww6EgdmUgMyBtxJvFmWVuw61jaC4gRUNPRyAwLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-16"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P109-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P109-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "effectiveDateTime": "2026-11-14",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P109-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "pT3a pN0 R1, ISUP 3, biochemický relaps",
+        "focus": [
+          {
+            "reference": "Condition/P109-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P109-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P109-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "effectiveDateTime": "2026-11-16",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P109-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 0,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P109-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P109-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P109-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "effectiveDateTime": "2026-11-16",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 84,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P109-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P109-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "effectiveDateTime": "2023-01-15",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P109-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "PSA"
+        },
+        "valueString": "0,42 µg/l (nadir < 0,01), PSA-DT 7 měsíců"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P109-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P109-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P109-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Uroonkologická komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "authoredOn": "2026-11-17T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P109-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Biochemický relaps po radikální prostatektomii, PSA 0,42 µg/l, PSMA PET negativní: časná záchranná radioterapie lůžka prostaty s ADT?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: Gleason 4+3, pT3a, pozitivní okraj apexu."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Operace] radikální prostatektomie (2023)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 0."
+          },
+          {
+            "text": "Preference a omezení pacienta: Obává se zhoršení kontinence po ozáření."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P109-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P109-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P109-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P109-zad01"
+        },
+        "for": {
+          "reference": "Patient/P109"
+        },
+        "authoredOn": "2026-11-17T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P109-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-07T13:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P109-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P109-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P109"
+        },
+        "authored": "2026-11-15T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P109"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "0",
+                  "display": "Zvládám všechno jako dřív, bez omezení"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 84
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "kvalita",
+                  "display": "Kvalita života, i kdyby léčba byla kratší nebo méně účinná"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

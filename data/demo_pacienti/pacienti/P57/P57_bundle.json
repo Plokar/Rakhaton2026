@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P57"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "500521/994"
           }
         ],
         "name": [
           {
-            "text": "Pacient P57 (fiktivní)"
+            "use": "official",
+            "text": "Zdeněk Pokorný (fiktivní)",
+            "family": "Pokorný",
+            "given": [
+              "Zdeněk"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1950",
+        "birthDate": "1950-05-21",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

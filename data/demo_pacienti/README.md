@@ -1,6 +1,6 @@
-# Demo pacienti P13–P72
+# Demo pacienti P13–P172
 
-Šedesát fiktivních pacientů pro 10 komisí s 24 zasedáními od 3. 11. do 4. 12. 2026, ve formátu datasetu Asseco (`pacienti/Pxx/Pxx_bundle.json`,
+160 fiktivních pacientů pro 10 komisí s 36 zasedáními od 3. 11. do 18. 12. 2026, ve formátu datasetu Asseco (`pacienti/Pxx/Pxx_bundle.json`,
 bundle `collection`, tag `fiktivni-data`). `ingest_dataset` je nahraje do IRIS spolu s datasetem
 (env `DEMO_DATASET_DIR`, v Dockeru `/data/demo_pacienti`; vypnutí `DEMO_DATASET_DIR=off` nebo `--no-demo`)
 a `seed_mdt` z jejich nominací založí zasedání. Jen pro demo, nikdy pro péči o pacienty. Dataset se nemění.
@@ -56,11 +56,44 @@ Na čem jde co předvést:
   P23 CEA 124 µg/l, P27 MR pánve, P30 kreatinin 138 µmol/l; ve druhé vlně P36 a P45 LDH, P41 biopsie nadledviny,
   P48 PDGFRA, P54 PSA, P63 PET/CT, P69 NGS panel.
 
+Třetí vlna (T-355, `pt()`): 100 pacientů P73–P172. P73–P106 doplní zasedání druhé vlny od 10. 11. na 4–5 případů,
+P107–P172 jsou v 12 nových zasedáních 7.–18. 12. Každé zasedání od 10. 11. má 4–8 případů. Pokrývají všechny diagnózy
+katalogu postupů (`data/onko/postupy.tsv`: C00–C14/C32, C15, C16, C18–C20, C22, C25, C34, C43, C50, C53, C54, C56,
+C61, C64, C67, C71, C78.2, C78.7, C79.3, C79.5, D41) a navíc lymfomy, myelom, CLL, sarkomy a desmoid. ECOG 0–3,
+kurativní i paliativní situace.
+
+| Termín | Komise | Pacienti |
+|---|---|---|
+| 10. 11.–4. 12. | doplnění 19 zasedání | P73–P106 |
+| po 7. 12. 13:00 | Uroonkologická | P107–P112 (mHSPC, 177Lu-PSMA, biochemický relaps, ccRCC M1, MIBC, FGFR3) |
+| út 8. 12. 14:00 | Hrudní | P113–P118 (adjuvance EGFR, unfit III, BRAF, MET, RET, SCLC ES) |
+| st 9. 12. 14:00 | Mamární | P119–P124 (HER2+ neoadjuvance, T-DXd, HER2-low, TNBC M1, 72 let, WBRT) |
+| čt 10. 12. 13:00 | Neuroonkologická | P125–P129 (relaps GBM, metastázy, PCNSL, komprese míchy) |
+| čt 10. 12. 14:00 | GIT | P130–P135 (jícen po CROSS, CLDN18.2, kolon III, W&W rektum, jaterní metastázy, HCC) |
+| pá 11. 12. 13:00 | Gynekoonkologická | P136–P141 (cervix IIIC1, endometrium p53abn a dMMR, ovarium) |
+| po 14. 12. 13:00 | Hematoonkologická | P142–P146 (Hodgkin 71 let, FL, CLL, myelom, Burkitt) |
+| út 15. 12. 14:00 | Hrudní | P147–P152 (PD-L1 85 %, skvamózní, KRAS G12C, ECOG 2, oligometastázy, nejasné ložisko) |
+| st 16. 12. 13:30 | Hlava a krk | P153–P157 (ENE+, nezpůsobilá k cisplatině, R/M, parotis HER2+) |
+| čt 17. 12. 14:00 | GIT | P158–P162 (KRAS G12C, rektum časné, pankreas gBRCA2, HCC BCLC C, jícen SCC M1) |
+| pá 18. 12. 13:00 | Sarkomy a GIST | P163–P167 (liposarkom, Ewing, desmoid, synoviální sarkom, leiomyosarkom) |
+| pá 18. 12. 14:00 | Melanom a kožní nádory | P168–P172 (neoadjuvance, IB, BRAF M1, mozkové metastázy, kožní SCC 81 let) |
+
+Mezery ve třetí vlně (pětina): bez dotazníku pacienta P75, P84, P93, P100, P110, P117, P127, P140, P150, P161;
+bez preferencí (dotazník bez priority, nominace bez preference) P77, P99, P115, P124, P146; bez laboratoře
+(`no_labs`) P91, P109, P135, P154, P166. Nové výsledky po zařazení (desetina): P74, P86, P95, P107, P119, P131, P137,
+P143, P149, P170.
+
+**Fiktivní jméno a RČ** (T-355, pro hledání při zařazení, T-356) mají všichni demo pacienti P13–P172:
+`Patient.name` = „Jméno Příjmení (fiktivní)“ z běžných českých jmen, `Patient.identifier` se systémem
+`https://rakathon.example.org/fhir/sid/rc-fiktivni`. RČ je formálně platné (datum narození podle věku k datu komise
+a pohlaví, ženy +50 k měsíci, desetimístné dělitelné 11, do roku 1953 devítimístné), ale z vymyšleného rozsahu:
+koncovka začíná `99`. Jméno a RČ se ukážou jen v dialogu přidání pacienta, jinde dál `Pxx · pohlaví · věk` (D-018).
+
 ## Nasazení na VPS (docker compose)
 
 ```bash
 cd <checkout repa> && git pull origin master
-cd WEB_Template && docker compose up -d --build backend     # nový mount /data/demo_pacienti, migrace
+cd WEB_Template && docker compose -f docker-compose.vps.yml up -d --build backend   # mount /data/demo_pacienti, migrace
 docker compose logs backend | grep -E "P[3-7][0-9] |Boardy"  # ingest pacientů a „Boardy: … případy: …“
 ```
 

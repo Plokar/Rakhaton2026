@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P17"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "815513/9949"
           }
         ],
         "name": [
           {
-            "text": "Pacient P17 (fiktivní)"
+            "use": "official",
+            "text": "Hana Svobodová (fiktivní)",
+            "family": "Svobodová",
+            "given": [
+              "Hana"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1981",
+        "birthDate": "1981-05-13",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

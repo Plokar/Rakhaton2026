@@ -1,0 +1,720 @@
+{
+  "resourceType": "Bundle",
+  "id": "P91-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P91",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P91",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P91"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "555911/9973"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Tereza Matoušková (fiktivní)",
+            "family": "Matoušková",
+            "given": [
+              "Tereza"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1955-09-11",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 71
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P91-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P91-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P91-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P91-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P91-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P91-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P91-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P91-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P91-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P91-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P91-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P91-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P91-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P91-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "D41.0",
+              "display": "Novotvar nejistého nebo neznámého chování ledviny"
+            }
+          ],
+          "text": "Novotvar nejistého nebo neznámého chování ledviny"
+        },
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "onsetDateTime": "2026-10-24",
+        "bodySite": [
+          {
+            "text": "pravá ledvina, dolní pól"
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "léze 32 mm, Bosniak nehodnoceno (solidní)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P91-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P91-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "N18.4",
+              "display": "Chronické onemocnění ledvin, stadium 3b–4"
+            }
+          ],
+          "text": "Chronické onemocnění ledvin, stadium 3b–4"
+        },
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "onsetDateTime": "2018-09"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P91-kom2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P91-kom2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I10",
+              "display": "Esenciální hypertenze"
+            }
+          ],
+          "text": "Esenciální hypertenze"
+        },
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "onsetDateTime": "2001-01"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P91-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P91-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "effectiveDateTime": "2026-10-24",
+        "issued": "2026-10-24T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P91-03"
+          }
+        ],
+        "conclusion": "Histologie zatím není, biopsie dosud neprovedena (rozhodnutí je předmětem MDT)..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "SGlzdG9sb2dpZSB6YXTDrW0gbmVuw60sIGJpb3BzaWUgZG9zdWQgbmVwcm92ZWRlbmEgKHJvemhvZG51dMOtIGplIHDFmWVkbcSbdGVtIE1EVCku",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-10-24"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P91-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P91-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "effectiveDateTime": "2026-10-31",
+        "issued": "2026-10-31T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P91-02"
+          }
+        ],
+        "conclusion": "CT ledvin s kontrastem: solidní sytící se léze dolního pólu pravé ledviny 32 mm, bez trombu v.",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1QgbGVkdmluIHMga29udHJhc3RlbTogc29saWRuw60gc3l0w61jw60gc2UgbMOpemUgZG9sbsOtaG8gcMOzbHUgcHJhdsOpIGxlZHZpbnkgMzIgbW0sIGJleiB0cm9tYnUgdi4gcmVuYWxpcy4=",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-31"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P91-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P91-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "date": "2026-11-02T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P91-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDcxIGxldCwgbsOhaG9kbsO9IG7DoWxleiBwxZlpIFVaIHBybyBib2xlc3RpIHphZC4gS3JlYXRpbmluIG5hcG9zbGVkeSB2IGzDqXTEmy4gRUNPRyAxLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-02"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P91-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P91-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "effectiveDateTime": "2026-10-31",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P91-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "léze 32 mm, Bosniak nehodnoceno (solidní)",
+        "focus": [
+          {
+            "reference": "Condition/P91-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P91-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P91-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "effectiveDateTime": "2026-11-02",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P91-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P91-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P91-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P91-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "effectiveDateTime": "2026-11-02",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 69,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P91-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P91-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P91-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Uroonkologická komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "authoredOn": "2026-11-03T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P91-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Nejasná solidní léze pravé ledviny 32 mm u 71leté pacientky s CKD 3b: biopsie, aktivní sledování, nebo ablace?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: Histologie zatím není, biopsie dosud neprovedena (rozhodnutí je předmětem MDT)."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: Chronické onemocnění ledvin, stadium 3b–4, Esenciální hypertenze. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Operaci by ráda odložila."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P91-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P91-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P91-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P91-zad01"
+        },
+        "for": {
+          "reference": "Patient/P91"
+        },
+        "authoredOn": "2026-11-03T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P91-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-23T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P91-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P91-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P91"
+        },
+        "authored": "2026-11-01T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P91"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 69
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

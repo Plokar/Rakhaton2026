@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P31"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "710927/9903"
           }
         ],
         "name": [
           {
-            "text": "Pacient P31 (fiktivní)"
+            "use": "official",
+            "text": "Petr Urban (fiktivní)",
+            "family": "Urban",
+            "given": [
+              "Petr"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1971",
+        "birthDate": "1971-09-27",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

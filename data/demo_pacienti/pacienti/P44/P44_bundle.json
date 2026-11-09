@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P44"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "745210/9951"
           }
         ],
         "name": [
           {
-            "text": "Pacient P44 (fiktivní)"
+            "use": "official",
+            "text": "Ivana Kadlecová (fiktivní)",
+            "family": "Kadlecová",
+            "given": [
+              "Ivana"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1974",
+        "birthDate": "1974-02-10",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

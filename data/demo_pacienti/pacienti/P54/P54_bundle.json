@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P54"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "520212/991"
           }
         ],
         "name": [
           {
-            "text": "Pacient P54 (fiktivní)"
+            "use": "official",
+            "text": "Jiří Zeman (fiktivní)",
+            "family": "Zeman",
+            "given": [
+              "Jiří"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1952",
+        "birthDate": "1952-02-12",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

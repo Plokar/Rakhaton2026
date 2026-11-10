@@ -3,8 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { CookieProvider } from '@/contexts/CookieContext';
-import { CookieConsentBanner, CookieSettingsModal } from '@/components/cookies';
 import { Providers } from './providers';
 
 const inter = Inter({
@@ -37,13 +35,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <CookieProvider>
-            <AuthProvider>
-              <Providers>{children}</Providers>
-            </AuthProvider>
-            <CookieConsentBanner />
-            <CookieSettingsModal />
-          </CookieProvider>
+          {/* Jen nezbytné cookies (přihlášení, CSRF), proto bez lišty souhlasu (T-371, /privacy). */}
+          <AuthProvider>
+            <Providers>{children}</Providers>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

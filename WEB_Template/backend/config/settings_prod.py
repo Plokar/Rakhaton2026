@@ -131,12 +131,20 @@ LOGGING = {
 }
 
 # ── Email (SMTP v produkci) ───────────────────────────────────────────────────
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')  # noqa
+# Bez EMAIL_HOST se e-maily neodesílají (konzole); pozvánky se pak předávají odkazem (T-371). Žádný výchozí Gmail.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')  # noqa
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))  # noqa
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'  # noqa
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')  # noqa
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # noqa
+if EMAIL_HOST:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    import logging as _logging
+
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    _logging.getLogger('config').warning(
+        'E-maily se neodesílají (EMAIL_HOST není nastaven), pozvánky předávejte odkazem.')
 
 # ── Sentry (zakomentováno – pro error monitoring) ────────────────────────────
 # import sentry_sdk

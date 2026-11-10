@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P63"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "620111/9958"
           }
         ],
         "name": [
           {
-            "text": "Pacient P63 (fiktivní)"
+            "use": "official",
+            "text": "Jan Šimek (fiktivní)",
+            "family": "Šimek",
+            "given": [
+              "Jan"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1962",
+        "birthDate": "1962-01-11",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

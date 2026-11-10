@@ -1,0 +1,966 @@
+{
+  "resourceType": "Bundle",
+  "id": "P88-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P88",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P88",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P88"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "625602/9934"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Jana Němcová (fiktivní)",
+            "family": "Němcová",
+            "given": [
+              "Jana"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1962-06-02",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 64
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P88-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P88-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P88-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P88-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P88-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P88-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P88-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P88-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P88-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P88-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P88-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P88-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P88-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P88-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C25.0",
+              "display": "Zhoubný novotvar hlavy slinivky břišní"
+            }
+          ],
+          "text": "Zhoubný novotvar hlavy slinivky břišní"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "onsetDateTime": "2026-10-17",
+        "bodySite": [
+          {
+            "text": "hlava pankreatu"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8500/3",
+                  "display": "Duktální adenokarcinom"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C25.0"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT2 cN0 cM0, stadium IB (TNM 8. vyd.)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P88-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P88-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Diabetes mellitus 2. typu, nově zjištěný"
+            }
+          ],
+          "text": "Diabetes mellitus 2. typu, nově zjištěný"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "onsetDateTime": "2026-08"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P88-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P88-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-17",
+        "issued": "2026-10-17T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P88-03"
+          }
+        ],
+        "conclusion": "EUS-FNB: duktální adenokarcinom pankreatu..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "RVVTLUZOQjogZHVrdMOhbG7DrSBhZGVub2thcmNpbm9tIHBhbmtyZWF0dS4=",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-10-17"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P88-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P88-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-27",
+        "issued": "2026-10-27T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P88-02"
+          }
+        ],
+        "conclusion": "CT pankreatického protokolu: tumor hlavy 24 mm bez kontaktu s AMS a v.",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1QgcGFua3JlYXRpY2vDqWhvIHByb3Rva29sdTogdHVtb3IgaGxhdnkgMjQgbW0gYmV6IGtvbnRha3R1IHMgQU1TIGEgdi4gcG9ydGFlLg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-27"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P88-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P88-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "date": "2026-10-29T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P88-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDY0IGxldCwgb2JzdHJ1a8SNbsOtIGlrdGVydXMgxZllxaFlbiBzdGVudGVtLCBiaWxpcnViaW4ga2xlc8OhLiBFQ09HIDEu",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-29"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-27",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P88-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT2 cN0 cM0, stadium IB (TNM 8. vyd.)",
+        "focus": [
+          {
+            "reference": "Condition/P88-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-29",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P88-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P88-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-29",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 61,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-17",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P88-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "CA 19-9"
+        },
+        "valueString": "182 kU/l"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-17",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P88-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "BRCA1/2 (zárodečné)"
+        },
+        "valueString": "vyšetřuje se"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-28T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-28T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-28T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-28T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P88-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P88-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "effectiveDateTime": "2026-10-28T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 38,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P88-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P88-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P88-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "authoredOn": "2026-10-30T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P88-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Resekabilní adenokarcinom hlavy pankreatu 24 mm: primární pankreatoduodenektomie, nebo neoadjuvance mFOLFIRINOX?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: duktální adenokarcinom pankreatu."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: Diabetes mellitus 2. typu, nově zjištěný. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce co nejdříve operaci."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P88-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P88-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P88-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P88-zad01"
+        },
+        "for": {
+          "reference": "Patient/P88"
+        },
+        "authoredOn": "2026-10-30T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P88-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-19T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P88-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P88-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P88"
+        },
+        "authored": "2026-10-28T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P88"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 61
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P65"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "525317/992"
           }
         ],
         "name": [
           {
-            "text": "Pacient P65 (fiktivní)"
+            "use": "official",
+            "text": "Martina Králová (fiktivní)",
+            "family": "Králová",
+            "given": [
+              "Martina"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1952",
+        "birthDate": "1952-03-17",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

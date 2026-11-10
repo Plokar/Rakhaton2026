@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P15"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "520307/992"
           }
         ],
         "name": [
           {
-            "text": "Pacient P15 (fiktivní)"
+            "use": "official",
+            "text": "Milan Kolář (fiktivní)",
+            "family": "Kolář",
+            "given": [
+              "Milan"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1952",
+        "birthDate": "1952-03-07",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -73,7 +73,8 @@ def dataset_dir(path: str | os.PathLike | None = None) -> Path:
 
 
 def patient_ids(root: Path) -> list[str]:
-    return sorted(p.name for p in (root / 'pacienti').iterdir() if re.fullmatch(r'P\d{2,3}', p.name))
+    return sorted((p.name for p in (root / 'pacienti').iterdir() if re.fullmatch(r'P\d{2,3}', p.name)),
+                  key=lambda name: int(name[1:]))                # P100 až za P99
 
 
 def _read_json(path: Path) -> dict:

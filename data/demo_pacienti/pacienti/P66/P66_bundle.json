@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P66"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "710420/9992"
           }
         ],
         "name": [
           {
-            "text": "Pacient P66 (fiktivní)"
+            "use": "official",
+            "text": "Roman Vaněk (fiktivní)",
+            "family": "Vaněk",
+            "given": [
+              "Roman"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1971",
+        "birthDate": "1971-04-20",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

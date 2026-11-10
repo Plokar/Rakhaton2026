@@ -1,0 +1,994 @@
+{
+  "resourceType": "Bundle",
+  "id": "P124-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P124",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P124",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P124"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "635226/9935"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Eva Sedláčková (fiktivní)",
+            "family": "Sedláčková",
+            "given": [
+              "Eva"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1963-02-26",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 63
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P124-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P124-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P124-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P124-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P124-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P124-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P124-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P124-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P124-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P124-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P124-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P124-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P124-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P124-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C79.3",
+              "display": "Sekundární zhoubný novotvar mozku a mozkových plen"
+            }
+          ],
+          "text": "Sekundární zhoubný novotvar mozku a mozkových plen"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "onsetDateTime": "2026-11-11",
+        "bodySite": [
+          {
+            "text": "12 ložisek supra- i infratentoriálně"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P124-dg2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P124-dg2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C50.9",
+              "display": "Zhoubný novotvar prsu, neurčený"
+            }
+          ],
+          "text": "Zhoubný novotvar prsu, neurčený"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "onsetDateTime": "2019-05-02",
+        "bodySite": [
+          {
+            "text": "pravý prs"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8500/3",
+                  "display": "Invazivní karcinom NST"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C50.9"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "M1 (kosti, mozek)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P124-med01",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P124-med01",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "H02AB02",
+              "display": "dexamethason"
+            }
+          ],
+          "text": "dexamethason"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "8 mg p.o. denně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P124-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P124-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P124-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-11",
+        "issued": "2026-11-11T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P124-03"
+          }
+        ],
+        "conclusion": "Biopsie 2019: invazivní karcinom NST, ER 70 %, HER2 0..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QmlvcHNpZSAyMDE5OiBpbnZheml2bsOtIGthcmNpbm9tIE5TVCwgRVIgNzAgJSwgSEVSMiAwLg==",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-11-11"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P124-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P124-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-16",
+        "issued": "2026-11-16T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P124-02"
+          }
+        ],
+        "conclusion": "MR mozku: 12 metastáz do 14 mm, bez hydrocefalu..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "TVIgbW96a3U6IDEyIG1ldGFzdMOheiBkbyAxNCBtbSwgYmV6IGh5ZHJvY2VmYWx1Lg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-16"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P124-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P124-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "date": "2026-11-18T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P124-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDYzIGxldCwgesOhdnJhdMSbIGEgc2xhYm9zdCBsZXbDqSBydWt5LiBOYSBkZXhhbWV0aGFzb251LiBFQ09HIDIu",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-18"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-16",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P124-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "M1 (kosti, mozek)",
+        "focus": [
+          {
+            "reference": "Condition/P124-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-18",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P124-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 2,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P124-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-18",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 58,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-11",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P124-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "ER"
+        },
+        "valueString": "70 %"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-11",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P124-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "HER2"
+        },
+        "valueString": "IHC 0"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-17T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-17T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-17T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-17T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P124-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P124-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "effectiveDateTime": "2026-11-17T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P124-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P124-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P124-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Mamární komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "authoredOn": "2026-11-19T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P124-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Mozkové metastázy u luminálního karcinomu prsu, mnohočetné (12 ložisek): ozáření celého mozku se šetřením hipokampu?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: invazivní karcinom NST, ER 70 %, HER2 0."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Hormonální léčba] několik linií (2020–2026)\n- [Chemoterapie] kapecitabin (2026-04 – 2026-09)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 2."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P124-dg1"
+          },
+          {
+            "reference": "Condition/P124-dg2"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P124-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P124-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P124-zad01"
+        },
+        "for": {
+          "reference": "Patient/P124"
+        },
+        "authoredOn": "2026-11-19T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P124-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-09T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P124-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P124-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P124"
+        },
+        "authored": "2026-11-17T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P124"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "2",
+                  "display": "O sebe se postarám, ale práci nezvládnu, přes den odpočívám méně než polovinu dne"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 58
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

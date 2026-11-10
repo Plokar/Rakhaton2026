@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P69"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "745701/9922"
           }
         ],
         "name": [
           {
-            "text": "Pacient P69 (fiktivní)"
+            "use": "official",
+            "text": "Ivana Jelínková (fiktivní)",
+            "family": "Jelínková",
+            "given": [
+              "Ivana"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1974",
+        "birthDate": "1974-07-01",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

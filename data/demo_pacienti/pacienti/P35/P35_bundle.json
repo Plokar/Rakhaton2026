@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P35"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "600311/9947"
           }
         ],
         "name": [
           {
-            "text": "Pacient P35 (fiktivní)"
+            "use": "official",
+            "text": "Martin Blažek (fiktivní)",
+            "family": "Blažek",
+            "given": [
+              "Martin"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1960",
+        "birthDate": "1960-03-11",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -222,6 +222,23 @@ export interface PatientListItem {
   mdt_date: string | null;
 }
 
+/**
+ * POST /api/patients/search/ {q} → nejvýš 20 (T-356). Jméno a RČ jen pro dialog přidání pacienta,
+ * nikam jinam (hlavička, projektor, podklad, chat, export) se nepředávají (D-018).
+ */
+export interface PatientSearchItem {
+  id: string;
+  /** "P100 · žena · 61 let" */
+  display_name: string;
+  sex: 'male' | 'female' | 'other' | 'unknown';
+  age: number | null;
+  /** "Jana Nováková (fiktivní)" */
+  name: string | null;
+  /** "655315/9913" */
+  rc: string | null;
+  birth_date: string | null;
+}
+
 /** GET /api/patients/{pid}/ */
 export interface PatientDetail extends PatientListItem {
   diagnoses: { text: string; icd10: string; onset?: string; verification: string; stage: string | null; citation: EvidenceId }[];

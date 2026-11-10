@@ -1,0 +1,1013 @@
+{
+  "resourceType": "Bundle",
+  "id": "P93-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P93",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P93",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P93"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "585117/9994"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Petra Zemanová (fiktivní)",
+            "family": "Zemanová",
+            "given": [
+              "Petra"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1958-01-17",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 68
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P93-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P93-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P93-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P93-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P93-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P93-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P93-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P93-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P93-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P93-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P93-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P93-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P93-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P93-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C34.3",
+              "display": "Zhoubný novotvar dolního laloku, průdušky nebo plíce"
+            }
+          ],
+          "text": "Zhoubný novotvar dolního laloku, průdušky nebo plíce"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "onsetDateTime": "2026-09-09",
+        "bodySite": [
+          {
+            "text": "pravý dolní plicní lalok"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8140/3",
+                  "display": "Adenokarcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C34.3"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT2b cN2 cM1a (pleura), stadium IVA (TNM 8. vyd.)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P93-dg2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P93-dg2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C78.2",
+              "display": "Sekundární zhoubný novotvar pohrudnice"
+            }
+          ],
+          "text": "Sekundární zhoubný novotvar pohrudnice"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "onsetDateTime": "2026-10-20",
+        "bodySite": [
+          {
+            "text": "pravostranný pleurální výpotek"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P93-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P93-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-09-09",
+        "issued": "2026-09-09T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P93-03"
+          }
+        ],
+        "conclusion": "Cytologie pleurálního výpotku: buňky adenokarcinomu, TTF-1 pozitivní..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q3l0b2xvZ2llIHBsZXVyw6FsbsOtaG8gdsO9cG90a3U6IGJ1xYhreSBhZGVub2thcmNpbm9tdSwgVFRGLTEgcG96aXRpdm7DrS4=",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-09-09"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P93-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P93-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-01",
+        "issued": "2026-11-01T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P93-02"
+          }
+        ],
+        "conclusion": "CT hrudníku: velký pravostranný výpotek s kolapsem dolního laloku, pleurální zesílení..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1QgaHJ1ZG7DrWt1OiB2ZWxrw70gcHJhdm9zdHJhbm7DvSB2w71wb3RlayBzIGtvbGFwc2VtIGRvbG7DrWhvIGxhbG9rdSwgcGxldXLDoWxuw60gemVzw61sZW7DrS4=",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P93-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P93-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "date": "2026-11-03T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P93-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDY4IGxldCwgMyBwdW5rY2UgemEgNCB0w71kbnksIGR1xaFub3N0IHYga2xpZHUuIEVDT0cgMi4gWmFow6FqZW5hIDEuIGxpbmllIHBlbWJyb2xpenVtYWJlbS4=",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-03"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-01",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P93-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT2b cN2 cM1a (pleura), stadium IVA (TNM 8. vyd.)",
+        "focus": [
+          {
+            "reference": "Condition/P93-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-03",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P93-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 2,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P93-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-03",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 54,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-09-09",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P93-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "EGFR"
+        },
+        "valueString": "bez mutace"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-09-09",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P93-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "ALK"
+        },
+        "valueString": "negativní"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-bm03",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-bm03",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-09-09",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P93-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "PD-L1 (TPS)"
+        },
+        "valueString": "70 %"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P93-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P93-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P93-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Hrudní – karcinom plic"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "authoredOn": "2026-11-04T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P93-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Maligní pleurální výpotek u adenokarcinomu plic stadium IVA, opakované punkce: talková pleurodéza, nebo permanentní pleurální katétr?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: buňky adenokarcinomu, TTF-1 pozitivní."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Imunoterapie] pembrolizumab 1. cyklus (2026-10-30)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 2."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce trávit co nejvíc času doma s vnoučaty."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P93-dg1"
+          },
+          {
+            "reference": "Condition/P93-dg2"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P93-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P93-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P93-zad01"
+        },
+        "for": {
+          "reference": "Patient/P93"
+        },
+        "authoredOn": "2026-11-04T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P93-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-24T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-kour01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-kour01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-03",
+        "category": [
+          {
+            "text": "Rizikové faktory"
+          }
+        ],
+        "code": {
+          "text": "Kouření"
+        },
+        "valueString": "bývalá kuřačka, 20 balíčkoroků"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P93-lab01-na",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P93-lab01-na",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2951-2",
+              "display": "Sodík"
+            }
+          ],
+          "text": "Sodík"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-11-02T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 139,
+          "unit": "mmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationAdministration-P93-tx-pembro-01",
+      "resource": {
+        "resourceType": "MedicationAdministration",
+        "id": "P93-tx-pembro-01",
+        "status": "completed",
+        "category": {
+          "text": "imunoterapie 1. linie"
+        },
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "L01FF02",
+              "display": "pembrolizumab"
+            }
+          ],
+          "text": "pembrolizumab"
+        },
+        "subject": {
+          "reference": "Patient/P93"
+        },
+        "effectiveDateTime": "2026-10-30"
+      }
+    }
+  ]
+}

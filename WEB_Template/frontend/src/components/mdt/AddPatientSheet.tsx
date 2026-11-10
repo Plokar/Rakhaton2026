@@ -8,9 +8,10 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { Input } from '@/components/ui/input';
 import { mdtApi } from '@/lib/mdt-api';
-import { apiErrorMessage, useCreateCase, useIntakeQuery, usePatientsQuery, useSessionQuery, useSessionsWithCases } from '@/lib/queries';
+import { apiErrorMessage, useCreateCase, useIntakeQuery, usePatientSearchQuery, usePatientsQuery, useSessionQuery, useSessionsWithCases } from '@/lib/queries';
+import { formatRc, isRcInput, validateRc } from '@/lib/rc';
 import { cn } from '@/lib/utils';
-import type { MdtCase, MdtSession, MdtSessionListItem, PatientListItem, ProjectorExtra, ProjectorLayout } from '@/types/mdt';
+import type { MdtCase, MdtSession, MdtSessionListItem, PatientListItem, PatientSearchItem, ProjectorExtra, ProjectorLayout } from '@/types/mdt';
 import { CitationProvider } from './citations';
 import { dayLabel, timeLabel } from './dates';
 import { ImportReportSheet } from './ImportReportSheet';
@@ -22,6 +23,23 @@ import { PatientChatFocus, PatientChatPanel } from './PatientChatDialog';
 import { SourceDrawer } from './SourceDrawer';
 
 const OPEN_SESSIONS = (s: MdtSessionListItem) => s.status !== 'closed';
+
+/** Jméno a RČ z hledání (T-356): jen v tomto dialogu, nikam dál (D-018). */
+type Identity = Pick<PatientSearchItem, 'name' | 'rc'>;
+
+function useDebounced<T>(value: T, ms = 300): T {
+  const [debounced, setDebounced] = React.useState(value);
+  React.useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return debounced;
+}
+
+const asListItem = (p: PatientSearchItem): PatientListItem => ({
+  id: p.id, display_name: p.display_name, sex: p.sex, age: p.age, diagnosis: null,
+  mdt_question: null, mdt_question_citation: null, mdt_date: null,
+});
 
 /** Zařazení čeká na dokončení (T-339): nominace bez kontroly úplnosti, nebo vrácené k doplnění (OBC-1.1). */
 export const intakePending = (c: Pick<MdtCase, 'status'>) => c.status === 'nominated' || c.status === 'returned';
@@ -78,11 +96,13 @@ export function AddPatientForm({
 }) {
   const me = useMe();
   const [patientId, setPatientIdState] = React.useState<string | null>(initialPatientId);
+  const [identity, setIdentity] = React.useState<Identity | null>(null);
   const [choice, setChoice] = React.useState<IntakeChoice | null>(null);
   const [layout, setLayout] = React.useState<ProjectorLayout>({});
   const chatInput = React.useRef<HTMLTextAreaElement>(null);
-  const setPatientId = (next: string | null) => {
+  const setPatientId = (next: string | null, who: Identity | null = null) => {
     setPatientIdState(next);
+    setIdentity(who);
     setChoice(null);                                // jiný pacient začíná z předvyplnění a s výchozím oknem
     setLayout({});
   };
@@ -116,10 +136,25 @@ export function AddPatientForm({
     if (s.id === session.id) continue;
     for (const c of detail.get(s.id)?.cases ?? []) elsewhere.set(c.patient_id, s);
   }
+  // T-356: jedno pole „Rodné číslo, jméno nebo Pxx“. RČ se formátuje a kontroluje při psaní, na server jde až
+  // platné (v těle POST, ne v URL). Jméno a Pxx hledá server, diagnózu a otázku dál filtr nad seznamem.
+  const rcMode = isRcInput(query);
+  const rcProblem = rcMode ? validateRc(query) : null;
   const needle = query.trim().toLocaleLowerCase('cs');
-  const list = (patients.data ?? []).filter(
-    (p) => !needle || [p.id, p.display_name, p.diagnosis?.icd10, p.diagnosis?.text, p.mdt_question].some((v) => v?.toLocaleLowerCase('cs').includes(needle)),
+  const serverQuery = useDebounced(rcMode ? (rcProblem === null ? query : '') : needle.length >= 2 ? query.trim() : '');
+  const found = usePatientSearchQuery(serverQuery);
+  const byId = new Map((patients.data ?? []).map((p) => [p.id, p]));
+  const fromServer = (found.data ?? []).map((hit) => ({ patient: byId.get(hit.id) ?? asListItem(hit), identity: { name: hit.name, rc: hit.rc } }));
+  const serverIds = new Set(fromServer.map((r) => r.patient.id));
+  const local = rcMode ? [] : (patients.data ?? []).filter(
+    (p) => !serverIds.has(p.id) && (!needle || [p.id, p.display_name, p.diagnosis?.icd10, p.diagnosis?.text, p.mdt_question]
+      .some((v) => v?.toLocaleLowerCase('cs').includes(needle))),
   );
+  const list: { patient: PatientListItem; identity: Identity | null }[] = [
+    ...(needle ? fromServer : []),
+    ...local.map((patient) => ({ patient, identity: null })),
+  ];
+  const searching = Boolean(serverQuery) && found.isFetching;
   const selected = patients.data?.find((p) => p.id === patientId) ?? null;
 
   const submit = (r: IntakeResult) => {
@@ -165,30 +200,55 @@ export function AddPatientForm({
             </Button>
             <Input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Hledat pacienta (P02), diagnózu, otázku…"
-              aria-label="Hledat pacienta"
+              onChange={(e) => setQuery(isRcInput(e.target.value) ? formatRc(e.target.value) : e.target.value)}
+              placeholder="Rodné číslo, jméno nebo Pxx"
+              aria-label="Rodné číslo, jméno nebo Pxx"
+              aria-describedby="patient-search-hint"
+              aria-invalid={Boolean(rcProblem && rcProblem !== 'incomplete')}
+              autoComplete="off"
+              spellCheck={false}
               leftIcon={<Search className="size-4" aria-hidden />}
               autoFocus
             />
-            {patients.isLoading ? (
+            <p id="patient-search-hint" className="-mt-1 text-xs text-muted-foreground" aria-live="polite">
+              {rcMode && rcProblem === 'incomplete'
+                ? 'Dopište rodné číslo ve tvaru XXXXXX/XXXX.'
+                : rcMode && rcProblem
+                  ? <span className="text-destructive">{rcProblem}</span>
+                  : searching
+                    ? 'Hledám v IRIS…'
+                    : 'RČ s lomítkem i bez, část jména bez diakritiky, nebo ID (P13). Diagnózu a otázku hledá seznam níže.'}
+            </p>
+            {found.isError && (
+              <p role="alert" className="text-sm text-destructive">{apiErrorMessage(found.error, 'Hledání se nepodařilo.')}</p>
+            )}
+            {rcMode && rcProblem !== null ? null : patients.isLoading ? (
               <div className="flex flex-col gap-2" aria-busy="true">
                 {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}
               </div>
             ) : patients.isError ? (
               <p role="alert" className="text-sm text-destructive">{apiErrorMessage(patients.error, 'Pacienty se nepodařilo načíst.')}</p>
             ) : list.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">Hledání neodpovídá žádný pacient.</p>
+              searching ? (
+                <div className="flex flex-col gap-2" aria-busy="true">
+                  {[0, 1].map((i) => <Skeleton key={i} className="h-14" />)}
+                </div>
+              ) : (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  {rcMode ? 'Pacient s tímto rodným číslem v IRIS není. Můžete založit nového pacienta.' : 'Hledání neodpovídá žádný pacient.'}
+                </p>
+              )
             ) : (
               <ul className="-mx-2 flex flex-col">
-                {list.map((p) => (
+                {list.map(({ patient: p, identity: who }) => (
                   <PatientOption
                     key={p.id}
                     patient={p}
+                    identity={who}
                     onBoard={onBoard.has(p.id)}
                     pending={pending.has(p.id)}
                     elsewhere={elsewhere.get(p.id)}
-                    onSelect={() => setPatientId(p.id)}
+                    onSelect={() => setPatientId(p.id, who)}
                   />
                 ))}
               </ul>
@@ -202,6 +262,7 @@ export function AddPatientForm({
               </Button>
               <div className="min-w-0 flex-1">
                 <p translate="no" className="text-sm font-semibold">{selected.display_name}</p>
+                {identity?.name && <IdentityLine identity={identity} />}
                 <p className="text-[13px] text-muted-foreground">
                   {selected.diagnosis ? `${selected.diagnosis.icd10} ${selected.diagnosis.text}` : 'Bez onkologické diagnózy'}
                 </p>
@@ -268,14 +329,26 @@ export function AddPatientForm({
   );
 }
 
+/** Jméno a RČ k ověření, že lékař přidává správného člověka; jen v dialogu přidání (D-018). */
+function IdentityLine({ identity }: { identity: Identity }) {
+  return (
+    <p translate="no" className="text-[13px] text-foreground/80" data-sensitive="identity">
+      {identity.name}
+      {identity.rc && <span className="ml-2 tabular-nums text-muted-foreground">RČ {identity.rc}</span>}
+    </p>
+  );
+}
+
 function PatientOption({
   patient,
+  identity = null,
   onBoard,
   pending = false,
   elsewhere,
   onSelect,
 }: {
   patient: PatientListItem;
+  identity?: Identity | null;
   onBoard: boolean;
   pending?: boolean;
   elsewhere: MdtSessionListItem | undefined;
@@ -302,6 +375,7 @@ function PatientOption({
             </span>
           )}
         </span>
+        {identity?.name && <IdentityLine identity={identity} />}
         <span className="truncate text-[13px] text-muted-foreground">
           {patient.diagnosis ? `${patient.diagnosis.icd10} ${patient.diagnosis.text}` : 'Bez onkologické diagnózy'}
         </span>

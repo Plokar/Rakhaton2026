@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P62"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "881008/9948"
           }
         ],
         "name": [
           {
-            "text": "Pacient P62 (fiktivní)"
+            "use": "official",
+            "text": "Ondřej Čermák (fiktivní)",
+            "family": "Čermák",
+            "given": [
+              "Ondřej"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1988",
+        "birthDate": "1988-10-08",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

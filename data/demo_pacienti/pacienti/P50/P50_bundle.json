@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P50"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "875828/9914"
           }
         ],
         "name": [
           {
-            "text": "Pacient P50 (fiktivní)"
+            "use": "official",
+            "text": "Alena Doležalová (fiktivní)",
+            "family": "Doležalová",
+            "given": [
+              "Alena"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1987",
+        "birthDate": "1987-08-28",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

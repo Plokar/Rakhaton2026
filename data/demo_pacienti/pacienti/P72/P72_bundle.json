@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P72"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "666010/9962"
           }
         ],
         "name": [
           {
-            "text": "Pacient P72 (fiktivní)"
+            "use": "official",
+            "text": "Helena Procházková (fiktivní)",
+            "family": "Procházková",
+            "given": [
+              "Helena"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1966",
+        "birthDate": "1966-10-10",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

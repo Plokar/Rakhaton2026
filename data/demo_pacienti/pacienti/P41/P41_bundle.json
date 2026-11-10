@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P41"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "550901/9912"
           }
         ],
         "name": [
           {
-            "text": "Pacient P41 (fiktivní)"
+            "use": "official",
+            "text": "Roman Veselý (fiktivní)",
+            "family": "Veselý",
+            "given": [
+              "Roman"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1955",
+        "birthDate": "1955-09-01",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

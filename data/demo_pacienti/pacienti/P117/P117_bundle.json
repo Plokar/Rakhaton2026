@@ -1,0 +1,904 @@
+{
+  "resourceType": "Bundle",
+  "id": "P117-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P117",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P117",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P117"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "620505/9960"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Pavel Kříž (fiktivní)",
+            "family": "Kříž",
+            "given": [
+              "Pavel"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1962-05-05",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 64
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P117-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P117-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P117-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P117-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P117-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P117-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P117-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P117-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P117-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P117-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P117-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P117-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P117-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P117-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C34.9",
+              "display": "Zhoubný novotvar průdušky nebo plíce, neurčený"
+            }
+          ],
+          "text": "Zhoubný novotvar průdušky nebo plíce, neurčený"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "onsetDateTime": "2026-11-08",
+        "bodySite": [
+          {
+            "text": "pravá plíce, multifokálně"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8140/3",
+                  "display": "Adenokarcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C34.9"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT3 cN1 cM1b (játra, 1 ložisko), stadium IVA (TNM 8. vyd.)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P117-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P117-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "issued": "2026-11-08T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P117-03"
+          }
+        ],
+        "conclusion": "EBUS-TBNA: adenokarcinom plic, NGS fúze KIF5B-RET..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "RUJVUy1UQk5BOiBhZGVub2thcmNpbm9tIHBsaWMsIE5HUyBmw7p6ZSBLSUY1Qi1SRVQu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-11-08"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P117-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P117-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-15",
+        "issued": "2026-11-15T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P117-02"
+          }
+        ],
+        "conclusion": "CT: tumor pravé plíce 48 mm, solitární jaterní metastáza 19 mm..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1Q6IHR1bW9yIHByYXbDqSBwbMOtY2UgNDggbW0sIHNvbGl0w6FybsOtIGphdGVybsOtIG1ldGFzdMOhemEgMTkgbW0u",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-15"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P117-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P117-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "date": "2026-11-17T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P117-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA2NCBsZXQsIG5la3XFmcOhaywgZGlhZ27Ds3phIHDFmWkgdnnFoWV0xZllbsOtIHBybyBwbmV1bW9uaWkuIEVDT0cgMS4=",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-17"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-15",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P117-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT3 cN1 cM1b (játra, 1 ložisko), stadium IVA (TNM 8. vyd.)",
+        "focus": [
+          {
+            "reference": "Condition/P117-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-17",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P117-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P117-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-17",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 79,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P117-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "RET"
+        },
+        "valueString": "fúze KIF5B-RET"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P117-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "PD-L1 (TPS)"
+        },
+        "valueString": "0 %"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-16T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-16T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-16T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-16T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-16T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P117-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P117-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P117-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Hrudní – karcinom plic"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "authoredOn": "2026-11-18T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P117-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Neskvamózní NSCLC stadium IVA s fúzí RET: selpercatinib v 1. linii?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: adenokarcinom plic, NGS fúze KIF5B-RET."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce léčbu bez chemoterapie."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P117-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P117-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P117-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P117-zad01"
+        },
+        "for": {
+          "reference": "Patient/P117"
+        },
+        "authoredOn": "2026-11-18T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P117-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-08T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-kour01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-kour01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-17",
+        "category": [
+          {
+            "text": "Rizikové faktory"
+          }
+        ],
+        "code": {
+          "text": "Kouření"
+        },
+        "valueString": "nekuřák"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P117-lab01-na",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P117-lab01-na",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2951-2",
+              "display": "Sodík"
+            }
+          ],
+          "text": "Sodík"
+        },
+        "subject": {
+          "reference": "Patient/P117"
+        },
+        "effectiveDateTime": "2026-11-16T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 139,
+          "unit": "mmol/l"
+        }
+      }
+    }
+  ]
+}

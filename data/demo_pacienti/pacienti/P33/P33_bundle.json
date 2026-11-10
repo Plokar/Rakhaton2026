@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P33"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "680105/9925"
           }
         ],
         "name": [
           {
-            "text": "Pacient P33 (fiktivní)"
+            "use": "official",
+            "text": "Lukáš Procházka (fiktivní)",
+            "family": "Procházka",
+            "given": [
+              "Lukáš"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1968",
+        "birthDate": "1968-01-05",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

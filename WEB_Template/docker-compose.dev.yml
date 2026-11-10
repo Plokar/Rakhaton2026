@@ -85,7 +85,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings_dev
       DJANGO_DEBUG: "True"
       DATASET_DIR: /data/dataset
-      DEMO_DATASET_DIR: /data/demo_pacienti                 # demo pacienti P13–P32 (komise v listopadu)
+      DEMO_DATASET_DIR: /data/demo_pacienti                 # fiktivní demo pacienti P13–P172 (T-355)
       FIXTURES_DIR: /data/fixtures
       FRONTEND_FIXTURES_DIR: /data/frontend-fixtures
       MDT_DEMO_CACHE_DIR: /data/demo_cache

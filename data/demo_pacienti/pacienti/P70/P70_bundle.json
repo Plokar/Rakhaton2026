@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P70"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "580804/9940"
           }
         ],
         "name": [
           {
-            "text": "Pacient P70 (fiktivní)"
+            "use": "official",
+            "text": "Luboš Urban (fiktivní)",
+            "family": "Urban",
+            "given": [
+              "Luboš"
+            ]
           }
         ],
         "gender": "male",
-        "birthDate": "1958",
+        "birthDate": "1958-08-04",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -21,15 +21,24 @@
           {
             "system": "https://rakathon.example.org/fhir/sid/pacient",
             "value": "P58"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "645624/9910"
           }
         ],
         "name": [
           {
-            "text": "Pacient P58 (fiktivní)"
+            "use": "official",
+            "text": "Zdeňka Navrátilová (fiktivní)",
+            "family": "Navrátilová",
+            "given": [
+              "Zdeňka"
+            ]
           }
         ],
         "gender": "female",
-        "birthDate": "1964",
+        "birthDate": "1964-06-24",
         "extension": [
           {
             "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",

@@ -1,0 +1,856 @@
+{
+  "resourceType": "Bundle",
+  "id": "P167-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P167",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P167",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P167"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "655515/9919"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Hana Doležalová (fiktivní)",
+            "family": "Doležalová",
+            "given": [
+              "Hana"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1965-05-15",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 61
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P167-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P167-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P167-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P167-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P167-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P167-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P167-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P167-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P167-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P167-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P167-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P167-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P167-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P167-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C55",
+              "display": "Zhoubný novotvar dělohy, část neurčená"
+            }
+          ],
+          "text": "Zhoubný novotvar dělohy, část neurčená"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "onsetDateTime": "2026-06-10",
+        "bodySite": [
+          {
+            "text": "děloha"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8890/3",
+                  "display": "Leiomyosarkom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C55"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "M1 (játra), stadium IV"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P167-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P167-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-06-10",
+        "issued": "2026-06-10T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P167-03"
+          }
+        ],
+        "conclusion": "Hysterektomie 2026: leiomyosarkom G3, mitózy 25/10 HPF..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "SHlzdGVyZWt0b21pZSAyMDI2OiBsZWlvbXlvc2Fya29tIEczLCBtaXTDs3p5IDI1LzEwIEhQRi4=",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-06-10"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P167-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P167-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-25",
+        "issued": "2026-11-25T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P167-02"
+          }
+        ],
+        "conclusion": "CT: 3 jaterní metastázy do 4 cm, peritoneum volné..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1Q6IDMgamF0ZXJuw60gbWV0YXN0w6F6eSBkbyA0IGNtLCBwZXJpdG9uZXVtIHZvbG7DqS4=",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-25"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P167-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P167-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "date": "2026-11-27T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P167-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDYxIGxldCwgMyBtxJtzw61jZSBwbyBoeXN0ZXJla3RvbWlpLiBMVkVGIDYwICUuIEVDT0cgMS4=",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-27"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-25",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P167-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "M1 (játra), stadium IV",
+        "focus": [
+          {
+            "reference": "Condition/P167-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-27",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P167-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P167-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-27",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 66,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-26T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-26T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-26T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-26T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P167-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P167-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "effectiveDateTime": "2026-11-26T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 17,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P167-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P167-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P167-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Komise pro sarkomy a GIST"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "authoredOn": "2026-11-28T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P167-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Leiomyosarkom dělohy s jaterními metastázami: doxorubicin s trabektedinem v 1. linii?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: leiomyosarkom G3, mitózy 25/10 HPF."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Operace] hysterektomie (2026-07)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce léčbu, která nevyžaduje port, pokud to jde."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P167-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P167-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P167-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P167-zad01"
+        },
+        "for": {
+          "reference": "Patient/P167"
+        },
+        "authoredOn": "2026-11-28T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P167-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-18T13:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P167-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P167-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P167"
+        },
+        "authored": "2026-11-26T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P167"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 66
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

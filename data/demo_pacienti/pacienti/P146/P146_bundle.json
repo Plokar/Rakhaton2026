@@ -1,0 +1,908 @@
+{
+  "resourceType": "Bundle",
+  "id": "P146-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P146",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P146",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P146"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "920408/9983"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Jaroslav Černý (fiktivní)",
+            "family": "Černý",
+            "given": [
+              "Jaroslav"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1992-04-08",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 34
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P146-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P146-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P146-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P146-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P146-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P146-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P146-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P146-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P146-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P146-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P146-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P146-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P146-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P146-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C83.7",
+              "display": "Burkittův lymfom"
+            }
+          ],
+          "text": "Burkittův lymfom"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "onsetDateTime": "2026-11-14",
+        "bodySite": [
+          {
+            "text": "ileocekální oblast, kostní dřeň"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "9687/3",
+                  "display": "Burkittův lymfom"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C83.7"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "Ann Arbor IV, vysoké riziko"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P146-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P146-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-14",
+        "issued": "2026-11-14T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P146-03"
+          }
+        ],
+        "conclusion": "Biopsie ileocekální masy: Burkittův lymfom, CD20+, Ki-67 100 %..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QmlvcHNpZSBpbGVvY2Vrw6FsbsOtIG1hc3k6IEJ1cmtpdHTFr3YgbHltZm9tLCBDRDIwKywgS2ktNjcgMTAwICUu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-11-14"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P146-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P146-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-21",
+        "issued": "2026-11-21T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P146-02"
+          }
+        ],
+        "conclusion": "CT: ileocekální masa 9 cm, mezenterické uzliny, kostní dřeň infiltrována..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1Q6IGlsZW9jZWvDoWxuw60gbWFzYSA5IGNtLCBtZXplbnRlcmlja8OpIHV6bGlueSwga29zdG7DrSBkxZllxYggaW5maWx0cm92w6FuYS4=",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-21"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P146-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P146-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "date": "2026-11-23T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P146-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCAzNCBsZXQsIGJvbGVzdGkgYsWZaWNoYSBhIMO6Ynl0ZWsgaG1vdG5vc3RpLiBMREggM8OXIG5vcm1hLiBFQ09HIDEu",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-23"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-21",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P146-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "Ann Arbor IV, vysoké riziko",
+        "focus": [
+          {
+            "reference": "Condition/P146-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-23",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P146-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P146-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-23",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 73,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-14",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P146-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "MYC přestavba (FISH)"
+        },
+        "valueString": "t(8;14) prokázána"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-14",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P146-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "Ki-67"
+        },
+        "valueString": "100 %"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 96,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P146-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P146-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "effectiveDateTime": "2026-11-22T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P146-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P146-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P146-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Hematoonkologická komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "authoredOn": "2026-11-24T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P146-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Burkittův lymfom stadium IV s postižením kostní dřeně: DA-EPOCH-R, nebo R-CODOX-M/R-IVAC?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: Burkittův lymfom, CD20+, Ki-67 100 %."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 1."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P146-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P146-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P146-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P146-zad01"
+        },
+        "for": {
+          "reference": "Patient/P146"
+        },
+        "authoredOn": "2026-11-24T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P146-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-14T13:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P146-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P146-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P146"
+        },
+        "authored": "2026-11-22T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P146"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 73
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

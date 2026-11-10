@@ -312,6 +312,18 @@ Každý požadavek z [ARCHITEKTURA §2](ARCHITEKTURA.md#2-katalog-požadavků) m
 | T-364 | **Požadavky lékaře na podklad:** `DoctorRequirement` (klíče katalogu údajů po oblastech); při zařazení a kontrole před zasedáním upozornění „MUDr. X vyžaduje … · chybí …“ pro pozvané lékaře; volba potřebuji (→ doplnit / `prep_tasks`) / nepotřebuji (odkliknutí se zapíše, D-019) — UCTY_A_PVW §3 krok 3, D-028 | API + UI | T-363 | upozornění u pacienta s chybějícím vyžadovaným údajem, test, ověřeno v prohlížeči | `@Jarda+claude` | ✅ |
 | T-365 | **Normy lékaře na PVW:** `DoctorNorm` (údaj, operátor, hodnota, jednotka, postup, zdroj); vyhodnocení kódem s citací faktu pacienta, `missing` bez údaje; řádek s autorem na PVW u pacientů, kde je lékař pozvaný; semafor beze změny (D-015) — UCTY_A_PVW §3 krok 4, D-028 | API + UI + AI | T-363 | testy vyhodnocení (splněno / nesplněno / chybí), PVW ukazuje normu s citací | `@Jarda+claude` | ✅ |
 | T-357 | **Živé zasedání pro mobil a web:** lékař přihlášený svým účtem vidí, na kterém zasedání má být nebo je (ohlášení přítomnosti), který pacient a slide je právě na projektoru (předseda vysílá z jednání, SSE `event: live`), otevře jeho detail a ptá se AI na něj i na jiného pacienta z agendy nebo z IRIS; pruh „Probíhá zasedání“ v celé aplikaci — ARCH §6.3, §7.1, §8.6 | API + UI | T-334, T-344, T-348 | mobil přepne pacienta bez obnovení stránky, testy, lint, tsc, ověřeno v prohlížeči (předseda + mobil) | `@Maty+claude` | ✅ |
+| T-367 | **Lokální běh bez Dockeru:** `backend/scripts/run_local.py` (FHIR a IRIS SQL v paměti, mock AI) a `./dev.sh local` / `dev.ps1 local` ([zadání](docs/ZADANI_PRIPRAVA_NA_POUZITI.md)) | INFRA | — | `./dev.sh local` → health 200, přihlášení, kalendář | `@claude` | 🟨 |
+| T-368 | **Zaseknuté joby generování:** job `queued`/`running` po restartu → po `MDT_JOB_TIMEOUT_MINUTES` chyba s možností opakovat | AI | — | test `test_jobs.py`, UI ukáže chybu | `@claude` | 🟨 |
+| T-369 | **Health check zná IRIS:** `iris_fhir`, `iris_sql`, `?strict=1` → 503, verze z `APP_VERSION` | INFRA | — | testy health | `@claude` | 🟨 |
+| T-370 | **Záznam přístupů k pacientům:** `AccessLog` + middleware, `GET /api/mdt/access-log/` (správce), záložka „Přístupy“ v Týmu | API | — | testy, záložka v Týmu | `@claude` | 🟨 |
+| T-371 | **Texty a zbytky šablony:** Zásady soukromí a Podmínky pro pilot, bez lišty cookies, `send_email`, SMTP v prod bez výchozího Gmailu | UI | — | grep bez „kanban/hackathon“ | `@claude` | 🟨 |
+| T-372 | **Přihlášení bez registrace:** odkaz jen při `registration_enabled` z `/api/auth/status/` | UI | — | prod bez odkazu, test | `@claude` | 🟨 |
+| T-373 | **Odhlášení při nečinnosti:** `useIdleLogout`, výjimky projektor a živé jednání | UI | — | po `NEXT_PUBLIC_IDLE_MINUTES` dialog a odhlášení | `@claude` | 🟨 |
+| T-374 | **Chybové stránky:** `error.tsx`, `global-error.tsx`, `dashboard/error.tsx` česky | UI | — | chyba v komponentě ≠ bílá stránka | `@claude` | 🟨 |
+| T-375 | **204 místo 404 u chybějícího podkladu a závěru** | API | — | žádná chyba v konzoli na detailu | `@claude` | 🟨 |
+| T-376 | **Zasedání po termínu:** oddíl „Čeká na ukončení“, pruh předsedovi s přesunem neprojednaných | UI | — | seed 21. 10. v novém oddílu | `@claude` | 🟨 |
+| T-377 | **Sentry volitelně:** `SENTRY_DSN`, `before_send` bez těla, cookies a query | INFRA | — | test `before_send` | `@claude` | 🟨 |
+| T-378 | **E2E v CI + lint bez varování:** Playwright smoke (předseda, člen komise 390 px), job `e2e` | INFRA | T-367 | job zelený, lint 0 varování | `@claude` | 🟨 |
 
 ### M4 — Freeze a demo (do So 11:00)
 

@@ -221,7 +221,7 @@ export function useCatalogs() {
  */
 export function TemplateAreasEditor({ value, onChange, specialty, initFromPresets = false, onAreaChange }: {
   value: Partial<Record<TemplateArea, ProjectorLayout>>;
-  /** Vybraná oblast (živý náhled PVW vedle editoru, T-358). */
+  /** Vybraná oblast (živý náhled PVW vedle editoru, T-363). */
   onAreaChange?: (area: TemplateArea) => void;
   onChange: (next: Partial<Record<TemplateArea, ProjectorLayout>>, presetId?: string) => void;
   specialty?: string | null;

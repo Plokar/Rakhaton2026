@@ -81,13 +81,13 @@ def app_practitioner(practitioner_id: str, name: str, role: str | None, username
 
 
 def organization_id(name: str) -> str:
-    """`ORG-<nemocnice>` (T-357): stabilní ID z názvu bez diakritiky."""
+    """`ORG-<nemocnice>` (T-362): stabilní ID z názvu bez diakritiky."""
     slug = re.sub(r"[^A-Za-z0-9-]+", "-", _plain(name)).strip("-").upper() or "NEMOCNICE"
     return f"ORG-{slug}"[:64]
 
 
 def organization_resources(practitioner_id: str, organization: str, role: str | None) -> list[dict]:
-    """Nemocnice lékaře z jiné nemocnice (T-357, D-027): `Organization` + `PractitionerRole` s odkazem na ni."""
+    """Nemocnice lékaře z jiné nemocnice (T-362, D-027): `Organization` + `PractitionerRole` s odkazem na ni."""
     org_id = organization_id(organization)
     practitioner_role = {"resourceType": "PractitionerRole", "id": f"{practitioner_id}-role"[:64], "active": True,
                          "practitioner": {"reference": f"Practitioner/{practitioner_id}"},

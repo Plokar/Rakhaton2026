@@ -239,7 +239,7 @@ export function useUpdateUser() {
   });
 }
 
-// ── T-356, T-357: správce MDT ──
+// ── T-361, T-362: správce MDT ──
 /** Všichni uživatelé včetně zablokovaných (jen správce). */
 export function useAllUsersQuery(enabled: boolean) {
   return useQuery({ queryKey: queryKeys.allUsers, queryFn: () => mdtApi.getAllUsers(), enabled });
@@ -261,7 +261,7 @@ export function useSessionInvited(sessionId: number | null) {
   });
 }
 
-// ── T-358–T-360: požadavky a normy lékaře ──
+// ── T-363–T-365: požadavky a normy lékaře ──
 export function useMyRules(enabled = true) {
   return useQuery({ queryKey: queryKeys.myRules, queryFn: () => mdtApi.getMyRules(), enabled });
 }

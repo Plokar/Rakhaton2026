@@ -663,14 +663,14 @@ export interface Me {
   last_name?: string;
   title_before?: string;
   title_after?: string;
-  /** Správce MDT (T-356, D-027): účty, pozvánky a komise. Může mít i klinickou roli předsedy. */
+  /** Správce MDT (T-361, D-027): účty, pozvánky a komise. Může mít i klinickou roli předsedy. */
   is_manager?: boolean;
   is_active?: boolean;
-  /** Nemocnice (T-357); prázdné = naše. */
+  /** Nemocnice (T-362); prázdné = naše. */
   organization?: string;
   /** Lékař z jiné nemocnice: vidí jen komise a zasedání, kam je pozvaný. */
   is_external?: boolean;
-  /** false = po prvním přihlášení se ukáže průvodce nastavením (T-358). */
+  /** false = po prvním přihlášení se ukáže průvodce nastavením (T-363). */
   onboarding_done?: boolean;
   /** Komise, jejichž je stálým členem. */
   committees?: CommitteeRef[];
@@ -681,7 +681,7 @@ export interface CommitteeRef {
   name: string;
 }
 
-/** GET /api/mdt/committees/ (T-357) */
+/** GET /api/mdt/committees/ (T-362) */
 export interface Committee extends CommitteeRef {
   members: { user_id: number; name: string }[];
   /** Počet zasedání komise. */
@@ -690,7 +690,7 @@ export interface Committee extends CommitteeRef {
 
 export type InvitationStatus = 'pending' | 'used' | 'expired' | 'revoked';
 
-/** GET /api/mdt/invitations/ (T-356, jen správce) */
+/** GET /api/mdt/invitations/ (T-361, jen správce) */
 export interface Invitation {
   id: number;
   email: string;
@@ -732,7 +732,7 @@ export interface InvitedDoctor {
   organization: string;
 }
 
-/** GET /api/mdt/sessions/{sid}/invited/ (T-357): pozvaní = členové komise bez vyřazených + přizvaní. */
+/** GET /api/mdt/sessions/{sid}/invited/ (T-362): pozvaní = členové komise bez vyřazených + přizvaní. */
 export interface SessionInvited {
   session: number;
   committee: CommitteeRef | null;
@@ -742,7 +742,7 @@ export interface SessionInvited {
   attendees: InvitedDoctor[];
 }
 
-/** Oblast požadavků a norem lékaře: oblast šablony nebo `*` = všechny diagnózy (T-359). */
+/** Oblast požadavků a norem lékaře: oblast šablony nebo `*` = všechny diagnózy (T-364). */
 export type RuleArea = TemplateArea | '*';
 export type NormOp = '>=' | '<=' | '>' | '<' | '==';
 
@@ -755,7 +755,7 @@ export interface DoctorRequirement {
   updated_at: string;
 }
 
-/** Norma lékaře (T-360, D-028): vyhodnocuje kód s citací, semafor nemění. */
+/** Norma lékaře (T-365, D-028): vyhodnocuje kód s citací, semafor nemění. */
 export interface DoctorNorm {
   id: number;
   area: RuleArea;
@@ -827,7 +827,7 @@ export interface DoctorRulesDoctor {
   norms: (DoctorNorm & { result: NormResult })[];
 }
 
-/** GET /api/mdt/cases/{cid}/doctor-rules/ a /api/mdt/sessions/{sid}/doctor-rules/?patient= (T-359, T-360) */
+/** GET /api/mdt/cases/{cid}/doctor-rules/ a /api/mdt/sessions/{sid}/doctor-rules/?patient= (T-364, T-365) */
 export interface DoctorRules {
   area: TemplateArea;
   area_label: string;
@@ -888,7 +888,7 @@ export interface MdtSession {
   chair: { user_id: number; name: string } | null;
   /** Výchozí BriefConfig boardu. */
   config_id: number | null;
-  /** Komise zasedání (T-357): její členové jsou pozvaní. */
+  /** Komise zasedání (T-362): její členové jsou pozvaní. */
   committee?: CommitteeRef | null;
 }
 
@@ -1053,7 +1053,7 @@ export interface MdtTask {
 }
 
 // ── Okno pro projektor (T-333) ────────────────────────────────────────────────
-/** `norms` = normy pozvaných lékařů na PVW (T-360). */
+/** `norms` = normy pozvaných lékařů na PVW (T-365). */
 export type ProjectorBlock = 'anamnesis' | 'facts' | 'treatments' | 'norms';
 
 /** Rozložení okna pro projektor u případu: pořadí a skrytí karet a klíčových údajů (`KeyFact.id`). */

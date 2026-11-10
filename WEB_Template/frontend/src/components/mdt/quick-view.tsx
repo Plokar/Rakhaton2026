@@ -68,7 +68,7 @@ export interface QuickViewSources {
   observations: Res<ObservationSeries[]>;
   /** Doporučená šablona podle diagnózy (T-318); `null` = báze ji pro diagnózu nemá. */
   template: Res<CaseTemplate | null>;
-  /** Normy a požadavky pozvaných lékařů u případu (T-360); bez případu chybí. */
+  /** Normy a požadavky pozvaných lékařů u případu (T-365); bez případu chybí. */
   doctorRules?: Res<DoctorRules>;
   loadSource: SourceLoader;
 }
@@ -1569,7 +1569,7 @@ function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[
         ))));
       }
     } else if (block === 'norms') {
-      // T-360: osobní normy pozvaných lékařů s výsledkem u pacienta; bez norem se karta nezobrazí
+      // T-365: osobní normy pozvaných lékařů s výsledkem u pacienta; bez norem se karta nezobrazí
       const norms = (sources.doctorRules?.data?.doctors ?? []).flatMap((d) => d.norms.map((n) => ({ n, author: doctorLabel(d) })));
       chunk(norms, PJ_NORM_CHUNK).forEach((part, i) => out.push(note(`norms-${i}`, block, (
         <ul className="flex flex-col gap-1">

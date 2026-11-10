@@ -154,7 +154,7 @@ export default function SettingsPage() {
 
         <MyTemplateCard />
 
-        {/* T-359, T-360: co vyžaduji, když jsem pozvaný, a moje normy na PVW (mění jen lékař sám) */}
+        {/* T-364, T-365: co vyžaduji, když jsem pozvaný, a moje normy na PVW (mění jen lékař sám) */}
         <section id="pozadavky" aria-labelledby="pozadavky-nadpis" className="scroll-mt-20 rounded-xl border border-border bg-card p-5">
           <h2 id="pozadavky-nadpis" className="text-base font-semibold">Moje požadavky na podklad</h2>
           <p className="mb-4 mt-1 text-sm text-muted-foreground">

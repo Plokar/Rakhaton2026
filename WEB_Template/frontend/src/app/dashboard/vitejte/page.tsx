@@ -32,7 +32,7 @@ const STEPS = [
 ] as const;
 
 /**
- * Průvodce nastavením lékaře po prvním přihlášení (T-358, D-028, docs/UCTY_A_PVW.md §3): profil → must-have PVW
+ * Průvodce nastavením lékaře po prvním přihlášení (T-363, D-028, docs/UCTY_A_PVW.md §3): profil → must-have PVW
  * s živým náhledem → požadavky → normy. Každý krok jde přeskočit a později změnit v Nastavení.
  */
 export default function OnboardingPage() {

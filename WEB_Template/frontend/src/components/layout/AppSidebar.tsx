@@ -30,7 +30,7 @@ const NAV = [
   { href: '/dashboard/mdt', label: 'Zasedání', icon: CalendarDays },
   { href: '/dashboard/tasks', label: 'Úkoly', icon: ListChecks },
   { href: '/dashboard/zaznamy', label: 'Záznam boardů', icon: Archive, chair: true },
-  { href: '/dashboard/tym', label: 'Tým a účty', icon: UsersRound, manager: true },   // správce MDT (T-356)
+  { href: '/dashboard/tym', label: 'Tým a účty', icon: UsersRound, manager: true },   // správce MDT (T-361)
 ] as const;
 
 /** Postranní panel (NAVRH_UI §5.1): navigace, nejbližší zasedání jedním klikem, okno projektoru. Bez dev služeb. */

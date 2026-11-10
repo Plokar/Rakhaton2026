@@ -14,7 +14,7 @@ import { formatDate } from './format';
 import { ROLE_META } from './roles';
 
 /**
- * Požadavky a normy pozvaných lékařů u pacienta (T-359, T-360, D-028, docs/UCTY_A_PVW.md §3).
+ * Požadavky a normy pozvaných lékařů u pacienta (T-364, T-365, D-028, docs/UCTY_A_PVW.md §3).
  *
  * - Požadavek je upozornění pro zadávajícího lékaře, ne blokace. Rozhodne, zda lékaře u pacienta potřebuje;
  *   odkliknutí se zapíše a nezmizí (D-019).

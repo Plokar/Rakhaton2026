@@ -2,7 +2,7 @@
 
 > Požadavek týmu z 9. 11. 2026. Navazuje na šablonu údajů lékaře (D-025, [SABLONY_LEKARE.md](SABLONY_LEKARE.md)),
 > tým komise (T-319), registraci se šablonou (T-338) a okno pro projektor (T-333, T-348).
-> Rozhodnutí D-027 a D-028, úkoly T-356 až T-360 v [PROGRESS.md](../PROGRESS.md).
+> Rozhodnutí D-027 a D-028, úkoly T-361 až T-365 v [PROGRESS.md](../PROGRESS.md).
 > **Stav: hotovo** (10. 11. 2026, větev `claude/exciting-edison-bp0dl2`). Kontrakty jsou v ARCHITEKTURA.md
 > §6.2, §6.3, §7.1, §8.6 a §9; jak to funguje v kódu, popisuje §5 níže.
 
@@ -103,7 +103,7 @@ Podle toho se ukazují požadavky lékaře (krok 3) a jeho normy na PVW (krok 4)
   - je vždy vidět, čí norma to je.
 - **Požadavky i normy mění jen lékař sám** (rozhodnuto 9. 11.) v průvodci nebo v Nastavení. Správce je vidí, ale nemění.
 
-## 4. Co přibylo (T-356 až T-360)
+## 4. Co přibylo (T-361 až T-365)
 
 | Co | Kde |
 |---|---|

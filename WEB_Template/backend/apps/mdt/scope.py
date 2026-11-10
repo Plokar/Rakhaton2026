@@ -1,4 +1,4 @@
-"""Kdo je pozvaný na zasedání a co vidí lékař z jiné nemocnice (T-357, D-027, docs/UCTY_A_PVW.md §2–3).
+"""Kdo je pozvaný na zasedání a co vidí lékař z jiné nemocnice (T-362, D-027, docs/UCTY_A_PVW.md §2–3).
 
 - Pozvaní na zasedání = stálí členové komise bez vyřazených + přizvaní jen na toto zasedání.
 - Externí lékař vidí jen zasedání, kam je pozvaný, jejich pacienty (celý podklad) a případy, ke kterým je přizvaný
@@ -98,7 +98,7 @@ def _api_user(request):
 
 
 class ExternalScopeMiddleware:
-    """Lékař z jiné nemocnice (T-357) dostane na API mimo své komise 403."""
+    """Lékař z jiné nemocnice (T-362) dostane na API mimo své komise 403."""
 
     def __init__(self, get_response):
         self.get_response = get_response

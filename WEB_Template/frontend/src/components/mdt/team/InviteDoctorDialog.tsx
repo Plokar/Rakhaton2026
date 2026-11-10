@@ -55,7 +55,7 @@ export function InvitationLink({ created }: { created: InvitationCreated }) {
 }
 
 /**
- * Pozvánka od správce MDT (T-356, T-357, D-027): lékař (i z jiné nemocnice) dostane jednorázový odkaz e-mailem
+ * Pozvánka od správce MDT (T-361, T-362, D-027): lékař (i z jiné nemocnice) dostane jednorázový odkaz e-mailem
  * a správce ho může zároveň zkopírovat. Externí lékař je člen komise a vidí jen komise, kam je pozvaný.
  */
 export function InviteDoctorDialog({ open, onClose }: { open: boolean; onClose: () => void }) {

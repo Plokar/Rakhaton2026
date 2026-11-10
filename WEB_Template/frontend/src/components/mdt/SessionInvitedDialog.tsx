@@ -19,7 +19,7 @@ function who(d: InvitedDoctor) {
 }
 
 /**
- * Pozvaní na zasedání (T-357, D-027): stálí členové komise bez vyřazených + přizvaní jen na toto zasedání.
+ * Pozvaní na zasedání (T-362, D-027): stálí členové komise bez vyřazených + přizvaní jen na toto zasedání.
  * Podle nich se zadávajícímu lékaři ukážou požadavky a na PVW normy lékařů. Mění předseda nebo správce MDT.
  */
 export function SessionInvitedDialog({ sessionId, canEdit, open, onOpenChange }: {

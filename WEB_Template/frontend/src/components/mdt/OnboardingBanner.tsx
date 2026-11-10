@@ -6,7 +6,7 @@ import { Sparkles } from 'lucide-react';
 import { buttonVariants } from '@/components/shadcn/button';
 import { useMe } from './me';
 
-/** Lékař po pozvánce ještě nedokončil průvodce nastavením (T-358): odkaz na něj nad obsahem. */
+/** Lékař po pozvánce ještě nedokončil průvodce nastavením (T-363): odkaz na něj nad obsahem. */
 export function OnboardingBanner() {
   const me = useMe();
   const pathname = usePathname();

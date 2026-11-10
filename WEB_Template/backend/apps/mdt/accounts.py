@@ -1,4 +1,4 @@
-"""Správce MDT: pozvánky, komise a pozvaní na zasedání (T-356, T-357, D-027, docs/UCTY_A_PVW.md §1–3, ARCH §6.3).
+"""Správce MDT: pozvánky, komise a pozvaní na zasedání (T-361, T-362, D-027, docs/UCTY_A_PVW.md §1–3, ARCH §6.3).
 
 - `GET|POST /api/mdt/invitations/`, `POST …/{id}/revoke/`, `POST …/{id}/resend/`: jen správce (`mdt_manager`).
 - `GET /api/mdt/invitations/public/{token}/`, `POST …/accept/`: bez přihlášení; odkaz platí jednou a do expirace.

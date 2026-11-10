@@ -36,7 +36,7 @@ function Loading() {
 }
 
 // ── Lékaři ───────────────────────────────────────────────────────────────────
-/** Lékaři: role, odbornost, správce, nemocnice, komise a zablokování (T-319, T-356, T-357). */
+/** Lékaři: role, odbornost, správce, nemocnice, komise a zablokování (T-319, T-361, T-362). */
 export function DoctorsPanel({ me }: { me: Me }) {
   const users = useAllUsersQuery(true);
   const update = useUpdateUser();

@@ -41,7 +41,7 @@ def test_demo_users_roles_and_me(seeded):
         'practitioner_id': 'LEK-APP-chirurg', 'first_name': 'Chirurg', 'last_name': '', 'title_before': '',
         'title_after': '', 'is_manager': False, 'is_active': True, 'organization': '', 'is_external': False,
         'onboarding_done': True}
-    assert {k: me[k] for k in expected} == expected and me['committees']      # T-356, T-357
+    assert {k: me[k] for k in expected} == expected and me['committees']      # T-361, T-362
     assert MdtCase.objects.get(patient_fhir_id='P04').created_by.username == 'pneumolog'
     assert MdtSession.objects.filter(chair__username='predseda').count() == 4
 

@@ -1,4 +1,4 @@
-"""Požadavky a normy lékaře (T-358–T-360, D-028, docs/UCTY_A_PVW.md §3)."""
+"""Požadavky a normy lékaře (T-363–T-365, D-028, docs/UCTY_A_PVW.md §3)."""
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command

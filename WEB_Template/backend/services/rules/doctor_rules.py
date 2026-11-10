@@ -1,4 +1,4 @@
-"""Požadavky a normy lékaře u pacienta (T-359, T-360, D-028, docs/UCTY_A_PVW.md §3 kroky 3–4).
+"""Požadavky a normy lékaře u pacienta (T-364, T-365, D-028, docs/UCTY_A_PVW.md §3 kroky 3–4).
 
 Deterministické, LLM se tu nevolá:
 

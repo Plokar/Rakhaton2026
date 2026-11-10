@@ -11,7 +11,7 @@ urlpatterns = [
     path('templates/<str:area>/', templates.template_detail, name='template-detail'),
     path('users/<int:uid>/', views.user_detail, name='user-detail'),
     path('users/<int:uid>/rules/', doctor_rules.user_rules, name='user-rules'),
-    # T-356, T-357: pozvánky, komise a pozvaní na zasedání (správce MDT)
+    # T-361, T-362: pozvánky, komise a pozvaní na zasedání (správce MDT)
     path('invitations/', accounts.invitation_list, name='invitation-list'),
     path('invitations/<int:iid>/revoke/', accounts.invitation_revoke, name='invitation-revoke'),
     path('invitations/<int:iid>/resend/', accounts.invitation_resend, name='invitation-resend'),
@@ -19,7 +19,7 @@ urlpatterns = [
     path('invitations/public/<str:token>/accept/', accounts.invitation_accept, name='invitation-accept'),
     path('committees/', accounts.committee_list, name='committee-list'),
     path('committees/<int:committee_id>/', accounts.committee_detail, name='committee-detail'),
-    # T-358–T-360: požadavky a normy lékaře
+    # T-363–T-365: požadavky a normy lékaře
     path('my-rules/', doctor_rules.my_rules, name='my-rules'),
     path('my-rules/requirements/<str:area>/', doctor_rules.my_requirement, name='my-requirement'),
     path('my-rules/norms/', doctor_rules.my_norms, name='my-norms'),

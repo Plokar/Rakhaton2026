@@ -140,7 +140,7 @@ export function ReviewDialog({
           )}
         </section>
 
-        {/* T-359: co vyžadují pozvaní lékaři; rozhoduje zadávající lékař (může kontrolu potvrdit) */}
+        {/* T-364: co vyžadují pozvaní lékaři; rozhoduje zadávající lékař (může kontrolu potvrdit) */}
         <RequirementsPanel rules={doctorRules.data} loading={doctorRules.isLoading} error={doctorRules.error}
           caseId={caseId} canDecide={data?.can_check !== false} />
 

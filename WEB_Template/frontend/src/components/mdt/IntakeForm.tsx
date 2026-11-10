@@ -30,7 +30,7 @@ export type IntakeResult = {
   acknowledged: string[];
   /** Okno pro projektor upravené při zařazení (T-333); bez úprav chybí. */
   projector_layout?: ProjectorLayout;
-  /** Rozhodnutí k požadavkům pozvaných lékařů (T-359); nerozhodnuté chybí. */
+  /** Rozhodnutí k požadavkům pozvaných lékařů (T-364); nerozhodnuté chybí. */
   requirement_decisions: { user_id: number; decision: 'needed' | 'not_needed' }[];
 };
 
@@ -53,7 +53,7 @@ export function IntakeForm({
   sessionId,
 }: {
   prefill: IntakePrefill;
-  /** Zasedání, na které se pacient zařazuje: požadavky jeho pozvaných lékařů (T-359). */
+  /** Zasedání, na které se pacient zařazuje: požadavky jeho pozvaných lékařů (T-364). */
   sessionId?: number;
   submitting: boolean;
   onSubmit: (result: IntakeResult) => void;

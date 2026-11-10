@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
 
 def _demo_committees(users) -> None:
-    """Komise podle názvu zasedání (T-357); nová komise dostane za členy demo lékaře. Nic nepřepisuje."""
+    """Komise podle názvu zasedání (T-362); nová komise dostane za členy demo lékaře. Nic nepřepisuje."""
     from apps.mdt.models import Committee
 
     for session in MdtSession.objects.filter(committee__isnull=True):

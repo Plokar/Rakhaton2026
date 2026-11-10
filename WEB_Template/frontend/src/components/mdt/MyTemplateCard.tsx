@@ -24,11 +24,11 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? {}) === JSON.string
  */
 export function MyTemplateCard({ showTitles = true, withPreview = true, bare = false, onboarding = false, saveRef }: {
   showTitles?: boolean;
-  /** Průvodce (T-358): bez uložené šablony předvyplní preset profese. */
+  /** Průvodce (T-363): bez uložené šablony předvyplní preset profese. */
   onboarding?: boolean;
   /** Průvodce: funkce, která rozpracovanou šablonu uloží při „Pokračovat“. */
   saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
-  /** Živý náhled PVW vedle editoru (T-358). */
+  /** Živý náhled PVW vedle editoru (T-363). */
   withPreview?: boolean;
   /** Bez rámečku a nadpisu (průvodce nastavením). */
   bare?: boolean;

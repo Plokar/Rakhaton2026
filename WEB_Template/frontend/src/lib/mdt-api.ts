@@ -99,7 +99,7 @@ export interface ImportProposal {
   rejected: ImportValue[];
 }
 
-/** POST /api/mdt/invitations/ (správce, T-356). */
+/** POST /api/mdt/invitations/ (správce, T-361). */
 export interface InvitationInput {
   last_name: string;
   first_name?: string;
@@ -130,7 +130,7 @@ export interface NewDoctorInput {
   preset?: string;
 }
 
-/** PATCH /api/mdt/users/{uid}/ (správce, T-319, T-356, T-357). */
+/** PATCH /api/mdt/users/{uid}/ (správce, T-319, T-361, T-362). */
 export interface UserUpdate {
   role?: MdtRole;
   specialty?: RoleId;
@@ -419,7 +419,7 @@ export const mdtApi = {
   createCase: (
     body: Pick<MdtCase, 'session' | 'patient_id' | 'service_request_id' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields'>
       & { acknowledge?: string[]; prep_tasks?: string[];
-        /** T-359: rozhodnutí k požadavkům pozvaných lékařů. */
+        /** T-364: rozhodnutí k požadavkům pozvaných lékařů. */
         requirement_decisions?: { user_id: number; decision: 'needed' | 'not_needed'; note?: string }[] },
   ) =>
     apiFetch<MdtCase>('/api/mdt/cases/', { method: 'POST', body: JSON.stringify(body) }),
@@ -430,7 +430,7 @@ export const mdtApi = {
   /** Kontrola před zasedáním (T-349): co přibylo od zařazení a stav kontroly. */
   getReview: (caseId: number) => apiFetch<CaseReview>(`/api/mdt/cases/${caseId}/review/`),
 
-  // ── T-356, T-357: správce MDT, pozvánky, komise, pozvaní na zasedání ──
+  // ── T-361, T-362: správce MDT, pozvánky, komise, pozvaní na zasedání ──
   getInvitations: () => apiFetch<Invitation[]>('/api/mdt/invitations/'),
   createInvitation: (input: InvitationInput) =>
     apiFetch<InvitationCreated>('/api/mdt/invitations/', { method: 'POST', body: JSON.stringify(input) }),
@@ -451,10 +451,10 @@ export const mdtApi = {
   getSessionInvited: (sessionId: number) => apiFetch<SessionInvited>(`/api/mdt/sessions/${sessionId}/invited/`),
   updateSessionInvited: (sessionId: number, input: { committee_id?: number | null; invited?: number[]; excluded?: number[] }) =>
     apiFetch<SessionInvited>(`/api/mdt/sessions/${sessionId}/invited/`, { method: 'PUT', body: JSON.stringify(input) }),
-  /** Průvodce nastavením hotový (T-358). */
+  /** Průvodce nastavením hotový (T-363). */
   finishOnboarding: () => apiFetch<Me>('/api/mdt/me/', { method: 'PATCH', body: JSON.stringify({ onboarding_done: true }) }),
 
-  // ── T-358–T-360: požadavky a normy lékaře ──
+  // ── T-363–T-365: požadavky a normy lékaře ──
   getMyRules: () => apiFetch<MyRules>('/api/mdt/my-rules/'),
   getUserRules: (userId: number) => apiFetch<MyRules>(`/api/mdt/users/${userId}/rules/`),
   saveRequirement: (area: RuleArea, input: { fields: string[]; note?: string }) =>

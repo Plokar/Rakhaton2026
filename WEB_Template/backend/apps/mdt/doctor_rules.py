@@ -1,4 +1,4 @@
-"""Požadavky a normy lékaře (T-358–T-360, D-028, docs/UCTY_A_PVW.md §3, ARCH §6.3, §8.6).
+"""Požadavky a normy lékaře (T-363–T-365, D-028, docs/UCTY_A_PVW.md §3, ARCH §6.3, §8.6).
 
 Moje nastavení (mění jen lékař sám):
 - `GET /api/mdt/my-rules/`: moje požadavky po oblastech a normy;

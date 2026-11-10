@@ -16,9 +16,9 @@ export const MDT_ROLE_LABEL: Record<MdtRole, string> = {
 /** Co smí role v UI (stejně jako backend, ARCH §6.3). Backend je stejně ověří. */
 export const can = {
   manageBoards: (me?: Me | null) => me?.role === 'mdt_admin',
-  /** Správce MDT (T-356, D-027): účty, pozvánky a komise. */
+  /** Správce MDT (T-361, D-027): účty, pozvánky a komise. */
   manageAccounts: (me?: Me | null) => Boolean(me?.is_manager),
-  /** Pozvané na zasedání mění předseda nebo správce (T-357). */
+  /** Pozvané na zasedání mění předseda nebo správce (T-362). */
   manageInvited: (me?: Me | null) => me?.role === 'mdt_admin' || Boolean(me?.is_manager),
   generateBrief: (me?: Me | null) => me?.role === 'mdt_admin' || me?.role === 'mdt_doctor',
   /** Předseda, zadávající lékař, nebo přizvaný ke spolupráci (T-326; i člen komise s rolí jen ke čtení). */
@@ -55,7 +55,7 @@ export function MeProvider({ userId, children }: { userId: number | string; chil
   );
 }
 
-/** Znovu načte profil přihlášeného (např. po dokončení průvodce nastavením, T-358). */
+/** Znovu načte profil přihlášeného (např. po dokončení průvodce nastavením, T-363). */
 export function useRefreshMe(): () => void {
   return React.useContext(RefreshMeContext);
 }

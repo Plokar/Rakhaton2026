@@ -75,7 +75,7 @@ def _member(u) -> dict:
             'first_name': u.first_name, 'last_name': u.last_name,
             'title_before': profile.title_before if profile else '', 'title_after': profile.title_after if profile else '',
             'role': roles.role(u), 'specialty': roles.specialty(u), 'practitioner_id': roles.practitioner_id(u),
-            # T-356–T-358: správce MDT, nemocnice, externí lékař, komise, průvodce nastavením
+            # T-361–T-363: správce MDT, nemocnice, externí lékař, komise, průvodce nastavením
             'is_manager': roles.is_manager(u), 'is_active': u.is_active,
             'organization': profile.organization if profile else '', 'is_external': profile.is_external if profile else False,
             'onboarding_done': profile.onboarding_done if profile else True,
@@ -134,7 +134,7 @@ def _config(data, case: MdtCase) -> dict:
 @permission_classes([IsAuthenticated])
 def me(request):
     """Role a odbornost přihlášeného (FR-U1). PATCH `{title_before?, title_after?, onboarding_done?}`: tituly si lékař
-    upraví sám (T-338), průvodce nastavením označí za hotový (T-358); roli a odbornost mění správce."""
+    upraví sám (T-338), průvodce nastavením označí za hotový (T-363); roli a odbornost mění správce."""
     if request.method == 'PATCH':
         from .models import UserProfile
         from .templates import clean_titles
@@ -198,9 +198,9 @@ def practitioner_list(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def user_detail(request, uid):
-    """Správce MDT (T-356) mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele
+    """Správce MDT (T-361) mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele
     (T-319), propojení s lékařem v IRIS `practitioner_id` (T-328), roli správce `is_manager`, nemocnici
-    `organization` + `is_external`, komise `committees: [id]` a zablokování `is_active` (T-357)."""
+    `organization` + `is_external`, komise `committees: [id]` a zablokování `is_active` (T-362)."""
     _require_manager(request)
     user = get_object_or_404(get_user_model(), pk=uid)
     role, specialty = request.data.get('role'), request.data.get('specialty')
@@ -214,7 +214,7 @@ def user_detail(request, uid):
         raise ValidationError({'role': 'Sám sobě roli předsedy odebrat nejde.'})
     with transaction.atomic():
         _update_account(request, user)
-        if roles.is_external(user):                 # T-357: lékař z jiné nemocnice pacienty nezařazuje
+        if roles.is_external(user):                 # T-362: lékař z jiné nemocnice pacienty nezařazuje
             if role not in (None, roles.VIEWER):
                 raise ValidationError({'role': 'Lékař z jiné nemocnice má roli člena komise.'})
             role = roles.VIEWER
@@ -238,7 +238,7 @@ def user_detail(request, uid):
 
 
 def _update_account(request, user) -> None:
-    """Správce MDT, nemocnice, komise a zablokování účtu (T-356, T-357)."""
+    """Správce MDT, nemocnice, komise a zablokování účtu (T-361, T-362)."""
     from .accounts import _committees
     from .models import UserProfile
     data = request.data
@@ -281,7 +281,7 @@ def session_list(request):
                                       chair=request.user, config_id=request.data.get('config_id'),
                                       committee=_committee_or_none(request.data))
         return Response(_session(s), status=201)
-    from .scope import visible_sessions                 # T-357: externí lékař jen zasedání, kam je pozvaný
+    from .scope import visible_sessions                 # T-362: externí lékař jen zasedání, kam je pozvaný
     sessions = visible_sessions(request.user).select_related('chair', 'committee').prefetch_related('cases')
     for param, lookup in (('from', 'date__date__gte'), ('to', 'date__date__lte')):
         if request.query_params.get(param):
@@ -299,7 +299,7 @@ def session_list(request):
 
 
 def _committee_or_none(data):
-    """`committee_id` zasedání (T-357): bez klíče `None`, neznámá komise 400."""
+    """`committee_id` zasedání (T-362): bez klíče `None`, neznámá komise 400."""
     from .models import Committee
     if data.get('committee_id') in (None, ''):
         return None
@@ -692,7 +692,7 @@ def case_create(request):
         if case.status in ('nominated', 'returned'):
             case.status = 'ready'
             case.save(update_fields=['status', 'updated_at'])
-        if decisions:                                   # T-359: rozhodnutí k požadavkům pozvaných lékařů
+        if decisions:                                   # T-364: rozhodnutí k požadavkům pozvaných lékařů
             case.requirement_decisions = [*case.requirement_decisions, *decisions]
             case.save(update_fields=['requirement_decisions', 'updated_at'])
     if prep:
@@ -702,7 +702,7 @@ def case_create(request):
 
 
 def _requirement_decisions(request, value) -> list[dict]:
-    """`requirement_decisions: [{user_id, decision: needed | not_needed, note?}]` z formuláře zařazení (T-359)."""
+    """`requirement_decisions: [{user_id, decision: needed | not_needed, note?}]` z formuláře zařazení (T-364)."""
     if value in (None, []):
         return []
     if not isinstance(value, list) or not all(

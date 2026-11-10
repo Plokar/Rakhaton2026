@@ -14,7 +14,7 @@ import type { DoctorNormInput, NormOp, RuleArea, TemplateArea } from '@/types/md
 import { AREAS } from './FactLayoutEditor';
 
 /**
- * Moje požadavky na podklad a moje normy pro řešení (T-358–T-360, D-028, docs/UCTY_A_PVW.md §3 kroky 3–4).
+ * Moje požadavky na podklad a moje normy pro řešení (T-363–T-365, D-028, docs/UCTY_A_PVW.md §3 kroky 3–4).
  * Mění je jen lékař sám; správce je jen vidí. Použité v průvodci po prvním přihlášení i v Nastavení.
  */
 

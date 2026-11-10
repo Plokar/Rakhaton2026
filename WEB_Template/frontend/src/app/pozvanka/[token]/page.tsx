@@ -19,7 +19,7 @@ import { mdtApi } from '@/lib/mdt-api';
 import { fieldErrorMessage } from '@/lib/queries';
 
 /**
- * Pozvánka od správce MDT (T-356, D-027): lékař přes jednorázový odkaz nastaví přihlášení. Jméno, profese,
+ * Pozvánka od správce MDT (T-361, D-027): lékař přes jednorázový odkaz nastaví přihlášení. Jméno, profese,
  * nemocnice a komise jsou z pozvánky. Pak pokračuje průvodcem nastavení (`/dashboard/vitejte`).
  */
 export default function InvitationPage({ params }: { params: Promise<{ token: string }> }) {

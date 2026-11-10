@@ -31,7 +31,7 @@ class BriefConfig(models.Model):
 
 
 class Committee(models.Model):
-    """Komise (T-357, D-027): stálí členové jsou pozvaní na všechna její zasedání. Spravuje správce MDT."""
+    """Komise (T-362, D-027): stálí členové jsou pozvaní na všechna její zasedání. Spravuje správce MDT."""
     name = models.CharField(max_length=300, unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='committees')
 
@@ -51,7 +51,7 @@ class MdtSession(models.Model):
                               related_name='chaired_sessions')
     status = models.CharField(max_length=12, choices=STATUS, default='planned')
     config = models.ForeignKey(BriefConfig, null=True, blank=True, on_delete=models.SET_NULL)
-    # Pozvaní na zasedání (T-357, D-027): členové komise bez vyřazených + přizvaní jen na toto zasedání.
+    # Pozvaní na zasedání (T-362, D-027): členové komise bez vyřazených + přizvaní jen na toto zasedání.
     committee = models.ForeignKey(Committee, null=True, blank=True, on_delete=models.SET_NULL, related_name='sessions')
     invited = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='invited_sessions')
     excluded = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='excluded_sessions')
@@ -91,7 +91,7 @@ class MdtCase(models.Model):
     checked_at = models.DateTimeField(null=True, blank=True)
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
                                    related_name='checked_cases')
-    # Rozhodnutí zadávajícího lékaře k požadavkům pozvaných lékařů (T-359): [{user_id, decision, note, by, at}].
+    # Rozhodnutí zadávajícího lékaře k požadavkům pozvaných lékařů (T-364): [{user_id, decision, note, by, at}].
     # Jen se přidává (D-019), platí poslední záznam pro lékaře.
     requirement_decisions = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -152,9 +152,9 @@ class UserProfile(models.Model):
     practitioner_fhir_id = models.CharField(max_length=64, blank=True)   # lékař v IRIS „LEK-…“ (T-328)
     title_before = models.CharField(max_length=40, blank=True)   # „MUDr.“, „doc. MUDr.“ (T-338)
     title_after = models.CharField(max_length=40, blank=True)    # „Ph.D.“
-    organization = models.CharField(max_length=200, blank=True)  # nemocnice (T-357), prázdné = naše
+    organization = models.CharField(max_length=200, blank=True)  # nemocnice (T-362), prázdné = naše
     is_external = models.BooleanField(default=False)             # lékař z jiné nemocnice: vidí jen své komise
-    onboarding_done = models.BooleanField(default=True)          # průvodce nastavením po prvním přihlášení (T-358)
+    onboarding_done = models.BooleanField(default=True)          # průvodce nastavením po prvním přihlášení (T-363)
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'
@@ -222,7 +222,7 @@ AREA_CHOICES = FactTemplate.AREAS + [('*', 'Všechny diagnózy')]
 
 
 class Invitation(models.Model):
-    """Pozvánka od správce MDT (T-356, D-027). Ukládá se jen hash tokenu; odkaz platí jednou a do `expires_at`."""
+    """Pozvánka od správce MDT (T-361, D-027). Ukládá se jen hash tokenu; odkaz platí jednou a do `expires_at`."""
     token_hash = models.CharField(max_length=64, unique=True)
     email = models.EmailField(blank=True)
     first_name = models.CharField(max_length=150, blank=True)
@@ -251,7 +251,7 @@ class Invitation(models.Model):
 
 
 class DoctorRequirement(models.Model):
-    """Údaje, které lékař vyžaduje, když je pozvaný na MDT (T-359, D-028). Mění jen lékař sám."""
+    """Údaje, které lékař vyžaduje, když je pozvaný na MDT (T-364, D-028). Mění jen lékař sám."""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_requirements')
     area = models.CharField(max_length=3, choices=AREA_CHOICES)
     fields = models.JSONField(default=list, blank=True)           # klíče katalogu údajů (`bm.egfr`, `lab:718-7`)
@@ -264,7 +264,7 @@ class DoctorRequirement(models.Model):
 
 
 class DoctorNorm(models.Model):
-    """Norma lékaře pro řešení (T-360, D-028): údaj, operátor, hodnota. Vyhodnocuje kód, semafor nemění (D-015)."""
+    """Norma lékaře pro řešení (T-365, D-028): údaj, operátor, hodnota. Vyhodnocuje kód, semafor nemění (D-015)."""
     OPS = [('>=', '≥'), ('<=', '≤'), ('>', '>'), ('<', '<'), ('==', '=')]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_norms')
     area = models.CharField(max_length=3, choices=AREA_CHOICES, default='*')

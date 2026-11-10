@@ -10,7 +10,7 @@ from .models import UserProfile
 
 ADMIN, DOCTOR, VIEWER = 'mdt_admin', 'mdt_doctor', 'mdt_viewer'
 ROLES = (ADMIN, DOCTOR, VIEWER)
-# Správce MDT (T-356, D-027): účty, pozvánky a komise, bez klinických oprávnění. Samostatná skupina vedle klinické
+# Správce MDT (T-361, D-027): účty, pozvánky a komise, bez klinických oprávnění. Samostatná skupina vedle klinické
 # role, jeden člověk může mít obě (demo předseda).
 MANAGER = 'mdt_manager'
 
@@ -57,7 +57,7 @@ def set_manager(user, value: bool) -> None:
 
 
 def is_external(user) -> bool:
-    """Lékař z jiné nemocnice (T-357): vidí jen komise a zasedání, kam je pozvaný."""
+    """Lékař z jiné nemocnice (T-362): vidí jen komise a zasedání, kam je pozvaný."""
     if not user or not user.is_authenticated or user.is_superuser:
         return False
     return UserProfile.objects.filter(user=user, is_external=True).exists()
@@ -107,7 +107,7 @@ def ensure_practitioner(user) -> str:
     if pid.startswith(practitioners.APP_PREFIX):        # lékaře účtu aplikace udržujeme (jméno, odbornost)
         fhir.put(practitioners.app_practitioner(pid, display_name(user), profile.specialty,
                                                 user.username))
-    if profile.organization:                            # lékař z jiné nemocnice (T-357): Organization + PractitionerRole
+    if profile.organization:                            # lékař z jiné nemocnice (T-362): Organization + PractitionerRole
         for resource in practitioners.organization_resources(pid, profile.organization, profile.specialty):
             fhir.put(resource)
     if profile.practitioner_fhir_id != pid:

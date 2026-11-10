@@ -22,7 +22,7 @@ function arrange<T extends string>(all: T[], part?: { order?: T[]; hidden?: T[] 
 }
 
 /**
- * Živý náhled PVW (projektor view, okno pro projektor) podle šablony lékaře (T-358, D-025): rozvržení bez dat
+ * Živý náhled PVW (projektor view, okno pro projektor) podle šablony lékaře (T-363, D-025): rozvržení bez dat
  * pacienta, takže funguje i pro lékaře z jiné nemocnice a při zakládání účtu. Ukazuje, co uvidí komise
  * a v jakém pořadí; skutečný panel má navíc hodnoty, stav a citace.
  */

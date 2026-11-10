@@ -19,7 +19,7 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 /**
- * Tým a účty (T-319, T-356, T-357, D-027): jeden správce MDT spravuje všechny účty a komise. Lékaře zve
+ * Tým a účty (T-319, T-361, T-362, D-027): jeden správce MDT spravuje všechny účty a komise. Lékaře zve
  * jednorázovým odkazem (i z jiných nemocnic), přiřazuje je do komisí, mění roli a odbornost a blokuje přístup.
  */
 export default function TeamPage() {

@@ -115,7 +115,7 @@ def template_catalog(request):
 def create_user(request):
     """POST `/api/mdt/users/` (správce MDT): `{username, password, email?, first_name, last_name, title_before?,
     title_after?, specialty, role, templates?: {area: layout}, preset?, organization?, is_external?, committees?,
-    is_manager?}` → 201 `Me`. Externí lékař je vždy `mdt_viewer` (T-357)."""
+    is_manager?}` → 201 `Me`. Externí lékař je vždy `mdt_viewer` (T-362)."""
     data = request.data
     User = get_user_model()
     username = str(data.get('username') or '').strip()

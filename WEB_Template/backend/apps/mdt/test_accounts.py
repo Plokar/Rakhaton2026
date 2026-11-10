@@ -1,4 +1,4 @@
-"""Správce MDT, pozvánky, komise a lékaři z jiných nemocnic (T-356, T-357, D-027, docs/UCTY_A_PVW.md)."""
+"""Správce MDT, pozvánky, komise a lékaři z jiných nemocnic (T-361, T-362, D-027, docs/UCTY_A_PVW.md)."""
 from datetime import timedelta
 
 import pytest

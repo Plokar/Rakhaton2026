@@ -32,7 +32,7 @@ export function BoardDialog({
   const [date, setDate] = React.useState(session ? localInputValue(session.date) : defaultDay ? `${defaultDay}T14:00` : '');
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  // Komise (T-357): její stálí členové jsou pozvaní. Nový board předvybere komisi se stejným názvem.
+  // Komise (T-362): její stálí členové jsou pozvaní. Nový board předvybere komisi se stejným názvem.
   const committees = useCommitteesQuery(open);
   const [committee, setCommittee] = React.useState<string | null>(session?.committee ? String(session.committee.id) : null);
   const byTitle = committees.data?.find((c) => c.name.toLocaleLowerCase('cs') === title.trim().toLocaleLowerCase('cs'));

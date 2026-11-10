@@ -327,6 +327,8 @@ LOGGING = {
 # ── MDTcore ───────────────────────────────────────────────────────────────
 # Joby generování synchronně (testy); jinak in-process ThreadPool (D-004)
 MDT_JOBS_SYNC = os.environ.get('MDT_JOBS_SYNC', 'False') == 'True'
+# Job bez změny déle než N minut (přerušený restartem) se ukáže jako chyba s možností opakovat (T-368)
+MDT_JOB_TIMEOUT_MINUTES = int(os.environ.get('MDT_JOB_TIMEOUT_MINUTES', '15'))
 # Offline demo (T-311): podklad z data/demo_cache místo LLM
 MDT_DEMO_OFFLINE = os.environ.get('MDT_DEMO_OFFLINE', 'False') == 'True'
 MDT_DEMO_CACHE_DIR = os.environ.get('MDT_DEMO_CACHE_DIR', str(BASE_DIR.parent.parent / 'data' / 'demo_cache'))

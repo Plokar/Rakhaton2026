@@ -10,6 +10,7 @@ import { CrumbSlotProvider, TopBar } from '@/components/layout/TopBar';
 import { PilotBanner } from '@/components/layout/PilotBanner';
 import { MeProvider } from '@/components/mdt/me';
 import { ReviewBanner } from '@/components/mdt/review';
+import { OnboardingBanner } from '@/components/mdt/OnboardingBanner';
 import { SidebarInset, SidebarProvider } from '@/components/shadcn/sidebar';
 
 /**
@@ -76,6 +77,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <SidebarInset className="min-w-0">
           <TopBar slotRef={setSlot} onSearch={() => setSearchOpen(true)} onShowShortcuts={() => setShortcutsOpen(true)} />
           <PilotBanner />
+          <OnboardingBanner />
           <ReviewBanner />
           <main id="obsah" className="flex min-h-0 min-w-0 flex-1 flex-col">
             <React.Suspense fallback={null}>{children}</React.Suspense>

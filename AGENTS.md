@@ -14,7 +14,7 @@ Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + v�
 ## Slovník (zkratky týmu)
 
 - **PVW = projektor view** = okno pro projektor: panel, který se při zasedání MDT promítá na projektoru celé komisi (`/projector`, slidy T-348, rozložení `MdtCase.projector_layout`, jinak šablona zadávajícího lékaře D-025). Když uživatel napíše „PVW“, myslí tohle.
-- **Správce MDT** = jeden správce všech komisí a všech účtů (role `mdt_manager`, může mít i roli předsedy `mdt_admin`). Lékaři se do aplikace dostanou jen přes jeho pozvánku (odkaz), i lékaři z jiných nemocnic. Každý lékař si při prvním přihlášení nastaví svůj must-have PVW, požadavky na podklad (upozorní zadávajícího lékaře, když je pozvaný) a své normy pro řešení (vidět na PVW). Detail a pravidla: **[docs/UCTY_A_PVW.md](docs/UCTY_A_PVW.md)** (D-027, D-028).
+- **Správce MDT** = jeden správce všech komisí a všech účtů (role `mdt_manager`, může mít i roli předsedy `mdt_admin`). Lékaři se do aplikace dostanou jen přes jeho pozvánku (odkaz), i lékaři z jiných nemocnic. Každý lékař si při prvním přihlášení nastaví svůj must-have PVW, požadavky na podklad (upozorní zadávajícího lékaře, když je pozvaný) a své normy pro řešení (vidět na PVW). V kódu: Tým a účty `/dashboard/tym`, pozvánka `/pozvanka/[token]`, průvodce `/dashboard/vitejte`, normy na PVW = karta „Normy lékařů“ (blok `norms`), vyhodnocení jen kódem (`services/rules/doctor_rules.py`). Detail a pravidla: **[docs/UCTY_A_PVW.md](docs/UCTY_A_PVW.md)** (D-027, D-028).
 
 ## Mapa repa
 

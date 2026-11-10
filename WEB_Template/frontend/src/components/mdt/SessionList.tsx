@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import type { MdtSessionListItem } from '@/types/mdt';
 import { BoardDialog } from './BoardDialog';
 import { dayLabel, patientsLabel, pragueDay, timeLabel, todayPrague } from './dates';
-import { InviteDialog } from './InviteDialog';
+import { InviteDoctorDialog } from './team/InviteDoctorDialog';
 import { can, useMe } from './me';
 
 /**
@@ -42,9 +42,11 @@ export function SessionList() {
         actions={
           manage && (
             <>
-              <Button variant="outline" size="lg" onClick={() => setInviting(true)}>
-                <UserPlus aria-hidden /> Pozvat kolegu
-              </Button>
+              {can.manageAccounts(me) && (
+                <Button variant="outline" size="lg" onClick={() => setInviting(true)}>
+                  <UserPlus aria-hidden /> Pozvat lékaře
+                </Button>
+              )}
               <Button size="lg" onClick={() => setCreating(true)}>
                 <Plus aria-hidden /> Nový board
               </Button>
@@ -101,7 +103,7 @@ export function SessionList() {
           }}
         />
       )}
-      <InviteDialog open={inviting} onClose={() => setInviting(false)} />
+      <InviteDoctorDialog open={inviting} onClose={() => setInviting(false)} />
     </Page>
   );
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Archive, CalendarDays, LayoutGrid, ListChecks, MonitorUp } from 'lucide-react';
+import { Archive, CalendarDays, LayoutGrid, ListChecks, MonitorUp, UsersRound } from 'lucide-react';
 import { dayLabel, pragueDay, timeLabel, todayPrague } from '@/components/mdt/dates';
 import { openProjectorWindow } from '@/components/mdt/projector';
 import {
@@ -30,6 +30,7 @@ const NAV = [
   { href: '/dashboard/mdt', label: 'Zasedání', icon: CalendarDays },
   { href: '/dashboard/tasks', label: 'Úkoly', icon: ListChecks },
   { href: '/dashboard/zaznamy', label: 'Záznam boardů', icon: Archive, chair: true },
+  { href: '/dashboard/tym', label: 'Tým a účty', icon: UsersRound, manager: true },   // správce MDT (T-356)
 ] as const;
 
 /** Postranní panel (NAVRH_UI §5.1): navigace, nejbližší zasedání jedním klikem, okno projektoru. Bez dev služeb. */
@@ -77,7 +78,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.filter((item) => !('chair' in item) || can.manageBoards(me)).map((item) => {
+              {NAV.filter((item) => ('chair' in item ? can.manageBoards(me) : 'manager' in item ? can.manageAccounts(me) : true)).map((item) => {
                 const active = 'exact' in item && item.exact ? pathname === item.href : pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>

@@ -3,7 +3,8 @@
 > Požadavek týmu z 9. 11. 2026. Navazuje na šablonu údajů lékaře (D-025, [SABLONY_LEKARE.md](SABLONY_LEKARE.md)),
 > tým komise (T-319), registraci se šablonou (T-338) a okno pro projektor (T-333, T-348).
 > Rozhodnutí D-027 a D-028, úkoly T-356 až T-360 v [PROGRESS.md](../PROGRESS.md).
-> Tento dokument je **návrh**. Kontrakty (API §6.3, JSON §8) se mění až v PR s kódem, podle AGENTS.md.
+> **Stav: hotovo** (10. 11. 2026, větev `claude/exciting-edison-bp0dl2`). Kontrakty jsou v ARCHITEKTURA.md
+> §6.2, §6.3, §7.1, §8.6 a §9; jak to funguje v kódu, popisuje §5 níže.
 
 ## 0. Slovník
 
@@ -42,8 +43,9 @@
      rozhodnuto 9. 11.). Pacienty do našich komisí nezařazuje (role `mdt_viewer`). Hlavičky jsou i pro něj bez jména
      a RČ (D-018).
    - Všude, kde je vidět jméno lékaře (přítomní, úkoly, spolupráce, záznam boardu), je u něj i jeho nemocnice.
-5. Veřejná registrace `/register` se vypne, nebo bude fungovat jen s platným tokenem pozvánky.
-   Demo účty a 1-click přihlášení pro pitch zůstávají.
+5. Samoregistrace `/register` je v pilotu a produkci vypnutá (`MDT_ALLOW_REGISTRATION`, T-355); účty vznikají
+   přes pozvánku nebo je správce založí přímo. V dev zůstává registrace kvůli demu, stejně jako demo účty
+   a 1-click přihlášení pro pitch.
 
 ## 3. Průvodce nastavením lékaře (při prvním přihlášení)
 
@@ -101,34 +103,26 @@ Podle toho se ukazují požadavky lékaře (krok 3) a jeho normy na PVW (krok 4)
   - je vždy vidět, čí norma to je.
 - **Požadavky i normy mění jen lékař sám** (rozhodnuto 9. 11.) v průvodci nebo v Nastavení. Správce je vidí, ale nemění.
 
-## 4. Co už existuje a co je nové
+## 4. Co přibylo (T-356 až T-360)
 
-| Už je | Kde |
+| Co | Kde |
 |---|---|
-| předseda zakládá lékaře ve dvou krocích (profil → šablona údajů) | `/dashboard/tym`, `POST /api/mdt/users/` (T-319, T-338) |
-| registrace s odborností a šablonou | `/register`, `POST /api/auth/register/` (T-338) |
-| šablona údajů lékaře po oblastech, presety podle odbornosti | `FactTemplate`, D-025 |
-| rozložení PVW u případu, „Uložit také jako moji šablonu“ | `MdtCase.projector_layout` (T-333) |
-| lékaři nemocnice z IRIS | `GET /api/mdt/practitioners/` (T-328) |
-| úkoly z chybějících údajů při zařazení | `prep_tasks` (T-350) |
+| role správce `mdt_manager` (samostatná skupina, demo předseda má obě role); účty, pozvánky a komise spravuje jen správce | `apps/mdt/roles.py`, `accounts.py`, `/dashboard/tym` |
+| pozvánka s jednorázovým odkazem (hash tokenu, 7 dní, e-mail i kopie, nový odkaz, zrušení) → stránka `/pozvanka/[token]` | `Invitation`, `apps/mdt/accounts.py` |
+| komise se stálými členy; u zasedání komise, přizvaní a vyřazení | `Committee`, `MdtSession.committee/invited/excluded`, `SessionInvitedDialog` (jednání → ⋯ → Pozvaní lékaři) |
+| lékař z jiné nemocnice: vidí jen své komise a zasedání, kam je pozvaný; v IRIS `Organization` + `PractitionerRole` | `apps/mdt/scope.py` (middleware deny by default), `services/practitioners.py` |
+| průvodce po prvním přihlášení: profil → můj PVW s náhledem → požadavky → normy | `/dashboard/vitejte`, `PvwSketch`, `MyRulesEditor`, `OnboardingBanner` |
+| požadavky lékaře → upozornění zadávajícímu lékaři při zařazení, v kontrole před zasedáním a v detailu případu; rozhodnutí „potřebuji / nepotřebuji / chybějící do úkolů“ | `DoctorRequirement`, `MdtCase.requirement_decisions`, `RequirementsPanel` |
+| normy lékaře na PVW (karta „Normy lékařů“), vyhodnocení kódem s citací | `DoctorNorm`, `services/rules/doctor_rules.py`, blok `norms` v `quick-view.tsx` |
 
-| Nové | Úkol |
-|---|---|
-| role správce `mdt_manager`, pozvánky s jednorázovým odkazem (e-mail i kopie), registrace jen přes pozvánku | T-356 |
-| komise se členy, přizvaní a vyřazení u zasedání, lékaři z jiných nemocnic a omezení na jejich komise | T-357 |
-| průvodce nastavením po prvním přihlášení (kroky 1–4) | T-358 |
-| požadavky lékaře → upozornění zadávajícímu lékaři | T-359 |
-| normy lékaře na PVW | T-360 |
+## 5. Jak to funguje v kódu
 
-## 5. Návrh datového modelu (upřesní se v PR s kódem)
-
-- `Invitation`: `token_hash`, `email`, jméno a tituly, `role`, `specialty`, `organization` (nemocnice), `is_external`,
-  `committees` (komise), `expires_at`, `used_at`, `revoked_at`, `created_by`.
-- `UserProfile`: + `organization`, `is_external`, `committees`, `onboarding_done`.
-- **Komise** dnes nemá vlastní model (zasedání `MdtSession` mají jen `title`). Nově `Committee` (`name`, `members` M2M)
-  a u zasedání `MdtSession.committee`, `invited` (přizvaní jen na toto zasedání) a `excluded` (členové, kteří
-  tentokrát nepřijdou). Pozvaní na zasedání = `members − excluded + invited`. Externí lékař vidí jen komise,
-  kde je členem, a zasedání, kam je přizvaný.
-- Role `mdt_manager` (Django `Group`), demo předseda má `mdt_admin` i `mdt_manager`.
-- `DoctorRequirement`: `user`, `area` (`PLI` / `PRS` / `KRC` / `OBC`…), `fields` (klíče katalogu údajů), `note`.
-- `DoctorNorm`: `user`, `area`, `field`, `op`, `value`, `unit`, `procedure` (postup ze semaforu, nepovinně), `note`, `source`.
+- **Pozvaní na zasedání** = `members` komise − `excluded` + `invited` (`scope.invited_users`). Podle nich se
+  ukazují požadavky (bez zadávajícího lékaře) a normy na PVW. Seed zakládá komise podle názvů zasedání.
+- **Externí lékař:** `ExternalScopeMiddleware` mu povolí jen vyjmenovaná API (`scope.ALWAYS`, API podle zasedání,
+  případu a pacienta z jeho zasedání); nové API je pro něj zavřené, dokud ho někdo vědomě nepřidá.
+- **Vyhodnocení normy** (`doctor_rules.evaluate_norm`): údaj chybí / přeskočený → `missing`; v hodnotě rozmezí,
+  nerovnost, víc čísel nebo jiná jednotka → `not_evaluable` s důvodem; jinak porovnání → `met` / `not_met`.
+  Z textu bere jen jednoznačné číslo v jednotce normy (např. „1,9 l (58 % náležité)“ + „%“ → 58).
+- **Rozhodnutí zadávajícího lékaře** se jen přidává do `MdtCase.requirement_decisions` (platí poslední, historie
+  zůstává, D-019). „Chybějící do úkolů“ založí `Task` v IRIS stejně jako příprava na MDT (T-350).

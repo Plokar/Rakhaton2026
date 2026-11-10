@@ -219,8 +219,10 @@ export function useCatalogs() {
  * Šablony po oblastech (plíce, prs, kolorektum, ostatní): záložky, preset a editor. Řízená komponenta:
  * `value[area]` = rozložení (prázdné = výchozí pořadí). Používá registrace, Tým i Nastavení.
  */
-export function TemplateAreasEditor({ value, onChange, specialty, initFromPresets = false }: {
+export function TemplateAreasEditor({ value, onChange, specialty, initFromPresets = false, onAreaChange }: {
   value: Partial<Record<TemplateArea, ProjectorLayout>>;
+  /** Vybraná oblast (živý náhled PVW vedle editoru, T-358). */
+  onAreaChange?: (area: TemplateArea) => void;
   onChange: (next: Partial<Record<TemplateArea, ProjectorLayout>>, presetId?: string) => void;
   specialty?: string | null;
   /** Při zakládání: oblasti bez hodnoty předvyplnit presetem podle profese. */
@@ -254,7 +256,10 @@ export function TemplateAreasEditor({ value, onChange, specialty, initFromPreset
             type="button"
             role="tab"
             aria-selected={a === area}
-            onClick={() => setArea(a)}
+            onClick={() => {
+              setArea(a);
+              onAreaChange?.(a);
+            }}
             className={cn(
               'rounded-lg border px-3 py-1.5 text-sm transition-colors',
               a === area ? 'border-primary bg-primary/10 font-medium text-foreground' : 'border-border text-muted-foreground hover:bg-muted',

@@ -38,12 +38,26 @@ export function meLabel(me: Me): string {
 }
 
 const MeContext = React.createContext<Me | null>(null);
+const RefreshMeContext = React.createContext<() => void>(() => {});
 const fetchMe = () => mdtApi.getMe();
 
 /** Role a odbornost přihlášeného z `/api/mdt/me/`; dokud se nenačte, je `null` (nic navíc nepovolí). */
 export function MeProvider({ userId, children }: { userId: number | string; children: React.ReactNode }) {
-  const { data } = useApiData(fetchMe, String(userId));
-  return <MeContext.Provider value={data ?? null}>{children}</MeContext.Provider>;
+  const [version, setVersion] = React.useState(0);
+  const { data } = useApiData(fetchMe, `${userId}:${version}`);
+  const [last, setLast] = React.useState<Me | null>(null);
+  if (data && data !== last) setLast(data);             // při obnově profilu nezmizí role (nic se nepřeblikne)
+  const refresh = React.useCallback(() => setVersion((v) => v + 1), []);
+  return (
+    <RefreshMeContext.Provider value={refresh}>
+      <MeContext.Provider value={data ?? last}>{children}</MeContext.Provider>
+    </RefreshMeContext.Provider>
+  );
+}
+
+/** Znovu načte profil přihlášeného (např. po dokončení průvodce nastavením, T-358). */
+export function useRefreshMe(): () => void {
+  return React.useContext(RefreshMeContext);
 }
 
 export function useMe(): Me | null {

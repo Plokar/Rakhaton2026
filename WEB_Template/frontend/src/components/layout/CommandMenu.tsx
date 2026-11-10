@@ -98,8 +98,8 @@ export function CommandMenu({
           <CommandItem value="nastavení" onSelect={() => run(() => router.push('/dashboard/settings'))}>
             <Settings aria-hidden /> Nastavení
           </CommandItem>
-          <CommandItem value="tým komise členové role odbornost" onSelect={() => run(() => router.push('/dashboard/tym'))}>
-            <UsersRound aria-hidden /> Tým komise
+          <CommandItem value="tým účty pozvánky komise členové role odbornost správce" onSelect={() => run(() => router.push('/dashboard/tym'))}>
+            <UsersRound aria-hidden /> Tým a účty
           </CommandItem>
           <CommandItem value="záznam boardů archiv uzavřené výstupy pdf fhir" onSelect={() => run(() => router.push('/dashboard/zaznamy'))}>
             <Archive aria-hidden /> Záznam boardů

@@ -50,10 +50,10 @@ export function UserMenu({ onShowShortcuts }: { onShowShortcuts: () => void }) {
             <Settings aria-hidden />
             Nastavení
           </DropdownMenuItem>
-          {can.manageBoards(me) && (
+          {can.manageAccounts(me) && (
             <DropdownMenuItem onClick={() => router.push('/dashboard/tym')}>
               <UsersRound aria-hidden />
-              Tým komise
+              Tým a účty
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={onShowShortcuts}>

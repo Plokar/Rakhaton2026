@@ -73,7 +73,7 @@ export function SessionInvitedDialog({ sessionId, canEdit, open, onOpenChange }:
             <label className="flex flex-col gap-1 text-sm font-medium">
               Komise
               {canEdit ? (
-                <select className={selectClass} value={data.committee?.id ?? ''} disabled={saving}
+                <select className="h-9 rounded-lg border border-input bg-card px-2 text-sm" value={data.committee?.id ?? ''} disabled={saving}
                   onChange={(e) => void save({ committee_id: e.target.value ? Number(e.target.value) : null })}>
                   <option value="">Bez komise</option>
                   {(committees.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

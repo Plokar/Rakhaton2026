@@ -5,6 +5,7 @@ Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + v�
 ## Než začneš
 
 1. Spusť `git pull --rebase origin master`.
+   Pak ověř graphify (`graphify --help`; když chybí, viz [Graphify](#graphify-povinné-pro-všechny-t-356)) a obnov graf `graphify update .`.
 2. Přečti **[PROGRESS.md](PROGRESS.md)**: protokol (§1), task board (§4) a blokery.
 3. Přečti v **[ARCHITEKTURA.md](ARCHITEKTURA.md)** sekce, na které odkazuje tvůj úkol. Je to zdroj pravdy pro architekturu, FHIR model a kontrakty (§8).
 4. U všeho, co sahá na data nebo AI, přečti **[DATASET.md](DATASET.md)**: struktura datasetu, ID, sanitizace, kde co ve FHIR je a hypotézy nesrovnalostí.
@@ -25,6 +26,24 @@ Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + v�
   - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDTcore“ má přednost.
   - T-352: `nextjs-shadcn`, `next-best-practices`, `nextjs-performance`, `frontend-ui-engineering` a `performance-optimization` (vzhled a výkon aplikace), `frontend-slides` (HTML prezentace) a `pptx` (PowerPoint pro pitch). Jejich blok „V MDTcore“ má přednost.
   - **UI v2** ([docs/NAVRH_UI.md](docs/NAVRH_UI.md)): shell v `app/dashboard/layout.tsx`, data přes TanStack Query (`src/lib/queries.ts`), 30s přehled `components/mdt/quick-view.tsx` je společný pro kalendář, jednání, detail i projektor.
+
+## Graphify (povinné pro všechny, T-356)
+
+Každý, kdo na projektu pracuje (člověk i AI agent), používá **graphify**: graf kódu a dokumentace repa pro rychlou
+orientaci a kontrolu dopadu změn.
+
+- **Instalace na každém zařízení** (jednou):
+  ```bash
+  uv tool install graphifyy     # pozor, dvě „y“
+  graphify install              # zaregistruje skill pro asistenta (jiný než Claude: --platform codex|cursor|copilot|…)
+  ```
+  V Claude Code to dělá sám hook `.claude/hooks/session-start.sh` při startu session a na pozadí obnoví graf.
+- **Před prací** se na architekturu, vazby a „kde je X / co volá Y“ ptej grafu, ne hádáním:
+  `graphify query "…"`, `graphify explain "X"`, `graphify path "A" "B"`. V Claude Code skill `/graphify`.
+- **Před změnou** sdílené funkce, kontraktu nebo komponenty zjisti dopad: `graphify affected "X"`.
+- **Po změně kódu** obnov graf: `graphify update .` (jen AST, bez LLM, ~25 s).
+- **Data:** sémantická extrakce s LLM (`/graphify`, `graphify extract`) jen nad tímto repem (syntetický dataset,
+  D-021) a s klíči z lokálního `.env`; **nikdy nad skutečnými pacientskými daty**. `graphify-out/` se necommituje.
 
 ## Příkazy
 

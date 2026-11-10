@@ -61,11 +61,11 @@ import { BoardDialog } from '../BoardDialog';
 import { BoardOutputsDialog, CloseBoardDialog } from '../CloseBoard';
 import { CollaboratorsDialog } from '../CollaboratorsDialog';
 import { ProjectorLayoutDialog } from '../ProjectorLayoutEditor';
-import { dayLabel, timeLabel } from '../dates';
+import { dayLabel, pragueDay, timeLabel, todayPrague } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { isDiscussed, shortPatient, spokenPatient } from '../patient';
-import { openProjectorWindow, publishSelection, publishSlide, useProjectorSlides, type SlideState } from '../projector';
+import { openProjectorWindow, publishSelection, publishSlide, useAnswerProjector, useProjectorSlides, type SlideState } from '../projector';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { ChatbotPanel } from './ChatbotPanel';
@@ -74,6 +74,7 @@ import { formatDuration, useCaseTimer } from './use-case-timer';
 import { DiscussionRecorder } from './DiscussionRecorder';
 import { useChatbot } from './use-chatbot';
 import { useSessionChat } from './use-session-chat';
+import { useLiveSession, usePresence, usePublishLive } from '../live/use-live';
 
 type Case = MdtCase & { id: number };
 
@@ -129,6 +130,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   React.useEffect(() => {
     if (current) publishSelection({ board: sessionId, caseId: current.id, patient: current.patient_id });
   }, [sessionId, current?.id, current?.patient_id, current]);
+  // okno projektoru otevřené z postranního panelu se zeptá, koho má ukázat (pacient už je vybraný)
+  useAnswerProjector(current ? { board: sessionId, caseId: current.id, patient: current.patient_id } : null);
 
   const select = React.useCallback((item: Case) => void setParam(item.id), [setParam]);
   const go = (delta: number) => {
@@ -168,6 +171,16 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const slides = useProjectorSlides(sessionId, current?.id ?? null);
   const slide = (move: { delta: number } | { to: number }) => current && publishSlide(sessionId, current.id, move);
 
+  // T-357: dnešní nebo probíhající zasedání je „živé“: předseda vysílá pacienta a slide do mobilů ostatních,
+  // ostatní lékaři se ohlásí jako přítomní a vidí, koho ukazuje projektor
+  const isLive = Boolean(
+    session.data && session.data.status !== 'closed' && (session.data.status === 'in_progress' || pragueDay(session.data.date) === todayPrague()),
+  );
+  usePublishLive(sessionId, isLive && chair, current?.id ?? null, slides);
+  usePresence(sessionId, isLive);
+  const { live } = useLiveSession(isLive && !chair ? sessionId : null);
+  const onProjector = live?.case && live.case.id !== current?.id ? live.case : null;
+
   const hk = { preventDefault: true, ignoreEventWhen: overlayOpen };
   useHotkeys('right', () => slide({ delta: 1 }), hk, [current]);
   useHotkeys('left', () => slide({ delta: -1 }), hk, [current]);
@@ -204,6 +217,20 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
 
   const main = current ? (
     <div className="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 lg:px-8">
+      {onProjector && (
+        <button
+          type="button"
+          onClick={() => void setParam(onProjector.id)}
+          className="mb-4 flex w-full items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-left text-sm hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <MonitorUp className="size-4 shrink-0 text-primary" aria-hidden />
+          <span className="min-w-0 flex-1">
+            Na projektoru je teď <span translate="no" className="font-semibold">{onProjector.patient_id}</span>
+            {onProjector.position ? ` (${onProjector.position}. z ${onProjector.count})` : ''}
+          </span>
+          <span className="font-medium text-primary">Přejít</span>
+        </button>
+      )}
       {current.status === 'returned' && (
         <p className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:bg-amber-400/10 dark:text-amber-200">
           <Undo2 className="mt-0.5 size-4 shrink-0" aria-hidden />

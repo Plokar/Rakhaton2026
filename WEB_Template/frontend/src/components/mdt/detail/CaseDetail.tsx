@@ -21,6 +21,7 @@ import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-sou
 import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
+import { patientCardHref } from '../patient';
 import { ReviewNotice } from '../review';
 import { CaseRequirements } from '../DoctorRules';
 import {
@@ -405,7 +406,7 @@ function DetailLayout({
           ...(session ? [{ label: session.title, href: `/dashboard/mdt/${session.id}` }] : []),
           {
             label: item?.patient_id ?? brief?.patient_id ?? sources.patientId,
-            href: isDemo ? undefined : `/dashboard/patients/${encodeURIComponent(sources.patientId)}`,
+            href: isDemo ? undefined : patientCardHref(sources.patientId, item?.id),
           },
         ]}
       />
@@ -615,7 +616,7 @@ function StickyCaseHeader({
                   <PanelRightOpen aria-hidden /> Úzké okno vedle PACS
                 </DropdownMenuItem>
                 {!isDemo && (
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${encodeURIComponent(sources.patientId)}`)}>
+                  <DropdownMenuItem onClick={() => router.push(patientCardHref(sources.patientId, item?.id))}>
                     <UserRound aria-hidden /> Karta pacienta, vložit zprávu
                   </DropdownMenuItem>
                 )}

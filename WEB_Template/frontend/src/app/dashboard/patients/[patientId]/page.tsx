@@ -37,8 +37,16 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
  * Karta pacienta (ARCH §7.1): diagnózy, TNM v čase, komorbidity, PS lékař vs. pacient, projednání v komisi,
  * časová osa a řady laboratoře / PROMs, vše přímo z IRIS s citacemi (bez AI). Vložení zprávy (BON-7).
  */
-export default function PatientPage({ params }: { params: Promise<{ patientId: string }> }) {
+export default function PatientPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ patientId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { patientId } = React.use(params);
+  // Z detailu případu (`?pripad=`): drobečky vedou zpět přes zasedání a případ, ne jen na Přehled
+  const fromCase = Number([React.use(searchParams).pripad].flat()[0]);
   const me = useMe();
   const patient = usePatientQuery(patientId);
   const timeline = useTimelineQuery(patientId);
@@ -49,12 +57,21 @@ export default function PatientPage({ params }: { params: Promise<{ patientId: s
   const close = React.useCallback(() => setOpenId(null), []);
 
   const cases = sessions.flatMap((s) => (detail.get(s.id)?.cases ?? []).filter((c) => c.patient_id === patientId).map((c) => ({ session: s, item: c })));
+  const origin = Number.isInteger(fromCase) && fromCase > 0 ? cases.find((c) => c.item.id === fromCase) : undefined;
+  const crumbs = origin
+    ? [
+        { label: 'Zasedání', href: '/dashboard/mdt' },
+        { label: origin.session.title, href: `/dashboard/mdt/${origin.session.id}` },
+        { label: patientId, href: `/dashboard/cases/${origin.item.id}` },
+        { label: 'Karta pacienta' },
+      ]
+    : [{ label: patientId }];
   const charts = (series.data ?? []).filter((s) => s.points.length >= 2).map(withReadableLabel);
   const d = patient.data;
 
   return (
     <Page className="max-w-5xl">
-      <PageCrumbs items={[{ label: patientId }]} />
+      <PageCrumbs items={crumbs} />
       <PageHeader
         title={<span translate="no">{d?.display_name ?? patientId}</span>}
         meta={d?.diagnosis ? <><span translate="no" className="font-medium text-foreground">{d.diagnosis.icd10}</span> {d.diagnosis.text}</> : 'Data přímo z IRIS, bez AI.'}

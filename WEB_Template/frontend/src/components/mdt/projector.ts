@@ -17,6 +17,29 @@ export interface ProjectorSelection {
 
 const CHANNEL = 'mdt-projector';
 const WINDOW_NAME = 'mdt-projector';
+// Poslední pacient poslaný na projektor: okno otevřené bez výběru (postranní panel, Ctrl K) ho ukáže hned,
+// i když jednání zrovna nikoho nepřepnulo. Starší než 12 h se neukazuje (včerejší zasedání).
+const LAST_KEY = 'mdt-projector-last';
+const LAST_TTL_MS = 12 * 60 * 60 * 1000;
+
+function remember(selection: ProjectorSelection) {
+  try {
+    window.localStorage.setItem(LAST_KEY, JSON.stringify({ ...selection, at: Date.now() }));
+  } catch {
+    // soukromé okno nebo zakázané úložiště: výběr přijde z otevřeného jednání (`hello`)
+  }
+}
+
+/** Poslední pacient na projektoru (nebo `null`, když žádný není nebo je starší než 12 h). */
+export function lastSelection(): ProjectorSelection | null {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(LAST_KEY) ?? 'null') as (ProjectorSelection & { at: number }) | null;
+    if (!saved || Date.now() - saved.at > LAST_TTL_MS) return null;
+    return parseSelection({ board: String(saved.board), case: String(saved.caseId), patient: saved.patient });
+  } catch {
+    return null;
+  }
+}
 
 export const projectorHref = (selection: ProjectorSelection | null) =>
   selection
@@ -35,6 +58,7 @@ export function parseSelection(params: Record<string, string | string[] | undefi
 
 /** Pošle výběr do otevřeného okna projektoru (když žádné není, nic se nestane). */
 export function publishSelection(selection: ProjectorSelection) {
+  remember(selection);
   post(selection);
 }
 
@@ -55,7 +79,7 @@ export interface SlideState {
 }
 
 type SlideCommand = { type: 'slide'; board: number; caseId: number; delta?: number; to?: number };
-type Message = ProjectorSelection | { type: 'refresh'; board: number } | SlideCommand | ({ type: 'slides' } & SlideState);
+type Message = ProjectorSelection | { type: 'refresh'; board: number } | { type: 'hello' } | SlideCommand | ({ type: 'slides' } & SlideState);
 
 function post(message: Message) {
   if (typeof BroadcastChannel === 'undefined') return;
@@ -124,7 +148,10 @@ export function useProjectorSlides(board: number, caseId: number | null): SlideS
 
 /** Otevře (nebo přepne) pojmenované úzké okno; blokované popupy vrátí false a odkaz se otevře v záložce. */
 export function openProjectorWindow(selection: ProjectorSelection | null): boolean {
-  const win = window.open(projectorHref(selection), WINDOW_NAME, 'popup,width=420,height=1000');
+  // Bez výběru (postranní panel): poslední pacient na projektoru, ne prázdné okno, které by ho zahodilo
+  if (selection) remember(selection);
+  const target = selection ?? lastSelection();
+  const win = window.open(projectorHref(target), WINDOW_NAME, 'popup,width=420,height=1000');
   win?.focus();
   return Boolean(win);
 }
@@ -143,10 +170,29 @@ export function useProjectorSelection(initial: ProjectorSelection | null) {
       }
       const next = parseSelection({ board: String(event.data?.board), case: String(event.data?.caseId), patient: event.data?.patient });
       if (!next) return;
+      remember(next);
       setSelection(next);
       window.history.replaceState(null, '', projectorHref(next));
     };
+    // Nově otevřené okno se zeptá otevřeného jednání, koho má právě vybraného (jednání posílá jen změny)
+    channel.postMessage({ type: 'hello' } satisfies Message);
     return () => channel.close();
   }, [client]);
   return selection;
+}
+
+/** Okno jednání: na dotaz nově otevřeného okna projektoru (`hello`) pošle aktuálně vybraného pacienta. */
+export function useAnswerProjector(selection: ProjectorSelection | null) {
+  const latest = React.useRef(selection);
+  React.useEffect(() => {
+    latest.current = selection;
+  });
+  React.useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel(CHANNEL);
+    channel.onmessage = (event: MessageEvent<Message>) => {
+      if (event.data && 'type' in event.data && event.data.type === 'hello' && latest.current) post(latest.current);
+    };
+    return () => channel.close();
+  }, []);
 }

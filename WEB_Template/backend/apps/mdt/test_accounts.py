@@ -219,3 +219,18 @@ def test_seed_assigns_committees(seeded):
     call_command('seed_mdt')                                  # idempotentní
     assert Committee.objects.count() == MdtSession.objects.values('title').distinct().count()
     assert MdtCase.objects.count()
+
+
+def test_live_respects_invitations(seeded):
+    """Živě na MDT (T-354) + pozvaní (T-362): externí lékař vidí jen své zasedání, pozvaný má důvod `invited`."""
+    sessions = list(MdtSession.objects.all()[:2])
+    MdtSession.objects.filter(pk__in=[s.pk for s in sessions]).update(status='in_progress')
+    created = invite({'is_external': True, 'organization': 'Nemocnice Jih', 'committees': []})
+    accept(token_of(created['link']), username='externi')
+    user = get_user_model().objects.get(username='externi')
+    sessions[0].invited.add(user)
+    live = with_jwt(user).get('/api/mdt/live/').json()
+    assert [s['id'] for s in live['sessions']] == [sessions[0].pk]
+    assert 'invited' in live['sessions'][0]['reasons']
+    assert with_jwt(user).get(f'/api/mdt/sessions/{sessions[1].pk}/live/').status_code == 403
+    assert with_jwt(user).get(f'/api/mdt/sessions/{sessions[0].pk}/live/').status_code == 200

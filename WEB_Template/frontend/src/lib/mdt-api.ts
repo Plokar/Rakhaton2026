@@ -3,6 +3,8 @@
  */
 import { apiFetch, apiUrl } from '@/lib/api';
 import type {
+  AccessLogFilters,
+  AccessLogPage,
   Committee,
   DoctorNorm,
   DoctorNormInput,
@@ -461,6 +463,13 @@ export const mdtApi = {
   acceptInvitation: (token: string, input: { username: string; password: string; password2: string }) =>
     apiFetch<Me>(`/api/mdt/invitations/public/${encodeURIComponent(token)}/accept/`, { method: 'POST', body: JSON.stringify(input) }),
   getAllUsers: () => apiFetch<Me[]>('/api/mdt/users/?all=1'),
+  /** T-370: záznam přístupů k pacientům (jen správce MDT), po 50 na stránku. */
+  getAccessLog: (filters: AccessLogFilters) => {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)]),
+    );
+    return apiFetch<AccessLogPage>(`/api/mdt/access-log/${params.size ? `?${params}` : ''}`);
+  },
   getCommittees: () => apiFetch<Committee[]>('/api/mdt/committees/'),
   createCommittee: (input: { name: string; members?: number[] }) =>
     apiFetch<Committee>('/api/mdt/committees/', { method: 'POST', body: JSON.stringify(input) }),

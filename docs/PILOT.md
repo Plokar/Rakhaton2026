@@ -99,6 +99,9 @@ docker compose up -d iris backend
 **Aktualizace během pilotu:** jen po domluvě s koordinátorem, mimo termíny zasedání. Před aktualizací záloha,
 po ní `/api/health/` a přihlášení.
 
+**Záznam přístupů:** kdo kdy otevřel kterého pacienta, stáhl export nebo zapsal, vidí správce MDT v aplikaci (Tým a
+účty → Přístupy) a v Django adminu (MDT → Access logs, jen pro čtení). Ukládají se jen ID pacientů (Pxx), ne jména.
+
 **Hlášení chyb:** odkaz v aplikaci → koordinátor → záznam do Blokerů v [PROGRESS.md](../PROGRESS.md) nebo úkol na
 task boardu.
 

@@ -305,3 +305,30 @@ class DoctorNorm(models.Model):
 
     class Meta:
         ordering = ['user', 'area', 'id']
+
+
+class AccessLog(models.Model):
+    """Kdo kdy otevřel kterého pacienta, stáhl export nebo zapsal (T-370). Jen ID, nikdy jméno, RČ ani tělo požadavku.
+
+    Zapisuje `apps.mdt.access_log.AccessLogMiddleware`; záznamy se z aplikace neupravují ani nemažou.
+    """
+    ACTIONS = [('view', 'zobrazení'), ('export', 'export'), ('write', 'zápis'), ('ai', 'dotaz na AI')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name='access_logs')
+    username = models.CharField(max_length=150, blank=True)       # zůstane i po smazání účtu
+    patient_fhir_id = models.CharField(max_length=64, blank=True, db_index=True)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='access_logs')
+    session_id_ref = models.PositiveIntegerField(null=True, blank=True)  # export celého zasedání (ZIP)
+    action = models.CharField(max_length=8, choices=ACTIONS)
+    path = models.CharField(max_length=300)
+    method = models.CharField(max_length=8)
+    status_code = models.PositiveSmallIntegerField()
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        indexes = [models.Index(fields=['user', 'patient_fhir_id', 'created_at'], name='access_user_patient_time')]
+
+    def __str__(self):
+        return f'{self.created_at:%Y-%m-%d %H:%M} {self.username} {self.action} {self.patient_fhir_id or self.path}'

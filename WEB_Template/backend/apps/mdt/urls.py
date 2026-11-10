@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import accounts, chat, chatbot, doctor_rules, drafts, live, templates, views
+from . import access_log, accounts, chat, chatbot, doctor_rules, drafts, live, templates, views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
@@ -17,6 +17,7 @@ urlpatterns = [
     path('invitations/<int:iid>/resend/', accounts.invitation_resend, name='invitation-resend'),
     path('invitations/public/<str:token>/', accounts.invitation_public, name='invitation-public'),
     path('invitations/public/<str:token>/accept/', accounts.invitation_accept, name='invitation-accept'),
+    path('access-log/', access_log.access_log_list, name='access-log'),           # T-370 (správce)
     path('committees/', accounts.committee_list, name='committee-list'),
     path('committees/<int:committee_id>/', accounts.committee_detail, name='committee-detail'),
     # T-363–T-365: požadavky a normy lékaře

@@ -75,6 +75,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.mdt.access_log.AccessLogMiddleware',     # T-370
+    'apps.mdt.scope.ExternalScopeMiddleware',      # T-362: bez něj by externí lékař v produkci viděl všechny pacienty
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.RateLimitMiddleware',

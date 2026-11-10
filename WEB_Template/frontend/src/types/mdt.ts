@@ -1127,3 +1127,26 @@ export interface ProjectorExtra {
   /** true = text napsala AI, false = doslovně z dokumentace (odpověď bez jazykového modelu). */
   ai?: boolean;
 }
+
+// ── T-370: záznam přístupů k pacientům (ARCH §6.3, jen správce MDT) ──
+export type AccessAction = 'view' | 'export' | 'write' | 'ai';
+
+export type AccessLogEntry = {
+  id: number;
+  created_at: string;
+  user_id: number | null;
+  username: string;
+  user_name: string;
+  patient_id: string;
+  case_id: number | null;
+  session_id: number | null;
+  action: AccessAction;
+  method: string;
+  path: string;
+  status: number;
+  ip: string | null;
+};
+
+export type AccessLogPage = { count: number; page: number; page_size: number; results: AccessLogEntry[] };
+
+export type AccessLogFilters = { patient?: string; user?: number | ''; action?: AccessAction | ''; from?: string; to?: string; page?: number };

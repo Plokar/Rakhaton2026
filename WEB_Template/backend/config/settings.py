@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.mdt.access_log.AccessLogMiddleware',    # T-370: kdo otevřel kterého pacienta (i odmítnuté 403)
     'apps.mdt.scope.ExternalScopeMiddleware',     # T-362: lékař z jiné nemocnice jen své komise
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

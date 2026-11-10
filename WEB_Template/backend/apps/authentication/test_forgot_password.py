@@ -33,3 +33,11 @@ def test_same_answer_for_unknown_email(api_client, doctor):
     known = api_client.post(URL, {'email': doctor.email}, format='json').json()
     unknown = api_client.post(URL, {'email': 'nikdo@nikde.test'}, format='json').json()
     assert known == unknown and len(mail.outbox) == 1
+
+
+def test_status_reports_registration_flag(api_client, settings):
+    """T-372: přihlášení nabízí registraci jen když ji backend povoluje (v pilotu a produkci ne)."""
+    settings.MDT_ALLOW_REGISTRATION = False
+    assert api_client.get('/api/auth/status/').json()['registration_enabled'] is False
+    settings.MDT_ALLOW_REGISTRATION = True
+    assert api_client.get('/api/auth/status/').json()['registration_enabled'] is True

@@ -228,14 +228,17 @@ class ChangePasswordView(APIView):
 def check_auth_status(request):
     """
     GET /api/auth/status/
-    Kontrola stavu autentizace (pro client-side auth check).
+    Kontrola stavu autentizace (pro client-side auth check). `registration_enabled` (T-372): smí se
+    na přihlášení nabízet registrace? V pilotu a produkci ne (`MDT_ALLOW_REGISTRATION`), účty jdou přes pozvánku.
     """
+    registration = bool(getattr(settings, 'MDT_ALLOW_REGISTRATION', True))
     if request.user.is_authenticated:
         return Response({
             'authenticated': True,
             'user': UserSerializer(request.user).data,
+            'registration_enabled': registration,
         })
-    return Response({'authenticated': False, 'user': None})
+    return Response({'authenticated': False, 'user': None, 'registration_enabled': registration})
 
 
 def _frontend_url(request) -> str:

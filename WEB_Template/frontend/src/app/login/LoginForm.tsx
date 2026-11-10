@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ApiError } from '@/lib/api';
+import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled';
 import { PILOT_MODE } from '@/lib/pilot';
 import { cn } from '@/lib/utils';
 import type { Light, RoleId } from '@/types/mdt';
@@ -68,6 +69,7 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, user } = useAuth();
+  const registration = useRegistrationEnabled();
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -263,16 +265,19 @@ export default function LoginForm() {
             </Button>
           </form>
 
-          {!PILOT_MODE && (
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Nemáte účet?{' '}
-            <Link
-              href="/register"
-              className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Zaregistrujte se
-            </Link>
-          </p>
+          {registration === true && (
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Nemáte účet?{' '}
+              <Link
+                href="/register"
+                className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Zaregistrujte se
+              </Link>
+            </p>
+          )}
+          {registration === false && (
+            <p className="mt-6 text-center text-sm text-muted-foreground">Účet vám založí správce MDT pozvánkou.</p>
           )}
         </div>
 

@@ -1234,7 +1234,8 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET | `/api/mdt/cases/{cid}/compatibility/` | semafor souladu postupů se stavem pacienta (FR-D4): `{id, title, guideline_citations, compatibility: TreatmentCompatibility}[]` (§8.3), všechny postupy ze sady guidelines včetně červených; `= services/rules/compatibility.py:evaluate_compatibility` |
 | POST | `/api/mdt/cases/{cid}/brief/` | `{config_id \| config, feedback?}`, vrátí `{job_id}`; předseda, zadávající nebo přizvaný lékař (T-326). **Zpětná vazba lékaře** (T-323): `feedback: {text, sections?: SectionId[]}` = co bylo v předchozí verzi špatně a na co se zaměřit; text 3–1000 znaků, pseudonymizovaný, jde do promptů vybraných částí (nic = všech, `services/ai/prompt_config.feedback_note`), uloží se v parametrech jobu a v `Brief.feedback` (kdo, kdy) |
 | GET | `/api/mdt/cases/{cid}/brief/` | poslední podklad (schéma §8.2); pravidla semaforu v `decision_support` dostanou při čtení `national_status` a `national` (Modrá kniha, D-026), i když podklad vznikl dřív |
-| GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s |
+| GET | `/api/jobs/{jid}/` | `{status, progress, result_id, error}`; FE polluje à 1 s. Job `queued`/`running` bez změny déle než `MDT_JOB_TIMEOUT_MINUTES` → `error` (T-368) |
+| GET | `/api/health/` | `{status: healthy\|degraded, version, checks: {database, cache, storage, iris_fhir, iris_sql}}` (T-369). Postgres/Redis/disk dole → 503; IRIS dole → `degraded` + 200, se `?strict=1` 503 (monitoring). IRIS kontroly jen s `IRIS_HOST` (jinak `skipped`), cache 20 s; `version` z `APP_VERSION` |
 | GET, POST | `/api/mdt/cases/{cid}/patient-summary/` | shrnutí pro pacienta (BON-4): POST (předseda, zadávající nebo přizvaný lékař, T-326) spustí job nad **potvrzeným** závěrem (jinak 409) → `Decision.patient_summary` + `DocumentReference/Pxx-mdtNN-pacient` (v PDF i FHIR exportu); GET vrátí uložené (404, dokud není) |
 | GET | `/api/mdt/cases/{cid}/gp-report/` | zpráva pro praktického lékaře (T-332): vzniká v jobu `patient-summary` spolu se shrnutím pro pacienta z **potvrzeného** závěru, každá věta s citací odstavce zápisu → `Decision.gp_report` + `DocumentReference/Pxx-mdtNN-pl` (v PDF i FHIR exportu); 404, dokud není |
 | POST | `/api/mdt/cases/{cid}/scribe/` | multipart `audio` nebo JSON `{transcript}` → přepis (Gemini) → draft závěru (job) (BON-3); předseda, zadávající nebo přizvaný lékař (T-326) |
@@ -1943,6 +1944,8 @@ interface DoctorRules {                         // GET /api/mdt/cases/{cid}/doct
 | `MDT_FRONTEND_URL` | backend | adresa aplikace v odkazu pozvánky v e-mailu (T-361); prázdné = původ požadavku správce (`Origin`). Ke zkopírování skládá odkaz prohlížeč z vlastní adresy |
 | `NEXT_PUBLIC_DEMO_PASSWORD` | Vercel / lokálně | heslo pro 1-click demo účty na loginu (výchozí `demo123456`); musí se shodovat s `MDT_DEMO_PASSWORD` backendu. Je veřejné, demo účty pracují jen s fiktivními daty |
 | `IRIS_HOST` / `IRIS_PORT` | backend | `iris` / `1972` |
+| `APP_VERSION` | backend | verze v `/api/health/` (např. git tag); výchozí `dev` |
+| `MDT_JOB_TIMEOUT_MINUTES` | backend | po kolika minutách beze změny je job generování přerušený (výchozí 15, T-368) |
 | `IRIS_NAMESPACE` | backend | `FHIRSERVER` |
 | `IRIS_USER` / `IRIS_PASSWORD` | backend | dev `SuperUser` / `SYS`, **na VPS jiné** |
 | `FHIR_BASE_URL` | backend | `http://iris:52773/fhir/r4`; ACI `http://<PUBLIC_IP>:52773/fhir/r4`, postup [AZURE_IRIS.md](docs/AZURE_IRIS.md) |

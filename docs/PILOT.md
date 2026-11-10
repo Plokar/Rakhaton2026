@@ -35,7 +35,8 @@ Pilot se spustí, až je všechno zaškrtnuté. Ověřuje koordinátor pilotu.
 **Provoz**
 - [ ] `https://<API_DOMAIN>/api/health/` → 200, přihlášení na produkční doméně projde.
 - [ ] Denní záloha běží (`scripts/backup.sh` v cronu) a jedna obnova je vyzkoušená (§6).
-- [ ] Monitoring dostupnosti hlídá `/api/health/` a frontend (např. UptimeRobot, každých 5 min, e-mail koordinátorovi).
+- [ ] Monitoring dostupnosti hlídá `/api/health/?strict=1` (503 i při výpadku IRIS) a frontend (např. UptimeRobot,
+      každých 5 min, e-mail koordinátorovi).
 
 **Lidé a data**
 - [ ] Každý lékař pilotu má **vlastní účet** (Tým → Přidat lékaře): jméno, odbornost, role. Sdílené demo účty

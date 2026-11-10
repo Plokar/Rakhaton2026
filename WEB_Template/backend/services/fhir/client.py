@@ -26,7 +26,8 @@ def base_url() -> str:
     return os.environ.get('FHIR_BASE_URL', 'http://iris:52773/fhir/r4').rstrip('/')
 
 
-def request(method: str, path: str = '', body: dict | None = None, params: dict | None = None) -> dict | None:
+def request(method: str, path: str = '', body: dict | None = None, params: dict | None = None,
+            timeout: float = 300) -> dict | None:
     url = path if path.startswith('http') else f'{base_url()}/{path.lstrip("/")}'.rstrip('/')
     if params:
         url += '?' + urllib.parse.urlencode(params, doseq=True)
@@ -42,7 +43,7 @@ def request(method: str, path: str = '', body: dict | None = None, params: dict 
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=300) as resp:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             raw = resp.read()
     except urllib.error.HTTPError as e:
         raw = e.read()

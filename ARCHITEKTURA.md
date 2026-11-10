@@ -1947,6 +1947,7 @@ interface DoctorRules {                         // GET /api/mdt/cases/{cid}/doct
 | `MDT_FRONTEND_URL` | backend | adresa aplikace v odkazu pozvánky v e-mailu (T-361); prázdné = původ požadavku správce (`Origin`). Ke zkopírování skládá odkaz prohlížeč z vlastní adresy |
 | `NEXT_PUBLIC_DEMO_PASSWORD` | Vercel / lokálně | heslo pro 1-click demo účty na loginu (výchozí `demo123456`); musí se shodovat s `MDT_DEMO_PASSWORD` backendu. Je veřejné, demo účty pracují jen s fiktivními daty |
 | `IRIS_HOST` / `IRIS_PORT` | backend | `iris` / `1972` |
+| `NEXT_PUBLIC_IDLE_MINUTES` | Vercel / lokálně | odhlášení při nečinnosti v minutách (výchozí 30, `0` vypne; T-373). Neplatí pro okno projektoru, úzký panel a jednání probíhajícího zasedání; s neuloženým závěrem se neodhlašuje |
 | `APP_VERSION` | backend | verze v `/api/health/` (např. git tag); výchozí `dev` |
 | `MDT_JOB_TIMEOUT_MINUTES` | backend | po kolika minutách beze změny je job generování přerušený (výchozí 15, T-368) |
 | `IRIS_NAMESPACE` | backend | `FHIRSERVER` |

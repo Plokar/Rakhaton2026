@@ -25,6 +25,7 @@ import { briefP03, decisionP03 } from '@/lib/fixtures';
 import { mdtApi } from '@/lib/mdt-api';
 import { useCaseLocation } from '@/lib/queries';
 import { useApiData } from '@/lib/use-api-data';
+import { setUnsaved } from '@/lib/unsaved';
 import type { Brief, Decision, EvidenceId, Me, ProcedureCompatibility } from '@/types/mdt';
 
 const orNull = <T,>(p: Promise<T>) =>
@@ -106,6 +107,11 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const canEdit = !confirmed && (isDemo || mayEditCase);
   const canConfirm = !isDemo && !confirmed && can.manageBoards(me);
   const dirty = draft !== null && savedAt === null;
+  // T-373: rozepsaný závěr nesmí zahodit odhlášení při nečinnosti
+  React.useEffect(() => {
+    setUnsaved('record', dirty);
+    return () => setUnsaved('record', false);
+  }, [dirty]);
   const order = React.useMemo(() => collectCitations([current ?? {}, brief?.red_flags ?? []]), [current, brief]);
 
   const edit = (next: Decision) => {

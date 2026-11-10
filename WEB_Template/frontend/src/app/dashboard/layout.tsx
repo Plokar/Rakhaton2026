@@ -7,6 +7,7 @@ import { AppSidebar } from '@/components/layout/AppSidebar';
 import { CommandMenu } from '@/components/layout/CommandMenu';
 import { ShortcutsDialog } from '@/components/layout/ShortcutsDialog';
 import { CrumbSlotProvider, TopBar } from '@/components/layout/TopBar';
+import { IdleLogout } from '@/components/layout/IdleLogout';
 import { PilotBanner } from '@/components/layout/PilotBanner';
 import { MeProvider } from '@/components/mdt/me';
 import { LiveBanner } from '@/components/mdt/live/LiveBanner';
@@ -90,6 +91,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <CommandMenu open={searchOpen} onOpenChange={setSearchOpen} onShowShortcuts={() => setShortcutsOpen(true)} />
       )}
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <IdleLogout />
     </CrumbSlotProvider>
   );
 }

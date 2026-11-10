@@ -184,6 +184,11 @@ export default function LoginForm() {
           </div>
           )}
 
+          {!error && searchParams.get('duvod') === 'necinnost' && (
+            <p role="status" className="mb-4 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground">
+              Kvůli nečinnosti jsme vás odhlásili. Po přihlášení se vrátíte tam, kde jste skončili.
+            </p>
+          )}
           {error && (
             <p
               role="alert"

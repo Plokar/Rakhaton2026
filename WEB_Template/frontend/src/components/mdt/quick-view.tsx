@@ -8,6 +8,7 @@ import { briefP03, intakeP03, observationsP03 } from '@/lib/fixtures';
 import { mdtApi, type StoredBrief } from '@/lib/mdt-api';
 import {
   useBriefQuery,
+  useCaseDoctorRules,
   useCompatibilityQuery,
   useIntakeQuery,
   useMyTemplateLayout,
@@ -18,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import type {
   CaseTemplate,
+  DoctorRules,
   IntakePrefill,
   IntakeWarning,
   Light,
@@ -34,6 +36,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/too
 import { AiBlock } from './AiBlock';
 import { CitationProvider, Citations, collectCitations, useCitationOpen } from './citations';
 import { CompatibilityLight, LightIcon, LIGHT_META } from './CompatibilityLight';
+import { doctorLabel, NormLine } from './DoctorRules';
 import { dayLabel, timeLabel } from './dates';
 import { FactIcon, FactLegend, FACT_META } from './FactIcon';
 import { formatDate, formatDatesInText } from './format';
@@ -65,6 +68,8 @@ export interface QuickViewSources {
   observations: Res<ObservationSeries[]>;
   /** Doporučená šablona podle diagnózy (T-318); `null` = báze ji pro diagnózu nemá. */
   template: Res<CaseTemplate | null>;
+  /** Normy a požadavky pozvaných lékařů u případu (T-360); bez případu chybí. */
+  doctorRules?: Res<DoctorRules>;
   loadSource: SourceLoader;
 }
 
@@ -82,6 +87,7 @@ export function useQuickViewSources(target: { sessionId: number | null; caseId: 
   const intake = useIntakeQuery(target.patientId);
   const observations = useObservationsQuery(target.patientId);
   const template = useTemplateQuery(target.caseId);
+  const doctorRules = useCaseDoctorRules(target.caseId);
   return {
     patientId: target.patientId ?? '',
     caseId: target.caseId,
@@ -91,6 +97,7 @@ export function useQuickViewSources(target: { sessionId: number | null; caseId: 
     intake: res(intake),
     observations: res(observations),
     template: res(template),
+    doctorRules: res(doctorRules),
     loadSource: mdtApi.getEvidence,
   };
 }
@@ -1192,6 +1199,7 @@ const PJ_PILL: Record<Light, string> = {
 export const PROJECTOR_BLOCKS: { id: ProjectorBlock; label: string }[] = [
   { id: 'facts', label: 'Klíčové údaje' },
   { id: 'treatments', label: 'Léčebné postupy' },
+  { id: 'norms', label: 'Normy pozvaných lékařů' },
 ];
 
 /** Karty v pořadí lékaře (neznámé vynechá, chybějící doplní na konec) včetně skrytých. */
@@ -1495,8 +1503,10 @@ const PJ_TREATMENT_CHUNK = 4;     // postupů v jedné jednotce
 const PJ_BLOCK_TITLE: Record<ProjectorBlock, string | null> = {
   facts: 'Klíčové údaje',
   treatments: 'Léčebné postupy',
+  norms: 'Normy lékařů',
   anamnesis: null,                // AnamnesisPanel má nadpis sám
 };
+const PJ_NORM_CHUNK = 4;          // norem v jedné jednotce
 
 function chunk<T>(items: T[], size: number): T[][] {
   return Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, i * size + size));
@@ -1558,6 +1568,14 @@ function useProjectorUnits(blocks: ProjectorBlock[]): SlideUnit<ProjectorBlock>[
           </ul>
         ))));
       }
+    } else if (block === 'norms') {
+      // T-360: osobní normy pozvaných lékařů s výsledkem u pacienta; bez norem se karta nezobrazí
+      const norms = (sources.doctorRules?.data?.doctors ?? []).flatMap((d) => d.norms.map((n) => ({ n, author: doctorLabel(d) })));
+      chunk(norms, PJ_NORM_CHUNK).forEach((part, i) => out.push(note(`norms-${i}`, block, (
+        <ul className="flex flex-col gap-1">
+          {part.map(({ n, author }) => <NormLine key={n.id} norm={n} author={author} />)}
+        </ul>
+      ))));
     } else {
       out.push(note('anamnesis', block, <AnamnesisPanel />));
     }
@@ -1590,6 +1608,11 @@ function ProjectorCardTitle({ block, continued, count }: { block: ProjectorBlock
       {block === 'treatments' && (
         <span className="text-[11px] font-normal text-muted-foreground" title="Důvod barvy se ukáže po najetí na štítek">
           barvu počítají pravidla, ne AI
+        </span>
+      )}
+      {block === 'norms' && (
+        <span className="text-[11px] font-normal text-muted-foreground" title="Osobní kritéria pozvaných lékařů; semafor postupů nemění">
+          vyhodnocuje kód, semafor nemění
         </span>
       )}
     </h2>

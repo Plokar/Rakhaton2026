@@ -14,6 +14,7 @@ import { FIELD_ABBR } from './key-facts';
 const BLOCKS: { id: ProjectorBlock; label: string }[] = [
   { id: 'facts', label: 'Klíčové údaje' },
   { id: 'treatments', label: 'Léčebné postupy' },
+  { id: 'norms', label: 'Normy pozvaných lékařů' },
 ];
 export const AREAS: TemplateArea[] = ['PLI', 'PRS', 'KRC', 'OBC'];
 

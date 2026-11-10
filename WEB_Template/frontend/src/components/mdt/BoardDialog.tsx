@@ -6,7 +6,7 @@ import { Label } from '@/components/shadcn/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { SessionInput } from '@/lib/mdt-api';
-import { apiErrorMessage } from '@/lib/queries';
+import { apiErrorMessage, useCommitteesQuery } from '@/lib/queries';
 import type { MdtSession } from '@/types/mdt';
 import { localInputValue } from './dates';
 
@@ -32,6 +32,11 @@ export function BoardDialog({
   const [date, setDate] = React.useState(session ? localInputValue(session.date) : defaultDay ? `${defaultDay}T14:00` : '');
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Komise (T-357): její stálí členové jsou pozvaní. Nový board předvybere komisi se stejným názvem.
+  const committees = useCommitteesQuery(open);
+  const [committee, setCommittee] = React.useState<string | null>(session?.committee ? String(session.committee.id) : null);
+  const byTitle = committees.data?.find((c) => c.name.toLocaleLowerCase('cs') === title.trim().toLocaleLowerCase('cs'));
+  const committeeId = committee ?? (byTitle ? String(byTitle.id) : '');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +47,7 @@ export function BoardDialog({
     setSaving(true);
     setError(null);
     try {
-      await onSubmit({ title: title.trim(), date: `${date}:00` });
+      await onSubmit({ title: title.trim(), date: `${date}:00`, committee_id: committeeId ? Number(committeeId) : null });
       onClose();
     } catch (err) {
       setError(apiErrorMessage(err, 'Board se nepodařilo uložit.'));
@@ -73,6 +78,14 @@ export function BoardDialog({
               autoComplete="off"
               autoFocus
             />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="board-committee">Stálí členové z komise</Label>
+            <select id="board-committee" className="h-9 rounded-lg border border-input bg-card px-2 text-sm"
+              value={committeeId} onChange={(e) => setCommittee(e.target.value)}>
+              <option value="">Bez komise (pozvané přidáte u zasedání)</option>
+              {(committees.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name} ({c.members.length})</option>)}
+            </select>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="board-date">Termín zasedání</Label>

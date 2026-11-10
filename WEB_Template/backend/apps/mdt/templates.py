@@ -113,8 +113,9 @@ def template_catalog(request):
 
 
 def create_user(request):
-    """POST `/api/mdt/users/` (předseda): `{username, password, email?, first_name, last_name, title_before?,
-    title_after?, specialty, role, templates?: {area: layout}, preset?}` → 201 `Me`."""
+    """POST `/api/mdt/users/` (správce MDT): `{username, password, email?, first_name, last_name, title_before?,
+    title_after?, specialty, role, templates?: {area: layout}, preset?, organization?, is_external?, committees?,
+    is_manager?}` → 201 `Me`. Externí lékař je vždy `mdt_viewer` (T-357)."""
     data = request.data
     User = get_user_model()
     username = str(data.get('username') or '').strip()
@@ -137,13 +138,22 @@ def create_user(request):
         raise ValidationError({'password': list(e.messages)}) from None
     titles = clean_titles(data)
     templates = clean_templates(data.get('templates'))
+    from .accounts import _committees
+    committees = _committees(data.get('committees'))
+    is_external = bool(data.get('is_external'))
+    organization = str(data.get('organization') or '').strip()[:200]
+    if is_external and not organization:
+        raise ValidationError({'organization': 'U lékaře z jiné nemocnice vyplňte nemocnici.'})
     with transaction.atomic():
         user = User.objects.create_user(username=username, password=password, email=str(data.get('email') or ''),
                                         first_name=str(data.get('first_name') or '').strip()[:150],
                                         last_name=str(data['last_name']).strip()[:150])
-        roles.assign(user, role=role, specialty=specialty)
-        UserProfile.objects.filter(user=user).update(**titles)
+        roles.assign(user, role=roles.VIEWER if is_external else role, specialty=specialty)
+        UserProfile.objects.filter(user=user).update(**titles, organization=organization, is_external=is_external)
         save_templates(user, templates, str(data.get('preset') or '')[:40])
+        user.committees.set(committees)
+        if data.get('is_manager'):
+            roles.set_manager(user, True)
     try:
         roles.ensure_practitioner(user)              # lékař v IRIS pro výběr přítomných (T-328); bez IRIS jede dál
     except Exception:

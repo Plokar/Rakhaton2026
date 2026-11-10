@@ -7,10 +7,11 @@ import { toast } from 'sonner';
 import { buttonVariants } from '@/components/shadcn/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
 import { Button } from '@/components/ui/button';
-import { apiErrorMessage, useCheckReview, useMyReviewsQuery, useReadinessQuery, useReviewQuery } from '@/lib/queries';
+import { apiErrorMessage, useCaseDoctorRules, useCheckReview, useMyReviewsQuery, useReadinessQuery, useReviewQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { CaseReview, MyReview, ReviewStatus } from '@/types/mdt';
 import { dayLabel, timeLabel } from './dates';
+import { RequirementsPanel } from './DoctorRules';
 import { formatDate } from './format';
 
 /**
@@ -72,6 +73,7 @@ export function ReviewDialog({
 }) {
   const review = useReviewQuery(open ? caseId : null);
   const readiness = useReadinessQuery(open ? caseId : null);
+  const doctorRules = useCaseDoctorRules(open ? caseId : null);
   const check = useCheckReview();
   const data = review.data;
   const missing = readiness.data?.unresolved.filter((f) => f.status !== 'skipped') ?? [];
@@ -87,7 +89,7 @@ export function ReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Kontrola před zasedáním · {patient}</DialogTitle>
           <DialogDescription>
@@ -137,6 +139,10 @@ export function ReviewDialog({
             <p className="text-sm text-muted-foreground">Povinné údaje jsou doplněné nebo přeskočené.</p>
           )}
         </section>
+
+        {/* T-359: co vyžadují pozvaní lékaři; rozhoduje zadávající lékař (může kontrolu potvrdit) */}
+        <RequirementsPanel rules={doctorRules.data} loading={doctorRules.isLoading} error={doctorRules.error}
+          caseId={caseId} canDecide={data?.can_check !== false} />
 
         {data?.checked_at && (
           <p className="text-xs text-muted-foreground">

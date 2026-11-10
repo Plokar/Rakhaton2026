@@ -17,7 +17,7 @@ from services.rules.fact_categories import (
 )
 
 PRESETS_FILE = Path(__file__).resolve().parent / "data" / "template_presets.yaml"
-BLOCKS = ("anamnesis", "facts", "treatments")
+BLOCKS = ("anamnesis", "facts", "treatments", "norms")      # norms = normy pozvaných lékařů (T-360)
 # Pole, která panel ukazuje jinde (hlavička, dolní pás), nejsou mezi údaji šablony.
 ELSEWHERE = {"mdt.question", "ecog.physician", "ecog.patient"}
 # Pole, která formulář zařazení přidá jen za podmínky (věk, HER2, jaterní metastázy, ppo < 60 %…):

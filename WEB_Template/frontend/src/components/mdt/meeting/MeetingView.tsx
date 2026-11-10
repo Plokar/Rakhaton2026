@@ -30,8 +30,10 @@ import {
   Trash2,
   Undo2,
   UsersRound,
+  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { SessionInvitedDialog } from '../SessionInvitedDialog';
 import { PageCrumb } from '@/components/layout/TopBar';
 import { Button, buttonVariants } from '@/components/shadcn/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/shadcn/dialog';
@@ -426,6 +428,7 @@ function MeetingHeader({
   const [deleting, setDeleting] = React.useState(false);
   const [closing, setClosing] = React.useState(false);
   const [outputs, setOutputs] = React.useState<'closed' | 'view' | null>(null);
+  const [inviting, setInviting] = React.useState(false);
   const chair = can.manageBoards(me);
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
 
@@ -505,6 +508,9 @@ function MeetingHeader({
             <DropdownMenuItem onClick={() => router.push(`/dashboard/mdt/${board.id}/setup`)}>
               <SlidersHorizontal aria-hidden /> {chair ? 'Nastavit podklad' : 'Nastavení podkladu'}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setInviting(true)}>
+              <Users aria-hidden /> Pozvaní lékaři
+            </DropdownMenuItem>
             {chair && (
               <>
                 <DropdownMenuItem onClick={() => setEditing(true)}>
@@ -550,6 +556,7 @@ function MeetingHeader({
         />
       )}
       <DeleteBoardDialog board={deleting ? board : null} onClose={() => setDeleting(false)} />
+      {inviting && <SessionInvitedDialog sessionId={board.id} canEdit={can.manageInvited(me)} open onOpenChange={setInviting} />}
       {closing && <CloseBoardDialog board={board} open onOpenChange={setClosing} onClosed={() => setOutputs('closed')} />}
       {outputs && (
         <BoardOutputsDialog sessionId={board.id} open justClosed={outputs === 'closed'} onOpenChange={(next) => !next && setOutputs(null)} />

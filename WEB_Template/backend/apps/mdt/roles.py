@@ -10,6 +10,9 @@ from .models import UserProfile
 
 ADMIN, DOCTOR, VIEWER = 'mdt_admin', 'mdt_doctor', 'mdt_viewer'
 ROLES = (ADMIN, DOCTOR, VIEWER)
+# Správce MDT (T-356, D-027): účty, pozvánky a komise, bez klinických oprávnění. Samostatná skupina vedle klinické
+# role, jeden člověk může mít obě (demo předseda).
+MANAGER = 'mdt_manager'
 
 # účet → (skupina, odbornost RoleId, celé jméno)
 DEMO_USERS = {
@@ -41,6 +44,23 @@ def display_name(user) -> str:
         return name
     before, after = profile.title_before.strip(), profile.title_after.strip()
     return f"{before + ' ' if before else ''}{name}{', ' + after if after else ''}"
+
+
+def is_manager(user) -> bool:
+    return bool(user and user.is_authenticated
+                and (user.is_superuser or user.groups.filter(name=MANAGER).exists()))
+
+
+def set_manager(user, value: bool) -> None:
+    group = Group.objects.get_or_create(name=MANAGER)[0]
+    (user.groups.add if value else user.groups.remove)(group)
+
+
+def is_external(user) -> bool:
+    """Lékař z jiné nemocnice (T-357): vidí jen komise a zasedání, kam je pozvaný."""
+    if not user or not user.is_authenticated or user.is_superuser:
+        return False
+    return UserProfile.objects.filter(user=user, is_external=True).exists()
 
 
 def role(user) -> str | None:
@@ -87,6 +107,9 @@ def ensure_practitioner(user) -> str:
     if pid.startswith(practitioners.APP_PREFIX):        # lékaře účtu aplikace udržujeme (jméno, odbornost)
         fhir.put(practitioners.app_practitioner(pid, display_name(user), profile.specialty,
                                                 user.username))
+    if profile.organization:                            # lékař z jiné nemocnice (T-357): Organization + PractitionerRole
+        for resource in practitioners.organization_resources(pid, profile.organization, profile.specialty):
+            fhir.put(resource)
     if profile.practitioner_fhir_id != pid:
         profile.practitioner_fhir_id = pid
         profile.save(update_fields=['practitioner_fhir_id'])
@@ -127,6 +150,8 @@ def ensure_demo_users(reset_passwords: bool = False) -> dict:
             user.set_password(password)
             user.save()
         user.groups.add(groups[group])
+        if username == 'predseda':                 # demo předseda je zároveň správce MDT (D-027)
+            set_manager(user, True)
         UserProfile.objects.update_or_create(user=user, defaults={'specialty': spec})
         users[username] = user
     return users

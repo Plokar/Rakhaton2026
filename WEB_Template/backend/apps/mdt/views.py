@@ -53,6 +53,11 @@ def can_edit_case(user, case: MdtCase) -> bool:
     return case.pk is not None and case.collaborators.filter(pk=user.pk).exists()
 
 
+def _require_manager(request) -> None:
+    if not roles.is_manager(request.user):
+        raise PermissionDenied('Účty spravuje správce MDT.')
+
+
 def _require_case_edit(request, case: MdtCase) -> None:
     if not can_edit_case(request.user, case):
         raise PermissionDenied('Případ smí měnit jen zadávající lékař, přizvaný lékař nebo předseda.')
@@ -69,12 +74,18 @@ def _member(u) -> dict:
     return {'user_id': u.pk, 'username': u.username, 'name': roles.display_name(u),
             'first_name': u.first_name, 'last_name': u.last_name,
             'title_before': profile.title_before if profile else '', 'title_after': profile.title_after if profile else '',
-            'role': roles.role(u), 'specialty': roles.specialty(u), 'practitioner_id': roles.practitioner_id(u)}
+            'role': roles.role(u), 'specialty': roles.specialty(u), 'practitioner_id': roles.practitioner_id(u),
+            # T-356–T-358: správce MDT, nemocnice, externí lékař, komise, průvodce nastavením
+            'is_manager': roles.is_manager(u), 'is_active': u.is_active,
+            'organization': profile.organization if profile else '', 'is_external': profile.is_external if profile else False,
+            'onboarding_done': profile.onboarding_done if profile else True,
+            'committees': [{'id': c.pk, 'name': c.name} for c in u.committees.all()]}
 
 
 def _session(s: MdtSession) -> dict:
     return {'id': s.pk, 'date': timezone.localtime(s.date).isoformat(), 'title': s.title, 'status': s.status,
-            'chair': _user(s.chair), 'config_id': s.config_id}
+            'chair': _user(s.chair), 'config_id': s.config_id,
+            'committee': {'id': s.committee.pk, 'name': s.committee.name} if s.committee_id else None}
 
 
 def _case(c: MdtCase, patient: dict | None = None) -> dict:
@@ -122,12 +133,14 @@ def _config(data, case: MdtCase) -> dict:
 @api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def me(request):
-    """Role a odbornost přihlášeného (FR-U1). PATCH `{title_before?, title_after?}`: tituly si lékař upraví sám (T-338);
-    roli a odbornost mění předseda."""
+    """Role a odbornost přihlášeného (FR-U1). PATCH `{title_before?, title_after?, onboarding_done?}`: tituly si lékař
+    upraví sám (T-338), průvodce nastavením označí za hotový (T-358); roli a odbornost mění správce."""
     if request.method == 'PATCH':
         from .models import UserProfile
         from .templates import clean_titles
         titles = clean_titles(request.data)
+        if 'onboarding_done' in request.data:
+            titles['onboarding_done'] = bool(request.data['onboarding_done'])
         if titles:
             UserProfile.objects.update_or_create(user=request.user, defaults=titles)
         return Response(_member(get_user_model().objects.get(pk=request.user.pk)))
@@ -142,11 +155,14 @@ def user_list(request):
     koho přizvat ke spolupráci); role a odbornost mění jen předseda (`user_detail`). POST (předseda, T-338): založí
     lékaře s profilem (jméno, tituly, profese, role) a šablonou údajů (`apps.mdt.templates.create_user`)."""
     if request.method == 'POST':
-        _require(request, roles.ADMIN)
+        _require_manager(request)
         from .templates import create_user
         return Response(_member(create_user(request)), status=201)
-    _require(request, roles.ADMIN, roles.DOCTOR)
-    users = get_user_model().objects.filter(is_active=True).order_by('username')
+    if not roles.is_manager(request.user):
+        _require(request, roles.ADMIN, roles.DOCTOR)
+    users = get_user_model().objects.order_by('username').prefetch_related('committees')
+    if not (roles.is_manager(request.user) and request.query_params.get('all') in ('1', 'true')):
+        users = users.filter(is_active=True)          # zablokované účty vidí jen správce (`?all=1`)
     return Response([_member(u) for u in users])
 
 
@@ -182,9 +198,10 @@ def practitioner_list(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def user_detail(request, uid):
-    """Předseda mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele (T-319)
-    a propojení s lékařem v IRIS `practitioner_id` (T-328)."""
-    _require(request, roles.ADMIN)
+    """Správce MDT (T-356) mění roli (`mdt_admin` / `mdt_doctor` / `mdt_viewer`) a odbornost (RoleId) uživatele
+    (T-319), propojení s lékařem v IRIS `practitioner_id` (T-328), roli správce `is_manager`, nemocnici
+    `organization` + `is_external`, komise `committees: [id]` a zablokování `is_active` (T-357)."""
+    _require_manager(request)
     user = get_object_or_404(get_user_model(), pk=uid)
     role, specialty = request.data.get('role'), request.data.get('specialty')
     if request.data.get('practitioner_id'):
@@ -193,8 +210,14 @@ def user_detail(request, uid):
         raise ValidationError({'role': f'Jen {", ".join(roles.ROLES)}.'})
     if specialty is not None and specialty not in roles.SPECIALTIES:
         raise ValidationError({'specialty': f'Jen {", ".join(roles.SPECIALTIES)}.'})
-    if user.pk == request.user.pk and role not in (None, roles.ADMIN):
+    if user.pk == request.user.pk and roles.role(user) == roles.ADMIN and role not in (None, roles.ADMIN):
         raise ValidationError({'role': 'Sám sobě roli předsedy odebrat nejde.'})
+    with transaction.atomic():
+        _update_account(request, user)
+        if roles.is_external(user):                 # T-357: lékař z jiné nemocnice pacienty nezařazuje
+            if role not in (None, roles.VIEWER):
+                raise ValidationError({'role': 'Lékař z jiné nemocnice má roli člena komise.'})
+            role = roles.VIEWER
     from .models import UserProfile
     from .templates import clean_titles
     titles = clean_titles(request.data)                  # T-338: tituly a jméno upraví předseda
@@ -206,12 +229,42 @@ def user_detail(request, uid):
         UserProfile.objects.update_or_create(user=user, defaults=titles)
         user = get_user_model().objects.get(pk=user.pk)
     roles.assign(user, role=role, specialty=specialty)
-    if specialty is not None:
+    if specialty is not None or 'organization' in request.data:
         try:                                     # odbornost i u lékaře účtu v IRIS (LEK-APP-…, T-328)
             roles.ensure_practitioner(user)
         except FhirError:
             pass
     return Response(_member(user))
+
+
+def _update_account(request, user) -> None:
+    """Správce MDT, nemocnice, komise a zablokování účtu (T-356, T-357)."""
+    from .accounts import _committees
+    from .models import UserProfile
+    data = request.data
+    self_edit = user.pk == request.user.pk
+    if 'is_manager' in data:
+        if self_edit and not data['is_manager']:
+            raise ValidationError({'is_manager': 'Sám sobě roli správce odebrat nejde.'})
+        roles.set_manager(user, bool(data['is_manager']))
+    if 'is_active' in data:
+        if self_edit and not data['is_active']:
+            raise ValidationError({'is_active': 'Sám sebe zablokovat nejde.'})
+        get_user_model().objects.filter(pk=user.pk).update(is_active=bool(data['is_active']))
+    profile = {}
+    if 'organization' in data:
+        profile['organization'] = str(data.get('organization') or '').strip()[:200]
+    if 'is_external' in data:
+        profile['is_external'] = bool(data['is_external'])
+    if profile:
+        current = UserProfile.objects.filter(user=user).first()
+        if profile.get('is_external', current.is_external if current else False) and \
+                not profile.get('organization', current.organization if current else ''):
+            raise ValidationError({'organization': 'U lékaře z jiné nemocnice vyplňte nemocnici.'})
+        UserProfile.objects.update_or_create(user=user, defaults=profile)
+    if 'committees' in data:
+        user.committees.set(_committees(data['committees']))
+    user.refresh_from_db()
 
 
 @extend_schema(request=OpenApiTypes.OBJECT, responses=OpenApiTypes.OBJECT, tags=['mdt'])
@@ -225,9 +278,11 @@ def session_list(request):
         if not request.data.get('title'):
             raise ValidationError({'title': 'Povinné (zaměření komise).'})
         s = MdtSession.objects.create(date=_datetime(request.data.get('date')), title=request.data['title'],
-                                      chair=request.user, config_id=request.data.get('config_id'))
+                                      chair=request.user, config_id=request.data.get('config_id'),
+                                      committee=_committee_or_none(request.data))
         return Response(_session(s), status=201)
-    sessions = MdtSession.objects.select_related('chair').prefetch_related('cases')
+    from .scope import visible_sessions                 # T-357: externí lékař jen zasedání, kam je pozvaný
+    sessions = visible_sessions(request.user).select_related('chair', 'committee').prefetch_related('cases')
     for param, lookup in (('from', 'date__date__gte'), ('to', 'date__date__lte')):
         if request.query_params.get(param):
             day = parse_date(request.query_params[param])
@@ -241,6 +296,17 @@ def session_list(request):
         for item, s in zip(out, sessions):
             item['cases'] = [summaries[c.pk] for c in s.cases.all()]
     return Response(out)
+
+
+def _committee_or_none(data):
+    """`committee_id` zasedání (T-357): bez klíče `None`, neznámá komise 400."""
+    from .models import Committee
+    if data.get('committee_id') in (None, ''):
+        return None
+    committee = Committee.objects.filter(pk=data['committee_id']).first()
+    if committee is None:
+        raise ValidationError({'committee_id': 'Neznámá komise.'})
+    return committee
 
 
 def _case_summaries(cases: list[MdtCase]) -> dict[int, dict]:
@@ -314,12 +380,14 @@ def session_detail(request, sid):
         for field in ('title', 'status', 'config_id'):
             if field in data:
                 setattr(s, field, data[field])
+        if 'committee_id' in data:
+            s.committee = _committee_or_none(data)
         if 'date' in data:
             s.date = _datetime(data['date'])
             # ponytail: Task v IRIS po jednom; když jeden zápis selže, předchozí zůstanou (IRIS = zdroj pravdy)
             for c in s.cases.all():
                 writeback.set_mdt_date(c.patient_fhir_id, c.service_request_fhir_id, timezone.localtime(s.date))
-        s.full_clean(exclude=['chair', 'config'])
+        s.full_clean(exclude=['chair', 'config', 'committee'])
         s.save()
     return _agenda_response(s)
 
@@ -590,6 +658,7 @@ def case_create(request):
     session = get_object_or_404(MdtSession, pk=data.get('session'))
     if session.status == 'closed':
         return Response(CLOSED_BOARD, status=409)
+    decisions = _requirement_decisions(request, data.get('requirement_decisions'))
     pid = data.get('patient_id')
     resources = _patient_resources(pid)
     prefill = intake.intake_prefill(resources, data.get('skipped_fields', []))
@@ -623,10 +692,26 @@ def case_create(request):
         if case.status in ('nominated', 'returned'):
             case.status = 'ready'
             case.save(update_fields=['status', 'updated_at'])
+        if decisions:                                   # T-359: rozhodnutí k požadavkům pozvaných lékařů
+            case.requirement_decisions = [*case.requirement_decisions, *decisions]
+            case.save(update_fields=['requirement_decisions', 'updated_at'])
     if prep:
         written += tasks.create_prep_tasks(pid, case.service_request_fhir_id, prep['owner'], prep['items'],
                                            timezone.localtime(case.session.date))
     return Response({**_case(case), 'fhir_written': written}, status=201 if created else 200)
+
+
+def _requirement_decisions(request, value) -> list[dict]:
+    """`requirement_decisions: [{user_id, decision: needed | not_needed, note?}]` z formuláře zařazení (T-359)."""
+    if value in (None, []):
+        return []
+    if not isinstance(value, list) or not all(
+            isinstance(d, dict) and isinstance(d.get('user_id'), int) and d.get('decision') in ('needed', 'not_needed')
+            and len(str(d.get('note') or '')) <= 300 for d in value):
+        raise ValidationError({'requirement_decisions': '[{user_id, decision: needed | not_needed, note?}]'})
+    at, by = timezone.now().isoformat(), roles.display_name(request.user)
+    return [{'user_id': d['user_id'], 'decision': d['decision'], 'note': str(d.get('note') or '').strip(),
+             'by': by, 'at': at} for d in value]
 
 
 def _prep_items(ids: list[str], prefill: dict) -> dict | None:

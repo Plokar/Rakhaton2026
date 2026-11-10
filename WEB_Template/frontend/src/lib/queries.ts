@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { QueryClient, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api';
-import { mdtApi, type SessionInput, type StoredBrief } from '@/lib/mdt-api';
+import { mdtApi, type SessionInput, type StoredBrief, type UserUpdate } from '@/lib/mdt-api';
 import type { Me, MdtCase, MdtRole, MdtSessionDetail, MdtSessionListItem, ProjectorLayout, RoleId, TemplateArea } from '@/types/mdt';
 
 /**
@@ -24,6 +24,15 @@ export function createQueryClient() {
 
 export const queryKeys = {
   users: ['users'] as const,
+  allUsers: ['users', 'all'] as const,
+  invitations: ['invitations'] as const,
+  committees: ['committees'] as const,
+  sessionInvited: (sessionId: number) => ['session', String(sessionId), 'invited'] as const,
+  myRules: ['my-rules'] as const,
+  normFields: ['norm-fields'] as const,
+  caseDoctorRules: (caseId: number | string) => ['case', String(caseId), 'doctor-rules'] as const,
+  sessionDoctorRules: (sessionId: number, patientId: string, skipped: string[]) =>
+    ['session', String(sessionId), 'doctor-rules', patientId, skipped.join(',')] as const,
   template: (caseId: number | string) => ['case', String(caseId), 'template'] as const,
   forMe: (caseId: number | string, specialty: string) => ['case', String(caseId), 'for-me', specialty] as const,
   sessions: ['sessions'] as const,
@@ -220,11 +229,74 @@ export function useTemplateCatalog(area: TemplateArea | null) {
 export function useUpdateUser() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({ userId, input }: { userId: number; input: { role?: MdtRole; specialty?: RoleId } }) => mdtApi.updateUser(userId, input),
+    mutationFn: ({ userId, input }: { userId: number; input: UserUpdate & { role?: MdtRole; specialty?: RoleId } }) => mdtApi.updateUser(userId, input),
     onSuccess: (saved) => {
-      client.setQueryData<Me[]>(queryKeys.users, (prev) => prev?.map((u) => (u.user_id === saved.user_id ? saved : u)));
+      for (const key of [queryKeys.users, queryKeys.allUsers]) {
+        client.setQueryData<Me[]>(key, (prev) => prev?.map((u) => (u.user_id === saved.user_id ? saved : u)));
+      }
+      void client.invalidateQueries({ queryKey: queryKeys.committees });
     },
   });
+}
+
+// ── T-356, T-357: správce MDT ──
+/** Všichni uživatelé včetně zablokovaných (jen správce). */
+export function useAllUsersQuery(enabled: boolean) {
+  return useQuery({ queryKey: queryKeys.allUsers, queryFn: () => mdtApi.getAllUsers(), enabled });
+}
+
+export function useInvitationsQuery(enabled: boolean) {
+  return useQuery({ queryKey: queryKeys.invitations, queryFn: () => mdtApi.getInvitations(), enabled });
+}
+
+export function useCommitteesQuery(enabled = true) {
+  return useQuery({ queryKey: queryKeys.committees, queryFn: () => mdtApi.getCommittees(), enabled, staleTime: 60_000 });
+}
+
+export function useSessionInvited(sessionId: number | null) {
+  return useQuery({
+    queryKey: queryKeys.sessionInvited(sessionId ?? 0),
+    queryFn: () => mdtApi.getSessionInvited(sessionId as number),
+    enabled: sessionId !== null,
+  });
+}
+
+// ── T-358–T-360: požadavky a normy lékaře ──
+export function useMyRules(enabled = true) {
+  return useQuery({ queryKey: queryKeys.myRules, queryFn: () => mdtApi.getMyRules(), enabled });
+}
+
+export function useNormFields() {
+  return useQuery({ queryKey: queryKeys.normFields, queryFn: () => mdtApi.getNormFields(), staleTime: Infinity });
+}
+
+export function useCaseDoctorRules(caseId: number | null) {
+  return useQuery({
+    queryKey: queryKeys.caseDoctorRules(caseId ?? 0),
+    queryFn: () => mdtApi.getCaseDoctorRules(caseId as number),
+    enabled: caseId !== null,
+  });
+}
+
+/** Při zařazení (případ ještě není): požadavky a normy pozvaných lékařů zasedání u pacienta. */
+export function useSessionDoctorRules(sessionId: number | null, patientId: string | null, skipped: string[] = []) {
+  return useQuery({
+    queryKey: queryKeys.sessionDoctorRules(sessionId ?? 0, patientId ?? '', skipped),
+    queryFn: () => mdtApi.getSessionDoctorRules(sessionId as number, patientId as string, skipped),
+    enabled: sessionId !== null && Boolean(patientId),
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** Chyby po polích z DRF (`{pole: ["zpráva"]}`) → jedna věta. */
+export function fieldErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError && error.status === 400 && error.data && typeof error.data === 'object') {
+    const parts = Object.values(error.data as Record<string, unknown>)
+      .flatMap((v) => (Array.isArray(v) ? v : [v]))
+      .filter((v): v is string => typeof v === 'string');
+    if (parts.length) return parts.join(' ');
+  }
+  return apiErrorMessage(error, fallback);
 }
 
 /**

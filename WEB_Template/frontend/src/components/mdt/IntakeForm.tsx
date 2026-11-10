@@ -3,9 +3,11 @@
 import * as React from 'react';
 import { CircleCheck, CircleDashed, Info, ListTodo, RotateCcw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSessionDoctorRules } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity } from '@/types/mdt';
 import { Citations } from './citations';
+import { RequirementsPanel } from './DoctorRules';
 import { hasLayout } from './fact-layout';
 import { warningLabel } from './key-facts';
 import { ProjectorLayoutEditor } from './ProjectorLayoutEditor';
@@ -28,6 +30,8 @@ export type IntakeResult = {
   acknowledged: string[];
   /** Okno pro projektor upravené při zařazení (T-333); bez úprav chybí. */
   projector_layout?: ProjectorLayout;
+  /** Rozhodnutí k požadavkům pozvaných lékařů (T-359); nerozhodnuté chybí. */
+  requirement_decisions: { user_id: number; decision: 'needed' | 'not_needed' }[];
 };
 
 /** ECOG a záměr C/P z formuláře: živý náhled okna pro projektor vedle formuláře (T-345). */
@@ -46,8 +50,11 @@ export function IntakeForm({
   layout,
   onLayoutChange,
   onChoiceChange,
+  sessionId,
 }: {
   prefill: IntakePrefill;
+  /** Zasedání, na které se pacient zařazuje: požadavky jeho pozvaných lékařů (T-359). */
+  sessionId?: number;
   submitting: boolean;
   onSubmit: (result: IntakeResult) => void;
   /** Pacient pro úpravu okna pro projektor (T-333); bez něj se sekce nezobrazí. */
@@ -73,6 +80,8 @@ export function IntakeForm({
   };
   const [imaging, setImaging] = React.useState(false);
   const [fillHint, setFillHint] = React.useState<string | null>(null);
+  const [decisions, setDecisions] = React.useState<Record<number, 'needed' | 'not_needed'>>({});
+  const doctorRules = useSessionDoctorRules(sessionId ?? null, patientId ?? prefill.patient_id ?? null, [...skipped].sort());
 
   const fields = prefill.fields;
   const skippedCitations = new Set(fields.filter((f) => skipped.has(f.id) && f.citation).map((f) => f.citation as string));
@@ -124,6 +133,7 @@ export function IntakeForm({
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
           prep_tasks: [...toTasks],
+          requirement_decisions: Object.entries(decisions).map(([id, decision]) => ({ user_id: Number(id), decision })),
           ...(layout.extra?.length || hasLayout(layout) ? { projector_layout: layout } : {}),
         });
       }}
@@ -255,6 +265,17 @@ export function IntakeForm({
           </p>
         )}
       </section>
+
+      {sessionId !== undefined && (
+        <RequirementsPanel
+          rules={doctorRules.data}
+          loading={doctorRules.isLoading}
+          error={doctorRules.error}
+          canDecide
+          decisions={decisions}
+          onDecide={(userId, decision) => setDecisions((prev) => ({ ...prev, [userId]: decision }))}
+        />
+      )}
 
       <section className="grid gap-5 sm:grid-cols-2">
         <div>

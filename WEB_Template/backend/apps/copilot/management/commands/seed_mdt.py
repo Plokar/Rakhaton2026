@@ -32,6 +32,7 @@ class Command(BaseCommand):
                           'order': order, 'created_by': requester},
             )
             created_cases += new
+        _demo_committees(users)
         # doplní chybějící (případy a boardy z dřívějšího běhu bez demo účtů), nic nepřepisuje
         MdtSession.objects.filter(chair__isnull=True).update(chair=users['predseda'])
         for case in MdtCase.objects.filter(created_by__isnull=True):
@@ -41,6 +42,18 @@ class Command(BaseCommand):
             f'Boardy: {MdtSession.objects.count()} (nové {created_sessions}), '
             f'případy: {MdtCase.objects.count()} (nové {created_cases}).'
         ))
+
+
+def _demo_committees(users) -> None:
+    """Komise podle názvu zasedání (T-357); nová komise dostane za členy demo lékaře. Nic nepřepisuje."""
+    from apps.mdt.models import Committee
+
+    for session in MdtSession.objects.filter(committee__isnull=True):
+        committee, new = Committee.objects.get_or_create(name=session.title)
+        if new:
+            committee.members.set(users.values())
+        session.committee = committee
+        session.save(update_fields=['committee'])
 
 
 def _demo_templates(users) -> None:

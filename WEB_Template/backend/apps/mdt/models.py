@@ -30,6 +30,18 @@ class BriefConfig(models.Model):
         return self.name
 
 
+class Committee(models.Model):
+    """Komise (T-357, D-027): stálí členové jsou pozvaní na všechna její zasedání. Spravuje správce MDT."""
+    name = models.CharField(max_length=300, unique=True)
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='committees')
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class MdtSession(models.Model):
     """Zasedání MDT = board (D-014). Zakládá a mění jen `mdt_admin` (T-501)."""
     STATUS = [('planned', 'plánováno'), ('in_progress', 'probíhá'), ('closed', 'uzavřeno')]
@@ -39,6 +51,10 @@ class MdtSession(models.Model):
                               related_name='chaired_sessions')
     status = models.CharField(max_length=12, choices=STATUS, default='planned')
     config = models.ForeignKey(BriefConfig, null=True, blank=True, on_delete=models.SET_NULL)
+    # Pozvaní na zasedání (T-357, D-027): členové komise bez vyřazených + přizvaní jen na toto zasedání.
+    committee = models.ForeignKey(Committee, null=True, blank=True, on_delete=models.SET_NULL, related_name='sessions')
+    invited = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='invited_sessions')
+    excluded = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='excluded_sessions')
 
     class Meta:
         ordering = ['date', 'title']
@@ -75,6 +91,9 @@ class MdtCase(models.Model):
     checked_at = models.DateTimeField(null=True, blank=True)
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
                                    related_name='checked_cases')
+    # Rozhodnutí zadávajícího lékaře k požadavkům pozvaných lékařů (T-359): [{user_id, decision, note, by, at}].
+    # Jen se přidává (D-019), platí poslední záznam pro lékaře.
+    requirement_decisions = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -133,6 +152,9 @@ class UserProfile(models.Model):
     practitioner_fhir_id = models.CharField(max_length=64, blank=True)   # lékař v IRIS „LEK-…“ (T-328)
     title_before = models.CharField(max_length=40, blank=True)   # „MUDr.“, „doc. MUDr.“ (T-338)
     title_after = models.CharField(max_length=40, blank=True)    # „Ph.D.“
+    organization = models.CharField(max_length=200, blank=True)  # nemocnice (T-357), prázdné = naše
+    is_external = models.BooleanField(default=False)             # lékař z jiné nemocnice: vidí jen své komise
+    onboarding_done = models.BooleanField(default=True)          # průvodce nastavením po prvním přihlášení (T-358)
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'
@@ -194,3 +216,67 @@ class PatientDraft(models.Model):
 
     def __str__(self):
         return f'{self.patient_fhir_id} ({self.get_status_display()})'
+
+
+AREA_CHOICES = FactTemplate.AREAS + [('*', 'Všechny diagnózy')]
+
+
+class Invitation(models.Model):
+    """Pozvánka od správce MDT (T-356, D-027). Ukládá se jen hash tokenu; odkaz platí jednou a do `expires_at`."""
+    token_hash = models.CharField(max_length=64, unique=True)
+    email = models.EmailField(blank=True)
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150)
+    title_before = models.CharField(max_length=40, blank=True)
+    title_after = models.CharField(max_length=40, blank=True)
+    specialty = models.CharField(max_length=30)
+    role = models.CharField(max_length=20)
+    organization = models.CharField(max_length=200, blank=True)
+    is_external = models.BooleanField(default=False)
+    committees = models.ManyToManyField(Committee, blank=True, related_name='invitations')
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    used_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name='accepted_invitations')
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                                   related_name='sent_invitations')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.last_name} ({self.email})'
+
+
+class DoctorRequirement(models.Model):
+    """Údaje, které lékař vyžaduje, když je pozvaný na MDT (T-359, D-028). Mění jen lékař sám."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_requirements')
+    area = models.CharField(max_length=3, choices=AREA_CHOICES)
+    fields = models.JSONField(default=list, blank=True)           # klíče katalogu údajů (`bm.egfr`, `lab:718-7`)
+    note = models.CharField(max_length=500, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'area'], name='doctor_requirement_user_area')]
+        ordering = ['user', 'area']
+
+
+class DoctorNorm(models.Model):
+    """Norma lékaře pro řešení (T-360, D-028): údaj, operátor, hodnota. Vyhodnocuje kód, semafor nemění (D-015)."""
+    OPS = [('>=', '≥'), ('<=', '≤'), ('>', '>'), ('<', '<'), ('==', '=')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_norms')
+    area = models.CharField(max_length=3, choices=AREA_CHOICES, default='*')
+    field = models.CharField(max_length=120)
+    op = models.CharField(max_length=2, choices=OPS)
+    value = models.FloatField()
+    unit = models.CharField(max_length=20, blank=True)
+    procedure = models.CharField(max_length=120, blank=True)      # k jakému postupu norma patří („resekce jater“)
+    note = models.CharField(max_length=300, blank=True)
+    source = models.CharField(max_length=60, blank=True)          # Evidence ID guidelines / EXT-MK-…
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['user', 'area', 'id']

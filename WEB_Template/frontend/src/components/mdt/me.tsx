@@ -16,6 +16,10 @@ export const MDT_ROLE_LABEL: Record<MdtRole, string> = {
 /** Co smí role v UI (stejně jako backend, ARCH §6.3). Backend je stejně ověří. */
 export const can = {
   manageBoards: (me?: Me | null) => me?.role === 'mdt_admin',
+  /** Správce MDT (T-356, D-027): účty, pozvánky a komise. */
+  manageAccounts: (me?: Me | null) => Boolean(me?.is_manager),
+  /** Pozvané na zasedání mění předseda nebo správce (T-357). */
+  manageInvited: (me?: Me | null) => me?.role === 'mdt_admin' || Boolean(me?.is_manager),
   generateBrief: (me?: Me | null) => me?.role === 'mdt_admin' || me?.role === 'mdt_doctor',
   /** Předseda, zadávající lékař, nebo přizvaný ke spolupráci (T-326; i člen komise s rolí jen ke čtení). */
   editCase: (me: Me | null | undefined, c: MdtCase) =>
@@ -29,7 +33,8 @@ export const can = {
 
 export function meLabel(me: Me): string {
   const specialty = me.specialty ? ROLE_META[me.specialty].label.toLowerCase() : null;
-  return specialty ? `${MDT_ROLE_LABEL[me.role]} · ${specialty}` : MDT_ROLE_LABEL[me.role];
+  const parts = [MDT_ROLE_LABEL[me.role], specialty, me.is_manager ? 'správce MDT' : null, me.is_external ? me.organization : null];
+  return parts.filter(Boolean).join(' · ');
 }
 
 const MeContext = React.createContext<Me | null>(null);

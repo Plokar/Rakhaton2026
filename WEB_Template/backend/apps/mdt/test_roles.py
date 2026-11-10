@@ -35,10 +35,13 @@ def test_demo_users_roles_and_me(seeded):
     me = as_user('predseda').get('/api/mdt/me/').json()
     assert (me['role'], me['specialty']) == ('mdt_admin', 'oncologist')
     assert as_user('pneumolog').get('/api/mdt/me/').json()['role'] == 'mdt_doctor'
-    assert as_user('chirurg').get('/api/mdt/me/').json() | {'user_id': 0} == {
+    me = as_user('chirurg').get('/api/mdt/me/').json() | {'user_id': 0}
+    expected = {
         'user_id': 0, 'username': 'chirurg', 'name': 'Chirurg', 'role': 'mdt_viewer', 'specialty': 'surgeon',
         'practitioner_id': 'LEK-APP-chirurg', 'first_name': 'Chirurg', 'last_name': '', 'title_before': '',
-        'title_after': ''}
+        'title_after': '', 'is_manager': False, 'is_active': True, 'organization': '', 'is_external': False,
+        'onboarding_done': True}
+    assert {k: me[k] for k in expected} == expected and me['committees']      # T-356, T-357
     assert MdtCase.objects.get(patient_fhir_id='P04').created_by.username == 'pneumolog'
     assert MdtSession.objects.filter(chair__username='predseda').count() == 4
 

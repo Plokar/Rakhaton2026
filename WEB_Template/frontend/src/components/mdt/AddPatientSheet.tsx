@@ -135,6 +135,7 @@ export function AddPatientForm({
         skipped_fields: r.skipped_fields,
         acknowledge: r.acknowledged,
         prep_tasks: r.prep_tasks,
+        requirement_decisions: r.requirement_decisions,
         ...(r.projector_layout ? { projector_layout: r.projector_layout } : {}),
       },
       {
@@ -231,6 +232,7 @@ export function AddPatientForm({
                     layout={layout}
                     onLayoutChange={setLayout}
                     onChoiceChange={setChoice}
+                    sessionId={session.id}
                   />
                 </PatientChatFocus.Provider>
               ) : null}

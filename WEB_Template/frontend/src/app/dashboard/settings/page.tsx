@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { MyTemplateCard } from '@/components/mdt/MyTemplateCard';
+import { NormsEditor, RequirementsEditor } from '@/components/mdt/MyRulesEditor';
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -152,6 +153,25 @@ export default function SettingsPage() {
         </Card>
 
         <MyTemplateCard />
+
+        {/* T-359, T-360: co vyžaduji, když jsem pozvaný, a moje normy na PVW (mění jen lékař sám) */}
+        <section id="pozadavky" aria-labelledby="pozadavky-nadpis" className="scroll-mt-20 rounded-xl border border-border bg-card p-5">
+          <h2 id="pozadavky-nadpis" className="text-base font-semibold">Moje požadavky na podklad</h2>
+          <p className="mb-4 mt-1 text-sm text-muted-foreground">
+            Údaje, které potřebujete, když jste na MDT pozvaný. Lékař, který pacienta připravuje, uvidí, co z nich chybí,
+            a rozhodne, zda vás u pacienta potřebuje. Zařazení pacienta neblokují.
+          </p>
+          <RequirementsEditor />
+        </section>
+
+        <section id="normy" aria-labelledby="normy-nadpis" className="scroll-mt-20 rounded-xl border border-border bg-card p-5">
+          <h2 id="normy-nadpis" className="text-base font-semibold">Moje normy pro řešení</h2>
+          <p className="mb-4 mt-1 text-sm text-muted-foreground">
+            Prahy a kritéria, za která odpovídáte. Na projektoru (PVW) se u pacientů, kde jste pozvaný, ukáže norma s vaším
+            jménem a hodnotou pacienta.
+          </p>
+          <NormsEditor />
+        </section>
 
         {/* Personal info */}
         <Card>

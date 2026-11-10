@@ -60,6 +60,12 @@ def main() -> None:
     ingest = {'patients': os.environ['LOCAL_PATIENTS']} if os.environ.get('LOCAL_PATIENTS') else {}
     call_command('ingest_dataset', **ingest)
     call_command('seed_mdt')
+    from apps.mdt.models import MdtCase
+    orphans = sorted({c for c in MdtCase.objects.values_list('patient_fhir_id', flat=True)
+                      if f'Patient/{c}' not in fhir.store})
+    if orphans:      # Postgres přežívá restart, FHIR v paměti ne: případy z dřívějšího běhu s víc pacienty
+        print(f'POZOR: {len(orphans)} pacientů má případ v Postgresu, ale není ve FHIR (např. {orphans[0]}); '
+              'jejich obrazovky vrátí 404. Spusťte bez LOCAL_PATIENTS, nebo s čistou databází.', flush=True)
     print(f'FHIR v paměti: {len(fhir.store)} záznamů. Přihlášení: predseda / demo123456', flush=True)
     call_command('runserver', f"0.0.0.0:{os.environ.get('LOCAL_PORT', '8000')}", '--noreload')
 

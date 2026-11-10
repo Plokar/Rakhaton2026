@@ -731,12 +731,12 @@ def _prep_items(ids: list[str], prefill: dict) -> dict | None:
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def case_brief(request, cid):
-    """GET: poslední podklad (Brief §8.2). POST `{config_id | config}` (předseda, zadávající nebo přizvaný lékař): spustí generování → `{job_id}`."""
+    """GET: poslední podklad (Brief §8.2), 204 dokud nevznikl. POST `{config_id | config}` (předseda, zadávající nebo přizvaný lékař): spustí generování → `{job_id}`."""
     case = get_object_or_404(MdtCase.objects.select_related('session__config'), pk=cid)
     if request.method == 'GET':
         brief = case.briefs.first()
         if brief is None:
-            return Response({'detail': 'Podklad ještě nebyl vygenerován.'}, status=404)
+            return Response(status=204)        # T-375: „ještě není“ není chyba (dřív 404 a červená konzole)
         content = brief.content
         if (content.get('decision_support') or {}).get('treatment_options'):
             from services.rules.national_rules import attach   # i podklad z doby před T-340 ukáže oporu v Modré knize
@@ -903,12 +903,12 @@ def config_detail(request, cfg_id):
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def case_decision(request, cid):
-    """Draft závěru (Decision §8.4). PUT (předseda, zadávající nebo přizvaný lékař, T-326) validuje schéma; potvrzený závěr nejde měnit."""
+    """Draft závěru (Decision §8.4), GET 204 dokud není. PUT (předseda, zadávající nebo přizvaný lékař, T-326) validuje schéma; potvrzený závěr nejde měnit."""
     case = get_object_or_404(MdtCase, pk=cid)
     decision = Decision.objects.filter(case=case).first()
     if request.method == 'GET':
         if decision is None:
-            return Response({'detail': 'Závěr ještě není.'}, status=404)
+            return Response(status=204)        # T-375: závěr ještě není
         return Response(decision.content)
     _require_case_edit(request, case)
     if decision and decision.status == 'confirmed':

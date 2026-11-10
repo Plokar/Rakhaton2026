@@ -213,6 +213,9 @@ const fileBody = (name: string, file: Blob) => {
   return data;
 };
 
+/** 204 „ještě není“ vrací `apiFetch` jako prázdný objekt; pro volající je to `null` (T-375). */
+const nullIfEmpty = <T extends object>(value: T): T | null => (value && Object.keys(value).length > 0 ? value : null);
+
 export const mdtApi = {
   getMe: () => apiFetch<Me>('/api/mdt/me/'),
   /** Tituly si lékař upraví sám (T-338); roli a odbornost mění předseda. */
@@ -328,7 +331,8 @@ export const mdtApi = {
   updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
-  getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
+  /** Poslední podklad; `null`, dokud nevznikl (204, T-375). */
+  getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`).then(nullIfEmpty),
 
   /** Nový podklad; `feedback` = co bylo v předchozí verzi špatně (jde do promptů vybraných částí, T-323). */
   generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig; feedback?: { text: string; sections?: SectionId[] } } = {}) =>
@@ -339,8 +343,8 @@ export const mdtApi = {
 
   getJob: (jobId: number) => apiFetch<GenerationJob>(`/api/jobs/${jobId}/`),
 
-  /** Draft nebo potvrzený závěr komise (404, dokud není). */
-  getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`),
+  /** Draft nebo potvrzený závěr komise; `null`, dokud není (204, T-375). */
+  getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`).then(nullIfEmpty),
 
   /** Uložení draftu (předseda, lékař); server ho validuje podle §8.4, potvrzený závěr nejde měnit (409). */
   saveDecision: (caseId: string, decision: Decision) =>

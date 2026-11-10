@@ -33,7 +33,7 @@ def case(fake_fhir_dataset):
 
 def test_draft_validated_and_saved(case, decision):
     url = f'/api/mdt/cases/{case.pk}/decision/'
-    assert as_user('predseda').get(url).status_code == 404
+    assert as_user('predseda').get(url).status_code == 204       # T-375: ještě není ≠ chyba
     assert as_user('radiolog').put(url, decision, format='json').status_code == 403
     bad = {**decision, 'sections': {**decision['sections'], 'intent': 'nevim'}}
     assert as_user('predseda').put(url, bad, format='json').status_code == 400

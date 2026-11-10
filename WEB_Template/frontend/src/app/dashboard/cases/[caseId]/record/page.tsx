@@ -146,6 +146,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
     mdtApi
       .getDecision(caseId)
       .then((fresh) => {
+        if (!fresh) return;
         setDraft(fresh);
         setSavedAt(nowLabel());
         setMessage({ kind: 'info', text: 'Draft připravil AI zapisovatel z přepisu diskuse. Zkontrolujte ho a upravte.' });

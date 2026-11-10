@@ -63,7 +63,7 @@ def test_generator_errors_end_in_error_state(chair_client, case, settings, monke
     job_id = chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').json()['job_id']
     job = chair_client.get(f'/api/jobs/{job_id}/').json()
     assert job['status'] == 'error' and message in job['error']
-    assert chair_client.get(f'/api/mdt/cases/{case.pk}/brief/').status_code == 404
+    assert chair_client.get(f'/api/mdt/cases/{case.pk}/brief/').status_code == 204
 
 
 @pytest.mark.django_db(transaction=True)

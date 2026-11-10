@@ -2,7 +2,7 @@
 
 > Požadavek týmu z 9. 11. 2026. Navazuje na šablonu údajů lékaře (D-025, [SABLONY_LEKARE.md](SABLONY_LEKARE.md)),
 > tým komise (T-319), registraci se šablonou (T-338) a okno pro projektor (T-333, T-348).
-> Rozhodnutí D-027 a D-028, úkoly T-355 až T-359 v [PROGRESS.md](../PROGRESS.md).
+> Rozhodnutí D-027 a D-028, úkoly T-356 až T-360 v [PROGRESS.md](../PROGRESS.md).
 > Tento dokument je **návrh**. Kontrakty (API §6.3, JSON §8) se mění až v PR s kódem, podle AGENTS.md.
 
 ## 0. Slovník
@@ -38,6 +38,9 @@
 4. **Lékař z jiné nemocnice:** správce u pozvánky vybere „externí lékař“ a jeho nemocnici
    (ve FHIR `Organization`, lékař `Practitioner` + `PractitionerRole.organization`).
    - Účastní se jen komisí, do kterých ho správce pozval. Jiné komise ani pacienty z nich nevidí.
+   - **U pacientů zasedání, kam je pozvaný, vidí celý podklad** jako ostatní členové komise (podklad, PVW, závěr;
+     rozhodnuto 9. 11.). Pacienty do našich komisí nezařazuje (role `mdt_viewer`). Hlavičky jsou i pro něj bez jména
+     a RČ (D-018).
    - Všude, kde je vidět jméno lékaře (přítomní, úkoly, spolupráce, záznam boardu), je u něj i jeho nemocnice.
 5. Veřejná registrace `/register` se vypne, nebo bude fungovat jen s platným tokenem pozvánky.
    Demo účty a 1-click přihlášení pro pitch zůstávají.
@@ -96,6 +99,7 @@ Podle toho se ukazují požadavky lékaře (krok 3) a jeho normy na PVW (krok 4)
   - norma lékaře je **osobní kritérium**, ne pravidlo semaforu: barvu semaforu nemění (D-015) a nikdy se nepíše
     „doporučujeme“;
   - je vždy vidět, čí norma to je.
+- **Požadavky i normy mění jen lékař sám** (rozhodnuto 9. 11.) v průvodci nebo v Nastavení. Správce je vidí, ale nemění.
 
 ## 4. Co už existuje a co je nové
 
@@ -110,11 +114,11 @@ Podle toho se ukazují požadavky lékaře (krok 3) a jeho normy na PVW (krok 4)
 
 | Nové | Úkol |
 |---|---|
-| role správce `mdt_manager`, pozvánky s jednorázovým odkazem (e-mail i kopie), registrace jen přes pozvánku | T-355 |
-| komise se členy, přizvaní a vyřazení u zasedání, lékaři z jiných nemocnic a omezení na jejich komise | T-356 |
-| průvodce nastavením po prvním přihlášení (kroky 1–4) | T-357 |
-| požadavky lékaře → upozornění zadávajícímu lékaři | T-358 |
-| normy lékaře na PVW | T-359 |
+| role správce `mdt_manager`, pozvánky s jednorázovým odkazem (e-mail i kopie), registrace jen přes pozvánku | T-356 |
+| komise se členy, přizvaní a vyřazení u zasedání, lékaři z jiných nemocnic a omezení na jejich komise | T-357 |
+| průvodce nastavením po prvním přihlášení (kroky 1–4) | T-358 |
+| požadavky lékaře → upozornění zadávajícímu lékaři | T-359 |
+| normy lékaře na PVW | T-360 |
 
 ## 5. Návrh datového modelu (upřesní se v PR s kódem)
 

@@ -12,7 +12,7 @@ import { useSaveSession, useSessionsQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { MdtSessionListItem } from '@/types/mdt';
 import { BoardDialog } from './BoardDialog';
-import { dayLabel, patientsLabel, pragueDay, timeLabel, todayPrague } from './dates';
+import { dayLabel, isOverdue, patientsLabel, pragueDay, timeLabel, todayPrague } from './dates';
 import { InviteDoctorDialog } from './team/InviteDoctorDialog';
 import { can, useMe } from './me';
 
@@ -31,8 +31,10 @@ export function SessionList() {
   const manage = can.manageBoards(me);
 
   const sorted = (sessions.data ?? []).toSorted((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title, 'cs'));
-  const upcoming = sorted.filter((s) => pragueDay(s.date) >= today);
-  const past = sorted.filter((s) => pragueDay(s.date) < today).reverse();
+  const upcoming = sorted.filter((s) => pragueDay(s.date) >= today && !isOverdue(s));
+  // T-376: po termínu a neukončená zvlášť nahoře, ať nezapadnou mezi minulá
+  const overdue = sorted.filter((s) => isOverdue(s)).reverse();
+  const past = sorted.filter((s) => pragueDay(s.date) < today && !isOverdue(s)).reverse();
 
   return (
     <Page className="max-w-5xl">
@@ -68,6 +70,17 @@ export function SessionList() {
         />
       ) : (
         <>
+          {overdue.length > 0 && (
+            <section aria-labelledby="overdue-title">
+              <h2 id="overdue-title" className="mb-1 text-base font-semibold">
+                Čeká na ukončení <span className="font-normal text-muted-foreground">({overdue.length})</span>
+              </h2>
+              <p className="mb-2 text-sm text-muted-foreground">
+                Termín proběhl a board není ukončený. {manage ? 'Ukončete ho, nebo přesuňte neprojednané pacienty na další zasedání.' : 'Ukončí ho předseda komise.'}
+              </p>
+              <SessionRows sessions={overdue} today={today} overdue />
+            </section>
+          )}
           <section aria-labelledby="upcoming-title">
             <h2 id="upcoming-title" className="mb-2 text-base font-semibold">
               Nadcházející <span className="font-normal text-muted-foreground">({upcoming.length})</span>
@@ -108,7 +121,7 @@ export function SessionList() {
   );
 }
 
-function SessionRows({ sessions, today, muted = false }: { sessions: MdtSessionListItem[]; today: string; muted?: boolean }) {
+function SessionRows({ sessions, today, muted = false, overdue = false }: { sessions: MdtSessionListItem[]; today: string; muted?: boolean; overdue?: boolean }) {
   return (
     <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
       {sessions.map((s) => {
@@ -139,7 +152,12 @@ function SessionRows({ sessions, today, muted = false }: { sessions: MdtSessionL
                 </span>
               </span>
               <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                {s.status === 'in_progress' && <span className="font-medium text-primary">probíhá</span>}
+                {overdue && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900 dark:bg-amber-400/15 dark:text-amber-200">
+                    neukončeno{s.undiscussed ? ` · ${s.undiscussed} neprojednáno` : ''}
+                  </span>
+                )}
+                {!overdue && s.status === 'in_progress' && <span className="font-medium text-primary">probíhá</span>}
                 {s.status === 'closed' && (
                   <span className="inline-flex items-center gap-1">
                     <Lock className="size-3" aria-hidden /> uzavřeno

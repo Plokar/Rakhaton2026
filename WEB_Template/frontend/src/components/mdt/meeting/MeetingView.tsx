@@ -69,6 +69,7 @@ import { openProjectorWindow, publishSelection, publishSlide, useAnswerProjector
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { ChatbotPanel } from './ChatbotPanel';
+import { OverdueBanner } from './OverdueBanner';
 import { SessionChat } from './SessionChat';
 import { formatDuration, useCaseTimer } from './use-case-timer';
 import { DiscussionRecorder } from './DiscussionRecorder';
@@ -107,6 +108,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const [completing, setCompleting] = React.useState<string | null>(null);
   const [collaborating, setCollaborating] = React.useState(false);
   const [editingProjector, setEditingProjector] = React.useState(false);
+  const [closingOverdue, setClosingOverdue] = React.useState(false);
   const chat = useSessionChat(sessionId, me);
   const reorder = useAgendaOrder(sessionId);
   const [moved, setMoved] = React.useState('');
@@ -320,6 +322,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         botOpen={bot.open}
         onBot={toggleBot}
       />
+      {chair && <OverdueBanner board={board} onClose={() => setClosingOverdue(true)} />}
+      {closingOverdue && <CloseBoardDialog board={board} open onOpenChange={setClosingOverdue} onClosed={() => toast.success('Board je ukončený', { description: 'Výstupy najdete v Záznamu boardů.' })} />}
       {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
           <ResizablePanel id="agenda" defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">

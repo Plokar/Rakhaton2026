@@ -290,7 +290,9 @@ def session_list(request):
                 raise ValidationError({param: 'Datum YYYY-MM-DD.'})
             sessions = sessions.filter(**{lookup: day})
     sessions = list(sessions)
-    out = [{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()]} for s in sessions]
+    # `undiscussed` (T-376): pacienti bez rozhodnutí, pro oddíl „Čeká na ukončení“ u zasedání po termínu
+    out = [{**_session(s), 'patients': [c.patient_fhir_id for c in s.cases.all()],
+            'undiscussed': sum(c.status not in ('decided', 'confirmed') for c in s.cases.all())} for s in sessions]
     if 'cases' in request.query_params.get('expand', '').split(','):
         summaries = _case_summaries([c for s in sessions for c in s.cases.all()])
         for item, s in zip(out, sessions):

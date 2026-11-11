@@ -46,3 +46,16 @@ def test_sessions_api_with_agenda(authenticated_client, seeded):
 
 def test_sessions_require_login(api_client):
     assert api_client.get('/api/mdt/sessions/').status_code in (401, 403)
+
+
+def test_session_list_counts_undiscussed(chair_client, db):
+    """T-376: seznam zasedání nese počet pacientů bez rozhodnutí (oddíl „Čeká na ukončení“)."""
+    from datetime import datetime, timezone as tz
+
+    from apps.mdt.models import MdtCase, MdtSession
+    session = MdtSession.objects.create(date=datetime(2026, 10, 21, 12, tzinfo=tz.utc), title='GIT')
+    for i, status in enumerate(('nominated', 'decided', 'confirmed', 'returned')):
+        MdtCase.objects.create(session=session, patient_fhir_id=f'P0{i + 1}', service_request_fhir_id=f'P0{i + 1}-zad01',
+                               status=status)
+    item = next(s for s in chair_client.get('/api/mdt/sessions/').json() if s['id'] == session.pk)
+    assert item['undiscussed'] == 2

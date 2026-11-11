@@ -1022,7 +1022,11 @@ export interface ChatbotMessage {
 export type PatientChatbotAnswer = Pick<ChatbotMessage, 'text' | 'claims' | 'uncertain' | 'model'>;
 
 /** GET /api/mdt/sessions/ */
-export type MdtSessionListItem = MdtSession & { patients: string[] };
+export type MdtSessionListItem = MdtSession & {
+  patients: string[];
+  /** Pacienti bez rozhodnutí komise (T-376). */
+  undiscussed?: number;
+};
 
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };

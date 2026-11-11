@@ -35,6 +35,7 @@ Pilot se spustí, až je všechno zaškrtnuté. Ověřuje koordinátor pilotu.
 **Provoz**
 - [ ] `https://<API_DOMAIN>/api/health/` → 200, přihlášení na produkční doméně projde.
 - [ ] Denní záloha běží (`scripts/backup.sh` v cronu) a jedna obnova je vyzkoušená (§6).
+- [ ] Volitelně `SENTRY_DSN` (hlášení chyb backendu; bez těla požadavků, cookies a query, `core/monitoring.py`).
 - [ ] Monitoring dostupnosti hlídá `/api/health/?strict=1` (503 i při výpadku IRIS) a frontend (např. UptimeRobot,
       každých 5 min, e-mail koordinátorovi).
 

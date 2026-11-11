@@ -146,13 +146,8 @@ else:
     _logging.getLogger('config').warning(
         'E-maily se neodesílají (EMAIL_HOST není nastaven), pozvánky předávejte odkazem.')
 
-# ── Sentry (zakomentováno – pro error monitoring) ────────────────────────────
-# import sentry_sdk
-# from sentry_sdk.integrations.django import DjangoIntegration
-# sentry_sdk.init(
-#     dsn=os.environ.get('SENTRY_DSN', ''),
-#     integrations=[DjangoIntegration()],
-#     traces_sample_rate=0.1,
-#     send_default_pii=False,
-#     environment='production',
-# )
+# ── Hlášení chyb (T-377) ─────────────────────────────────────────────────────
+# Jen s SENTRY_DSN; bez něj se nic neimportuje a nic neodchází ven. Bez těla, cookies, hlaviček a query.
+from core.monitoring import init_sentry  # noqa: E402
+
+init_sentry()

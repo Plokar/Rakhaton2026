@@ -18,10 +18,7 @@ import {
   Sliders,
   History,
   Terminal,
-  Zap,
-  CheckCircle2,
   AlertCircle,
-  HelpCircle,
 } from 'lucide-react';
 
 interface HistoryItem {

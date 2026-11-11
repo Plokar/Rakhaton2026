@@ -27,6 +27,8 @@ export function Avatar({ src, alt, fallback = 'U', size = 'default', className, 
       {...props}
     >
       {src && !imageError ? (
+        // Avatar z libovolné URL (profil): next/image by vyžadoval povolené domény, optimalizace tu nic nepřinese.
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={alt || 'Avatar'}

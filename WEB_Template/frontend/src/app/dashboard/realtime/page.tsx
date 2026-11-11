@@ -5,19 +5,13 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import {
-  Radio,
   Send,
   Terminal,
   RefreshCw,
-  Zap,
-  Users,
-  Clock,
   Activity,
   Trash2,
 } from 'lucide-react';
@@ -31,7 +25,6 @@ interface LogMessage {
 }
 
 export default function RealtimePage() {
-  const { user } = useAuth();
   const [room, setRoom] = React.useState('hackathon');
   const [wsUrl, setWsUrl] = React.useState('/ws/room/hackathon/');
   const [messages, setMessages] = React.useState<LogMessage[]>([]);

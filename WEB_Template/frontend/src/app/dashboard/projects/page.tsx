@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar } from '@/components/ui/avatar';
 import { Dialog, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { EmptyState } from '@/components/ui/empty-state';
 import {
   projectsApi,
   tasksApi,
@@ -24,11 +23,6 @@ import {
   Search,
   LayoutGrid,
   List,
-  Filter,
-  CheckCircle2,
-  Calendar,
-  Clock,
-  ExternalLink,
   ChevronRight,
   Trash2,
 } from 'lucide-react';
@@ -36,12 +30,11 @@ import {
 export default function ProjectsPage() {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [tasks, setTasks] = React.useState<Task[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [, setLoading] = React.useState(true);
 
   const [viewMode, setViewMode] = React.useState<'kanban' | 'table'>('kanban');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = React.useState<string>('all');
+  const [selectedStatus] = React.useState<string>('all');
 
   // New task dialog
   const [newTaskOpen, setNewTaskOpen] = React.useState(false);
@@ -172,19 +165,6 @@ export default function ProjectsPage() {
         return <Badge variant="default">Střední</Badge>;
       default:
         return <Badge variant="outline">Nízká</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'done':
-        return <Badge variant="success">Hotovo</Badge>;
-      case 'in_progress':
-        return <Badge variant="info">V řešení</Badge>;
-      case 'review':
-        return <Badge variant="warning">Review</Badge>;
-      default:
-        return <Badge variant="secondary">K řešení</Badge>;
     }
   };
 

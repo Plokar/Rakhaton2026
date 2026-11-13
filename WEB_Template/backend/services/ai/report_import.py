@@ -5,7 +5,7 @@
    každá hodnota se ověří proti svému odstavci (číslo i datum musí být ve zdroji). Nic se nezapisuje.
 2. **Potvrzení lékařem** (`confirm`): klient pošle návrh zpět (případně jen vybrané hodnoty); server ho znovu
    ověří proti textu dokumentu a zapíše jednou transakcí `DocumentReference` + `Observation[]` (`derivedFrom`
-   → dokument) + `Provenance` (lékař + MDT Copilot). Neověřitelné hodnoty se nezapíšou nikdy.
+   → dokument) + `Provenance` (lékař + MDTcore). Neověřitelné hodnoty se nezapíšou nikdy.
 """
 from __future__ import annotations
 

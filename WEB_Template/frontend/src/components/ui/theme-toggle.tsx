@@ -25,7 +25,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       ) : (
         <>
           <Moon className="h-4 w-4 text-slate-700 dark:text-slate-300" aria-hidden />
-          <span className="hidden sm:inline">Projektor</span>
+          <span className="hidden sm:inline">Tmavý</span>
         </>
       )}
     </button>

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import chat, chatbot, drafts, templates, views
+from . import access_log, accounts, chat, chatbot, doctor_rules, drafts, live, templates, views
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
@@ -10,14 +10,35 @@ urlpatterns = [
     path('templates/catalog/', templates.template_catalog, name='template-catalog'),
     path('templates/<str:area>/', templates.template_detail, name='template-detail'),
     path('users/<int:uid>/', views.user_detail, name='user-detail'),
+    path('users/<int:uid>/rules/', doctor_rules.user_rules, name='user-rules'),
+    # T-361, T-362: pozvánky, komise a pozvaní na zasedání (správce MDT)
+    path('invitations/', accounts.invitation_list, name='invitation-list'),
+    path('invitations/<int:iid>/revoke/', accounts.invitation_revoke, name='invitation-revoke'),
+    path('invitations/<int:iid>/resend/', accounts.invitation_resend, name='invitation-resend'),
+    path('invitations/public/<str:token>/', accounts.invitation_public, name='invitation-public'),
+    path('invitations/public/<str:token>/accept/', accounts.invitation_accept, name='invitation-accept'),
+    path('access-log/', access_log.access_log_list, name='access-log'),           # T-370 (správce)
+    path('committees/', accounts.committee_list, name='committee-list'),
+    path('committees/<int:committee_id>/', accounts.committee_detail, name='committee-detail'),
+    # T-363–T-365: požadavky a normy lékaře
+    path('my-rules/', doctor_rules.my_rules, name='my-rules'),
+    path('my-rules/requirements/<str:area>/', doctor_rules.my_requirement, name='my-requirement'),
+    path('my-rules/norms/', doctor_rules.my_norms, name='my-norms'),
+    path('my-rules/norms/<int:norm_id>/', doctor_rules.my_norm_detail, name='my-norm-detail'),
+    path('norm-fields/', doctor_rules.norm_fields, name='norm-fields'),
     path('sessions/', views.session_list, name='session-list'),
     path('sessions/<int:sid>/', views.session_detail, name='session-detail'),
     path('sessions/<int:sid>/order/', views.session_order, name='session-order'),
+    path('sessions/<int:sid>/invited/', accounts.session_invited, name='session-invited'),
+    path('sessions/<int:sid>/doctor-rules/', doctor_rules.session_doctor_rules, name='session-doctor-rules'),
     path('sessions/<int:sid>/record/', views.session_record, name='session-record'),
     path('sessions/<int:sid>/export.zip', views.session_export_zip, name='session-export-zip'),
     path('records/', views.board_records, name='board-records'),
     path('sessions/<int:sid>/messages/', chat.session_messages, name='session-messages'),
     path('sessions/<int:sid>/stream/', chat.session_stream, name='session-stream'),
+    path('live/', live.my_live, name='my-live'),
+    path('sessions/<int:sid>/live/', live.session_live, name='session-live'),
+    path('sessions/<int:sid>/presence/', live.session_presence, name='session-presence'),
     path('sessions/<int:sid>/chatbot/', chatbot.session_chatbot, name='session-chatbot'),
     path('configs/', views.config_list, name='config-list'),
     path('configs/<int:cfg_id>/', views.config_detail, name='config-detail'),
@@ -30,6 +51,7 @@ urlpatterns = [
     path('patients/<str:pid>/intake/', views.patient_intake, name='patient-intake'),
     path('patients/<str:pid>/import/', views.patient_import, name='patient-import'),
     path('patients/<str:pid>/import/confirm/', views.patient_import_confirm, name='patient-import-confirm'),
+    path('patients/<str:pid>/chatbot/', chatbot.patient_chatbot, name='patient-chatbot'),
     path('cases/', views.case_create, name='case-create'),
     path('cases/<int:cid>/', views.case_detail, name='case-detail'),
     path('cases/<int:cid>/decision/', views.case_decision, name='case-decision'),
@@ -45,7 +67,12 @@ urlpatterns = [
     path('cases/<int:cid>/scribe/', views.case_scribe, name='case-scribe'),
     path('cases/<int:cid>/patient-summary/', views.case_patient_summary, name='case-patient-summary'),
     path('cases/<int:cid>/readiness/', views.case_readiness, name='case-readiness'),
+    path('cases/<int:cid>/review/', views.case_review, name='case-review'),
+    path('reviews/', views.review_list, name='review-list'),
     path('cases/<int:cid>/compatibility/', views.case_compatibility, name='case-compatibility'),
     path('cases/<int:cid>/template/', views.case_template, name='case-template'),
     path('cases/<int:cid>/for-me/', views.case_for_me, name='case-for-me'),
+    path('cases/<int:cid>/doctor-rules/', doctor_rules.case_doctor_rules, name='case-doctor-rules'),
+    path('cases/<int:cid>/doctor-rules/decision/', doctor_rules.case_doctor_rules_decision,
+         name='case-doctor-rules-decision'),
 ]

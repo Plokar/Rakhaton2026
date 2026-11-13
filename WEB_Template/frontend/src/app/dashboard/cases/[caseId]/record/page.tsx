@@ -25,6 +25,7 @@ import { briefP03, decisionP03 } from '@/lib/fixtures';
 import { mdtApi } from '@/lib/mdt-api';
 import { useCaseLocation } from '@/lib/queries';
 import { useApiData } from '@/lib/use-api-data';
+import { setUnsaved } from '@/lib/unsaved';
 import type { Brief, Decision, EvidenceId, Me, ProcedureCompatibility } from '@/types/mdt';
 
 const orNull = <T,>(p: Promise<T>) =>
@@ -91,6 +92,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const [revising, setRevising] = React.useState(false);
   const [reason, setReason] = React.useState('');
   const [openId, setOpenId] = React.useState<EvidenceId | null>(null);
+  const [intentChosen, setIntentChosen] = React.useState(false);
   const close = React.useCallback(() => setOpenId(null), []);
   const location = useCaseLocation(isDemo ? null : Number(caseId));
 
@@ -98,11 +100,18 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const brief = briefData.data ?? null;
   const current = draft ?? decisionData.data ?? (loading ? null : initialDraft(caseId, brief, me, location.item?.question));
   const confirmed = current?.status === 'confirmed';
+  // Nový závěr bez záměru v podkladu: „odlozeno“ je jen technická výchozí hodnota, lékař musí záměr zvolit sám.
+  const intentUnset = !intentChosen && !confirmed && !decisionData.data && !brief?.header.intent;
   // T-326: upravuje zadávající lékař, přizvaný lékař nebo předseda (backend to ověří znovu)
   const mayEditCase = location.item ? can.editCase(me, location.item) : can.manageBoards(me);
   const canEdit = !confirmed && (isDemo || mayEditCase);
   const canConfirm = !isDemo && !confirmed && can.manageBoards(me);
   const dirty = draft !== null && savedAt === null;
+  // T-373: rozepsaný závěr nesmí zahodit odhlášení při nečinnosti
+  React.useEffect(() => {
+    setUnsaved('record', dirty);
+    return () => setUnsaved('record', false);
+  }, [dirty]);
   const order = React.useMemo(() => collectCitations([current ?? {}, brief?.red_flags ?? []]), [current, brief]);
 
   const edit = (next: Decision) => {
@@ -137,6 +146,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
     mdtApi
       .getDecision(caseId)
       .then((fresh) => {
+        if (!fresh) return;
         setDraft(fresh);
         setSavedAt(nowLabel());
         setMessage({ kind: 'info', text: 'Draft připravil AI zapisovatel z přepisu diskuse. Zkontrolujte ho a upravte.' });
@@ -163,6 +173,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
   };
 
   const confirm = async () => {
+    if (intentUnset) throw new Error('Před potvrzením zvolte léčebný záměr.');
     if (!current?.sections.question.text.trim() || !current.sections.conclusion.text.trim()) {
       throw new Error('Před potvrzením vyplňte projednanou otázku a závěr MDT.');
     }
@@ -188,8 +199,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
         title="Závěr komise"
         meta={
           <>
-            <span translate="no">{brief?.header.display_name ?? patientLabel}</span> · zápis ve struktuře záznamu MDT. Text od AI je
-            odlišený, rozhoduje lékař.
+            <span translate="no">{brief?.header.display_name ?? patientLabel}</span>
           </>
         }
         actions={
@@ -335,6 +345,9 @@ function DecisionContent({ caseId }: { caseId: string }) {
               readOnly={!canEdit}
               redFlags={brief?.red_flags ?? []}
               options={optionsData.data ?? []}
+              requesterUserId={location.item?.created_by?.user_id ?? null}
+              intentUnset={intentUnset}
+              onIntentChosen={() => setIntentChosen(true)}
             />
           </section>
           <SourceDrawer
@@ -351,7 +364,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
           decision={current}
           patientId={brief?.patient_id ?? 'Pxx'}
           confirmer={me?.name ?? 'předseda'}
-          remaining={decisionChecklist(current, (brief?.red_flags ?? []).map((f) => f.id))}
+          remaining={[...(intentUnset ? ['Léčebný záměr'] : []), ...decisionChecklist(current, (brief?.red_flags ?? []).map((f) => f.id))]}
           onClose={() => setConfirming(false)}
           onConfirm={confirm}
         />

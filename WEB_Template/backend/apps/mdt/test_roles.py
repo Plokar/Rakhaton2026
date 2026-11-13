@@ -35,10 +35,13 @@ def test_demo_users_roles_and_me(seeded):
     me = as_user('predseda').get('/api/mdt/me/').json()
     assert (me['role'], me['specialty']) == ('mdt_admin', 'oncologist')
     assert as_user('pneumolog').get('/api/mdt/me/').json()['role'] == 'mdt_doctor'
-    assert as_user('chirurg').get('/api/mdt/me/').json() | {'user_id': 0} == {
+    me = as_user('chirurg').get('/api/mdt/me/').json() | {'user_id': 0}
+    expected = {
         'user_id': 0, 'username': 'chirurg', 'name': 'Chirurg', 'role': 'mdt_viewer', 'specialty': 'surgeon',
         'practitioner_id': 'LEK-APP-chirurg', 'first_name': 'Chirurg', 'last_name': '', 'title_before': '',
-        'title_after': ''}
+        'title_after': '', 'is_manager': False, 'is_active': True, 'organization': '', 'is_external': False,
+        'onboarding_done': True}
+    assert {k: me[k] for k in expected} == expected and me['committees']      # T-361, T-362
     assert MdtCase.objects.get(patient_fhir_id='P04').created_by.username == 'pneumolog'
     assert MdtSession.objects.filter(chair__username='predseda').count() == 4
 
@@ -170,3 +173,38 @@ def test_collaborators_validation(seeded):
     # zadávající lékař sám sebe nepřizývá (právo už má)
     me = p04.created_by_id
     assert as_user('pneumolog').patch(url, {'collaborators': [me]}, format='json').json()['collaborators'] == []
+
+
+# ── Pilot: heslo demo účtů mimo DEBUG ───────────────────────────────────────────
+
+@pytest.mark.parametrize('password', [None, 'demo123456', 'CHANGE-ME-DEMO-PASSWORD', 'kratke'])
+def test_pilot_rejects_weak_demo_password(settings, monkeypatch, password):
+    from django.core.exceptions import ImproperlyConfigured
+    from apps.mdt.roles import demo_password
+    settings.MDT_STRICT_SECRETS = True
+    if password is None:
+        monkeypatch.delenv('MDT_DEMO_PASSWORD', raising=False)
+    else:
+        monkeypatch.setenv('MDT_DEMO_PASSWORD', password)
+    with pytest.raises(ImproperlyConfigured):
+        demo_password()
+
+
+def test_pilot_accepts_strong_demo_password(settings, monkeypatch):
+    from apps.mdt.roles import demo_password
+    settings.MDT_STRICT_SECRETS = True
+    monkeypatch.setenv('MDT_DEMO_PASSWORD', 'Pilot-MDT-2026-silne')
+    assert demo_password() == 'Pilot-MDT-2026-silne'
+
+
+@pytest.mark.django_db
+def test_reset_demo_passwords(settings, monkeypatch):
+    from apps.mdt.roles import ensure_demo_users
+    monkeypatch.setenv('MDT_DEMO_PASSWORD', 'demo123456')
+    ensure_demo_users()
+    settings.MDT_STRICT_SECRETS = True
+    monkeypatch.setenv('MDT_DEMO_PASSWORD', 'Pilot-MDT-2026-silne')
+    users = ensure_demo_users()                         # bez resetu se heslo existujícího účtu nemění
+    assert users['predseda'].check_password('demo123456')
+    users = ensure_demo_users(reset_passwords=True)
+    assert users['predseda'].check_password('Pilot-MDT-2026-silne')

@@ -16,6 +16,10 @@ export const MDT_ROLE_LABEL: Record<MdtRole, string> = {
 /** Co smí role v UI (stejně jako backend, ARCH §6.3). Backend je stejně ověří. */
 export const can = {
   manageBoards: (me?: Me | null) => me?.role === 'mdt_admin',
+  /** Správce MDT (T-361, D-027): účty, pozvánky a komise. */
+  manageAccounts: (me?: Me | null) => Boolean(me?.is_manager),
+  /** Pozvané na zasedání mění předseda nebo správce (T-362). */
+  manageInvited: (me?: Me | null) => me?.role === 'mdt_admin' || Boolean(me?.is_manager),
   generateBrief: (me?: Me | null) => me?.role === 'mdt_admin' || me?.role === 'mdt_doctor',
   /** Předseda, zadávající lékař, nebo přizvaný ke spolupráci (T-326; i člen komise s rolí jen ke čtení). */
   editCase: (me: Me | null | undefined, c: MdtCase) =>
@@ -29,16 +33,31 @@ export const can = {
 
 export function meLabel(me: Me): string {
   const specialty = me.specialty ? ROLE_META[me.specialty].label.toLowerCase() : null;
-  return specialty ? `${MDT_ROLE_LABEL[me.role]} · ${specialty}` : MDT_ROLE_LABEL[me.role];
+  const parts = [MDT_ROLE_LABEL[me.role], specialty, me.is_manager ? 'správce MDT' : null, me.is_external ? me.organization : null];
+  return parts.filter(Boolean).join(' · ');
 }
 
 const MeContext = React.createContext<Me | null>(null);
+const RefreshMeContext = React.createContext<() => void>(() => {});
 const fetchMe = () => mdtApi.getMe();
 
 /** Role a odbornost přihlášeného z `/api/mdt/me/`; dokud se nenačte, je `null` (nic navíc nepovolí). */
 export function MeProvider({ userId, children }: { userId: number | string; children: React.ReactNode }) {
-  const { data } = useApiData(fetchMe, String(userId));
-  return <MeContext.Provider value={data ?? null}>{children}</MeContext.Provider>;
+  const [version, setVersion] = React.useState(0);
+  const { data } = useApiData(fetchMe, `${userId}:${version}`);
+  const [last, setLast] = React.useState<Me | null>(null);
+  if (data && data !== last) setLast(data);             // při obnově profilu nezmizí role (nic se nepřeblikne)
+  const refresh = React.useCallback(() => setVersion((v) => v + 1), []);
+  return (
+    <RefreshMeContext.Provider value={refresh}>
+      <MeContext.Provider value={data ?? last}>{children}</MeContext.Provider>
+    </RefreshMeContext.Provider>
+  );
+}
+
+/** Znovu načte profil přihlášeného (např. po dokončení průvodce nastavením, T-363). */
+export function useRefreshMe(): () => void {
+  return React.useContext(RefreshMeContext);
 }
 
 export function useMe(): Me | null {

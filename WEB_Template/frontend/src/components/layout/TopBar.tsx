@@ -66,7 +66,8 @@ const SECTIONS: { prefix: string; label: string; href: string }[] = [
   { prefix: '/dashboard/cases', label: 'Zasedání', href: '/dashboard/mdt' },
   { prefix: '/dashboard/tasks', label: 'Úkoly', href: '/dashboard/tasks' },
   { prefix: '/dashboard/settings', label: 'Nastavení', href: '/dashboard/settings' },
-  { prefix: '/dashboard/tym', label: 'Tým komise', href: '/dashboard/tym' },
+  { prefix: '/dashboard/tym', label: 'Tým a účty', href: '/dashboard/tym' },
+  { prefix: '/dashboard/vitejte', label: 'Nastavení lékaře', href: '/dashboard/vitejte' },
   { prefix: '/dashboard/zaznamy', label: 'Záznam boardů', href: '/dashboard/zaznamy' },
 ];
 

@@ -63,7 +63,7 @@ def test_generator_errors_end_in_error_state(chair_client, case, settings, monke
     job_id = chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').json()['job_id']
     job = chair_client.get(f'/api/jobs/{job_id}/').json()
     assert job['status'] == 'error' and message in job['error']
-    assert chair_client.get(f'/api/mdt/cases/{case.pk}/brief/').status_code == 404
+    assert chair_client.get(f'/api/mdt/cases/{case.pk}/brief/').status_code == 204
 
 
 @pytest.mark.django_db(transaction=True)
@@ -88,3 +88,42 @@ def test_llm_call_log_record(db):
                                               'tokens_in': 10, 'tokens_out': 5, 'latency_ms': 7})
     assert (row.ok, row.tokens_in, row.provider) == (True, 10, 'mock')
     assert LlmCallLog.record('x', {'status': 'error', 'error': 'timeout', 'provider': 'gemini'}).ok is False
+
+
+# ── T-368: job přerušený restartem nezůstane „running“ ──
+
+def _age(job, minutes):
+    from datetime import timedelta
+
+    from django.utils import timezone
+    GenerationJob.objects.filter(pk=job.pk).update(updated_at=timezone.now() - timedelta(minutes=minutes))
+
+
+def test_stale_running_job_becomes_error_on_poll(chair_client, case):
+    job = GenerationJob.objects.create(case=case, kind='brief', status='running', progress=40)
+    _age(job, 20)
+    body = chair_client.get(f'/api/jobs/{job.pk}/').json()
+    assert body['status'] == 'error' and body['error'] == jobs.STALE_ERROR
+
+
+def test_fresh_running_job_stays_running(chair_client, case):
+    job = GenerationJob.objects.create(case=case, kind='brief', status='running')
+    _age(job, 5)
+    assert chair_client.get(f'/api/jobs/{job.pk}/').json()['status'] == 'running'
+
+
+def test_timeout_from_settings_and_new_job_clears_old(chair_client, case, sync, settings):
+    settings.MDT_JOB_TIMEOUT_MINUTES = 2
+    old = GenerationJob.objects.create(case=case, kind='brief', status='queued')
+    _age(old, 3)
+    assert chair_client.post(f'/api/mdt/cases/{case.pk}/brief/', {}, format='json').status_code == 202
+    old.refresh_from_db()
+    assert old.status == 'error'
+
+
+def test_progress_keeps_job_fresh(case, sync):
+    job = GenerationJob.objects.create(case=case, kind='brief', params={'config': {'name': 'Výchozí'}})
+    jobs.run(job.pk)
+    job.refresh_from_db()
+    assert job.status == 'done'
+    assert jobs.fail_stale() == 0

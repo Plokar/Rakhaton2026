@@ -7,7 +7,12 @@ import { AppSidebar } from '@/components/layout/AppSidebar';
 import { CommandMenu } from '@/components/layout/CommandMenu';
 import { ShortcutsDialog } from '@/components/layout/ShortcutsDialog';
 import { CrumbSlotProvider, TopBar } from '@/components/layout/TopBar';
+import { IdleLogout } from '@/components/layout/IdleLogout';
+import { PilotBanner } from '@/components/layout/PilotBanner';
 import { MeProvider } from '@/components/mdt/me';
+import { LiveBanner } from '@/components/mdt/live/LiveBanner';
+import { ReviewBanner } from '@/components/mdt/review';
+import { OnboardingBanner } from '@/components/mdt/OnboardingBanner';
 import { SidebarInset, SidebarProvider } from '@/components/shadcn/sidebar';
 
 /**
@@ -73,6 +78,10 @@ function Shell({ children }: { children: React.ReactNode }) {
         <AppSidebar />
         <SidebarInset className="min-w-0">
           <TopBar slotRef={setSlot} onSearch={() => setSearchOpen(true)} onShowShortcuts={() => setShortcutsOpen(true)} />
+          <PilotBanner />
+          <OnboardingBanner />
+          <LiveBanner />
+          <ReviewBanner />
           <main id="obsah" className="flex min-h-0 min-w-0 flex-1 flex-col">
             <React.Suspense fallback={null}>{children}</React.Suspense>
           </main>
@@ -82,6 +91,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <CommandMenu open={searchOpen} onOpenChange={setSearchOpen} onShowShortcuts={() => setShortcutsOpen(true)} />
       )}
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <IdleLogout />
     </CrumbSlotProvider>
   );
 }

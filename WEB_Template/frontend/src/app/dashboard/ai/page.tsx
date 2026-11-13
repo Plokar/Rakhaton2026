@@ -18,10 +18,7 @@ import {
   Sliders,
   History,
   Terminal,
-  Zap,
-  CheckCircle2,
   AlertCircle,
-  HelpCircle,
 } from 'lucide-react';
 
 interface HistoryItem {
@@ -124,8 +121,8 @@ export default function AiStudioPage() {
 
   const samplePrompts = [
     { label: '⚡ TS Stream funkce', text: 'Napiš TypeScript async generátor pro čtení chunků z audio streamu.' },
-    { label: '📊 Hackathon Pitch', text: 'Vytvoř 1-minutový přesvědčivý pitch pro porotu pro náš projekt.' },
-    { label: '🔒 JWT Validace', text: 'Jak ověřit JWT token v Django Channels WebSocket scope middleware?' },
+    { label: 'Pitch pro porotu', text: 'Vytvoř 1-minutový přesvědčivý pitch pro porotu pro náš projekt.' },
+    { label: 'Ověření JWT', text: 'Jak ověřit JWT token v Django Channels WebSocket scope middleware?' },
   ];
 
   return (
@@ -135,7 +132,7 @@ export default function AiStudioPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
                 AI Studio Playground
               </h1>
               <Badge variant={selectedProvider === 'mock' ? 'info' : 'success'}>
@@ -216,7 +213,7 @@ export default function AiStudioPage() {
                     <Terminal className="h-4 w-4 text-emerald-500" /> Výstup modelu
                   </CardTitle>
                   {response && (
-                    <Badge variant="outline" className="text-[10px] font-mono">
+                    <Badge variant="outline" className="text-[11px] font-mono">
                       {response.tokens_used} tokenů
                     </Badge>
                   )}
@@ -282,9 +279,9 @@ export default function AiStudioPage() {
                       >
                         <span className="truncate">{p.name}</span>
                         {p.is_configured ? (
-                          <span className="text-[10px] text-emerald-500 font-mono">Připraveno</span>
+                          <span className="text-[11px] text-emerald-500 font-mono">Připraveno</span>
                         ) : (
-                          <span className="text-[10px] text-muted-foreground font-mono">Vyžaduje klíč</span>
+                          <span className="text-[11px] text-muted-foreground font-mono">Vyžaduje klíč</span>
                         )}
                       </button>
                     ))}
@@ -324,7 +321,7 @@ export default function AiStudioPage() {
                     onChange={(e) => setTemperature(parseFloat(e.target.value))}
                     className="w-full accent-primary"
                   />
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
+                  <div className="flex justify-between text-[11px] text-muted-foreground mt-0.5">
                     <span>Přesný (0.0)</span>
                     <span>Kreativní (1.0)</span>
                   </div>
@@ -370,7 +367,7 @@ export default function AiStudioPage() {
                       className="flex w-full flex-col rounded-lg border border-border/60 bg-muted/20 p-2 text-left hover:bg-muted/40 transition"
                     >
                       <span className="text-xs font-medium text-foreground truncate">{h.prompt}</span>
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1">
                         <span className="uppercase">{h.provider}</span>
                         <span>{h.timestamp}</span>
                       </div>

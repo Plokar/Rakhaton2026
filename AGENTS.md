@@ -1,15 +1,21 @@
 # AGENTS.md — pravidla pro AI agenty (a lidi)
 
-Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + výzva InterSystems). Paralelně na něm pracuje víc lidí a víc AI agentů, proto drž tento protokol.
+Projekt **MDTcore** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE + výzva InterSystems). Paralelně na něm pracuje víc lidí a víc AI agentů, proto drž tento protokol.
 
 ## Než začneš
 
 1. Spusť `git pull --rebase origin master`.
+   Pak ověř graphify (`graphify --help`; když chybí, viz [Graphify](#graphify-povinné-pro-všechny-t-356)) a obnov graf `graphify update .`.
 2. Přečti **[PROGRESS.md](PROGRESS.md)**: protokol (§1), task board (§4) a blokery.
 3. Přečti v **[ARCHITEKTURA.md](ARCHITEKTURA.md)** sekce, na které odkazuje tvůj úkol. Je to zdroj pravdy pro architekturu, FHIR model a kontrakty (§8).
 4. U všeho, co sahá na data nebo AI, přečti **[DATASET.md](DATASET.md)**: struktura datasetu, ID, sanitizace, kde co ve FHIR je a hypotézy nesrovnalostí.
 5. U obrazovek, semaforu, varování a zařazení pacienta přečti **[docs/POZADAVKY_LEKARE.md](docs/POZADAVKY_LEKARE.md)**: požadavky lékaře sladěné se zadáním, katalog pravidel, škály a zkratky.
 6. Vezmi si úkol podle protokolu: stav ⬜, závislosti ✅. Udělej **claim commit** a pak pracuj ve větvi `t-xxx-…`. Když na jednom stroji pracuje víc agentů, má každý vlastní `git worktree` (PROGRESS §1, „Sprinty a paralelní práce“).
+
+## Slovník (zkratky týmu)
+
+- **PVW = projektor view** = okno pro projektor: panel, který se při zasedání MDT promítá na projektoru celé komisi (`/projector`, slidy T-348, rozložení `MdtCase.projector_layout`, jinak šablona zadávajícího lékaře D-025). Když uživatel napíše „PVW“, myslí tohle.
+- **Správce MDT** = jeden správce všech komisí a všech účtů (role `mdt_manager`, může mít i roli předsedy `mdt_admin`). Lékaři se do aplikace dostanou jen přes jeho pozvánku (odkaz), i lékaři z jiných nemocnic. Každý lékař si při prvním přihlášení nastaví svůj must-have PVW, požadavky na podklad (upozorní zadávajícího lékaře, když je pozvaný) a své normy pro řešení (vidět na PVW). V kódu: Tým a účty `/dashboard/tym`, pozvánka `/pozvanka/[token]`, průvodce `/dashboard/vitejte`, normy na PVW = karta „Normy lékařů“ (blok `norms`), vyhodnocení jen kódem (`services/rules/doctor_rules.py`). Detail a pravidla: **[docs/UCTY_A_PVW.md](docs/UCTY_A_PVW.md)** (D-027, D-028).
 
 ## Mapa repa
 
@@ -18,18 +24,38 @@ Projekt **MDT Copilot** vzniká na hackathonu Rakathon 2026 (zadání Asseco CE 
 - IRIS for Health (FHIR R4 + Vector Search): služba `iris` v docker-compose, viz ARCHITEKTURA §4.
 - `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`: dataset od Asseco (= `DATASET_DIR`). **Neměnit**, opravy patří do sanitizace v ingestu.
 - `data/`: dev ground truth, fixtures pro UI, audio pro zapisovatele, `onko/` = znalostní báze (postupy podle diagnózy, studie, kritéria semaforu, normy). Ptej se přes `python3 data/onko/q.py`, celé TSV do promptu nenačítej.
-- `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), později `EVAL.md` a `DEMO.md`.
+- `docs/`: požadavky lékaře (`POZADAVKY_LEKARE.md`), účty, pozvánky a nastavení lékaře pro PVW (`UCTY_A_PVW.md`), `EVAL.md` a `DEMO.md`.
 - `.claude/skills/` (po T-011): IRIS skills z FHIR-AI-Hackathon-Kit. Použij je pro FHIR, vektory a IRIS SQL, ale **místo OpenAI volej náš provider** (`services/ai_service.py`: NVIDIA / Gemini).
-  - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDT Copilot“ má přednost před textem skillu (ARCH §4.8).
+  - UI skills (T-015): `shadcn`, `web-design-guidelines` (audit UI) a `vercel-react-best-practices`. Jejich blok „V MDTcore“ má přednost před textem skillu (ARCH §4.8).
   - `impeccable` (T-016): `/impeccable audit | critique | polish | distill | harden | clarify | adapt <cíl>` nad `WEB_Template/frontend` (`--target`). Hook detektoru jen lokálně (`/impeccable hooks on`).
-  - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDT Copilot“ má přednost.
+  - `frontend-design` (anthropics/skills, kontrolní seznam proti generickému „AI vzhledu“), `vercel-composition-patterns` (skládání komponent) a `webapp-testing` (Playwright snímky a interakce lokální aplikace). Jejich blok „V MDTcore“ má přednost.
+  - T-352: `nextjs-shadcn`, `next-best-practices`, `nextjs-performance`, `frontend-ui-engineering` a `performance-optimization` (vzhled a výkon aplikace), `frontend-slides` (HTML prezentace) a `pptx` (PowerPoint pro pitch). Jejich blok „V MDTcore“ má přednost.
   - **UI v2** ([docs/NAVRH_UI.md](docs/NAVRH_UI.md)): shell v `app/dashboard/layout.tsx`, data přes TanStack Query (`src/lib/queries.ts`), 30s přehled `components/mdt/quick-view.tsx` je společný pro kalendář, jednání, detail i projektor.
+
+## Graphify (povinné pro všechny, T-356)
+
+Každý, kdo na projektu pracuje (člověk i AI agent), používá **graphify**: graf kódu a dokumentace repa pro rychlou
+orientaci a kontrolu dopadu změn.
+
+- **Instalace na každém zařízení** (jednou):
+  ```bash
+  uv tool install graphifyy     # pozor, dvě „y“
+  graphify install              # zaregistruje skill pro asistenta (jiný než Claude: --platform codex|cursor|copilot|…)
+  ```
+  V Claude Code to dělá sám hook `.claude/hooks/session-start.sh` při startu session a na pozadí obnoví graf.
+- **Před prací** se na architekturu, vazby a „kde je X / co volá Y“ ptej grafu, ne hádáním:
+  `graphify query "…"`, `graphify explain "X"`, `graphify path "A" "B"`. V Claude Code skill `/graphify`.
+- **Před změnou** sdílené funkce, kontraktu nebo komponenty zjisti dopad: `graphify affected "X"`.
+- **Po změně kódu** obnov graf: `graphify update .` (jen AST, bez LLM, ~25 s).
+- **Data:** sémantická extrakce s LLM (`/graphify`, `graphify extract`) jen nad tímto repem (syntetický dataset,
+  D-021) a s klíči z lokálního `.env`; **nikdy nad skutečnými pacientskými daty**. `graphify-out/` se necommituje.
 
 ## Příkazy
 
 ```powershell
 cd WEB_Template; .\dev.ps1 up          # celý dev stack (Linux/macOS: ./dev.sh up nebo make dev)
 .\dev.ps1 test                         # backend testy (pytest)
+./dev.sh local                         # bez Dockeru: FHIR a vektory v paměti, mock AI (T-367, README)
 cd WEB_Template/frontend; npm run lint; npm run build
 curl -u SuperUser:SYS http://localhost:52773/fhir/r4/metadata   # IRIS FHIR běží?
 docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_dataset --patients P03 --skip-vectors

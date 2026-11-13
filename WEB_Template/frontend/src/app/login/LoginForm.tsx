@@ -1,10 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Activity,
   ArrowRight,
   CircleAlert,
   CircleCheck,
@@ -24,12 +24,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ApiError } from '@/lib/api';
+import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled';
+import { PILOT_MODE } from '@/lib/pilot';
 import { cn } from '@/lib/utils';
 import type { Light, RoleId } from '@/types/mdt';
 
 // Demo účty zakládá `seed_mdt` (T-501) nad fiktivními daty. 1-click přihlášení heslo záměrně zveřejňuje;
 // na produkci se musí shodovat s MDT_DEMO_PASSWORD backendu.
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'demo123456';
+// V pilotu (NEXT_PUBLIC_PILOT_MODE) se demo sekce neukáže a heslo se do JS nedostane: každý lékař má vlastní účet.
+const DEMO_PASSWORD = PILOT_MODE ? '' : process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'demo123456';
 
 /** Odbornost = barevný štítek (D-017), role v komisi = text vedle. */
 const DEMO_ACCOUNTS: { username: string; specialty: RoleId; role: string; note?: string }[] = [
@@ -66,6 +69,7 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, user } = useAuth();
+  const registration = useRegistrationEnabled();
 
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -107,7 +111,7 @@ export default function LoginForm() {
   return (
     <div className="flex min-h-dvh bg-background">
       <aside
-        aria-label="O aplikaci MedTeam"
+        aria-label="O aplikaci MDTcore"
         className="hidden min-h-dvh flex-1 flex-col justify-between gap-8 border-r border-border bg-muted/40 p-8 lg:flex xl:p-14"
       >
         <Brand subtitle />
@@ -125,7 +129,7 @@ export default function LoginForm() {
           <ProductPreview />
         </div>
         <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} MedTeam · podklady pro multidisciplinární onkologickou komisi
+          © {new Date().getFullYear()} MDTcore · podklady pro multidisciplinární onkologickou komisi
         </p>
       </aside>
 
@@ -140,8 +144,14 @@ export default function LoginForm() {
 
         <div className="mx-auto my-auto w-full max-w-sm py-6">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Přihlášení</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Pro ukázku vyberte roli. Vlastním účtem se přihlásíte níže.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {PILOT_MODE
+              ? 'Pilotní provoz s fiktivními pacienty. Přihlaste se účtem, který vám založil koordinátor pilotu.'
+              : 'Pro ukázku vyberte roli. Vlastním účtem se přihlásíte níže.'}
+          </p>
+          {PILOT_MODE && <div className="h-5" aria-hidden />}
 
+          {!PILOT_MODE && (
           <section aria-labelledby="demo-accounts" className="mt-5">
             <div className="flex items-baseline justify-between gap-3">
               <h2 id="demo-accounts" className="text-sm font-medium text-foreground">Demo účty</h2>
@@ -164,13 +174,21 @@ export default function LoginForm() {
               ))}
             </ul>
           </section>
+          )}
 
+          {!PILOT_MODE && (
           <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground" aria-hidden>
             <span className="h-px flex-1 bg-border" />
             nebo vlastním účtem
             <span className="h-px flex-1 bg-border" />
           </div>
+          )}
 
+          {!error && searchParams.get('duvod') === 'necinnost' && (
+            <p role="status" className="mb-4 rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground">
+              Kvůli nečinnosti jsme vás odhlásili. Po přihlášení se vrátíte tam, kde jste skončili.
+            </p>
+          )}
           {error && (
             <p
               role="alert"
@@ -193,7 +211,7 @@ export default function LoginForm() {
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
-                placeholder="např. predseda…"
+                placeholder={PILOT_MODE ? 'jmeno.prijmeni' : 'např. predseda…'}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 aria-invalid={Boolean(error) && !username.trim()}
@@ -252,15 +270,20 @@ export default function LoginForm() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Nemáte účet?{' '}
-            <Link
-              href="/register"
-              className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Zaregistrujte se
-            </Link>
-          </p>
+          {registration === true && (
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Nemáte účet?{' '}
+              <Link
+                href="/register"
+                className="rounded-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Zaregistrujte se
+              </Link>
+            </p>
+          )}
+          {registration === false && (
+            <p className="mt-6 text-center text-sm text-muted-foreground">Účet vám založí správce MDT pozvánkou.</p>
+          )}
         </div>
 
         {process.env.NODE_ENV === 'development' && (
@@ -279,11 +302,9 @@ export default function LoginForm() {
 function Brand({ className, subtitle = false }: { className?: string; subtitle?: boolean }) {
   return (
     <div className={cn('flex items-center gap-2.5', className)}>
-      <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <Activity className="size-5" aria-hidden />
-      </span>
+      <Image src="/icon-192.png" alt="" width={36} height={36} className="size-9 rounded-lg" aria-hidden />
       <span>
-        <span translate="no" className="block text-lg font-bold leading-tight tracking-tight text-foreground">MedTeam</span>
+        <span translate="no" className="block text-lg font-semibold leading-tight tracking-tight text-foreground">MDTcore</span>
         {subtitle && <span className="block text-xs text-muted-foreground">Podklady pro onkologickou komisi</span>}
       </span>
     </div>
@@ -397,12 +418,12 @@ function ProductPreview() {
           </ul>
         </div>
         <div className="flex items-start gap-3 border-t-2 border-primary/40 bg-card px-4 py-2.5">
-          <p className="line-clamp-2 flex-1 text-sm font-bold leading-snug">
+          <p className="line-clamp-2 flex-1 text-sm font-semibold leading-snug">
             Jsou jaterní metastázy po 8 cyklech FOLFOX + bevacizumab resekabilní?
           </p>
           <p className="shrink-0 text-right leading-tight">
-            <span className="block text-[10px] text-muted-foreground">MKN-10</span>
-            <span className="text-sm font-bold">C18.7</span>
+            <span className="block text-[11px] text-muted-foreground">MKN-10</span>
+            <span className="text-sm font-semibold">C18.7</span>
           </p>
         </div>
       </div>
@@ -416,9 +437,9 @@ function ProductPreview() {
 function PreviewTile({ term, value, note, warn = false }: { term: string; value: string; note: string; warn?: boolean }) {
   return (
     <div className="flex min-w-12 flex-col items-center rounded-lg border border-border bg-background px-2 py-1">
-      <span className="text-[10px] font-medium text-muted-foreground">{term}</span>
-      <span className="text-xl font-bold leading-none">{value}</span>
-      <span className={cn('mt-0.5 text-[10px]', warn ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-muted-foreground')}>{note}</span>
+      <span className="text-[11px] font-medium text-muted-foreground">{term}</span>
+      <span className="text-xl font-semibold leading-none">{value}</span>
+      <span className={cn('mt-0.5 text-[11px]', warn ? 'font-medium text-amber-700 dark:text-amber-400' : 'text-muted-foreground')}>{note}</span>
     </div>
   );
 }

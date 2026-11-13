@@ -114,3 +114,45 @@ def test_invalid_questions_and_closed_board(seeded):
     r = doctor.post(url(s.pk), {'text': 'ok'}, format='json')
     assert (r.status_code, r.json()) == (409, chatbot.CLOSED_CHATBOT)
     assert doctor.get(url(s.pk)).status_code == 200
+
+
+# ── T-345: chatbot nad kartou pacienta (bez boardu, nic se neukládá) ─────────────────────────────
+
+def patient_url(pid):
+    return f'/api/mdt/patients/{pid}/chatbot/'
+
+
+@pytest.mark.django_db
+def test_patient_chatbot_answers_without_board(seeded):
+    r = as_user('onkolog').post(patient_url('P03'), {'text': 'Jaké je poslední CEA?'}, format='json')
+    assert r.status_code == 200
+    answer = r.json()
+    assert set(answer) == {'text', 'claims', 'uncertain', 'model'}
+    assert [(c['kind'], c['citations'], c['verification']) for c in answer['claims']] == [
+        ('claim', ['P03-lab06-cea'], 'verified'),
+        ('claim', ['P03-neexistuje'], 'unverified'),
+        ('missing', [], 'verified')]
+    assert not ChatbotMessage.objects.exists()
+
+
+@pytest.mark.django_db
+def test_patient_chatbot_history_from_browser(seeded, monkeypatch):
+    calls = []
+    monkeypatch.setattr(ai_chatbot, 'answer', lambda text, pid, history: calls.append((text, pid, history)) or
+                        {'text': '', 'claims': [], 'uncertain': [], 'model': None})
+    history = [{'role': 'user', 'text': f'Otázka {i}'} for i in range(8)]
+    history.append({'role': 'ai', 'text': '', 'claims': [{'kind': 'claim', 'text': 'CEA 13,9', 'citations': ['P03-lab06-cea'],
+                                                         'verification': 'verified'}, {'kind': 'jiné', 'text': 'x'}]})
+    as_user('onkolog').post(patient_url('P03'), {'text': 'A dál?', 'history': history}, format='json')
+    (text, pid, sent), = calls
+    assert (text, pid, len(sent)) == ('A dál?', 'P03', chatbot.CONTEXT_MESSAGES)
+    assert sent[-1] == {'role': 'ai', 'text': '', 'claims': [{'kind': 'claim', 'text': 'CEA 13,9', 'citations': ['P03-lab06-cea']}]}
+
+
+@pytest.mark.django_db
+def test_patient_chatbot_invalid_input(seeded):
+    doctor = as_user('onkolog')
+    for pid, body in (('P03', {'text': '  '}), ('P03', {'text': 'x' * 2001}), ('P03', {'text': 'ok', 'history': 'x'}),
+                      ('P03', {'text': 'ok', 'history': [{'role': 'system', 'text': 'x'}]}), ('../P03', {'text': 'ok'})):
+        assert doctor.post(patient_url(pid), body, format='json').status_code in (400, 404), (pid, body)
+    assert APIClient().post(patient_url('P03'), {'text': 'ok'}, format='json').status_code == 401

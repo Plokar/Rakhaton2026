@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'apps.ws',               # WebSocket consumers
     'apps.items',            # Example domain module
     'apps.projects',         # Hackathon projects, tasks, notifs, storage, AI
-    'apps.copilot',          # MDT Copilot (iris_init, ingest, AI orchestrace)
+    'apps.copilot',          # MDTcore (iris_init, ingest, AI orchestrace)
     'apps.patients',         # Pacienti z IRIS FHIR (T-103)
     'apps.mdt',              # Boardy, případy, konfigurace (T-107)
 ]
@@ -53,6 +53,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.mdt.access_log.AccessLogMiddleware',    # T-370: kdo otevřel kterého pacienta (i odmítnuté 403)
+    'apps.mdt.scope.ExternalScopeMiddleware',     # T-362: lékař z jiné nemocnice jen své komise
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.SecurityHeadersMiddleware',
@@ -90,7 +92,10 @@ DATABASES = {
         'OPTIONS': {
             'connect_timeout': 10,
         },
-        'CONN_MAX_AGE': 60,  # Connection pooling
+        # Daphne/ASGI: každý požadavek běží v jiném vlákně, perzistentní spojení se nevracejí a hromadí
+        # se až do „too many clients already“ (T-353). Django pro ASGI doporučuje 0.
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '0')),
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
@@ -263,12 +268,14 @@ EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
     'django.core.mail.backends.console.EmailBackend'
 )
+# Adresa aplikace v odkazu pozvánky (T-361); prázdné = původ požadavku správce
+MDT_FRONTEND_URL = os.environ.get('MDT_FRONTEND_URL', '')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mailhog')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 1025))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@hackathon.local')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MDTcore <noreply@mdtcore.local>')
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 LOGGING = {
@@ -318,9 +325,11 @@ LOGGING = {
 # CELERY_TASK_TRACK_STARTED = True
 # CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minut
 
-# ── MDT Copilot ───────────────────────────────────────────────────────────────
+# ── MDTcore ───────────────────────────────────────────────────────────────
 # Joby generování synchronně (testy); jinak in-process ThreadPool (D-004)
 MDT_JOBS_SYNC = os.environ.get('MDT_JOBS_SYNC', 'False') == 'True'
+# Job bez změny déle než N minut (přerušený restartem) se ukáže jako chyba s možností opakovat (T-368)
+MDT_JOB_TIMEOUT_MINUTES = int(os.environ.get('MDT_JOB_TIMEOUT_MINUTES', '15'))
 # Offline demo (T-311): podklad z data/demo_cache místo LLM
 MDT_DEMO_OFFLINE = os.environ.get('MDT_DEMO_OFFLINE', 'False') == 'True'
 MDT_DEMO_CACHE_DIR = os.environ.get('MDT_DEMO_CACHE_DIR', str(BASE_DIR.parent.parent / 'data' / 'demo_cache'))

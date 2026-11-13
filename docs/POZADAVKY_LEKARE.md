@@ -1,4 +1,4 @@
-# Požadavky lékaře pro MDT Copilot — poznámky a pokyny pro AI agenty
+# Požadavky lékaře pro MDTcore — poznámky a pokyny pro AI agenty
 
 > **Stav: zapracováno do ARCHITEKTURA.md a PROGRESS.md** (Pá 16. 10. 2026 večer). Vychází z požadavků budoucího uživatele (lékaře), které předal tým, z revize datasetu v1.1 a z porovnání se zadáním ([Soulad se zadáním](#soulad-se-zadáním)). V kódu zatím nic není.
 >
@@ -56,6 +56,8 @@ Porovnáno s prezentací zadání (13 slidů s poznámkami řečníka). Číslo 
 | **Administrátor MDT** | předseda komise (D-014) | zakládá boardy (datum, čas, komise), mění termíny, **nastavuje podklad pro zasedání** (sekce, pořadí, přítomné role, podrobnost; FR-R1), přesouvá pacienty, potvrzuje závěr (FR-C3) | měnit klinická data pacienta |
 | **Zadávající lékař** | ošetřující lékař, který pacienta nominuje | zařadí pacienta do boardu ([§2.2](#22-formulář-zařadit-pacienta-do-boardu)), doplní nebo přeskočí údaje, odklikne varování, zadá ECOG a záměr C/P, zaškrtne připomínku snímku, **přesouvá své pacienty mezi boardy** | měnit cizí případy, potvrzovat závěr |
 | **Prohlížející** | členové komise | číst podklad, bloky si u sebe sbalit nebo přeskládat (lokálně) | měnit data a výchozí nastavení podkladu |
+
+> **Doplněno 9. 11. (D-027, D-028):** nad rolemi je **jeden správce MDT**, který spravuje všechny účty a posílá lékařům pozvánky odkazem (i lékařům z jiných nemocnic). Každý lékař si při prvním přihlášení nastaví must-have **PVW** (projektor view = okno pro projektor), požadavky na podklad a své normy pro řešení. Detail: [UCTY_A_PVW.md](UCTY_A_PVW.md).
 
 **Implementace** (ARCH §6.2):
 

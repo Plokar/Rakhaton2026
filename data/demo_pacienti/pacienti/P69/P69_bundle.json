@@ -1,0 +1,987 @@
+{
+  "resourceType": "Bundle",
+  "id": "P69-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P69",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P69",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P69"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "745701/9922"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Ivana Jelínková (fiktivní)",
+            "family": "Jelínková",
+            "given": [
+              "Ivana"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1974-07-01",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 52
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P69-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P69-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P69-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P69-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P69-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P69-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P69-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P69-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P69-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P69-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P69-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P69-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P69-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P69-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C22.1",
+              "display": "Karcinom intrahepatálních žlučovodů"
+            }
+          ],
+          "text": "Karcinom intrahepatálních žlučovodů"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "onsetDateTime": "2026-11-08",
+        "bodySite": [
+          {
+            "text": "levý jaterní lalok"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8160/3",
+                  "display": "Cholangiokarcinom"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C22.1"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT2 cN1 cM0, neresekabilní (cévní invaze)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P69-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P69-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "issued": "2026-11-08T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P69-03"
+          }
+        ],
+        "conclusion": "Biopsie jater: adenokarcinom pankreatobiliárního typu, CK7+, CK20−, odpovídá cholangiokarcinomu..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "QmlvcHNpZSBqYXRlcjogYWRlbm9rYXJjaW5vbSBwYW5rcmVhdG9iaWxpw6FybsOtaG8gdHlwdSwgQ0s3KywgQ0syMOKIkiwgb2Rwb3bDrWTDoSBjaG9sYW5naW9rYXJjaW5vbXUu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-11-08"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P69-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P69-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-10",
+        "issued": "2026-11-10T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P69-02"
+          }
+        ],
+        "conclusion": "CT: tumor levého laloku 7 cm s infiltrací levé a střední jaterní žíly, hilové uzliny..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1Q6IHR1bW9yIGxldsOpaG8gbGFsb2t1IDcgY20gcyBpbmZpbHRyYWPDrSBsZXbDqSBhIHN0xZllZG7DrSBqYXRlcm7DrSDFvsOtbHksIGhpbG92w6kgdXpsaW55Lg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-10"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P69-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P69-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "date": "2026-11-12T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P69-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDUyIGxldCwgbsOhaG9kbsO9IG7DoWxleiBwxZlpIFVaIHBybyBib2xlc3QgYsWZaWNoYS4gRUNPRyAwLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-12"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-10",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P69-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT2 cN1 cM0, neresekabilní (cévní invaze)",
+        "focus": [
+          {
+            "reference": "Condition/P69-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-12",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P69-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 0,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P69-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-12",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 63,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P69-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "FGFR2"
+        },
+        "valueString": "fúze FGFR2–BICC1"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P69-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "IDH1"
+        },
+        "valueString": "bez mutace"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-bm03",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-bm03",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-08",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P69-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "CA 19-9"
+        },
+        "valueString": "212 kU/l"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-11T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-11T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-11T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-11T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-11T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P69-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P69-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P69-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "authoredOn": "2026-11-13T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P69-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Neresekabilní intrahepatální cholangiokarcinom s FGFR2 fúzí: gemcitabin s cisplatinou a durvalumabem v první linii, pemigatinib při progresi?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: adenokarcinom pankreatobiliárního typu, CK7+, CK20−, odpovídá cholangiokarcinomu."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 0."
+          },
+          {
+            "text": "Preference a omezení pacienta: Má zájem o klinickou studii."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P69-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P69-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P69-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P69-zad01"
+        },
+        "for": {
+          "reference": "Patient/P69"
+        },
+        "authoredOn": "2026-11-13T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P69-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-03T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P69-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P69-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "authored": "2026-11-11T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P69"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "0",
+                  "display": "Zvládám všechno jako dřív, bez omezení"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 63
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "delka",
+                  "display": "Co nejdelší život, i za cenu vedlejších účinků"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P69-bm92",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P69-bm92",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P69"
+        },
+        "effectiveDateTime": "2026-11-26",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "NGS panel"
+        },
+        "valueString": "FGFR2 fúze potvrzena, TMB 3 mut/Mb"
+      }
+    }
+  ]
+}

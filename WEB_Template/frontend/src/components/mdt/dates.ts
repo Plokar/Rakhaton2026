@@ -79,3 +79,10 @@ export function rangeLabel(from: string, to: string): string {
 export function localInputValue(iso: string): string {
   return `${pragueDay(iso)}T${timeLabel(iso)}`;
 }
+
+/**
+ * Zasedání po termínu, které nikdo neukončil (T-376): začalo před víc než 12 hodinami a není uzavřené.
+ * Nic se nedělá samo, jen se na to upozorní (ukončit nebo přesunout neprojednané musí předseda).
+ */
+export const isOverdue = (session: { date: string; status: string }, now: Date = new Date()) =>
+  session.status !== 'closed' && now.getTime() - new Date(session.date).getTime() > 12 * 3_600_000;

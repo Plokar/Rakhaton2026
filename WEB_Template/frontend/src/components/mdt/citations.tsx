@@ -9,7 +9,7 @@ const EVIDENCE_KEYS = new Set([
   'citation', 'citations', 'guideline', 'guideline_citations', 'rule_citation',
   'patient_citations', 'inputs', 'criterion_id', 'required_by',
 ]);
-const PATIENT_FACT = /^P\d{2}(?:-|#|$)/;
+const PATIENT_FACT = /^P\d{2,3}(?:-|#|$)/;
 
 /** Citace v pořadí, v jakém se v podkladu objeví (bez duplicit). */
 export function collectCitations(node: unknown): EvidenceId[] {

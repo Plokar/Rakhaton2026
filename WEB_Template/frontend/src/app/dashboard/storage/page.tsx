@@ -6,18 +6,15 @@ import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { storageApi, type UploadedFileItem } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import {
   Upload,
-  HardDrive,
   FileText,
-  Image,
+  Image as ImageIcon,
   FileCode,
   File,
-  Download,
   Trash2,
   CheckCircle2,
   AlertCircle,
@@ -26,7 +23,7 @@ import {
 
 export default function StoragePage() {
   const [files, setFiles] = React.useState<UploadedFileItem[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState('');
@@ -82,7 +79,7 @@ export default function StoragePage() {
   };
 
   const getFileIcon = (mime: string) => {
-    if (mime.startsWith('image/')) return <Image className="h-4 w-4 text-emerald-500" />;
+    if (mime.startsWith('image/')) return <ImageIcon className="h-4 w-4 text-emerald-500" />;
     if (mime.includes('json') || mime.includes('javascript') || mime.includes('python'))
       return <FileCode className="h-4 w-4 text-cyan-500" />;
     if (mime.includes('pdf') || mime.includes('text'))
@@ -100,7 +97,7 @@ export default function StoragePage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
                 Úložiště souborů
               </h1>
               <Badge variant="success">Local Disk / S3 Ready</Badge>
@@ -114,16 +111,16 @@ export default function StoragePage() {
         {/* Top Metric Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground uppercase font-semibold">Celkem souborů</p>
-            <p className="text-2xl font-bold mt-1 text-foreground">{files.length}</p>
+            <p className="text-xs text-muted-foreground">Celkem souborů</p>
+            <p className="text-2xl font-semibold mt-1 text-foreground">{files.length}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground uppercase font-semibold">Využité místo</p>
-            <p className="text-2xl font-bold mt-1 text-foreground">{humanTotal}</p>
+            <p className="text-xs text-muted-foreground">Využité místo</p>
+            <p className="text-2xl font-semibold mt-1 text-foreground">{humanTotal}</p>
           </div>
           <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground uppercase font-semibold">Storage Provider</p>
-            <p className="text-2xl font-bold mt-1 text-foreground">Local Media</p>
+            <p className="text-xs text-muted-foreground">Storage Provider</p>
+            <p className="text-2xl font-semibold mt-1 text-foreground">Local Media</p>
           </div>
         </div>
 

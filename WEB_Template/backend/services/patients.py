@@ -204,7 +204,7 @@ def identities() -> dict[str, dict]:
     for p in fhir.search('Patient'):
         name = next((n.get('text') or ' '.join([*n.get('given', []), n.get('family', '')]).strip()
                      for n in p.get('name', [])), None)
-        rc = next((i.get('value', '') for i in p.get('identifier', []) if i.get('system') == rc_module.SYSTEM), '')
+        rc = next((i.get('value', '') for i in p.get('identifier', []) if i.get('system') in rc_module.SYSTEMS), '')
         out[p['id']] = {'name': name or None, 'rc': f'******/{rc.split("/")[1]}' if '/' in rc else None}
     return out
 
@@ -214,5 +214,10 @@ def list_patients() -> list[dict]:
     for rtype in ('Patient', 'Condition', 'ServiceRequest', 'Task'):
         for r in fhir.search(rtype):
             by_pid[r['id'] if rtype == 'Patient' else _subject(r)].append(r)
-    return [summary(pid, rs) for pid, rs in sorted(by_pid.items())
+    return [summary(pid, rs) for pid, rs in sorted(by_pid.items(), key=lambda kv: _pid_key(kv[0]))
             if any(r['resourceType'] == 'Patient' for r in rs)]
+
+
+def _pid_key(pid: str) -> tuple:
+    """Číselné pořadí `Pxx` (P99 před P100), ostatní ID za nimi abecedně."""
+    return (0, int(pid[1:]), '') if re.fullmatch(r'P\d+', pid) else (1, 0, pid)

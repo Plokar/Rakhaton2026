@@ -19,3 +19,13 @@ export function spokenPatient(item: Pick<MdtCase, 'patient_id' | 'patient'>): st
 
 /** Projednáno = rozhodnuto nebo potvrzeno (jednání komise, NAVRH_UI §7.1). */
 export const isDiscussed = (item: Pick<MdtCase, 'status'>) => item.status === 'decided' || item.status === 'confirmed';
+
+
+/**
+ * Karta pacienta z detailu případu: `?pripad=` nese zasedání a případ, aby drobečky vedly zpět
+ * (Přehled › Zasedání › board › pacient › Karta pacienta), ne jen na Přehled.
+ */
+export function patientCardHref(patientId: string, caseId?: number | null): string {
+  const base = `/dashboard/patients/${encodeURIComponent(patientId)}`;
+  return caseId != null ? `${base}?pripad=${caseId}` : base;
+}

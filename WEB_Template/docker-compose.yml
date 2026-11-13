@@ -17,7 +17,7 @@ services:
       - traefik_certs:/acme.json
     networks:
       - app-network
-    # Dashboard Traefiku se ven nepublikuje (bez basicAuth by byl veřejný); MDT Copilot: ARCH §3.4
+    # Dashboard Traefiku se ven nepublikuje (bez basicAuth by byl veřejný); MDTcore: ARCH §3.4
     healthcheck:
       test: ["CMD", "traefik", "healthcheck"]
       interval: 30s
@@ -85,7 +85,7 @@ services:
     environment:
       DJANGO_SETTINGS_MODULE: config.settings_prod
       DJANGO_DEBUG: "False"
-      # MDT Copilot (ARCH §3.4, §9): IRIS lokálně nebo v ACI podle env, dataset a báze read-only
+      # MDTcore (ARCH §3.4, §9): IRIS lokálně nebo v ACI podle env, dataset a báze read-only
       IRIS_HOST: ${IRIS_HOST:-iris}
       IRIS_PORT: "${IRIS_PORT:-1972}"
       IRIS_NAMESPACE: ${IRIS_NAMESPACE:-FHIRSERVER}
@@ -93,6 +93,7 @@ services:
       IRIS_PASSWORD: ${IRIS_PASSWORD:?IRIS_PASSWORD v .env (ne výchozí SYS)}
       FHIR_BASE_URL: ${FHIR_BASE_URL:-http://iris:52773/fhir/r4}
       DATASET_DIR: /data/dataset
+      DEMO_DATASET_DIR: /data/demo_pacienti                 # fiktivní demo pacienti P13–P172 (T-355)
       ONKO_KB_DIR: /data/onko
       ONKO_DATASET_DIR: /data/dataset
       ONKO_GUIDELINES_DIR: /data/dataset/guidelines
@@ -117,6 +118,7 @@ services:
       - backend_static:/code/staticfiles
       - backend_media:/code/media
       - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
+      - ../data/demo_pacienti:/data/demo_pacienti:ro
       - ../data/onko:/data/onko:ro
       - ../data/audio:/data/audio:ro
       - ../data/demo_cache:/data/demo_cache
@@ -155,7 +157,7 @@ services:
 
   # ===========================================================================
   # FRONTEND – Next.js (production build)
-  # MDT Copilot nasazuje frontend na Vercel (D-001), tady jen volitelně: --profile frontend
+  # MDTcore nasazuje frontend na Vercel (D-001), tady jen volitelně: --profile frontend
   # ===========================================================================
   frontend:
     profiles: ["frontend"]

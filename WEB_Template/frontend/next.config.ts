@@ -35,6 +35,16 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Moduly šablony (AI playground, projekty, realtime, úložiště) nejsou součást MDTcore: kód zůstává (AGENTS.md),
+  // ale adresa vede na přehled, aby se na ně lékař ani porota nedostali.
+  async redirects() {
+    return ['ai', 'projects', 'realtime', 'storage'].map((page) => ({
+      source: `/dashboard/${page}`,
+      destination: '/dashboard',
+      permanent: false,
+    }));
+  },
+
   // Security headers (doplněk k Traefik middleware)
   async headers() {
     return [

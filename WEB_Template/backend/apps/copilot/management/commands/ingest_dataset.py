@@ -20,6 +20,8 @@ class Command(BaseCommand):
         parser.add_argument('--patients', help='jen vybraní pacienti, např. P03,P05 (výchozí všichni)')
         parser.add_argument('--dataset-dir', help='kořen datasetu (výchozí env DATASET_DIR)')
         parser.add_argument('--dry-run', action='store_true', help='nic neposílá: sanitizace, počty, odstavce')
+        parser.add_argument('--no-demo', action='store_true',
+                            help='bez demo pacientů P13+ (data/demo_pacienti, env DEMO_DATASET_DIR)')
         parser.add_argument('--skip-fhir', action='store_true', help='FHIR přeskočit (data už v IRIS jsou), jen vektory')
         parser.add_argument('--skip-vectors', action='store_true', help='bez vektorových tabulek (bez embeddingů)')
         parser.add_argument(
@@ -41,13 +43,24 @@ class Command(BaseCommand):
         try:
             root = ingest.dataset_dir(opts['dataset_dir'])
             patients = [p.strip() for p in opts['patients'].split(',')] if opts['patients'] else None
+            demo = None if opts['no_demo'] else ingest.demo_dataset_dir()
+            # demo pacienti (data/demo_pacienti) jdou vedle datasetu; --patients vybírá z obou složek
+            main_ids = demo_ids = None
+            if patients:
+                demo_available = set(ingest.patient_ids(demo)) if demo else set()
+                main_ids = [p for p in patients if p not in demo_available]
+                demo_ids = [p for p in patients if p in demo_available]
+            parts = [(root, main_ids, True)] if main_ids is None or main_ids else []
+            if demo and (demo_ids is None or demo_ids):
+                parts.append((demo, demo_ids, False))
             skip_fhir = opts['skip_fhir']
-            report = ingest.collect(root, patients)
+            report = self._merge(ingest.collect(r, ids, shared) for r, ids, shared in parts)
             if self.if_empty and not skip_fhir and ingest.is_loaded(report):
                 self.stdout.write(f'FHIR: všech {report.unique_resources} resources už v IRIS je, přeskakuji (--if-empty).')
                 skip_fhir = True
             if not (offline or skip_fhir):
-                report = ingest.ingest(root, patients, opts['bundle_type'], log=self.stdout.write)
+                report = self._merge(ingest.ingest(r, ids, opts['bundle_type'], include_shared=shared,
+                                                   log=self.stdout.write) for r, ids, shared in parts)
             self._fhir_summary(report, sent=not (offline or skip_fhir))
             if report.errors:
                 raise CommandError(f'FHIR ingest skončil s {len(report.errors)} chybami (viz výše).')
@@ -70,6 +83,14 @@ class Command(BaseCommand):
             raise CommandError(f'IRIS nedostupný ({fhir.base_url()}): {e}. Běží iris a proběhl iris_init?')
 
     # ── FHIR ──
+    @staticmethod
+    def _merge(reports):
+        merged = ingest.IngestReport()
+        for r in reports:
+            merged.parts += r.parts
+            merged.warnings += r.warnings
+        return merged
+
     def _fhir_summary(self, report, sent):
         for warning in report.warnings:
             self.stdout.write(self.style.WARNING(f'⚠ {warning}'))
@@ -83,7 +104,7 @@ class Command(BaseCommand):
 
     # ── vektory ──
     def _vectors(self, root, report, offline, recreate):
-        patients = [p for p in report.parts if re.fullmatch(r'P\d{2}', p.label)]
+        patients = [p for p in report.parts if re.fullmatch(r'P\d{2,3}', p.label)]
         studies = next((p.resources for p in report.parts if p.label == 'studie'), [])
         guidelines = indexing.guideline_chunks(root)
         for warning in indexing.guideline_count_warnings(guidelines):

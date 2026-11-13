@@ -1,13 +1,19 @@
 """Role a demo účty (D-014, ARCH §6.2, POZADAVKY_LEKARE §1)."""
 import os
+import re
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.models import Group
 
 from .models import UserProfile
 
 ADMIN, DOCTOR, VIEWER = 'mdt_admin', 'mdt_doctor', 'mdt_viewer'
 ROLES = (ADMIN, DOCTOR, VIEWER)
+# Správce MDT (T-361, D-027): účty, pozvánky a komise, bez klinických oprávnění. Samostatná skupina vedle klinické
+# role, jeden člověk může mít obě (demo předseda).
+MANAGER = 'mdt_manager'
 
 # účet → (skupina, odbornost RoleId, celé jméno)
 DEMO_USERS = {
@@ -22,9 +28,24 @@ DEMO_USERS = {
     'patolog': (VIEWER, 'pathologist', 'Patolog'),
     'radioterapeut': (VIEWER, 'radiation_oncologist', 'Radiační onkolog'),
 }
-# zadávající lékař podle pacienta (ARCH §6.2): P04 pneumolog, ostatní onkolog
-REQUESTER_BY_PATIENT = {'P04': 'pneumolog'}
+# zadávající lékař podle pacienta (ARCH §6.2): P04 a hrudní demo pacienti pneumolog, GIT demo pacienti
+# onkolog-git (data/demo_pacienti), ostatní onkolog
+REQUESTER_BY_PATIENT = {'P04': 'pneumolog',
+                        **{f'P{n}': 'pneumolog' for n in (*range(13, 17), 41, 42, 43, 56, 57)},
+                        **{f'P{n}': 'onkolog-git' for n in (*range(21, 25), 39, 40, 52, 69, 70)}}
 DEFAULT_REQUESTER = 'onkolog'
+# T-355: další demo pacienti podle komise (hrudní → pneumolog, GIT → onkolog-git), mapa pacientů má přednost
+REQUESTER_BY_BOARD = {'Hrudní – karcinom plic': 'pneumolog',
+                      'GIT – kolorektální karcinom / hepatobiliární': 'onkolog-git'}
+
+
+def requester(patient_id: str, board_title: str = '') -> str:
+    """Demo účet zadávajícího lékaře případu (`seed_mdt`). Podle komise jen třetí vlna (P73+), dataset a starší
+    demo pacienti dál podle mapy a výchozího onkologa (na tom stojí oprávnění v testech)."""
+    if patient_id in REQUESTER_BY_PATIENT:
+        return REQUESTER_BY_PATIENT[patient_id]
+    third_wave = bool(re.fullmatch(r'P\d+', patient_id or '')) and int(patient_id[1:]) >= 73
+    return REQUESTER_BY_BOARD.get(board_title, DEFAULT_REQUESTER) if third_wave else DEFAULT_REQUESTER
 
 
 def display_name(user) -> str:
@@ -36,6 +57,23 @@ def display_name(user) -> str:
         return name
     before, after = profile.title_before.strip(), profile.title_after.strip()
     return f"{before + ' ' if before else ''}{name}{', ' + after if after else ''}"
+
+
+def is_manager(user) -> bool:
+    return bool(user and user.is_authenticated
+                and (user.is_superuser or user.groups.filter(name=MANAGER).exists()))
+
+
+def set_manager(user, value: bool) -> None:
+    group = Group.objects.get_or_create(name=MANAGER)[0]
+    (user.groups.add if value else user.groups.remove)(group)
+
+
+def is_external(user) -> bool:
+    """Lékař z jiné nemocnice (T-362): vidí jen komise a zasedání, kam je pozvaný."""
+    if not user or not user.is_authenticated or user.is_superuser:
+        return False
+    return UserProfile.objects.filter(user=user, is_external=True).exists()
 
 
 def role(user) -> str | None:
@@ -82,6 +120,9 @@ def ensure_practitioner(user) -> str:
     if pid.startswith(practitioners.APP_PREFIX):        # lékaře účtu aplikace udržujeme (jméno, odbornost)
         fhir.put(practitioners.app_practitioner(pid, display_name(user), profile.specialty,
                                                 user.username))
+    if profile.organization:                            # lékař z jiné nemocnice (T-362): Organization + PractitionerRole
+        for resource in practitioners.organization_resources(pid, profile.organization, profile.specialty):
+            fhir.put(resource)
     if profile.practitioner_fhir_id != pid:
         profile.practitioner_fhir_id = pid
         profile.save(update_fields=['practitioner_fhir_id'])
@@ -94,18 +135,36 @@ def users_by_practitioner() -> dict[str, dict]:
             for p in UserProfile.objects.exclude(practitioner_fhir_id='').select_related('user')}
 
 
-def ensure_demo_users() -> dict:
-    """Skupiny + demo účty (heslo `MDT_DEMO_PASSWORD`, výchozí jako demo účty templatu). Idempotentní."""
+DEV_DEMO_PASSWORD = 'demo123456'
+# výchozí heslo z repa a zástupné hodnoty z `.env.prod.example` nesmí do pilotu ani produkce
+WEAK_DEMO_PASSWORDS = {DEV_DEMO_PASSWORD, 'CHANGE-ME-DEMO-PASSWORD', ''}
+
+
+def demo_password() -> str:
+    """Heslo demo účtů: `MDT_DEMO_PASSWORD`. V pilotu a produkci (`MDT_STRICT_SECRETS`, settings_prod) musí být
+    nastavené, alespoň 12 znaků a ne výchozí z repa; v dev a testech platí výchozí `demo123456`."""
+    strict = getattr(settings, 'MDT_STRICT_SECRETS', False)
+    password = os.environ.get('MDT_DEMO_PASSWORD', '' if strict else DEV_DEMO_PASSWORD)
+    if strict and (password in WEAK_DEMO_PASSWORDS or len(password) < 12):
+        raise ImproperlyConfigured(
+            'MDT_DEMO_PASSWORD: v pilotu a produkci nastavte vlastní heslo demo účtů (aspoň 12 znaků, ne výchozí z repa).')
+    return password
+
+
+def ensure_demo_users(reset_passwords: bool = False) -> dict:
+    """Skupiny + demo účty (heslo `MDT_DEMO_PASSWORD`). Idempotentní; heslo existujícího účtu změní jen `reset_passwords`."""
     groups = {name: Group.objects.get_or_create(name=name)[0] for name in ROLES}
-    password = os.environ.get('MDT_DEMO_PASSWORD', 'demo123456')
+    password = demo_password()
     users = {}
     for username, (group, spec, full_name) in DEMO_USERS.items():
         user, created = get_user_model().objects.get_or_create(
             username=username, defaults={'first_name': full_name, 'email': f'{username}@mdt.local'})
-        if created:
+        if created or reset_passwords:
             user.set_password(password)
             user.save()
         user.groups.add(groups[group])
+        if username == 'predseda':                 # demo předseda je zároveň správce MDT (D-027)
+            set_manager(user, True)
         UserProfile.objects.update_or_create(user=user, defaults={'specialty': spec})
         users[username] = user
     return users

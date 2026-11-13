@@ -5,19 +5,13 @@ export const dynamic = 'force-dynamic';
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import {
-  Radio,
   Send,
   Terminal,
   RefreshCw,
-  Zap,
-  Users,
-  Clock,
   Activity,
   Trash2,
 } from 'lucide-react';
@@ -31,7 +25,6 @@ interface LogMessage {
 }
 
 export default function RealtimePage() {
-  const { user } = useAuth();
   const [room, setRoom] = React.useState('hackathon');
   const [wsUrl, setWsUrl] = React.useState('/ws/room/hackathon/');
   const [messages, setMessages] = React.useState<LogMessage[]>([]);
@@ -110,7 +103,7 @@ export default function RealtimePage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
                 WebSocket Live Monitor
               </h1>
               <div
@@ -150,7 +143,7 @@ export default function RealtimePage() {
 
         {/* Channel Selector Pills */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-xs font-medium text-muted-foreground">
             Kanál:
           </span>
           {[
@@ -203,7 +196,7 @@ export default function RealtimePage() {
                     key={m.id}
                     className="flex items-start gap-2.5 rounded-lg bg-card/80 p-2.5 border border-border/60"
                   >
-                    <span className="text-[10px] text-muted-foreground shrink-0">{m.timestamp}</span>
+                    <span className="text-[11px] text-muted-foreground shrink-0">{m.timestamp}</span>
                     <span className="font-semibold text-primary shrink-0">[{m.type}]</span>
                     <span className="font-semibold text-foreground shrink-0">{m.user}:</span>
                     <span className="text-muted-foreground break-all">
@@ -239,7 +232,7 @@ export default function RealtimePage() {
 
         {/* Technical architecture hint */}
         <div className="rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">💡 Jak používat WebSockety ve vašich komponentách:</p>
+          <p className="font-semibold text-foreground">Jak používat WebSockety ve vašich komponentách:</p>
           <p className="font-mono text-[11px] text-primary">
             const &#123; status, sendMessage, lastMessage &#125; = useWebSocket(&apos;/ws/room/muj_kanal/&apos;);
           </p>

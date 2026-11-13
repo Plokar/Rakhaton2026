@@ -222,6 +222,23 @@ export interface PatientListItem {
   mdt_date: string | null;
 }
 
+/**
+ * POST /api/patients/search/ {q} → nejvýš 20 (T-356). Jméno a RČ jen pro dialog přidání pacienta,
+ * nikam jinam (hlavička, projektor, podklad, chat, export) se nepředávají (D-018).
+ */
+export interface PatientSearchItem {
+  id: string;
+  /** "P100 · žena · 61 let" */
+  display_name: string;
+  sex: 'male' | 'female' | 'other' | 'unknown';
+  age: number | null;
+  /** "Jana Nováková (fiktivní)" */
+  name: string | null;
+  /** "655315/9913" */
+  rc: string | null;
+  birth_date: string | null;
+}
+
 /** GET /api/patients/{pid}/ */
 export interface PatientDetail extends PatientListItem {
   diagnoses: { text: string; icd10: string; onset?: string; verification: string; stage: string | null; citation: EvidenceId }[];
@@ -583,6 +600,8 @@ export interface MdtCase {
   /** IntakeField.id */
   skipped_fields: string[];
   acknowledged_warnings: { id: string; by: number; at: string }[];
+  /** Kontrola před zasedáním potvrzena (T-349, jen čtení; mění POST …/review/). */
+  checked_at?: string | null;
   /** returned = vráceno k doplnění (OBC-1.1). */
   status: 'nominated' | 'ready' | 'in_discussion' | 'decided' | 'confirmed' | 'returned';
   /** Pořadí v agendě (jen čtení). */
@@ -661,6 +680,175 @@ export interface Me {
   last_name?: string;
   title_before?: string;
   title_after?: string;
+  /** Správce MDT (T-361, D-027): účty, pozvánky a komise. Může mít i klinickou roli předsedy. */
+  is_manager?: boolean;
+  is_active?: boolean;
+  /** Nemocnice (T-362); prázdné = naše. */
+  organization?: string;
+  /** Lékař z jiné nemocnice: vidí jen komise a zasedání, kam je pozvaný. */
+  is_external?: boolean;
+  /** false = po prvním přihlášení se ukáže průvodce nastavením (T-363). */
+  onboarding_done?: boolean;
+  /** Komise, jejichž je stálým členem. */
+  committees?: CommitteeRef[];
+}
+
+export interface CommitteeRef {
+  id: number;
+  name: string;
+}
+
+/** GET /api/mdt/committees/ (T-362) */
+export interface Committee extends CommitteeRef {
+  members: { user_id: number; name: string }[];
+  /** Počet zasedání komise. */
+  sessions: number;
+}
+
+export type InvitationStatus = 'pending' | 'used' | 'expired' | 'revoked';
+
+/** GET /api/mdt/invitations/ (T-361, jen správce) */
+export interface Invitation {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  title_before: string;
+  title_after: string;
+  specialty: RoleId;
+  role: MdtRole;
+  organization: string;
+  is_external: boolean;
+  committees: CommitteeRef[];
+  status: InvitationStatus;
+  expires_at: string;
+  used_at: string | null;
+  used_by: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+/** POST /api/mdt/invitations/ a …/resend/: jednorázový odkaz je jen v této odpovědi. */
+export interface InvitationCreated extends Invitation {
+  link: string;
+  /** `/pozvanka/<token>`: odkaz na aktuální adrese aplikace. */
+  path: string;
+  email_sent: boolean;
+}
+
+/** GET /api/mdt/invitations/public/{token}/ (bez přihlášení) */
+export type PublicInvitation = Pick<Invitation,
+  'email' | 'first_name' | 'last_name' | 'title_before' | 'title_after' | 'specialty' | 'role' | 'organization'
+  | 'is_external' | 'committees' | 'expires_at'>;
+
+/** Lékař v seznamu pozvaných na zasedání. */
+export interface InvitedDoctor {
+  user_id: number;
+  name: string;
+  specialty: RoleId | null;
+  organization: string;
+}
+
+/** GET /api/mdt/sessions/{sid}/invited/ (T-362): pozvaní = členové komise bez vyřazených + přizvaní. */
+export interface SessionInvited {
+  session: number;
+  committee: CommitteeRef | null;
+  members: InvitedDoctor[];
+  excluded: InvitedDoctor[];
+  invited: InvitedDoctor[];
+  attendees: InvitedDoctor[];
+}
+
+/** Oblast požadavků a norem lékaře: oblast šablony nebo `*` = všechny diagnózy (T-364). */
+export type RuleArea = TemplateArea | '*';
+export type NormOp = '>=' | '<=' | '>' | '<' | '==';
+
+export interface DoctorRequirement {
+  area: RuleArea;
+  area_label: string;
+  /** Klíče katalogu údajů (`spiro.fev1`, `lab:718-7`). */
+  fields: string[];
+  note: string;
+  updated_at: string;
+}
+
+/** Norma lékaře (T-365, D-028): vyhodnocuje kód s citací, semafor nemění. */
+export interface DoctorNorm {
+  id: number;
+  area: RuleArea;
+  area_label: string;
+  field: string;
+  label: string;
+  op: NormOp;
+  value: number;
+  unit: string;
+  procedure: string;
+  note: string;
+  /** Evidence ID guidelines (`KRC-2.1`, `EXT-MK-…`), nepovinně. */
+  source: string;
+  /** „FLR ≥ 30 %“ */
+  text: string;
+}
+
+export type DoctorNormInput = Pick<DoctorNorm, 'area' | 'field' | 'op' | 'value' | 'unit' | 'procedure' | 'note' | 'source'>;
+
+/** GET /api/mdt/my-rules/ */
+export interface MyRules {
+  requirements: DoctorRequirement[];
+  norms: DoctorNorm[];
+  areas: { id: RuleArea; label: string }[];
+  ops: { id: NormOp; label: string }[];
+}
+
+/** GET /api/mdt/norm-fields/: číselné údaje pro normy. */
+export interface NormField {
+  key: string;
+  label: string;
+  unit: string;
+}
+
+export interface NormResult {
+  /** met = splněno, not_met = nesplněno, missing = údaj chybí, not_evaluable = nejde posoudit (NEJISTOTA). */
+  status: 'met' | 'not_met' | 'missing' | 'not_evaluable';
+  value: string | null;
+  citation: EvidenceId | null;
+  reason: string | null;
+}
+
+export interface RequirementItem {
+  key: string;
+  label: string;
+  status: 'present' | 'missing' | 'pending' | 'skipped';
+  value: string | null;
+  citation: EvidenceId | null;
+}
+
+export interface RequirementDecision {
+  user_id: number;
+  decision: 'needed' | 'not_needed';
+  note: string;
+  by: string;
+  at: string;
+}
+
+/** Pozvaný lékař s požadavky a normami u pacienta. */
+export interface DoctorRulesDoctor {
+  user_id: number;
+  name: string;
+  specialty: RoleId | null;
+  organization: string;
+  is_external: boolean;
+  requirement: { note: string; items: RequirementItem[]; missing: string[] } | null;
+  /** Poslední rozhodnutí zadávajícího lékaře (jen u případu). */
+  decision: RequirementDecision | null;
+  norms: (DoctorNorm & { result: NormResult })[];
+}
+
+/** GET /api/mdt/cases/{cid}/doctor-rules/ a /api/mdt/sessions/{sid}/doctor-rules/?patient= (T-364, T-365) */
+export interface DoctorRules {
+  area: TemplateArea;
+  area_label: string;
+  doctors: DoctorRulesDoctor[];
 }
 
 /** Oblast šablony lékaře (T-338): plíce C34, prs C50, kolorektum C18–C20, ostatní. */
@@ -717,6 +905,42 @@ export interface MdtSession {
   chair: { user_id: number; name: string } | null;
   /** Výchozí BriefConfig boardu. */
   config_id: number | null;
+  /** Komise zasedání (T-362): její členové jsou pozvaní. */
+  committee?: CommitteeRef | null;
+}
+
+/**
+ * Živé zasedání (T-357): co je právě na projektoru a kdo je na zasedání. GET/PUT /api/mdt/sessions/{sid}/live/,
+ * změny živě ve streamu boardu jako `event: live`. Pacient jen jako `Pxx` (D-018).
+ */
+export interface LiveState {
+  session: number;
+  status: MdtSession['status'];
+  /** Pacient na projektoru; `position` = pořadí v agendě (od 1). `null` = projektor zatím nic neukazuje. */
+  case: { id: number; patient_id: string; status: MdtCase['status']; position: number | null; count: number } | null;
+  /** Slide projektoru (od 0); `null` = projektor neběží nebo slidy nehlásí. */
+  slide: { index: number; total: number; label: string } | null;
+  updated_at: string | null;
+  by: { user_id: number; name: string } | null;
+  /** Lékaři ohlášení za posledních 5 min. */
+  present: { user_id: number; name: string; specialty: RoleId | null }[];
+}
+
+/** GET /api/mdt/live/ (T-357): dnešní a probíhající zasedání; `current` = kde lékař je, jinak kde má být. */
+export interface MyLive {
+  now: string;
+  current: number | null;
+  sessions: (Pick<MdtSession, 'id' | 'date' | 'title' | 'status' | 'chair'> & {
+    /** Lékař tu má být: předseda, zadávající nebo přizvaný lékař pacienta v agendě. */
+    expected: boolean;
+    /** `invited` = člen komise nebo přizvaný na zasedání (T-362). */
+    reasons: ('chair' | 'invited' | 'requester' | 'collaborator')[];
+    /** Lékař je ohlášený na tomto zasedání. */
+    here: boolean;
+    my_patients: string[];
+    can_present: boolean;
+    live: LiveState;
+  })[];
 }
 
 /** Přítomný lékař v záznamu boardu (z `Decision.attendees` všech závěrů boardu, T-333). */
@@ -794,8 +1018,15 @@ export interface ChatbotMessage {
   created_at: string;
 }
 
+/** POST /api/mdt/patients/{pid}/chatbot/ (T-345): odpověď AI nad kartou pacienta bez boardu, nic se neukládá. */
+export type PatientChatbotAnswer = Pick<ChatbotMessage, 'text' | 'claims' | 'uncertain' | 'model'>;
+
 /** GET /api/mdt/sessions/ */
-export type MdtSessionListItem = MdtSession & { patients: string[] };
+export type MdtSessionListItem = MdtSession & {
+  patients: string[];
+  /** Pacienti bez rozhodnutí komise (T-376). */
+  undiscussed?: number;
+};
 
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };
@@ -809,6 +1040,47 @@ export interface Readiness {
   /** missing, pending nebo skipped; se zachovaným stavem (D-019). */
   unresolved: IntakeField[];
   stale_staging: { id: string; age_days: number; citation?: EvidenceId }[];
+}
+
+/** Stav kontroly před zasedáním (T-349): upcoming = víc než 48 h do zasedání, due = čeká na zadávajícího lékaře,
+ *  checked = potvrzeno a nic nového, missed = zasedání začalo bez kontroly (pacient zůstává, jen podsvícený). */
+export type ReviewStatus = 'upcoming' | 'due' | 'checked' | 'missed';
+
+/** Výsledek, který přibyl v IRIS po zařazení (laboratoř, zobrazení, zpráva…). */
+export interface ReviewResult {
+  /** Evidence ID resource ("P19-lvef01") */
+  citation: EvidenceId;
+  type: string;
+  /** "Výsledek" | "Zpráva" | "Dokument" | … */
+  kind: string;
+  /** YYYY-MM-DD */
+  date: string;
+  label: string;
+  value: string;
+  /** Přišlo po poslední kontrole (nebo kontrola ještě nebyla). */
+  unseen: boolean;
+}
+
+/** GET/POST /api/mdt/cases/{cid}/review/ (T-349) */
+export interface CaseReview {
+  case_id: number;
+  status: ReviewStatus;
+  /** Od kdy se počítá (datum nominace, YYYY-MM-DD). */
+  since: string;
+  /** Od kdy kontrola běží (48 h před zasedáním, ISO). */
+  due_from: string;
+  checked_at: string | null;
+  checked_by: { user_id: number; name: string } | null;
+  new_results: ReviewResult[];
+  unseen_count: number;
+  can_check: boolean;
+}
+
+/** GET /api/mdt/reviews/ → moje kontroly před zasedáním ve stavu `due` (upozornění v aplikaci). */
+export interface MyReview extends CaseReview {
+  patient_id: string;
+  display_name: string;
+  session: { id: number; title: string; date: string };
 }
 
 export type TaskStatus = 'requested' | 'in-progress' | 'completed';
@@ -836,7 +1108,8 @@ export interface MdtTask {
 }
 
 // ── Okno pro projektor (T-333) ────────────────────────────────────────────────
-export type ProjectorBlock = 'anamnesis' | 'facts' | 'treatments';
+/** `norms` = normy pozvaných lékařů na PVW (T-365). */
+export type ProjectorBlock = 'anamnesis' | 'facts' | 'treatments' | 'norms';
 
 /** Rozložení okna pro projektor u případu: pořadí a skrytí karet a klíčových údajů (`KeyFact.id`). */
 export interface ProjectorLayout {
@@ -845,4 +1118,39 @@ export interface ProjectorLayout {
   categories?: { order: FactCategory[]; hidden: FactCategory[] };
   /** Klíče údajů: ID pole, `lab:<LOINC>`, `alert:<pravidlo>` (šablona) nebo přesné `KeyFact.id` (úprava u případu). */
   facts?: { order: string[]; hidden: string[] };
+  /** Jen u případu (T-345): údaje doplněné z karty pacienta přes chatbot, nejvýš 12; šablona lékaře je nemá. */
+  extra?: ProjectorExtra[];
 }
+
+/** Údaj doplněný z karty pacienta (T-345): tvrzení odpovědi chatbotu, které lékař přidal do okna pro projektor. */
+export interface ProjectorExtra {
+  id: string;
+  text: string;
+  /** Aspoň jedno Evidence ID, odkud tvrzení je. */
+  citations: EvidenceId[];
+  /** true = text napsala AI, false = doslovně z dokumentace (odpověď bez jazykového modelu). */
+  ai?: boolean;
+}
+
+// ── T-370: záznam přístupů k pacientům (ARCH §6.3, jen správce MDT) ──
+export type AccessAction = 'view' | 'export' | 'write' | 'ai';
+
+export type AccessLogEntry = {
+  id: number;
+  created_at: string;
+  user_id: number | null;
+  username: string;
+  user_name: string;
+  patient_id: string;
+  case_id: number | null;
+  session_id: number | null;
+  action: AccessAction;
+  method: string;
+  path: string;
+  status: number;
+  ip: string | null;
+};
+
+export type AccessLogPage = { count: number; page: number; page_size: number; results: AccessLogEntry[] };
+
+export type AccessLogFilters = { patient?: string; user?: number | ''; action?: AccessAction | ''; from?: string; to?: string; page?: number };

@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from services import evidence, patients
+from services import evidence, patient_search, patients
 from services.fhir.client import FhirError
 
 
@@ -24,11 +24,29 @@ def _load(pid: str) -> list[dict]:
     return rs
 
 
-@extend_schema(responses=OpenApiTypes.OBJECT, tags=['patients'])
+@extend_schema(responses=OpenApiTypes.OBJECT, tags=['patients'],
+               parameters=[OpenApiParameter('q', str, description='jméno nebo Pxx (RČ jen přes POST search/)')])
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def patient_list(request):
-    return Response(patients.list_patients())
+    q = request.query_params.get('q')
+    if q is None:
+        return Response(patients.list_patients())
+    if patient_search.looks_like_rc(q):          # RČ v URL by skončilo v access logu Daphne, Vercelu i Cloudflaru
+        return Response({'detail': 'Rodné číslo posílejte v těle POST /api/patients/search/, ne v adrese.'}, status=400)
+    return Response(patient_search.search(q))
+
+
+@extend_schema(request={'application/json': {'type': 'object', 'properties': {'q': {'type': 'string'}}}},
+               responses=OpenApiTypes.OBJECT, tags=['patients'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def patient_search_view(request):
+    """Hledání pro dialog přidání pacienta: RČ (s lomítkem i bez), část jména, nebo Pxx; nejvýš 20 výsledků."""
+    q = request.data.get('q') if isinstance(request.data, dict) else None
+    if not isinstance(q, str) or len(q) > 100:
+        return Response({'detail': 'Zadejte rodné číslo, jméno nebo Pxx.'}, status=400)
+    return Response(patient_search.search(q))
 
 
 @extend_schema(responses=OpenApiTypes.OBJECT, tags=['patients'])

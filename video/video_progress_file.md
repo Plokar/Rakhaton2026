@@ -31,7 +31,7 @@
 | V-24 | Klip 11: chatbot „Jaká je hodnota FEV1?“ (hodnota, datum, zdroj) | ✅ | `src/clips/Chatbot.tsx`, 5 s; rozhovor vložen jen v DOM, data z datasetu |
 | V-23 | Klip 10: průjezd podkladem P02 podle whatsapp_inspirace.mp4 | ✅ | `src/clips/DetailScroll.tsx`, 5 s, tmavý režim |
 | V-22 | Klipy po scénách (výřezy z průchodu) | ✅ | `scripts/render_klipy.sh` → `out/klipy/` |
-| V-20 | Prezentace 13 slidů (.pptx) ve stylu videí | ✅ | `prezentace/MedTeam_Prezentace.pptx`, validace prošla, kontrola exportem z PowerPointu |
+| V-20 | Prezentace 13 slidů (.pptx) ve stylu videí | ✅ | `prezentace/MDTcore_Prezentace.pptx`, validace prošla, kontrola exportem z PowerPointu |
 
 ## Klíčová rozhodnutí
 

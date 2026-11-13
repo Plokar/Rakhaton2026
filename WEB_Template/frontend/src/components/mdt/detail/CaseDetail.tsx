@@ -21,6 +21,9 @@ import { apiDataSource, BriefDataProvider, fixtureDataSource } from '../data-sou
 import { FeedbackNote, GenerateBrief, RegenerateDialog, useBriefJob } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { openProjectorWindow } from '../projector';
+import { patientCardHref } from '../patient';
+import { ReviewNotice } from '../review';
+import { CaseRequirements } from '../DoctorRules';
 import {
   CaseQuickViewBody, dataNoticesLabel, fixtureQuickViewSources, quickHeader, redFlagsLabel, useQuickViewSources, type QuickViewSources,
 } from '../quick-view';
@@ -403,7 +406,7 @@ function DetailLayout({
           ...(session ? [{ label: session.title, href: `/dashboard/mdt/${session.id}` }] : []),
           {
             label: item?.patient_id ?? brief?.patient_id ?? sources.patientId,
-            href: isDemo ? undefined : `/dashboard/patients/${encodeURIComponent(sources.patientId)}`,
+            href: isDemo ? undefined : patientCardHref(sources.patientId, item?.id),
           },
         ]}
       />
@@ -417,6 +420,8 @@ function DetailLayout({
         </aside>
 
         <div className="flex min-w-0 flex-col gap-6">
+          {item?.id != null && <ReviewNotice caseId={item.id} patient={item.patient_id} session={session} />}
+          {item?.id != null && <CaseRequirements caseId={item.id} canDecide={can.editCase(me, item)} />}
           {view && (
             <div className="-mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-[13px] text-muted-foreground" id="poradi-label">Pořadí podkladu</span>
@@ -611,7 +616,7 @@ function StickyCaseHeader({
                   <PanelRightOpen aria-hidden /> Úzké okno vedle PACS
                 </DropdownMenuItem>
                 {!isDemo && (
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/patients/${encodeURIComponent(sources.patientId)}`)}>
+                  <DropdownMenuItem onClick={() => router.push(patientCardHref(sources.patientId, item?.id))}>
                     <UserRound aria-hidden /> Karta pacienta, vložit zprávu
                   </DropdownMenuItem>
                 )}

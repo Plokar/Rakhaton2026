@@ -12,9 +12,9 @@ import { AREA_LABEL, editorGroups, type LayoutItem } from './fact-layout';
 import { FIELD_ABBR } from './key-facts';
 
 const BLOCKS: { id: ProjectorBlock; label: string }[] = [
-  { id: 'anamnesis', label: 'Anamnéza' },
   { id: 'facts', label: 'Klíčové údaje' },
   { id: 'treatments', label: 'Léčebné postupy' },
+  { id: 'norms', label: 'Normy pozvaných lékařů' },
 ];
 export const AREAS: TemplateArea[] = ['PLI', 'PRS', 'KRC', 'OBC'];
 
@@ -85,13 +85,17 @@ export function SortableRows({ rows, onMove, onToggle, hideVerb = 'Skrýt' }: {
  * Editor rozložení údajů (T-338): kategorie (pořadí, skrytí) a údaje v nich (pořadí, skrytí), u okna projektoru
  * i karty. Kategorie určuje systém, lékař mění jen pořadí a viditelnost (D-024). Skryté v podkladu zůstává.
  */
-export function FactLayoutEditor({ items, value, onChange, blocks = false, hideVerb = 'Skrýt', loading = false }: {
+export function FactLayoutEditor({ items, value, onChange, blocks = false, hideVerb = 'Skrýt', loading = false, addon, actions }: {
   items: LayoutItem[];
   value: ProjectorLayout;
   onChange: (next: ProjectorLayout) => void;
   blocks?: boolean;
   hideVerb?: string;
   loading?: boolean;
+  /** Sekce pod kategoriemi (okno u případu: údaje doplněné z karty pacienta, T-345). */
+  addon?: React.ReactNode;
+  /** Tlačítka vedle „Obnovit výchozí“ (okno u případu: doplnit z karty pacienta, T-345). */
+  actions?: React.ReactNode;
 }) {
   const groups = editorGroups(items, value);
   const categoryOrder = groups.map((g) => g.category);
@@ -100,7 +104,7 @@ export function FactLayoutEditor({ items, value, onChange, blocks = false, hideV
   const hiddenFacts = value.facts?.hidden ?? [];
   const setCategories = (order: FactCategory[], hidden: FactCategory[]) => onChange({ ...value, categories: { order, hidden } });
   const blockRows = (() => {
-    const order = [...new Set([...(value.blocks?.order ?? []), ...BLOCKS.map((b) => b.id)])];
+    const order = [...new Set([...(value.blocks?.order ?? []), ...BLOCKS.map((b) => b.id)])].filter((id) => BLOCKS.some((b) => b.id === id));
     const hidden = value.blocks?.hidden ?? [];
     return { order, hidden };
   })();
@@ -143,7 +147,7 @@ export function FactLayoutEditor({ items, value, onChange, blocks = false, hideV
           </section>
           {groups.map((g) => (
             <section key={g.category} className={cn(g.hidden && 'opacity-60')}>
-              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="mb-1.5 text-[11px] font-medium text-muted-foreground">
                 {g.label}{g.hidden && ' · skrytá celá kategorie'}
               </h3>
               <SortableRows
@@ -172,10 +176,15 @@ export function FactLayoutEditor({ items, value, onChange, blocks = false, hideV
           ))}
         </>
       )}
+      {addon}
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" variant="outline" size="sm" onClick={() => onChange({})}>
-          <RotateCcw aria-hidden /> Obnovit výchozí
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {/* výchozí pořadí a viditelnost; doplněné z karty pacienta zůstávají, ty se odebírají každý zvlášť */}
+          <Button type="button" variant="outline" size="sm" onClick={() => onChange(value.extra?.length ? { extra: value.extra } : {})}>
+            <RotateCcw aria-hidden /> Obnovit výchozí
+          </Button>
+          {actions}
+        </div>
         <p className="text-xs text-muted-foreground">Skryté údaje jsou o klik dál, závažný údaj se ukáže vždy. Podklad zůstává celý.</p>
       </div>
     </div>
@@ -210,8 +219,10 @@ export function useCatalogs() {
  * Šablony po oblastech (plíce, prs, kolorektum, ostatní): záložky, preset a editor. Řízená komponenta:
  * `value[area]` = rozložení (prázdné = výchozí pořadí). Používá registrace, Tým i Nastavení.
  */
-export function TemplateAreasEditor({ value, onChange, specialty, initFromPresets = false }: {
+export function TemplateAreasEditor({ value, onChange, specialty, initFromPresets = false, onAreaChange }: {
   value: Partial<Record<TemplateArea, ProjectorLayout>>;
+  /** Vybraná oblast (živý náhled PVW vedle editoru, T-363). */
+  onAreaChange?: (area: TemplateArea) => void;
   onChange: (next: Partial<Record<TemplateArea, ProjectorLayout>>, presetId?: string) => void;
   specialty?: string | null;
   /** Při zakládání: oblasti bez hodnoty předvyplnit presetem podle profese. */
@@ -245,7 +256,10 @@ export function TemplateAreasEditor({ value, onChange, specialty, initFromPreset
             type="button"
             role="tab"
             aria-selected={a === area}
-            onClick={() => setArea(a)}
+            onClick={() => {
+              setArea(a);
+              onAreaChange?.(a);
+            }}
             className={cn(
               'rounded-lg border px-3 py-1.5 text-sm transition-colors',
               a === area ? 'border-primary bg-primary/10 font-medium text-foreground' : 'border-border text-muted-foreground hover:bg-muted',

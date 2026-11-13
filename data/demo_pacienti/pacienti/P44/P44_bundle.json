@@ -1,0 +1,942 @@
+{
+  "resourceType": "Bundle",
+  "id": "P44-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P44",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P44",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P44"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "745210/9951"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Ivana Kadlecová (fiktivní)",
+            "family": "Kadlecová",
+            "given": [
+              "Ivana"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1974-02-10",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 52
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P44-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P44-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P44-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P44-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P44-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P44-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P44-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P44-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P44-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P44-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P44-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P44-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P44-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P44-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C43.5",
+              "display": "Zhoubný melanom trupu"
+            }
+          ],
+          "text": "Zhoubný melanom trupu"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "onsetDateTime": "2026-09-27",
+        "bodySite": [
+          {
+            "text": "kůže zad"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8721/3",
+                  "display": "Nodulární melanom"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C43.5"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "pT3b pN1a cM0, stadium IIIB (AJCC 8)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P44-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P44-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-09-27",
+        "issued": "2026-09-27T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P44-03"
+          }
+        ],
+        "conclusion": "Reexcize a sentinelová biopsie: nodulární melanom Breslow 3,2 mm s ulcerací, 1 z 2 uzlin pozitivní (mikrometastáza 0,8 mm)..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UmVleGNpemUgYSBzZW50aW5lbG92w6EgYmlvcHNpZTogbm9kdWzDoXJuw60gbWVsYW5vbSBCcmVzbG93IDMsMiBtbSBzIHVsY2VyYWPDrSwgMSB6IDIgdXpsaW4gcG96aXRpdm7DrSAobWlrcm9tZXRhc3TDoXphIDAsOCBtbSku",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-09-27"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P44-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P44-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-24",
+        "issued": "2026-10-24T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P44-02"
+          }
+        ],
+        "conclusion": "PET/CT: bez vzdálených metastáz.",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "UEVUL0NUOiBiZXogdnpkw6FsZW7DvWNoIG1ldGFzdMOhei4gTVIgbW96a3UgYmV6IG1ldGFzdMOhei4=",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-24"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P44-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P44-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "date": "2026-10-26T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P44-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudGthIDUyIGxldCwgemRyYXZvdG7DrSBzZXN0cmEuIEhvamVuw60gaml6ZXYgYmV6IGtvbXBsaWthY8OtLiBFQ09HIDAu",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-26"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-24",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P44-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "pT3b pN1a cM0, stadium IIIB (AJCC 8)",
+        "focus": [
+          {
+            "reference": "Condition/P44-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-26",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P44-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 0,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P44-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-26",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 68,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-09-27",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P44-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "BRAF"
+        },
+        "valueString": "mutace V600E"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-bm02",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-bm02",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-09-27",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P44-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "Breslow"
+        },
+        "valueString": "3,2 mm, ulcerace"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-25T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 132,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-25T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-25T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-25T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P44-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P44-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "effectiveDateTime": "2026-10-25T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P44-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P44-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P44-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Komise pro melanom a kožní nádory"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "authoredOn": "2026-10-27T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P44-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Melanom zad pT3b pN1a (stadium IIIB), BRAF V600E, po excizi a biopsii sentinelové uzliny: adjuvantní anti-PD-1, nebo dabrafenib s trametinibem?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: nodulární melanom Breslow 3,2 mm s ulcerací, 1 z 2 uzlin pozitivní (mikrometastáza 0,8 mm)."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Operace] reexcize a biopsie sentinelové uzliny (2026-10-24)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: bez komorbidit. ECOG 0."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce léčbu s co nejméně návštěvami."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P44-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P44-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P44-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P44-zad01"
+        },
+        "for": {
+          "reference": "Patient/P44"
+        },
+        "authoredOn": "2026-10-27T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P44-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-16T13:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P44-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P44-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "authored": "2026-10-25T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P44"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "0",
+                  "display": "Zvládám všechno jako dřív, bez omezení"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 68
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Procedure-P44-proc01",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "P44-proc01",
+        "status": "completed",
+        "code": {
+          "text": "Reexcize jizvy a biopsie sentinelové uzliny axily"
+        },
+        "subject": {
+          "reference": "Patient/P44"
+        },
+        "category": {
+          "text": "chirurgie"
+        },
+        "performedDateTime": "2026-10-24"
+      }
+    }
+  ]
+}

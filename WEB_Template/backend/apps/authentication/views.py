@@ -78,6 +78,11 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
+        # Pilot / produkce (T-355): účty zakládá koordinátor (Tým → Přidat lékaře). Registrovaný uživatel by dostal
+        # roli viewer a viděl by všechny pacienty.
+        if not getattr(settings, 'MDT_ALLOW_REGISTRATION', True):
+            return Response({'detail': 'Registrace je vypnutá. Účet vám založí koordinátor pilotu.'},
+                            status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -223,20 +228,38 @@ class ChangePasswordView(APIView):
 def check_auth_status(request):
     """
     GET /api/auth/status/
-    Kontrola stavu autentizace (pro client-side auth check).
+    Kontrola stavu autentizace (pro client-side auth check). `registration_enabled` (T-372): smí se
+    na přihlášení nabízet registrace? V pilotu a produkci ne (`MDT_ALLOW_REGISTRATION`), účty jdou přes pozvánku.
     """
+    registration = bool(getattr(settings, 'MDT_ALLOW_REGISTRATION', True))
     if request.user.is_authenticated:
         return Response({
             'authenticated': True,
             'user': UserSerializer(request.user).data,
+            'registration_enabled': registration,
         })
-    return Response({'authenticated': False, 'user': None})
+    return Response({'authenticated': False, 'user': None, 'registration_enabled': registration})
+
+
+def _frontend_url(request) -> str:
+    """Adresa aplikace do odkazu v e-mailu. Hlavičce Origin věříme jen v dev nebo když je mezi povolenými původy:
+    jinak by šlo podvrhnout odkaz na cizí web, který by uživateli sebral token pro obnovu hesla (T-371)."""
+    from django.conf import settings
+
+    configured = getattr(settings, 'MDT_FRONTEND_URL', '')
+    if configured:
+        return configured.rstrip('/')
+    allowed = [o for o in getattr(settings, 'CORS_ALLOWED_ORIGINS', []) if o]
+    origin = request.headers.get('Origin', '')
+    if origin and (settings.DEBUG or origin in allowed):
+        return origin.rstrip('/')
+    return (allowed[0] if allowed and not settings.DEBUG else 'http://localhost:3000').rstrip('/')
 
 
 class ForgotPasswordView(APIView):
     """
     POST /api/auth/forgot-password/
-    Zašle e-mail s resetovacím odkazem do Mailhogu.
+    Zašle e-mail s odkazem pro obnovu hesla. Odpověď je stejná, ať účet existuje, nebo ne.
     """
     permission_classes = [AllowAny]
 
@@ -251,27 +274,21 @@ class ForgotPasswordView(APIView):
             from django.contrib.auth.tokens import default_token_generator
             from django.utils.http import urlsafe_base64_encode
             from django.utils.encoding import force_bytes
-            from services.email_service import send_hackathon_email
+            from services.email_service import send_email
 
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"http://localhost:3000/reset-password?uid={uid}&token={token}"
+            reset_url = f"{_frontend_url(request)}/reset-password?uid={uid}&token={token}"
 
-            subject = "Obnova hesla – Hackathon Template"
-            body = f"Ahoj {user.username},\n\npro obnovu hesla klikni na odkaz:\n{reset_url}\n\nOdkaz je platný 24 hodin."
-            html_body = f"""
-            <div style="font-family: sans-serif; padding: 20px;">
-              <h2>Obnova hesla</h2>
-              <p>Ahoj <b>{user.username}</b>,</p>
-              <p>obdrželi jsme žádost o obnovu tvého hesla v Hackathon OS.</p>
-              <p><a href="{reset_url}" style="background: #4f46e5; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">Nastavit nové heslo</a></p>
-              <p style="color: #6b7280; font-size: 12px; margin-top: 20px;">Pokud jsi o změnu nežádal/a, tento email ignoruj.</p>
-            </div>
-            """
-            send_hackathon_email(to=email, subject=subject, body=body, html_body=html_body)
+            subject = "Obnova hesla do MDTcore"
+            body = (f"Dobrý den,\n\npro účet {user.username} v MDTcore někdo požádal o obnovu hesla. Nové heslo "
+                    f"nastavíte tady:\n{reset_url}\n\nOdkaz platí omezenou dobu a jen jednou. Pokud jste o obnovu "
+                    f"nežádali, e-mail ignorujte.")
+            html_body = None
+            send_email(to=email, subject=subject, body=body, html_body=html_body)
 
         return Response({
-            'message': 'Pokud je zadaný e-mail v systému, byl odeslán odkaz pro obnovu hesla (zkontroluj Mailhog na :8025).'
+            'message': 'Pokud je zadaný e-mail v systému, odeslali jsme na něj odkaz pro obnovu hesla.'
         })
 
 

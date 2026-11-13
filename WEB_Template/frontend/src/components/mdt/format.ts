@@ -8,3 +8,8 @@ export function formatDate(value: string | null | undefined): string {
   const date = `${Number(day)}. ${Number(month)}. ${year}`;
   return timePart ? `${date} ${timePart.slice(0, 5)}` : date;
 }
+
+/** ISO data uvnitř textu tvrzení („2026-09-08 · MR prostaty“) česky jako jinde v aplikaci; text podkladu se nemění. */
+export function formatDatesInText(text: string): string {
+  return text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, (_, y: string, m: string, d: string) => `${Number(d)}. ${Number(m)}. ${y}`);
+}

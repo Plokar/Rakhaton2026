@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage, useMyTemplates, useSaveTemplate } from '@/lib/queries';
 import type { ProjectorLayout, TemplateArea } from '@/types/mdt';
+import { cn } from '@/lib/utils';
 import { AREAS, TemplateAreasEditor } from './FactLayoutEditor';
 import { AREA_LABEL } from './fact-layout';
 import { useMe } from './me';
+import { PvwSketch } from './PvwSketch';
 import { ROLE_META } from './roles';
 
 type Drafts = Partial<Record<TemplateArea, ProjectorLayout>>;
@@ -20,8 +22,19 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? {}) === JSON.string
  * Nastavení → Moje šablona údajů (T-338, docs/SABLONY_LEKARE.md R2, R5): tituly a šablona klíčových údajů po
  * oblastech. Platí v mém detailu a přehledech a jako výchozí okno projektoru u pacientů, které zařazuji.
  */
-export function MyTemplateCard() {
+export function MyTemplateCard({ showTitles = true, withPreview = true, bare = false, onboarding = false, saveRef }: {
+  showTitles?: boolean;
+  /** Průvodce (T-363): bez uložené šablony předvyplní preset profese. */
+  onboarding?: boolean;
+  /** Průvodce: funkce, která rozpracovanou šablonu uloží při „Pokračovat“. */
+  saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  /** Živý náhled PVW vedle editoru (T-363). */
+  withPreview?: boolean;
+  /** Bez rámečku a nadpisu (průvodce nastavením). */
+  bare?: boolean;
+} = {}) {
   const me = useMe();
+  const [area, setArea] = React.useState<TemplateArea>('PLI');
   const templates = useMyTemplates();
   const save = useSaveTemplate();
   const [drafts, setDrafts] = React.useState<Drafts | null>(null);
@@ -37,6 +50,7 @@ export function MyTemplateCard() {
   const changed = AREAS.filter((a) => !same(current[a], saved[a]));
   const titleValue = titles ?? { title_before: me?.title_before ?? '', title_after: me?.title_after ?? '' };
 
+  const seedPresets = onboarding && templates.isSuccess && !Object.keys(saved).length;
   const saveAll = async () => {
     try {
       for (const area of changed) {
@@ -50,6 +64,14 @@ export function MyTemplateCard() {
     }
   };
 
+  React.useEffect(() => {
+    if (!saveRef) return;
+    saveRef.current = () => (changed.length ? saveAll() : Promise.resolve());
+    return () => {
+      saveRef.current = null;
+    };
+  });
+
   const saveTitles = async () => {
     try {
       const updated = await mdtApi.updateMyTitles(titleValue);
@@ -61,13 +83,19 @@ export function MyTemplateCard() {
   };
 
   return (
-    <section id="sablona" aria-labelledby="sablona-nadpis" className="scroll-mt-20 rounded-xl border border-border bg-card p-5">
-      <h2 id="sablona-nadpis" className="text-base font-semibold">Lékař a moje šablona údajů</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Co chcete u pacienta vidět a v jakém pořadí. Platí ve vašem detailu a přehledech a jako výchozí okno pro projektor
-        u pacientů, které zařazujete. U konkrétního pacienta ho můžete upravit. Skryté údaje nezmizí, závažný údaj se ukáže vždy.
-      </p>
+    <section id="sablona" aria-labelledby={bare ? undefined : 'sablona-nadpis'} aria-label={bare ? 'Můj PVW' : undefined}
+      className={cn('scroll-mt-20', !bare && 'rounded-xl border border-border bg-card p-5')}>
+      {!bare && (
+        <>
+          <h2 id="sablona-nadpis" className="text-base font-semibold">Lékař a můj PVW (šablona údajů)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Co chcete u pacienta vidět a v jakém pořadí. Platí ve vašem detailu a přehledech a jako výchozí okno pro projektor
+            (PVW) u pacientů, které zařazujete. U konkrétního pacienta ho můžete upravit. Skryté údaje nezmizí, závažný údaj se ukáže vždy.
+          </p>
+        </>
+      )}
 
+      {showTitles && (
       <div className="mt-4 grid max-w-xl grid-cols-[1fr_1fr_auto] items-end gap-3">
         <label className="flex flex-col gap-1 text-xs font-semibold">
           Titul před jménem
@@ -79,13 +107,15 @@ export function MyTemplateCard() {
         </label>
         <Button type="button" variant="outline" onClick={() => void saveTitles()} disabled={!titles}>Uložit tituly</Button>
       </div>
-      {me && (
+      )}
+      {showTitles && me && (
         <p className="mt-2 text-xs text-muted-foreground">
           Profese: {me.specialty ? ROLE_META[me.specialty].label : 'nevyplněno'} (mění předseda v Týmu komise).
         </p>
       )}
 
-      <div className="mt-5">
+      <div className={cn('mt-5', withPreview && 'grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]')}>
+        <div className="min-w-0">
         {templates.isLoading ? (
           <Skeleton className="h-64" />
         ) : templates.isError ? (
@@ -94,11 +124,19 @@ export function MyTemplateCard() {
           <TemplateAreasEditor
             value={current}
             specialty={me?.specialty}
+            onAreaChange={setArea}
+            initFromPresets={seedPresets}
             onChange={(next, presetId) => {
               setDrafts(next);
               if (presetId) setPreset(presetId);
             }}
           />
+        )}
+        </div>
+        {withPreview && (
+          <div className="lg:sticky lg:top-20 lg:self-start">
+            <PvwSketch area={area} layout={current[area]} />
+          </div>
         )}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-4">

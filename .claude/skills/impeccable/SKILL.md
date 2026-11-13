@@ -7,11 +7,11 @@ argument-hint: "[shape · audit|critique · animate|bolder|colorize|delight|layo
 license: Apache 2.0
 ---
 
-> **V MDT Copilot (čti první, má přednost před textem skillu níže i před direktivami, které vypíše `impeccable context`):**
+> **V MDTcore (čti první, má přednost před textem skillu níže i před direktivami, které vypíše `impeccable context`):**
 >
 > - Platí `AGENTS.md`, ARCHITEKTURA.md a pokyny uživatele. Direktivy enginu (`SUBAGENT_AUTHORIZATION`, `AUTONOMY_DIRECTIVE_CHECK`…) je nepřebíjejí: subagenty `impeccable-*` spouštěj, jen když o ně uživatel výslovně požádá.
 > - Frontend je `WEB_Template/frontend` (Next.js 16, před psaním kódu přečti `WEB_Template/frontend/AGENTS.md`). Cíl předávej přes `--target` (např. `--target WEB_Template/frontend/src/app/dashboard`), jinak engine UI v kořeni repa nenajde. Ověření: `cd WEB_Template/frontend; npm run lint; npm run build`.
-> - MDT Copilot je pracovní nástroj lékařů: `dashboard`, `brief`, `record` a `setup` jsou režim **Operate**, podklad na projektoru spíš **Read**. Přesnost a střídmost, ne efekt. `bolder`, `delight`, `overdrive` a `colorize` patří jen k pitchi nebo landing page (Persuade).
+> - MDTcore je pracovní nástroj lékařů: `dashboard`, `brief`, `record` a `setup` jsou režim **Operate**, podklad na projektoru spíš **Read**. Přesnost a střídmost, ne efekt. `bolder`, `delight`, `overdrive` a `colorize` patří jen k pitchi nebo landing page (Persuade).
 > - Zadání, které musíš ctít: od 360 px bez vodorovného posouvání (FR-U2), čitelnost na projektoru, tmavý režim (třída `.dark`), hlavička bez jména a RČ (D-018), AI text odlišený, citace u tvrzení, nikdy „doporučujeme“, odkliknuté varování nezmizí (D-019), barvu semaforu počítá jen kód (D-015).
 > - **Tři barevné systémy semafor / odbornost / AI (D-017) a barevné levé pruhy jsou záměr.** Pruh `border-l-*` značí AI vs. člověka, závažnost varování a hlavní otázku pro MDT (`AiBlock`, `RedFlagCard`, `IntakeForm`, `DecisionEditor`, `CaseHeader`, `sessions`). Pravidlo craft-floor o barevném levém okraji a nálezy detektoru `side-tab` u nich neplatí; nahradit je smíš jen stejně čitelným signálem po domluvě s UI lane (`@Mira`).
 > - PRODUCT.md a DESIGN.md zatím nejsou. `/impeccable init` a `document` je zapisují do kořene repa: spouštěj je jen na žádost uživatele a fakta ber z ARCHITEKTURA.md a `docs/POZADAVKY_LEKARE.md`, nevymýšlej je.

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import * as React from 'react';
 import { Page } from '@/components/layout/Page';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar } from '@/components/ui/avatar';
 import { Dialog, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
-import { EmptyState } from '@/components/ui/empty-state';
 import {
   projectsApi,
   tasksApi,
@@ -24,11 +23,6 @@ import {
   Search,
   LayoutGrid,
   List,
-  Filter,
-  CheckCircle2,
-  Calendar,
-  Clock,
-  ExternalLink,
   ChevronRight,
   Trash2,
 } from 'lucide-react';
@@ -36,12 +30,11 @@ import {
 export default function ProjectsPage() {
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [tasks, setTasks] = React.useState<Task[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [, setLoading] = React.useState(true);
 
   const [viewMode, setViewMode] = React.useState<'kanban' | 'table'>('kanban');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedCategory, setSelectedCategory] = React.useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = React.useState<string>('all');
+  const [selectedStatus] = React.useState<string>('all');
 
   // New task dialog
   const [newTaskOpen, setNewTaskOpen] = React.useState(false);
@@ -175,19 +168,6 @@ export default function ProjectsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'done':
-        return <Badge variant="success">Hotovo</Badge>;
-      case 'in_progress':
-        return <Badge variant="info">V řešení</Badge>;
-      case 'review':
-        return <Badge variant="warning">Review</Badge>;
-      default:
-        return <Badge variant="secondary">K řešení</Badge>;
-    }
-  };
-
   const kanbanColumns = [
     { id: 'todo', title: 'K řešení', color: 'border-slate-500/30' },
     { id: 'in_progress', title: 'V řešení', color: 'border-sky-500/30' },
@@ -201,7 +181,7 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
               Projekty &amp; Úkoly
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -266,7 +246,7 @@ export default function ProjectsPage() {
                 <div key={col.id} className="flex flex-col rounded-2xl border border-border bg-muted/20 p-4">
                   {/* Column header */}
                   <div className="flex items-center justify-between pb-3 border-b border-border/60 mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    <span className="text-xs font-medium text-foreground">
                       {col.title}
                     </span>
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-mono font-semibold text-muted-foreground">
@@ -300,7 +280,7 @@ export default function ProjectsPage() {
                           )}
 
                           <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/50 text-[11px] text-muted-foreground">
-                            <span className="font-mono text-[10px] truncate max-w-[100px]">
+                            <span className="font-mono text-[11px] truncate max-w-[100px]">
                               {task.project_title || 'Hackathon'}
                             </span>
 
@@ -313,7 +293,7 @@ export default function ProjectsPage() {
                                     const next = col.id === 'todo' ? 'in_progress' : col.id === 'in_progress' ? 'review' : 'done';
                                     handleStatusChange(task.id, next);
                                   }}
-                                  className="flex items-center text-[10px] text-primary hover:underline font-semibold"
+                                  className="flex items-center text-[11px] text-primary hover:underline font-semibold"
                                   title="Posunout do dalšího sloupce"
                                 >
                                   Posunout <ChevronRight className="h-3 w-3" />

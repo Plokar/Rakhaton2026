@@ -1,0 +1,130 @@
+# =============================================================================
+# MDT Copilot (MedTeam) – jen backend na sdíleném VPS (frontend běží na Vercelu)
+#   API: https://apimedteam.nervelabs.co.uk  →  Cloudflare (Origin Rule)  →  VPS:${BACKEND_PORT}
+#   FE:  https://medteam.nervelabs.co.uk (Vercel, rewrites /api/* → BACKEND_URL, D-003)
+# Bez vlastního Traefiku: porty 80/443/8080 na VPS drží jiná aplikace (NERVE), 8880 zapadgo.
+# 2052 = HTTP port, který Cloudflare proxy umí i bez přepisu portu v Origin Rule.
+# IRIS (FHIR R4 + vektory) jen interně; Management Portal: ssh -L 52773:127.0.0.1:52773 <vps>
+#
+# Spuštění (z WEB_Template/):
+#   cp .env.prod.example .env  &&  (vyplnit, viz níže)
+#   docker compose -f docker-compose.vps.yml up -d --build
+# =============================================================================
+name: medteam
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # IRIS for Health – FHIR R4 + Vector Search (ARCH §3.4, §4.2); ven nic, portál jen na localhost VPS
+  iris:
+    build: ./iris
+    restart: unless-stopped
+    environment:
+      ISC_DATA_DIRECTORY: /durable
+    volumes:
+      - iris_data:/durable
+    ports:
+      - "127.0.0.1:${IRIS_PORTAL_PORT:-52773}:52773"
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings_prod
+      DJANGO_DEBUG: "False"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      IRIS_HOST: iris
+      IRIS_PORT: "1972"
+      IRIS_NAMESPACE: FHIRSERVER
+      IRIS_USER: SuperUser
+      IRIS_PASSWORD: ${IRIS_PASSWORD:?IRIS_PASSWORD v .env (ne výchozí SYS)}
+      FHIR_BASE_URL: http://iris:52773/fhir/r4
+      DATASET_DIR: /data/dataset
+      DEMO_DATASET_DIR: /data/demo_pacienti                 # fiktivní demo pacienti P13–P172 (T-355)
+      ONKO_KB_DIR: /data/onko
+      ONKO_DATASET_DIR: /data/dataset
+      ONKO_GUIDELINES_DIR: /data/dataset/guidelines
+      ONKO_EXT_CATALOG: /code/services/iris/data/external_sources.json
+      ONKO_APP_RULES: /code/services/rules/data/compatibility_rules.yaml
+      AUDIO_DIR: /data/audio
+      MDT_DEMO_CACHE_DIR: /data/demo_cache
+      MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
+      MDT_SEED: ${MDT_SEED:-True}
+    # Cloudflare → origin po HTTP; Cloudflare posílá X-Forwarded-Proto: https (SECURE_PROXY_SSL_HEADER)
+    ports:
+      - "${BACKEND_PORT:-2052}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      iris:
+        condition: service_started
+    networks:
+      - app-network
+    volumes:
+      - backend_static:/code/staticfiles
+      - backend_media:/code/media
+      - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
+      - ../data/demo_pacienti:/data/demo_pacienti:ro
+      - ../data/onko:/data/onko:ro
+      - ../data/audio:/data/audio:ro
+      - ../data/demo_cache:/data/demo_cache
+    # localhost není v ALLOWED_HOSTS a prod přesměrovává na HTTPS → healthcheck se tváří jako požadavek z Cloudflare
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Host: $${API_DOMAIN}\" -H 'X-Forwarded-Proto: https' http://localhost:8000/api/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+
+volumes:
+  iris_data:
+  postgres_data:
+  redis_data:
+  backend_static:
+  backend_media:
+
+networks:
+  app-network:
+    driver: bridge

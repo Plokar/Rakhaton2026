@@ -1,0 +1,1066 @@
+{
+  "resourceType": "Bundle",
+  "id": "P30-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P30",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P30",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P30"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "540824/9990"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Vladimír Jelínek (fiktivní)",
+            "family": "Jelínek",
+            "given": [
+              "Vladimír"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1954-08-24",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 72
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P30-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P30-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P30-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P30-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P30-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P30-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P30-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P30-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P30-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P30-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P30-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P30-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P30-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P30-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C67.2",
+              "display": "Zhoubný novotvar boční stěny močového měchýře"
+            }
+          ],
+          "text": "Zhoubný novotvar boční stěny močového měchýře"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "onsetDateTime": "2026-10-05",
+        "bodySite": [
+          {
+            "text": "pravá boční stěna močového měchýře"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8120/3",
+                  "display": "Uroteliální karcinom"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C67.2"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "cT2 cN0 cM0, stadium II (TNM 8. vyd.)"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P30-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P30-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "I48.0",
+              "display": "Paroxysmální fibrilace síní"
+            }
+          ],
+          "text": "Paroxysmální fibrilace síní"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "onsetDateTime": "2019-09"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P30-kom2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P30-kom2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "H90.3",
+              "display": "Oboustranná nedoslýchavost"
+            }
+          ],
+          "text": "Oboustranná nedoslýchavost"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:MedicationRequest-P30-med01",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "P30-med01",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "chronická medikace"
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "B01AF02",
+              "display": "apixaban"
+            }
+          ],
+          "text": "apixaban"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "authoredOn": "2026-01-15",
+        "dosageInstruction": [
+          {
+            "text": "5 mg p.o. 2× denně"
+          }
+        ],
+        "requester": {
+          "reference": "Practitioner/LEK-P30-01"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P30-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P30-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-05",
+        "issued": "2026-10-05T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P30-03"
+          }
+        ],
+        "conclusion": "TURBT: high-grade uroteliální karcinom s invazí do detrusoru, bez karcinomu in situ..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "VFVSQlQ6IGhpZ2gtZ3JhZGUgdXJvdGVsacOhbG7DrSBrYXJjaW5vbSBzIGludmF6w60gZG8gZGV0cnVzb3J1LCBiZXoga2FyY2lub211IGluIHNpdHUu",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-10-05"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P30-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P30-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "issued": "2026-10-12T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P30-02"
+          }
+        ],
+        "conclusion": "CT urografie: ztluštění pravé boční stěny 24 mm, horní cesty močové bez nálezu, uzliny nezvětšené..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "Q1QgdXJvZ3JhZmllOiB6dGx1xaF0xJtuw60gcHJhdsOpIGJvxI1uw60gc3TEm255IDI0IG1tLCBob3Juw60gY2VzdHkgbW/EjW92w6kgYmV6IG7DoWxlenUsIHV6bGlueSBuZXp2xJt0xaFlbsOpLg==",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-10-12"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P30-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P30-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "date": "2026-10-14T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P30-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA3MiBsZXQsIG1ha3Jvc2tvcGlja8OhIGhlbWF0dXJpZS4gTmVkb3Nsw71jaGF2b3N0IG9ib3VzdHJhbm7EmyAoc2x1Y2hhZGxhKS4gRUNPRyAxLg==",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-10-14"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-12",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P30-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "cT2 cN0 cM0, stadium II (TNM 8. vyd.)",
+        "focus": [
+          {
+            "reference": "Condition/P30-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P30-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 1,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P30-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-14",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 77,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-05",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P30-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "PD-L1 (CPS)"
+        },
+        "valueString": "8"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-lab01-hb",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-lab01-hb",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin"
+            }
+          ],
+          "text": "Hemoglobin"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 127,
+          "unit": "g/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-lab01-neu",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-lab01-neu",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "751-8",
+              "display": "Neutrofily absolutně"
+            }
+          ],
+          "text": "Neutrofily absolutně"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 4.1,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-lab01-plt",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-lab01-plt",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Hematologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "777-3",
+              "display": "Trombocyty"
+            }
+          ],
+          "text": "Trombocyty"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 245,
+          "unit": "10^9/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-lab01-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-lab01-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 102,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-lab01-bili",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-lab01-bili",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14631-6",
+              "display": "Bilirubin celkový"
+            }
+          ],
+          "text": "Bilirubin celkový"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-13T07:30:00+02:00",
+        "valueQuantity": {
+          "value": 11,
+          "unit": "µmol/l"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P30-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P30-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P30-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: Uroonkologická komise"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P30-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Svalovinu infiltrující uroteliální karcinom močového měchýře cT2 N0: neoadjuvantní chemoterapie a radikální cystektomie, nebo trimodální léčba?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: high-grade uroteliální karcinom s invazí do detrusoru, bez karcinomu in situ."
+          },
+          {
+            "text": "Předchozí onkologická léčba:\n- [Operace] TURBT (2026-10-05)"
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: fibrilace síní na apixabanu, nedoslýchavost. ECOG 1."
+          },
+          {
+            "text": "Preference a omezení pacienta: Pokud možno chce zachovat močový měchýř."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P30-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P30-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P30-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P30-zad01"
+        },
+        "for": {
+          "reference": "Patient/P30"
+        },
+        "authoredOn": "2026-10-15T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P30-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-11-09T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P30-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P30-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "authored": "2026-10-13T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P30"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "1",
+                  "display": "Těžší fyzickou práci nezvládám, lehčí činnosti a domácnost ano"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 77
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "kvalita",
+                  "display": "Kvalita života, i kdyby léčba byla kratší nebo méně účinná"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Procedure-P30-proc01",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "P30-proc01",
+        "status": "completed",
+        "code": {
+          "text": "Transuretrální resekce tumoru močového měchýře (TURBT)"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "category": {
+          "text": "urologie"
+        },
+        "performedDateTime": "2026-10-05"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P30-lab02-krea",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P30-lab02-krea",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biochemie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "14682-9",
+              "display": "Kreatinin"
+            }
+          ],
+          "text": "Kreatinin"
+        },
+        "subject": {
+          "reference": "Patient/P30"
+        },
+        "effectiveDateTime": "2026-10-28T07:30:00+01:00",
+        "valueQuantity": {
+          "value": 138,
+          "unit": "µmol/l"
+        }
+      }
+    }
+  ]
+}

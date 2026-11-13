@@ -188,20 +188,10 @@ export const PanelStage: React.FC<{ f: number; short?: boolean }> = ({ f, short 
         position: 'absolute', left: 0, right: 0, bottom: 0, height: 480, opacity: iv(f, [440, 452, 590, 600], [0, 1, 1, 0]),
         background: 'linear-gradient(180deg, rgba(4,7,11,0) 0%, rgba(4,7,11,0.9) 42%, rgba(4,7,11,0.97) 100%)',
       }} />
-      <Caption frame={f} text="MedTeam připraví *celý případ.*" from={350} to={414} x={150} y={392} size={88} align="left" maxWidth={820} />
-      <Caption frame={f} text="Za pár sekund." from={374} to={414} x={150} y={604} size={54} weight={600} color={C.ink2} align="left" />
-      {short ? (
-        // 20s verze: oba titulky na jedné kartě ve dvou řádcích, jinak by se nedaly přečíst
-        <>
-          <Caption frame={f} text="Každé tvrzení má *zdroj.*" from={446} to={592} y={784} size={62} />
-          <Caption frame={f} text="Každý rozpor *na očích.*" from={476} to={592} y={866} size={62} accent={C.amber} />
-        </>
-      ) : (
-        <>
-          <Caption frame={f} text="Každé tvrzení má *zdroj.*" from={452} to={530} y={812} size={64} />
-          <Caption frame={f} text="Každý rozpor *na očích.*" from={538} to={592} y={812} size={64} accent={C.amber} />
-        </>
-      )}
+      <Caption text="MDTcore připraví *celý případ.*" from={350} to={414} x={150} y={392} size={88} align="left" maxWidth={820} />
+      <Caption text="Za pár sekund." from={374} to={414} x={150} y={604} size={54} weight={600} color={C.ink2} align="left" />
+      <Caption text="Každé tvrzení má *zdroj.*" from={452} to={530} y={812} size={64} />
+      <Caption text="Každý rozpor *na očích.*" from={538} to={592} y={812} size={64} accent={C.amber} />
     </AbsoluteFill>
   );
 };

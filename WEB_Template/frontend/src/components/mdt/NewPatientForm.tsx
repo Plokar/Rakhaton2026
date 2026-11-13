@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { PILOT_MODE } from '@/lib/pilot';
 import { ApiError } from '@/lib/api';
 import { mdtApi, type PatientDraft, type PatientDraftEdits } from '@/lib/mdt-api';
 import { apiErrorMessage, queryKeys } from '@/lib/queries';
@@ -101,7 +102,7 @@ function DocumentInputs({ text, onText, files, onFiles, error, allowJson = false
 
 function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: number; onDraft: (d: PatientDraft) => void; onExisting: (pid: string) => void; onCancel: () => void }) {
   const [rc, setRc] = React.useState('');
-  const [synthetic, setSynthetic] = React.useState(false);
+  const [synthetic, setSynthetic] = React.useState(PILOT_MODE);           // pilot: jen fiktivní pacienti (D-021)
   const [text, setText] = React.useState('');
   const [files, setFiles] = React.useState<File[]>([]);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
@@ -159,6 +160,12 @@ function DraftStart({ sessionId, onDraft, onExisting, onCancel }: { sessionId?: 
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
+      {PILOT_MODE && (
+        <p role="note" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] text-amber-950 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+          <strong className="font-medium">Pilotní provoz:</strong> zadávejte jen vymyšlené rodné číslo a fiktivní zprávy.
+          Skutečné údaje pacientů sem nepatří.
+        </p>
+      )}
       <p className="text-[13px] text-muted-foreground">
         Z rodného čísla se odvodí pohlaví a věk, ze zpráv diagnóza, TNM, ECOG a otázka pro MDT (každý údaj s citací).
         Pacienta jde načíst i z FHIR JSON (bundle jednoho pacienta). V IRIS se nic nezapíše, dokud návrh nepotvrdíte.

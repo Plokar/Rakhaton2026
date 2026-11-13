@@ -30,6 +30,18 @@ class BriefConfig(models.Model):
         return self.name
 
 
+class Committee(models.Model):
+    """Komise (T-362, D-027): stálí členové jsou pozvaní na všechna její zasedání. Spravuje správce MDT."""
+    name = models.CharField(max_length=300, unique=True)
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='committees')
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class MdtSession(models.Model):
     """Zasedání MDT = board (D-014). Zakládá a mění jen `mdt_admin` (T-501)."""
     STATUS = [('planned', 'plánováno'), ('in_progress', 'probíhá'), ('closed', 'uzavřeno')]
@@ -39,6 +51,19 @@ class MdtSession(models.Model):
                               related_name='chaired_sessions')
     status = models.CharField(max_length=12, choices=STATUS, default='planned')
     config = models.ForeignKey(BriefConfig, null=True, blank=True, on_delete=models.SET_NULL)
+    # Pozvaní na zasedání (T-362, D-027): členové komise bez vyřazených + přizvaní jen na toto zasedání.
+    committee = models.ForeignKey(Committee, null=True, blank=True, on_delete=models.SET_NULL, related_name='sessions')
+    invited = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='invited_sessions')
+    excluded = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='excluded_sessions')
+    # Živé zasedání (T-357): co je právě na projektoru. Nastavuje jednání komise u předsedy, čtou mobily a web
+    # ostatních lékařů (stream boardu, `event: live`), aby lékař jedním klepnutím viděl detail pacienta na slidu.
+    live_case = models.ForeignKey('MdtCase', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+    live_slide = models.PositiveSmallIntegerField(null=True, blank=True)      # 0 = první slide
+    live_slides = models.PositiveSmallIntegerField(null=True, blank=True)     # počet slidů pacienta
+    live_label = models.CharField(max_length=200, blank=True)                 # „Klíčové údaje · Léčebné postupy“
+    live_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name='+')
+    live_updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['date', 'title']
@@ -70,6 +95,14 @@ class MdtCase(models.Model):
     imaging_recent_checked = models.BooleanField(default=False)
     skipped_fields = models.JSONField(default=list, blank=True)          # [IntakeField.id]
     acknowledged_warnings = models.JSONField(default=list, blank=True)   # [{id, by, at}]
+    # Kontrola před zasedáním (T-349): zadávající lékař viděl, co přibylo od zařazení. Bez ní zůstane pacient
+    # na MDT, jen podsvícený („kontrola neproběhla“).
+    checked_at = models.DateTimeField(null=True, blank=True)
+    checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name='checked_cases')
+    # Rozhodnutí zadávajícího lékaře k požadavkům pozvaných lékařů (T-364): [{user_id, decision, note, by, at}].
+    # Jen se přidává (D-019), platí poslední záznam pro lékaře.
+    requirement_decisions = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -78,6 +111,22 @@ class MdtCase(models.Model):
 
     def __str__(self):
         return f'{self.patient_fhir_id} @ {self.session}'
+
+
+class SessionPresence(models.Model):
+    """Lékař je na zasedání (T-357): aplikace nebo web živého zasedání se ohlašuje (`POST …/presence/`).
+    Přítomný = ohlášení za posledních `live.PRESENCE_TTL`; odchod = smazání."""
+    session = models.ForeignKey(MdtSession, on_delete=models.CASCADE, related_name='presences')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_presences')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    last_seen = models.DateTimeField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['session', 'user'], name='session_presence_user')]
+        ordering = ['joined_at']
+
+    def __str__(self):
+        return f'{self.user} @ {self.session}'
 
 
 class SessionMessage(models.Model):
@@ -128,6 +177,9 @@ class UserProfile(models.Model):
     practitioner_fhir_id = models.CharField(max_length=64, blank=True)   # lékař v IRIS „LEK-…“ (T-328)
     title_before = models.CharField(max_length=40, blank=True)   # „MUDr.“, „doc. MUDr.“ (T-338)
     title_after = models.CharField(max_length=40, blank=True)    # „Ph.D.“
+    organization = models.CharField(max_length=200, blank=True)  # nemocnice (T-362), prázdné = naše
+    is_external = models.BooleanField(default=False)             # lékař z jiné nemocnice: vidí jen své komise
+    onboarding_done = models.BooleanField(default=True)          # průvodce nastavením po prvním přihlášení (T-363)
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'
@@ -189,3 +241,94 @@ class PatientDraft(models.Model):
 
     def __str__(self):
         return f'{self.patient_fhir_id} ({self.get_status_display()})'
+
+
+AREA_CHOICES = FactTemplate.AREAS + [('*', 'Všechny diagnózy')]
+
+
+class Invitation(models.Model):
+    """Pozvánka od správce MDT (T-361, D-027). Ukládá se jen hash tokenu; odkaz platí jednou a do `expires_at`."""
+    token_hash = models.CharField(max_length=64, unique=True)
+    email = models.EmailField(blank=True)
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150)
+    title_before = models.CharField(max_length=40, blank=True)
+    title_after = models.CharField(max_length=40, blank=True)
+    specialty = models.CharField(max_length=30)
+    role = models.CharField(max_length=20)
+    organization = models.CharField(max_length=200, blank=True)
+    is_external = models.BooleanField(default=False)
+    committees = models.ManyToManyField(Committee, blank=True, related_name='invitations')
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    used_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name='accepted_invitations')
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
+                                   related_name='sent_invitations')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.last_name} ({self.email})'
+
+
+class DoctorRequirement(models.Model):
+    """Údaje, které lékař vyžaduje, když je pozvaný na MDT (T-364, D-028). Mění jen lékař sám."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_requirements')
+    area = models.CharField(max_length=3, choices=AREA_CHOICES)
+    fields = models.JSONField(default=list, blank=True)           # klíče katalogu údajů (`bm.egfr`, `lab:718-7`)
+    note = models.CharField(max_length=500, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'area'], name='doctor_requirement_user_area')]
+        ordering = ['user', 'area']
+
+
+class DoctorNorm(models.Model):
+    """Norma lékaře pro řešení (T-365, D-028): údaj, operátor, hodnota. Vyhodnocuje kód, semafor nemění (D-015)."""
+    OPS = [('>=', '≥'), ('<=', '≤'), ('>', '>'), ('<', '<'), ('==', '=')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_norms')
+    area = models.CharField(max_length=3, choices=AREA_CHOICES, default='*')
+    field = models.CharField(max_length=120)
+    op = models.CharField(max_length=2, choices=OPS)
+    value = models.FloatField()
+    unit = models.CharField(max_length=20, blank=True)
+    procedure = models.CharField(max_length=120, blank=True)      # k jakému postupu norma patří („resekce jater“)
+    note = models.CharField(max_length=300, blank=True)
+    source = models.CharField(max_length=60, blank=True)          # Evidence ID guidelines / EXT-MK-…
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['user', 'area', 'id']
+
+
+class AccessLog(models.Model):
+    """Kdo kdy otevřel kterého pacienta, stáhl export nebo zapsal (T-370). Jen ID, nikdy jméno, RČ ani tělo požadavku.
+
+    Zapisuje `apps.mdt.access_log.AccessLogMiddleware`; záznamy se z aplikace neupravují ani nemažou.
+    """
+    ACTIONS = [('view', 'zobrazení'), ('export', 'export'), ('write', 'zápis'), ('ai', 'dotaz na AI')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name='access_logs')
+    username = models.CharField(max_length=150, blank=True)       # zůstane i po smazání účtu
+    patient_fhir_id = models.CharField(max_length=64, blank=True, db_index=True)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='access_logs')
+    session_id_ref = models.PositiveIntegerField(null=True, blank=True)  # export celého zasedání (ZIP)
+    action = models.CharField(max_length=8, choices=ACTIONS)
+    path = models.CharField(max_length=300)
+    method = models.CharField(max_length=8)
+    status_code = models.PositiveSmallIntegerField()
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        indexes = [models.Index(fields=['user', 'patient_fhir_id', 'created_at'], name='access_user_patient_time')]
+
+    def __str__(self):
+        return f'{self.created_at:%Y-%m-%d %H:%M} {self.username} {self.action} {self.patient_fhir_id or self.path}'

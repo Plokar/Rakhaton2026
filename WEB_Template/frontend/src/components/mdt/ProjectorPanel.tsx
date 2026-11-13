@@ -37,5 +37,13 @@ export function ProjectorPanel({
       </div>
     );
   }
-  return <CaseQuickViewProjector sources={sources} caseId={selection.caseId} titleAs={titleAs} className={className} />;
+  return (
+    <CaseQuickViewProjector
+      sources={sources}
+      caseId={selection.caseId}
+      titleAs={titleAs}
+      className={className}
+      remote={{ board: selection.board, caseId: selection.caseId }}
+    />
+  );
 }

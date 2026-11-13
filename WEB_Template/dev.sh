@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # Hackathon OS – Developer Automation Script
-# Usage: ./dev.sh [up|down|seed|reset|build|logs|test]
+# Usage: ./dev.sh [up|down|seed|reset|build|logs|test|local]
 # =============================================================================
 set -e
 
@@ -57,13 +57,19 @@ case "$CMD" in
     docker compose -f $COMPOSE_FILE logs -f
     ;;
 
+  local)
+    # T-367: bez Dockeru a bez IRIS (FHIR a vektory v paměti, mock AI); potřebuje lokální Postgres a Redis
+    echo "💻 Backend bez Dockeru na http://localhost:${LOCAL_PORT:-8000} (frontend: cd frontend && npm run dev)"
+    cd backend && exec "${PYTHON:-python3}" scripts/run_local.py
+    ;;
+
   test)
     echo "🧪 Spouštím testy..."
     docker compose -f $COMPOSE_FILE exec backend pytest
     ;;
 
   *)
-    echo "Použití: $0 {up|down|seed|reset|build|logs|test}"
+    echo "Použití: $0 {up|down|seed|reset|build|logs|test|local}"
     exit 1
     ;;
 esac

@@ -38,6 +38,11 @@ MISSING = re.compile(r"nevyšetř|probíh|čeká|nestanov|nedostat", re.IGNORECA
 
 
 # ── báze ──────────────────────────────────────────────────────────────────────
+
+def _rules_count(n: int) -> str:
+    """1 pravidlo, 2–4 pravidla, 5 a víc pravidel."""
+    return f"{n} {'pravidlo' if n == 1 else 'pravidla' if 2 <= n <= 4 else 'pravidel'}"
+
 def kb_dir() -> Path | None:
     env = os.environ.get("ONKO_KB_DIR")
     if env and (Path(env) / "q.py").is_file():
@@ -324,7 +329,7 @@ def kb_procedures(resources: list[dict], *, existing_ids: Iterable[str] = (), al
         if unknown:                                      # ⚪ pravidla shrnout do jednoho řádku (30 s orientace)
             missing = sorted({m for r, _ in unknown for m in r["chybi"]})
             rules.append({"rule_id": unknown[0][0]["id"] if len(unknown) == 1 else "KB-UNKNOWN", "status": "grey",
-                          "text": f"{len(unknown)} pravidel nelze posoudit ({', '.join(r['kontrola'] for r, _ in unknown[:4])}"
+                          "text": f"{_rules_count(len(unknown))} nelze posoudit ({', '.join(r['kontrola'] for r, _ in unknown[:4])}"
                                   f"{' …' if len(unknown) > 4 else ''})" + (f"; chybí údaj: {', '.join(missing[:8])}" if missing else ""),
                           "patient_citations": [], "rule_citation": unknown[0][1]})
         modality = _modality(tags)

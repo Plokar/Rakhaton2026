@@ -86,7 +86,7 @@ class Command(BaseCommand):
         fhir.put({
             'resourceType': 'Device',
             'id': 'mdt-copilot',
-            'deviceName': [{'name': 'MDT Copilot', 'type': 'user-friendly-name'}],
+            'deviceName': [{'name': 'MDTcore', 'type': 'user-friendly-name'}],
             'version': [{'value': os.environ.get('AI_MODEL', 'gemini-3.8-flash')}],
         })
         self.stdout.write('PUT Device/mdt-copilot OK')

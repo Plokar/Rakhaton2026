@@ -30,7 +30,12 @@ def nominations(requests: list[dict], tasks: list[dict]) -> list[dict]:
             'question': (r.get('reasonCode') or [{}])[0].get('text', ''),
             'date': datetime.fromisoformat(start), 'title': board_title(r),
         })
-    return sorted(out, key=lambda n: (n['date'], n['title'], n['patient_id']))
+    return sorted(out, key=lambda n: (n['date'], n['title'], _pid_key(n['patient_id'])))
+
+
+def _pid_key(pid: str) -> tuple:
+    """P99 před P100 (T-355)."""
+    return (0, int(pid[1:])) if re.fullmatch(r'P\d+', pid or '') else (1, pid or '')
 
 
 def load_nominations() -> list[dict]:

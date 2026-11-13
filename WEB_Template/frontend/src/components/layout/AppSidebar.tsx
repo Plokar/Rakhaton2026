@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Activity, Archive, CalendarDays, LayoutGrid, ListChecks, MonitorUp } from 'lucide-react';
+import { Archive, CalendarDays, LayoutGrid, ListChecks, MonitorUp, Radio, UsersRound } from 'lucide-react';
 import { dayLabel, pragueDay, timeLabel, todayPrague } from '@/components/mdt/dates';
 import { openProjectorWindow } from '@/components/mdt/projector';
 import {
@@ -26,9 +27,11 @@ import { useMyTasksQuery, useSessionsQuery, useTasksQuery } from '@/lib/queries'
 
 const NAV = [
   { href: '/dashboard', label: 'Přehled', icon: LayoutGrid, exact: true },
+  { href: '/dashboard/live', label: 'Živě na MDT', icon: Radio },
   { href: '/dashboard/mdt', label: 'Zasedání', icon: CalendarDays },
   { href: '/dashboard/tasks', label: 'Úkoly', icon: ListChecks },
   { href: '/dashboard/zaznamy', label: 'Záznam boardů', icon: Archive, chair: true },
+  { href: '/dashboard/tym', label: 'Tým a účty', icon: UsersRound, manager: true },   // správce MDT (T-361)
 ] as const;
 
 /** Postranní panel (NAVRH_UI §5.1): navigace, nejbližší zasedání jedním klikem, okno projektoru. Bez dev služeb. */
@@ -61,12 +64,10 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/dashboard" />} tooltip="MedTeam">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Activity className="size-4" aria-hidden />
-              </span>
+            <SidebarMenuButton size="lg" render={<Link href="/dashboard" />} tooltip="MDTcore">
+              <Image src="/icon-192.png" alt="" width={32} height={32} className="size-8 shrink-0 rounded-lg" aria-hidden />
               <span className="flex min-w-0 flex-col leading-tight">
-                <span translate="no" className="truncate text-sm font-semibold">MedTeam</span>
+                <span translate="no" className="truncate text-sm font-semibold">MDTcore</span>
                 <span className="truncate text-xs text-muted-foreground">Onkologická komise</span>
               </span>
             </SidebarMenuButton>
@@ -78,7 +79,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.filter((item) => !('chair' in item) || can.manageBoards(me)).map((item) => {
+              {NAV.filter((item) => ('chair' in item ? can.manageBoards(me) : 'manager' in item ? can.manageAccounts(me) : true)).map((item) => {
                 const active = 'exact' in item && item.exact ? pathname === item.href : pathname.startsWith(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>

@@ -1,0 +1,779 @@
+{
+  "resourceType": "Bundle",
+  "id": "P135-bundle",
+  "type": "collection",
+  "meta": {
+    "tag": [
+      {
+        "system": "https://rakathon.example.org/fhir/tag",
+        "code": "fiktivni-data",
+        "display": "Fiktivní data – Rakathon 2026"
+      }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:Patient-P135",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "P135",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/pacient",
+            "value": "P135"
+          },
+          {
+            "system": "https://rakathon.example.org/fhir/sid/rc-fiktivni",
+            "value": "580303/9957"
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "Martin Pospíšil (fiktivní)",
+            "family": "Pospíšil",
+            "given": [
+              "Martin"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1958-03-03",
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/vek-k-datu-mdt",
+            "valueInteger": 68
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Organization-ORG-FN",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "ORG-FN",
+        "name": "Fiktivní fakultní nemocnice – Komplexní onkologické centrum"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P135-01",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P135-01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P135-01"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P135-01 (fiktivní lékař) – klinický onkolog (ošetřující lékař)"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "klinický onkolog (ošetřující lékař)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P135-02",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P135-02",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P135-02"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P135-02 (fiktivní lékař) – radiolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "radiolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Practitioner-LEK-P135-03",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "LEK-P135-03",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/lekar",
+            "value": "LEK-P135-03"
+          }
+        ],
+        "name": [
+          {
+            "text": "LEK-P135-03 (fiktivní lékař) – patolog"
+          }
+        ],
+        "qualification": [
+          {
+            "code": {
+              "text": "patolog"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P135-dg1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P135-dg1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "onkologická diagnóza"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "C22.0",
+              "display": "Hepatocelulární karcinom"
+            }
+          ],
+          "text": "Hepatocelulární karcinom"
+        },
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "onsetDateTime": "2026-11-07",
+        "bodySite": [
+          {
+            "text": "segment 6"
+          }
+        ],
+        "extension": [
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-morfologie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "8170/3",
+                  "display": "Hepatocelulární karcinom NOS"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://rakathon.example.org/fhir/StructureDefinition/icd-o-3-topografie",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/icd-o-3",
+                  "code": "C22.0"
+                }
+              ]
+            }
+          }
+        ],
+        "stage": [
+          {
+            "summary": {
+              "text": "BCLC 0, solitární 26 mm"
+            },
+            "type": {
+              "text": "klinické"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P135-kom1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P135-kom1",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "K74.6",
+              "display": "Cirhóza jater Child-Pugh A (MASLD)"
+            }
+          ],
+          "text": "Cirhóza jater Child-Pugh A (MASLD)"
+        },
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "onsetDateTime": "2021-01"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Condition-P135-kom2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "P135-kom2",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "text": "komorbidita"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10",
+              "code": "E11.9",
+              "display": "Diabetes mellitus 2. typu"
+            }
+          ],
+          "text": "Diabetes mellitus 2. typu"
+        },
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "onsetDateTime": "2014-04"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P135-pat01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P135-pat01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "SP",
+                "display": "Surgical Pathology"
+              }
+            ],
+            "text": "Patologie"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "22637-3",
+              "display": "Pathology report"
+            }
+          ],
+          "text": "Histologie – bioptický vzorek"
+        },
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "effectiveDateTime": "2026-11-07",
+        "issued": "2026-11-07T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P135-03"
+          }
+        ],
+        "conclusion": "Diagnóza podle LI-RADS 5 bez biopsie..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "RGlhZ27Ds3phIHBvZGxlIExJLVJBRFMgNSBiZXogYmlvcHNpZS4=",
+            "title": "Histologie – bioptický vzorek",
+            "creation": "2026-11-07"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DiagnosticReport-P135-img01",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "P135-img01",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ],
+            "text": "Zobrazovací metody"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18748-4",
+              "display": "Diagnostic imaging study"
+            }
+          ],
+          "text": "Restagingové zobrazení"
+        },
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "effectiveDateTime": "2026-11-17",
+        "issued": "2026-11-17T15:00:00+02:00",
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P135-02"
+          }
+        ],
+        "conclusion": "MR jater s hepatospecifickou kontrastní látkou: LI-RADS 5 ložisko segmentu 6, 26 mm..",
+        "presentedForm": [
+          {
+            "contentType": "text/plain; charset=utf-8",
+            "language": "cs",
+            "data": "TVIgamF0ZXIgcyBoZXBhdG9zcGVjaWZpY2tvdSBrb250cmFzdG7DrSBsw6F0a291OiBMSS1SQURTIDUgbG/Fvmlza28gc2VnbWVudHUgNiwgMjYgbW0u",
+            "title": "Restagingové zobrazení",
+            "creation": "2026-11-17"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:DocumentReference-P135-doc01",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "P135-doc01",
+        "status": "current",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Onkologické vyšetření před MDT"
+        },
+        "category": [
+          {
+            "text": "A-ONK – Onkologická ambulance"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "date": "2026-11-19T10:00:00+02:00",
+        "author": [
+          {
+            "reference": "Practitioner/LEK-P135-01"
+          }
+        ],
+        "description": "Onkologické vyšetření před MDT",
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "cs",
+              "data": "UGFjaWVudCA2OCBsZXQsIG7DoWxleiBwxZlpIHNsZWRvdsOhbsOtIGNpcmjDs3p5LiBCZXogYXNjaXR1LiBFQ09HIDAuIExhYm9yYXRvxZkgeiBoZXBhdG9sb2dpZSB6YXTDrW0gbmVkb2xvxb5lbmEu",
+              "title": "Onkologické vyšetření před MDT",
+              "creation": "2026-11-19"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P135-tnm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P135-tnm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "effectiveDateTime": "2026-11-17",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P135-doc01"
+          }
+        ],
+        "category": [
+          {
+            "text": "Staging"
+          }
+        ],
+        "code": {
+          "text": "TNM (klinické)"
+        },
+        "valueString": "BCLC 0, solitární 26 mm",
+        "focus": [
+          {
+            "reference": "Condition/P135-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P135-ecog01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P135-ecog01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "effectiveDateTime": "2026-11-19",
+        "derivedFrom": [
+          {
+            "reference": "DocumentReference/P135-doc01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "survey"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89247-1",
+              "display": "ECOG Performance Status score"
+            }
+          ],
+          "text": "ECOG – hodnoceno lékařem"
+        },
+        "valueInteger": 0,
+        "performer": [
+          {
+            "reference": "Practitioner/LEK-P135-01"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P135-vaha01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P135-vaha01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "effectiveDateTime": "2026-11-19",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Hmotnost"
+        },
+        "valueQuantity": {
+          "value": 90,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Observation-P135-bm01",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "P135-bm01",
+        "status": "final",
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "effectiveDateTime": "2026-11-07",
+        "derivedFrom": [
+          {
+            "reference": "DiagnosticReport/P135-pat01"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          },
+          {
+            "text": "Biomarker / molekulární patologie"
+          }
+        ],
+        "code": {
+          "text": "AFP"
+        },
+        "valueString": "18 µg/l"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ServiceRequest-P135-zad01",
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "P135-zad01",
+        "identifier": [
+          {
+            "system": "https://rakathon.example.org/fhir/sid/mdt-zadanka",
+            "value": "P135-zad01"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "text": "Požadované zaměření MDT: GIT – kolorektální karcinom / hepatobiliární"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-projednani",
+              "code": "primarni",
+              "display": "Primární projednání"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "authoredOn": "2026-11-20T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P135-01"
+        },
+        "performer": [
+          {
+            "reference": "Organization/ORG-FN"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-typ-otazky",
+                "code": "lecebny-plan",
+                "display": "Léčebný plán"
+              }
+            ],
+            "text": "Hepatocelulární karcinom 2,6 cm na podkladě cirhózy Child-Pugh A, BCLC 0: radiofrekvenční ablace, nebo resekce?"
+          }
+        ],
+        "note": [
+          {
+            "text": "Histologie a grade: Diagnóza podle LI-RADS 5 bez biopsie."
+          },
+          {
+            "text": "Předchozí onkologická léčba: žádná."
+          },
+          {
+            "text": "Relevantní komorbidity a současný stav: Cirhóza jater Child-Pugh A (MASLD), Diabetes mellitus 2. typu. ECOG 0."
+          },
+          {
+            "text": "Preference a omezení pacienta: Chce co nejšetrnější výkon."
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/P135-dg1"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:Task-P135-zad01-task",
+      "resource": {
+        "resourceType": "Task",
+        "id": "P135-zad01-task",
+        "status": "accepted",
+        "businessStatus": {
+          "coding": [
+            {
+              "system": "https://rakathon.example.org/fhir/CodeSystem/mdt-stav-zadanky",
+              "code": "naplanovana",
+              "display": "Naplánovaná"
+            }
+          ]
+        },
+        "intent": "order",
+        "focus": {
+          "reference": "ServiceRequest/P135-zad01"
+        },
+        "for": {
+          "reference": "Patient/P135"
+        },
+        "authoredOn": "2026-11-20T11:00:00+02:00",
+        "requester": {
+          "reference": "Practitioner/LEK-P135-01"
+        },
+        "owner": {
+          "reference": "Organization/ORG-FN"
+        },
+        "restriction": {
+          "period": {
+            "start": "2026-12-10T14:00:00+01:00"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:QuestionnaireResponse-P135-prom01",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "P135-prom01",
+        "questionnaire": "https://rakathon.example.org/fhir/Questionnaire/MDT-PROMS-1",
+        "status": "completed",
+        "subject": {
+          "reference": "Patient/P135"
+        },
+        "authored": "2026-11-18T18:00:00+02:00",
+        "source": {
+          "reference": "Patient/P135"
+        },
+        "item": [
+          {
+            "linkId": "bolest",
+            "text": "Bolest za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 2
+              }
+            ]
+          },
+          {
+            "linkId": "unava",
+            "text": "Únava za poslední týden (0–10)",
+            "answer": [
+              {
+                "valueInteger": 3
+              }
+            ]
+          },
+          {
+            "linkId": "samostatnost",
+            "text": "Jak zvládáte běžný den?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "0",
+                  "display": "Zvládám všechno jako dřív, bez omezení"
+                }
+              }
+            ]
+          },
+          {
+            "linkId": "hmotnost",
+            "text": "Vaše současná hmotnost (kg)",
+            "answer": [
+              {
+                "valueDecimal": 90
+              }
+            ]
+          },
+          {
+            "linkId": "alergie",
+            "text": "Alergie nebo nesnášenlivost léků",
+            "answer": [
+              {
+                "valueString": "nevím o žádné"
+              }
+            ]
+          },
+          {
+            "linkId": "priorita",
+            "text": "Co je pro vás v léčbě nejdůležitější?",
+            "answer": [
+              {
+                "valueCoding": {
+                  "system": "https://rakathon.example.org/fhir/CodeSystem/proms-odpovedi",
+                  "code": "oboji",
+                  "display": "Obojí je pro mě stejně důležité"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

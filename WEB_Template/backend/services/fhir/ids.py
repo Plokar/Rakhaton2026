@@ -30,7 +30,7 @@ def sanitize_reference(ref: str) -> str:
 
 # Konvence ID (DATASET §3 + výstupy aplikace ARCH §4.3). Pořadí nehraje roli, vzory se nepřekrývají.
 _GLOBAL_RULES = (
-    (r'P\d{2}', 'Patient'),
+    (r'P\d{2,3}', 'Patient'),
     (r'LEK-[A-Za-z0-9-]+', 'Practitioner'),
     (r'ORG-[A-Za-z0-9-]+', 'Organization'),
     (r'MDT-PROMS-\d+', 'Questionnaire'),
@@ -56,6 +56,7 @@ _PATIENT_RULES = (  # část ID za `Pxx-`
     (r'prom\d+', 'QuestionnaireResponse'),
     (r'zad\d+', 'ServiceRequest'),
     (r'zad\d+-task', 'Task'),
+    (r'zad\d+-prep\d+', 'Task'),                        # úkol z přípravy na MDT (T-350)
     (r'mdt\d+(-rozhodnuti)?', 'Composition'),
     (r'mdt\d+-careplan', 'CarePlan'),
     (r'mdt\d+-careteam', 'CareTeam'),
@@ -69,8 +70,8 @@ _PATIENT_RULES = (  # část ID za `Pxx-`
 )
 _GLOBAL = [(re.compile(p), t) for p, t in _GLOBAL_RULES]
 _PATIENT = [(re.compile(p), t) for p, t in _PATIENT_RULES]
-_PATIENT_PREFIX = re.compile(r'(P\d{2})-(.+)')
-_PRACTITIONER_PATIENT = re.compile(r'LEK-(P\d{2})-\d+')
+_PATIENT_PREFIX = re.compile(r'(P\d{2,3})-(.+)')
+_PRACTITIONER_PATIENT = re.compile(r'LEK-(P\d{2,3})-\d+')
 
 
 def resource_type_for_id(rid: str) -> str | None:
@@ -117,7 +118,7 @@ def patient_id_for(rid: str) -> str | None:
     m = _PATIENT_PREFIX.fullmatch(rid) or _PRACTITIONER_PATIENT.fullmatch(rid)
     if m:
         return m[1]
-    return rid if re.fullmatch(r'P\d{2}', rid) else None
+    return rid if re.fullmatch(r'P\d{2,3}', rid) else None
 
 
 @dataclass(frozen=True)

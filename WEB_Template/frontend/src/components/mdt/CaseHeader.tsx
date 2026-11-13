@@ -62,10 +62,10 @@ export function CaseHeader({
               pac. {ecog.patient?.value ?? '–'}
             </dd>
           </div>
-          <div className="flex min-w-15 flex-col items-center rounded-lg bg-muted/70 px-2.5 py-1.5" title={header.intent ? `Léčebný záměr ${INTENT_SOURCE[header.intent.source]}` : 'Léčebný záměr nezadán'}>
+          <div className="flex min-w-15 flex-col items-center rounded-lg bg-muted/70 px-2.5 py-1.5" title={header.intent ? `Léčebný záměr ${INTENT_SOURCE[header.intent.source]}` : 'Léčebný záměr zatím nezvolen'}>
             <dt className="text-xs font-medium text-muted-foreground">C/P</dt>
             <dd className="text-[1.75rem] font-semibold leading-8">{header.intent?.letter ?? '–'}</dd>
-            <dd className="text-xs text-muted-foreground">{header.intent ? INTENT_LABEL[header.intent.code] : 'nezadán'}</dd>
+            <dd className="text-xs text-muted-foreground">{header.intent ? INTENT_LABEL[header.intent.code] : 'nezvoleno'}</dd>
           </div>
         </dl>
       </div>

@@ -5,6 +5,7 @@ import { TriangleAlert } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/shadcn/toggle-group';
 import type { BriefSection, Claim } from '@/types/mdt';
 import { Citations } from './citations';
+import { formatDatesInText } from './format';
 import { MissingData } from './MissingData';
 
 /** Tvrzení AI s klikacími citacemi; neověřené tvrzení je výrazně označené (ARCH §5.3). */
@@ -21,7 +22,7 @@ export function ClaimItem({ claim }: { claim: Claim }) {
         >
           <TriangleAlert className="size-3.5 self-center" aria-hidden /> Neověřeno
         </span>
-        {claim.text}
+        {formatDatesInText(claim.text)}
         <Citations ids={claim.citations} />
         <Confidence value={claim.confidence} />
       </p>
@@ -29,7 +30,7 @@ export function ClaimItem({ claim }: { claim: Claim }) {
   }
   return (
     <p className="text-sm leading-relaxed">
-      {claim.text}
+      {formatDatesInText(claim.text)}
       <Citations ids={claim.citations} />
       <Confidence value={claim.confidence} />
     </p>
@@ -40,7 +41,7 @@ export function ClaimItem({ claim }: { claim: Claim }) {
  * Míra jistoty (BONUS zadání §3.3, T-332): sémantická shoda tvrzení s citovaným textem z grounding validátoru.
  * U strukturovaných dat (laboratoř, TNM) chybí, ta se ověřují čísly a daty přímo ve zdroji.
  */
-function Confidence({ value }: { value?: number | null }) {
+export function Confidence({ value }: { value?: number | null }) {
   if (value === undefined || value === null) return null;
   const percent = Math.round(value * 100);
   return (

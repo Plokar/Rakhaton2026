@@ -80,6 +80,23 @@ def app_practitioner(practitioner_id: str, name: str, role: str | None, username
     return out
 
 
+def organization_id(name: str) -> str:
+    """`ORG-<nemocnice>` (T-362): stabilní ID z názvu bez diakritiky."""
+    slug = re.sub(r"[^A-Za-z0-9-]+", "-", _plain(name)).strip("-").upper() or "NEMOCNICE"
+    return f"ORG-{slug}"[:64]
+
+
+def organization_resources(practitioner_id: str, organization: str, role: str | None) -> list[dict]:
+    """Nemocnice lékaře z jiné nemocnice (T-362, D-027): `Organization` + `PractitionerRole` s odkazem na ni."""
+    org_id = organization_id(organization)
+    practitioner_role = {"resourceType": "PractitionerRole", "id": f"{practitioner_id}-role"[:64], "active": True,
+                         "practitioner": {"reference": f"Practitioner/{practitioner_id}"},
+                         "organization": {"reference": f"Organization/{org_id}", "display": organization}}
+    if role in ROLE_LABEL:
+        practitioner_role["code"] = [{"text": ROLE_LABEL[role]}]
+    return [{"resourceType": "Organization", "id": org_id, "active": True, "name": organization}, practitioner_role]
+
+
 def exists(practitioner_id: str) -> bool:
     try:
         fhir.read("Practitioner", practitioner_id)

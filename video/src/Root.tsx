@@ -12,9 +12,8 @@ import { WALK_TOTAL } from './walk/timeline';
 
 export const Root: React.FC = () => (
   <>
-    <Composition id="MedTeamHook" component={Hook} durationInFrames={HOOK_TOTAL} fps={FPS} width={W} height={H} defaultProps={{ bgm: true }} />
-    <Composition id="MedTeamHook20" component={Hook} durationInFrames={HOOK20_TOTAL} fps={FPS} width={W} height={H} defaultProps={{ bgm: true, short: true }} />
-    <Composition id="MedTeamWalkthrough" component={Walkthrough} durationInFrames={WALK_TOTAL} fps={FPS} width={W} height={H} defaultProps={{ bgm: true }} />
+    <Composition id="MDTcoreHook" component={Hook} durationInFrames={HOOK_TOTAL} fps={FPS} width={W} height={H} defaultProps={{ bgm: true }} />
+    <Composition id="MDTcoreWalkthrough" component={Walkthrough} durationInFrames={WALK_TOTAL} fps={FPS} width={W} height={H} defaultProps={{ bgm: true }} />
     <Composition id="KlipProjektor" component={ProjectorPreset} durationInFrames={PJ_TOTAL} fps={FPS} width={PJ_W} height={PJ_H} defaultProps={{ theme: 'dark' as const }} />
     <Composition id="KlipProjektorSvetly" component={ProjectorPreset} durationInFrames={PJ_TOTAL} fps={FPS} width={PJ_W} height={PJ_H} defaultProps={{ theme: 'light' as const }} />
     <Composition id="KlipPodklad" component={DetailScroll} durationInFrames={SCROLL_TOTAL} fps={FPS} width={W} height={H} />

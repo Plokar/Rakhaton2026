@@ -1,11 +1,14 @@
 'use client';
 
 import * as React from 'react';
-import { CircleCheck, CircleDashed, Info, RotateCcw, TriangleAlert } from 'lucide-react';
+import { CircleCheck, CircleDashed, Info, ListTodo, RotateCcw, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSessionDoctorRules } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { IntakeField, IntakePrefill, IntakeWarning, ProjectorLayout, Severity } from '@/types/mdt';
 import { Citations } from './citations';
+import { RequirementsPanel } from './DoctorRules';
+import { hasLayout } from './fact-layout';
 import { warningLabel } from './key-facts';
 import { ProjectorLayoutEditor } from './ProjectorLayoutEditor';
 
@@ -22,10 +25,17 @@ export type IntakeResult = {
   intent: 'C' | 'P';
   imaging_recent_checked: boolean;
   skipped_fields: string[];
+  /** Chybějící údaje a varování „do mých úkolů“ (T-350): server je přeskočí / vezme na vědomí a založí úkol. */
+  prep_tasks: string[];
   acknowledged: string[];
   /** Okno pro projektor upravené při zařazení (T-333); bez úprav chybí. */
   projector_layout?: ProjectorLayout;
+  /** Rozhodnutí k požadavkům pozvaných lékařů (T-364); nerozhodnuté chybí. */
+  requirement_decisions: { user_id: number; decision: 'needed' | 'not_needed' }[];
 };
+
+/** ECOG a záměr C/P z formuláře: živý náhled okna pro projektor vedle formuláře (T-345). */
+export type IntakeChoice = { ecog: number | null; intent: 'C' | 'P' | null };
 
 /**
  * Zařazení pacienta do boardu (FR-P4, ARCH §5.10, POZADAVKY §2.2): předvyplněné údaje z IRIS s citací,
@@ -37,32 +47,54 @@ export function IntakeForm({
   submitting,
   onSubmit,
   patientId,
+  layout,
+  onLayoutChange,
+  onChoiceChange,
+  sessionId,
 }: {
   prefill: IntakePrefill;
+  /** Zasedání, na které se pacient zařazuje: požadavky jeho pozvaných lékařů (T-364). */
+  sessionId?: number;
   submitting: boolean;
   onSubmit: (result: IntakeResult) => void;
   /** Pacient pro úpravu okna pro projektor (T-333); bez něj se sekce nezobrazí. */
   patientId?: string;
+  /** Okno pro projektor drží rodič (T-345): mění ho editor i chatbot vedle formuláře. */
+  layout: ProjectorLayout;
+  onLayoutChange: (next: ProjectorLayout) => void;
+  /** Změna ECOG nebo záměru (náhled okna vedle formuláře, T-345). */
+  onChoiceChange?: (choice: IntakeChoice) => void;
 }) {
-  const [layout, setLayout] = React.useState<ProjectorLayout>({});
   const [skipped, setSkipped] = React.useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = React.useState<Set<string>>(new Set());
-  const [ecog, setEcog] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
-  const [intent, setIntent] = React.useState<'C' | 'P' | null>(prefill.intent_prefill ?? null);
+  const [toTasks, setToTasks] = React.useState<Set<string>>(new Set());
+  const [ecog, setEcogState] = React.useState<number | null>(prefill.ecog_physician?.value ?? null);
+  const [intent, setIntentState] = React.useState<'C' | 'P' | null>(prefill.intent_prefill ?? null);
+  const setEcog = (next: number) => {
+    setEcogState(next);
+    onChoiceChange?.({ ecog: next, intent });
+  };
+  const setIntent = (next: 'C' | 'P') => {
+    setIntentState(next);
+    onChoiceChange?.({ ecog, intent: next });
+  };
   const [imaging, setImaging] = React.useState(false);
   const [fillHint, setFillHint] = React.useState<string | null>(null);
+  const [decisions, setDecisions] = React.useState<Record<number, 'needed' | 'not_needed'>>({});
+  const doctorRules = useSessionDoctorRules(sessionId ?? null, patientId ?? prefill.patient_id ?? null, [...skipped].sort());
 
   const fields = prefill.fields;
   const skippedCitations = new Set(fields.filter((f) => skipped.has(f.id) && f.citation).map((f) => f.citation as string));
   // Přeskočený údaj se dál nehlídá: varování, která na něm stojí, se v formuláři umlčí (v podkladu zůstanou).
   const silenced = (w: IntakeWarning) => w.citations.some((c) => skippedCitations.has(c));
-  const active = prefill.warnings.filter((w) => !acknowledged.has(w.id) && !silenced(w));
+  const active = prefill.warnings.filter((w) => !acknowledged.has(w.id) && !toTasks.has(w.id) && !silenced(w));
   const done = prefill.warnings.filter((w) => acknowledged.has(w.id) || silenced(w));
+  const tasked = prefill.warnings.filter((w) => toTasks.has(w.id));
   const question = fields.find((f) => f.id === 'mdt.question');
   const missingQuestion = !question || question.status !== 'present';
   // Zařazení projde až po vyřešení všeho: každý chybějící údaj doplněn nebo vědomě přeskočen,
   // každé varování vzato na vědomí, ECOG, záměr C/P a kontrola stáří snímku.
-  const unresolvedFields = fields.filter((f) => (f.status === 'missing' || f.status === 'pending') && !skipped.has(f.id));
+  const unresolvedFields = fields.filter((f) => (f.status === 'missing' || f.status === 'pending') && !skipped.has(f.id) && !toTasks.has(f.id));
   const remaining: string[] = [
     ...unresolvedFields.map((f) => `Údaj „${f.label}“: doplnit nebo přeskočit`),
     ...(active.length > 0 ? [`Varování k potvrzení: ${active.length}`] : []),
@@ -71,6 +103,14 @@ export function IntakeForm({
     ...(imaging ? [] : ['Kontrola stáří snímku']),
   ];
   const canSubmit = !missingQuestion && remaining.length === 0;
+
+  const toggleTask = (id: string) =>
+    setToTasks((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const toggleSkip = (f: IntakeField) =>
     setSkipped((prev) => {
@@ -92,7 +132,9 @@ export function IntakeForm({
           imaging_recent_checked: imaging,
           skipped_fields: [...skipped],
           acknowledged: [...acknowledged],
-          ...(layout.blocks || layout.facts || layout.categories ? { projector_layout: layout } : {}),
+          prep_tasks: [...toTasks],
+          requirement_decisions: Object.entries(decisions).map(([id, decision]) => ({ user_id: Number(id), decision })),
+          ...(layout.extra?.length || hasLayout(layout) ? { projector_layout: layout } : {}),
         });
       }}
     >
@@ -101,10 +143,13 @@ export function IntakeForm({
         <ul className="divide-y divide-border rounded-lg border border-border bg-card">
           {fields.map((f) => {
             const isSkipped = skipped.has(f.id);
+            const isTask = toTasks.has(f.id);
             const missing = f.status === 'missing' || f.status === 'pending';
             return (
               <li key={f.id} className="flex flex-wrap items-start gap-2 px-3 py-2 text-sm">
-                {missing && !isSkipped ? (
+                {isTask ? (
+                  <ListTodo className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                ) : missing && !isSkipped ? (
                   <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
                 ) : isSkipped ? (
                   <CircleDashed className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -116,7 +161,9 @@ export function IntakeForm({
                     {f.label}
                     {f.required_by && <Citations ids={[f.required_by]} />}
                   </p>
-                  {isSkipped ? (
+                  {isTask ? (
+                    <p className="text-[13px] text-muted-foreground">V mých úkolech: doplnit před zasedáním (do té doby v podkladu jako chybějící)</p>
+                  ) : isSkipped ? (
                     <p className="text-[13px] text-muted-foreground">Chybí (přeskočeno lékařem), v podkladu zůstane jako chybějící údaj</p>
                   ) : (
                     <p className={cn('text-[13px]', missing ? 'font-medium text-amber-800 dark:text-amber-300' : 'text-muted-foreground')}>
@@ -133,12 +180,18 @@ export function IntakeForm({
                 </div>
                 {missing && (
                   <div className="flex shrink-0 gap-1.5">
-                    {!isSkipped && (
+                    {!isSkipped && !isTask && (
                       <Button type="button" variant="outline" size="sm" onClick={() => setFillHint(fillHint === f.id ? null : f.id)}>
                         Doplnit
                       </Button>
                     )}
-                    {!UNSKIPPABLE.has(f.id) && (
+                    {!UNSKIPPABLE.has(f.id) && !isSkipped && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => toggleTask(f.id)} className="gap-1"
+                        aria-pressed={isTask} title="Údaj se zatím přeskočí a do Mých úkolů přibude „doplnit před MDT“">
+                        {isTask ? <><RotateCcw aria-hidden /> Vrátit</> : <><ListTodo aria-hidden /> Do úkolů</>}
+                      </Button>
+                    )}
+                    {!UNSKIPPABLE.has(f.id) && !isTask && (
                       <Button type="button" variant="ghost" size="sm" onClick={() => toggleSkip(f)} className="gap-1">
                         {isSkipped ? <><RotateCcw aria-hidden /> Vrátit</> : 'Přeskočit'}
                       </Button>
@@ -175,18 +228,32 @@ export function IntakeForm({
                     <Citations ids={w.citations} />
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAcknowledged((prev) => new Set(prev).add(w.id))}
-                >
-                  Beru na vědomí
-                </Button>
+                <div className="flex shrink-0 gap-1.5">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => toggleTask(w.id)} className="gap-1"
+                    title="Varování se vezme na vědomí a do Mých úkolů přibude úkol ho před MDT vyřešit">
+                    <ListTodo aria-hidden /> Do úkolů
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAcknowledged((prev) => new Set(prev).add(w.id))}
+                  >
+                    Beru na vědomí
+                  </Button>
+                </div>
               </div>
             </li>
           ))}
         </ul>
+        {tasked.length > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            V mých úkolech: {tasked.map((w) => warningLabel(w).text).join(', ')}.{' '}
+            <button type="button" className="font-medium text-primary hover:underline" onClick={() => setToTasks((prev) => new Set([...prev].filter((id) => !tasked.some((w) => w.id === id))))}>
+              Vrátit
+            </button>
+          </p>
+        )}
         {done.length > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
             Vzato na vědomí nebo umlčeno přeskočením: {done.length}. V podkladu pro komisi zůstávají (D-019).{' '}
@@ -198,6 +265,17 @@ export function IntakeForm({
           </p>
         )}
       </section>
+
+      {sessionId !== undefined && (
+        <RequirementsPanel
+          rules={doctorRules.data}
+          loading={doctorRules.isLoading}
+          error={doctorRules.error}
+          canDecide
+          decisions={decisions}
+          onDecide={(userId, decision) => setDecisions((prev) => ({ ...prev, [userId]: decision }))}
+        />
+      )}
 
       <section className="grid gap-5 sm:grid-cols-2">
         <div>
@@ -266,10 +344,10 @@ export function IntakeForm({
       {patientId && (
         <details className="rounded-lg border border-border bg-card px-3 py-2">
           <summary className="cursor-pointer text-sm font-semibold">
-            Okno pro projektor <span className="font-normal text-muted-foreground">(volitelné: skrýt nebo přeskládat údaje)</span>
+            Okno pro projektor <span className="font-normal text-muted-foreground">(volitelné: skrýt, přeskládat nebo doplnit z karty)</span>
           </summary>
           <div className="mt-3">
-            <ProjectorLayoutEditor patientId={patientId} value={layout} onChange={setLayout} />
+            <ProjectorLayoutEditor patientId={patientId} value={layout} onChange={onLayoutChange} />
           </div>
         </details>
       )}

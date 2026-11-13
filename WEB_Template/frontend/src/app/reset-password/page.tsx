@@ -69,7 +69,7 @@ function ResetPasswordContent() {
           <Link href="/" className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground mb-4">
             <Zap className="h-5 w-5 fill-current" />
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Nastavení nového hesla</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Nastavení nového hesla</h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Zadejte své nové heslo (minimálně 8 znaků).
           </p>

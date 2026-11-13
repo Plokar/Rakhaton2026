@@ -10,8 +10,12 @@ from services.mdt_seed import load_nominations
 class Command(BaseCommand):
     help = 'Demo účty a role, zasedání MDT a případy z ServiceRequest + Task v IRIS. Přesunutý případ nechá na novém boardu.'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--reset-demo-passwords', action='store_true',
+                            help='Nastaví všem demo účtům heslo z MDT_DEMO_PASSWORD (před pilotem: pryč s výchozím heslem).')
+
     def handle(self, *args, **options):
-        users = roles.ensure_demo_users()
+        users = roles.ensure_demo_users(reset_passwords=options['reset_demo_passwords'])
         for user in users.values():                    # T-328: účet ↔ lékař v IRIS („moje úkoly“, výběr lékaře)
             roles.ensure_practitioner(user)
         ensure_presets(users['predseda'])
@@ -21,22 +25,35 @@ class Command(BaseCommand):
             session, new = MdtSession.objects.get_or_create(date=n['date'], title=n['title'],
                                                             defaults={'chair': users['predseda']})
             created_sessions += new
-            requester = users[roles.REQUESTER_BY_PATIENT.get(n['patient_id'], roles.DEFAULT_REQUESTER)]
+            requester = users[roles.requester(n['patient_id'], n['title'])]
             _, new = MdtCase.objects.get_or_create(
                 service_request_fhir_id=n['service_request_id'],
                 defaults={'session': session, 'patient_fhir_id': n['patient_id'], 'question': n['question'],
                           'order': order, 'created_by': requester},
             )
             created_cases += new
+        _demo_committees(users)
         # doplní chybějící (případy a boardy z dřívějšího běhu bez demo účtů), nic nepřepisuje
         MdtSession.objects.filter(chair__isnull=True).update(chair=users['predseda'])
-        for case in MdtCase.objects.filter(created_by__isnull=True):
-            case.created_by = users[roles.REQUESTER_BY_PATIENT.get(case.patient_fhir_id, roles.DEFAULT_REQUESTER)]
+        for case in MdtCase.objects.filter(created_by__isnull=True).select_related('session'):
+            case.created_by = users[roles.requester(case.patient_fhir_id, case.session.title if case.session else '')]
             case.save(update_fields=['created_by'])
         self.stdout.write(self.style.SUCCESS(
             f'Boardy: {MdtSession.objects.count()} (nové {created_sessions}), '
             f'případy: {MdtCase.objects.count()} (nové {created_cases}).'
         ))
+
+
+def _demo_committees(users) -> None:
+    """Komise podle názvu zasedání (T-362); nová komise dostane za členy demo lékaře. Nic nepřepisuje."""
+    from apps.mdt.models import Committee
+
+    for session in MdtSession.objects.filter(committee__isnull=True):
+        committee, new = Committee.objects.get_or_create(name=session.title)
+        if new:
+            committee.members.set(users.values())
+        session.committee = committee
+        session.save(update_fields=['committee'])
 
 
 def _demo_templates(users) -> None:

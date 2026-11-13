@@ -3,8 +3,6 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import { CookieProvider } from '@/contexts/CookieContext';
-import { CookieConsentBanner, CookieSettingsModal } from '@/components/cookies';
 import { Providers } from './providers';
 
 const inter = Inter({
@@ -13,8 +11,8 @@ const inter = Inter({
   display: 'swap',
 });
 
-// Značka MedTeam (NAVRH_UI Q5); env NEXT_PUBLIC_APP_NAME je ze šablony („Hackathon Template“), proto se nepoužívá.
-const appName = 'MedTeam';
+// Značka MDTcore (NAVRH_UI Q5); env NEXT_PUBLIC_APP_NAME je ze šablony („Hackathon Template“), proto se nepoužívá.
+const appName = 'MDTcore';
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +20,7 @@ export const metadata: Metadata = {
     template: `%s | ${appName}`,
   },
   description:
-    'MedTeam (MDT Copilot): podklady pro multidisciplinární onkologickou komisi s citacemi zdrojů. AI připravuje, rozhoduje lékař.',
+    'MDTcore: podklady pro multidisciplinární onkologickou komisi s citacemi zdrojů. AI připravuje, rozhoduje lékař.',
 };
 
 export default function RootLayout({
@@ -37,13 +35,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <CookieProvider>
-            <AuthProvider>
-              <Providers>{children}</Providers>
-            </AuthProvider>
-            <CookieConsentBanner />
-            <CookieSettingsModal />
-          </CookieProvider>
+          {/* Jen nezbytné cookies (přihlášení, CSRF), proto bez lišty souhlasu (T-371, /privacy). */}
+          <AuthProvider>
+            <Providers>{children}</Providers>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

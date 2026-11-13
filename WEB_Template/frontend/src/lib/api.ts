@@ -1,5 +1,5 @@
 /**
- * API Client – Type-Safe HTTP Wrapper pro MDT Copilot Django Backend
+ * API Client – Type-Safe HTTP Wrapper pro MDTcore Django Backend
  * Automaticky posílá CSRF token a JWT httpOnly cookies.
  */
 
@@ -165,6 +165,8 @@ export interface AuthResponse {
 export interface AuthStatus {
   authenticated: boolean;
   user: User | null;
+  /** T-372: smí se nabízet registrace (v pilotu a produkci ne, účty jdou přes pozvánku). */
+  registration_enabled?: boolean;
 }
 
 export const authApi = {

@@ -6,7 +6,7 @@ import { authApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { Zap, Mail, ArrowLeft, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
+import { Zap, Mail, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = React.useState('');
@@ -43,9 +43,9 @@ export default function ForgotPasswordPage() {
           <Link href="/" className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground mb-4">
             <Zap className="h-5 w-5 fill-current" />
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Obnova zapomenutého hesla</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Obnova zapomenutého hesla</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Zadejte e-mail přidružený k vašemu účtu. V dev módu se e-mail odešle do Mailhogu.
+            Zadejte e-mail svého účtu. Pošleme vám odkaz pro nastavení nového hesla.
           </p>
         </div>
 
@@ -55,20 +55,11 @@ export default function ForgotPasswordPage() {
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <p className="text-sm text-foreground font-medium">
-              E-mail s odkazem pro obnovu byl odeslán.
+              Pokud účet s tímto e-mailem existuje, poslali jsme na něj odkaz pro obnovu hesla.
             </p>
-            <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground text-left space-y-1">
-              <p className="font-semibold text-foreground">🔍 Kde najdu e-mail v dev prostředí?</p>
-              <p>Otevřete Mailhog webové rozhraní na portu 8025:</p>
-              <a
-                href="http://localhost:8025"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
-              >
-                Otevřít Mailhog (:8025) <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Pokud e-mail do pár minut nedorazí, zkontrolujte spam nebo požádejte správce MDT o nový odkaz.
+            </p>
             <Link href="/login" className="block pt-2">
               <Button variant="outline" className="w-full">
                 Zpět na přihlášení
@@ -90,7 +81,7 @@ export default function ForgotPasswordPage() {
               </label>
               <Input
                 type="email"
-                placeholder="např. admin@hackathon.local"
+                placeholder="např. jan.novak@nemocnice.cz"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 leftIcon={<Mail className="h-4 w-4" />}

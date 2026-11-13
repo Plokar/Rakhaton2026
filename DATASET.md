@@ -1,6 +1,6 @@
-# Dataset MDT Copilot v1.1 — průvodce pro vývojáře a AI agenty
+# Dataset MDTcore v1.1 — průvodce pro vývojáře a AI agenty
 
-> Dataset od Asseco CE pro zadání MDT Copilot. **Všechna data jsou fiktivní** a klinicky neověřená. Smí do gitu a repo je veřejné (rozhodnutí týmu).
+> Dataset od Asseco CE pro zadání MDTcore. **Všechna data jsou fiktivní** a klinicky neověřená. Smí do gitu a repo je veřejné (rozhodnutí týmu).
 >
 > **Umístění:** `Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1/`. V kódu vždy přes proměnnou `DATASET_DIR`, cestu nehardcoduj.
 >
@@ -235,7 +235,7 @@ Všechno klinické ──subject/for──▶ Patient ;  autoři ──▶ Pract
 - Škály 0–10: **0 = žádné potíže, 10 = nejhorší**.
 - Každý pacient má **2 vyplnění** (`Pxx-prom01`, `Pxx-prom02`).
 
-| linkId | Otázka | Typ | Použití v Copilotu |
+| linkId | Otázka | Typ | Použití v MDTcore |
 |---|---|---|---|
 | `bolest`, `unava`, `nevolnost`, `dusnost`, `chut`, `brneni`, `prujem`, `psychika`, `spanek` | symptomy 0–10 | integer | trend mezi vyplněními; **≥ 7 = výrazná zátěž** (OBC-1.3) |
 | `bolest-misto` | kde bolí | string | lokalizace nové bolesti (PRS-4.2) |

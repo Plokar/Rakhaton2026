@@ -27,6 +27,9 @@
 | V-18 | Průchod v2: render s hudbou i bez | ✅ | 90,0 s, bez přebuzení (špička −0,6 dBFS) |
 | V-19 | Průchod v2.1: gramatika kamery (navigace × čtení), pomalejší tempo, závěr 5,5 s | ✅ | render s hudbou hotový; verze bez hudby zůstala z v2 (na přání uživatele nerenderováno) |
 | V-21 | Klip 04: okno projektoru s výbuchem skrytých údajů (preset pneumologa) | ✅ | v2: vertikální úzký náhled, 5 s, tmavá + světlá (`src/clips/ProjectorPreset.tsx`) |
+| V-25 | Hook zkrácen na 20 s (stejné scény, přemapovaný čas, drop na úderu) | ✅ | `MedTeamHook20`, `out/medteam-hook-20s(-nobgm).mp4`; 30s verze zůstává |
+| V-24 | Klip 11: chatbot „Jaká je hodnota FEV1?“ (hodnota, datum, zdroj) | ✅ | `src/clips/Chatbot.tsx`, 5 s; rozhovor vložen jen v DOM, data z datasetu |
+| V-23 | Klip 10: průjezd podkladem P02 podle whatsapp_inspirace.mp4 | ✅ | `src/clips/DetailScroll.tsx`, 5 s, tmavý režim |
 | V-22 | Klipy po scénách (výřezy z průchodu) | ✅ | `scripts/render_klipy.sh` → `out/klipy/` |
 | V-20 | Prezentace 13 slidů (.pptx) ve stylu videí | ✅ | `prezentace/MedTeam_Prezentace.pptx`, validace prošla, kontrola exportem z PowerPointu |
 
@@ -43,6 +46,12 @@
 - **D6 · VO je volitelný:** soubory `public/audio/vo/A_0x.mp3` se načtou automaticky, když existují (`getStaticFiles`).
 
 ## Deník
+
+- **18. 10. 2026:** hook 20 s: celý oblouk zachován, scény zrychlené po úsecích, drop ověřen na 6,87 s, titulky důkazu sloučené do dvou řádků.
+
+- **18. 10. 2026:** klip 11 chatbot: dotaz na FEV1 u P04, odpověď s hodnotou 1,9 l (58 %), datem 25. 8. 2026 a odkazem P04-doc03; klik otevře skutečný panel zdroje se zvýrazněnou větou.
+
+- **18. 10. 2026:** klip 10 „průjezd podkladem“ podle inspiračního videa: detail P02 v tmavém režimu, pevná hlavička a navigace, obsah projede za 5 s se zastavením u varovných signálů.
 
 - **18. 10. 2026:** klip 04 předělán na vertikální úzký náhled okna projektoru (jako vyskakovací okno), 5 s, jen výbuchy a dosednutí; tmavá a světlá varianta.
 

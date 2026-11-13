@@ -48,8 +48,10 @@ export const Caption: React.FC<{
   align?: 'left' | 'center';
   stagger?: number;
   maxWidth?: number;
-}> = ({ text, from, to, size = 64, weight = 750, color = C.ink, accent = C.teal, x = 'center', y, align = 'center', stagger = 3, maxWidth = 1500 }) => {
-  const f = useCurrentFrame();
+  frame?: number; // čas scény, když se liší od snímku kompozice (20s hook přemapovává čas)
+}> = ({ text, from, to, size = 64, weight = 750, color = C.ink, accent = C.teal, x = 'center', y, align = 'center', stagger = 3, maxWidth = 1500, frame }) => {
+  const own = useCurrentFrame();
+  const f = frame ?? own;
   if (f < from - 1 || f > to + 14) return null;
   const words = text.split(' ');
   const out = iv(f, [to, to + 12], [1, 0], EASE.exit);

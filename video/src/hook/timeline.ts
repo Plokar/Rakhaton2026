@@ -62,3 +62,56 @@ export const VO_A: VoSlot[] = [
   { file: 'A_06.mp3', from: 705, maxDur: 54, text: 'Rozhoduje vždy lékař.' },
   { file: 'A_07.mp3', from: 798, maxDur: 78, text: 'MedTeam. Copilot onkologické komise.' },
 ];
+
+// ── Hook 20 s (MedTeamHook20): stejné scény, čas přemapovaný po úsecích (nový snímek → snímek 30s verze). ──
+// Drop zůstává na úderu hudby (nový f206); stisk Potvrdit na úderu +257 (f463). Ticho před dropem skoro beze změny.
+export const HOOK20_TOTAL = 600;
+const DROP20 = 206;
+const REMAP20: [number, number][] = [
+  [0, 0], [70, 110], [178, 300], [DROP20, BEAT.drop], [282, 420], [380, 600], [463, CLICK], [500, BEAT.b6], [600, HOOK_TOTAL],
+];
+const lerpMap = (x: number, from: 0 | 1) => {
+  const to = 1 - from;
+  for (let i = 0; i < REMAP20.length - 1; i++) {
+    const a = REMAP20[i], b = REMAP20[i + 1];
+    if (x <= b[from]) return a[to] + ((x - a[from]) * (b[to] - a[to])) / (b[from] - a[from]);
+  }
+  return REMAP20[REMAP20.length - 1][to];
+};
+/** Nový snímek (20 s) → snímek 30s verze, který scény vykreslí. */
+export const oldFrame20 = (f: number) => lerpMap(f, 0);
+const N = (old: number) => Math.round(lerpMap(old, 1));
+
+export const HOOK20_MUSIC_OFFSET = Math.round(52.92 * 30) - DROP20; // drop skladby (52,92 s) = f206
+export const MUSIC_ENV_20: [number, number][] = [
+  [0, 0], [30, 0.3], [176, 0.36], [194, 0.06], [205, 0.06], [DROP20, 0.5], [215, 0.6], [495, 0.6], [560, 0.42], [599, 0],
+];
+export const SFX_A20: Sfx[] = [
+  ...HEARTBEATS.map((f, i) => ({ from: N(f), src: 'heartbeat-single.mp3', volume: 0.95 - i * 0.05, dur: 22, note: `tep ${i + 1}` })),
+  ...Array.from({ length: 7 }, (_, i): Sfx => ({ from: N(S.flood.from + i * 30), src: 'clock-tick-single.mp3', volume: 0.55 + i * 0.07, dur: 16, note: `odpočet ${300 - i}` })),
+  { from: 70, src: 'riser-synth.wav', volume: 0.7, dur: 126, note: 'gradace do dropu (končí f196)' },
+  { from: DROP20 - 74, src: 'whoosh-reverse.wav', volume: 0.55, dur: 74, note: 'nasátí do bodu (vrchol na dropu)' },
+  { from: DROP20 - 26, src: 'impact-epic-trailer.mp3', volume: 0.7, dur: 140, note: 'DROP' },
+  { from: DROP20, src: 'sub-drop.wav', volume: 0.45, dur: 66, note: 'sub pod drop' },
+  { from: N(334), src: 'whoosh-big.mp3', volume: 0.38, dur: 60, note: 'panel stoupá z hloubky' },
+  { from: N(BEAT.b1), src: 'sparkle.mp3', volume: 0.3, dur: 50, note: 'panel odhalen' },
+  { from: N(430), src: 'click-camera.mp3', volume: 0.32, dur: 12, note: 'zaostření na PS' },
+  { from: N(470), src: 'data-scan.mp3', volume: 0.3, dur: 24, note: 'sken údajů' },
+  { from: N(503), src: 'swoosh-quick.mp3', volume: 0.35, dur: 20, note: 'karta zdroje vlétá' },
+  { from: N(BEAT.b3), src: 'light-sweep-magic.mp3', volume: 0.36, dur: 45, note: 'karta zdroje dosedne' },
+  { from: N(596), src: 'whoosh-fast.mp3', volume: 0.3, dur: 34, note: 'přechod na semafor' },
+  ...ROW_LAND.map((f, i) => ({ from: N(f), src: 'bass-hit-short.mp3', volume: 0.7 - i * 0.07, dur: 26, note: `řádek semaforu ${i + 1}` })),
+  { from: N(694), src: 'swoosh-quick.mp3', volume: 0.22, dur: 20, note: 'řádky odcházejí' },
+  { from: N(CLICK), src: 'click-camera.mp3', volume: 0.65, dur: 12, note: 'stisk Potvrdit (úder +257)' },
+  { from: N(CLICK) - 13, src: 'impact-zoom-quick.mp3', volume: 0.55, dur: 30, note: 'razítko dopadne' },
+  ...logoSfx(N(BEAT.b6)),
+];
+export const VO_A20: VoSlot[] = [
+  { file: 'A_01.mp3', from: 10, maxDur: 58, text: 'Pět specialistů. Pět minut. Jeden pacient.' },
+  { file: 'A_02.mp3', from: 76, maxDur: 96, text: 'A za ním roky zpráv… a rozporů.' },
+  { file: 'A_03.mp3', from: 216, maxDur: 62, text: 'MedTeam připraví celý případ.' },
+  { file: 'A_04.mp3', from: 294, maxDur: 82, text: 'Každé tvrzení má zdroj.' },
+  { file: 'A_05.mp3', from: 392, maxDur: 60, text: 'Semafor počítají pravidla. Ne AI.' },
+  { file: 'A_06.mp3', from: 452, maxDur: 44, text: 'Rozhoduje vždy lékař.' },
+  { file: 'A_07.mp3', from: 520, maxDur: 72, text: 'MedTeam. Copilot onkologické komise.' },
+];

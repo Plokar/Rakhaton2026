@@ -1,123 +1,165 @@
 {
-  "height": 11241,
+  "height": 11104,
+  "pinned": [
+    {
+      "pos": "fixed",
+      "x": 0,
+      "y": 0,
+      "w": 256,
+      "h": 1080
+    },
+    {
+      "pos": "sticky",
+      "x": 256,
+      "y": 0,
+      "w": 1664,
+      "h": 56
+    },
+    {
+      "pos": "sticky",
+      "x": 256,
+      "y": 56,
+      "w": 1664,
+      "h": 73
+    },
+    {
+      "pos": "sticky",
+      "x": 400,
+      "y": 160,
+      "w": 192,
+      "h": 372
+    }
+  ],
+  "nav": {
+    "x": 400,
+    "y": 160,
+    "w": 192,
+    "h": 372
+  },
   "sections": [
     {
       "id": "prehled",
-      "title": "Rychlý přehled",
-      "x": 632,
-      "y": 197,
-      "w": 1144,
-      "h": 1983
+      "y": 197
     },
     {
       "id": "pro-me",
-      "title": "Pro vás · klinický onkolog",
-      "x": 632,
-      "y": 2204,
-      "w": 1144,
-      "h": 843
+      "y": 2204
     },
     {
       "id": "souhrn",
-      "title": "Souhrn a časová osa",
-      "x": 632,
-      "y": 3070,
-      "w": 1144,
-      "h": 1005
+      "y": 3070
     },
     {
       "id": "lecba",
-      "title": "Léčba a studie",
-      "x": 632,
-      "y": 4099,
-      "w": 1144,
-      "h": 2382
+      "y": 4099
     },
     {
       "id": "varovani",
-      "title": "Varovné signály",
-      "x": 632,
-      "y": 6506,
-      "w": 1144,
-      "h": 897
+      "y": 6506
     },
     {
       "id": "odbornosti",
-      "title": "Odbornosti",
-      "x": 632,
-      "y": 7427,
-      "w": 1144,
-      "h": 1216
+      "y": 7427
     },
     {
       "id": "role-oncologist",
-      "title": "Klinický onkolog",
-      "x": 632,
-      "y": 7488,
-      "w": 1144,
-      "h": 997
+      "y": 7488
+    },
+    {
+      "id": "role-surgeon",
+      "y": 8505
+    },
+    {
+      "id": "role-radiologist",
+      "y": 8555
+    },
+    {
+      "id": "role-pathologist",
+      "y": 8605
     },
     {
       "id": "otazky",
-      "title": "Otázky k diskusi",
-      "x": 632,
-      "y": 8667,
-      "w": 1144,
-      "h": 291
+      "y": 8667
     },
     {
       "id": "anamneza",
-      "title": "Anamnéza",
-      "x": 632,
-      "y": 8982,
-      "w": 1144,
-      "h": 377
+      "y": 8982
     },
     {
       "id": "podobne",
-      "title": "Podobné případy",
-      "x": 632,
-      "y": 9383,
-      "w": 1144,
-      "h": 613
+      "y": 9383
     },
     {
       "id": "pacient",
-      "title": "Hlas pacienta",
-      "x": 632,
-      "y": 10020,
-      "w": 1144,
-      "h": 750
+      "y": 10020
     },
     {
       "id": "role-patient",
-      "title": "Hlas pacienta",
-      "x": 632,
-      "y": 10081,
-      "w": 1144,
-      "h": 681
+      "y": 10081
     },
     {
       "id": "dotaz",
-      "title": "Zeptat se na případ",
-      "x": 632,
-      "y": 10794,
-      "w": 1144,
-      "h": 304
+      "y": 10794
     }
   ],
   "ask": {
     "x": 632,
     "y": 10794,
     "w": 1144,
-    "h": 304
+    "h": 167
   },
-  "answer": {
-    "x": 632,
-    "y": 10969,
-    "w": 1144,
-    "h": 121
-  },
+  "navStates": [
+    {
+      "from": 0,
+      "active": "Rychlý přehled",
+      "file": "nav_0.png"
+    },
+    {
+      "from": 2100,
+      "active": "Pro vás",
+      "file": "nav_1.png"
+    },
+    {
+      "from": 3000,
+      "active": "Souhrn a časová osa",
+      "file": "nav_2.png"
+    },
+    {
+      "from": 4050,
+      "active": "Léčba a studie",
+      "file": "nav_3.png"
+    },
+    {
+      "from": 6450,
+      "active": "Varovné signály",
+      "file": "nav_4.png"
+    },
+    {
+      "from": 7350,
+      "active": "Odbornosti",
+      "file": "nav_5.png"
+    },
+    {
+      "from": 8550,
+      "active": "Otázky k diskusi",
+      "file": "nav_6.png"
+    },
+    {
+      "from": 8850,
+      "active": "Anamnéza",
+      "file": "nav_7.png"
+    },
+    {
+      "from": 9300,
+      "active": "Podobné případy",
+      "file": "nav_8.png"
+    },
+    {
+      "from": 9900,
+      "active": "Hlas pacienta",
+      "file": "nav_9.png"
+    }
+  ],
   "tiles": [
     {
       "file": "tile_0.png",
@@ -137,7 +179,7 @@
     {
       "file": "tile_3.png",
       "y": 9000,
-      "h": 2241
+      "h": 2104
     }
   ]
 }

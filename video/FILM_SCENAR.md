@@ -235,3 +235,41 @@ Klipy jsou v `out/klipy/`, bez hudby, se zvukovými efekty. Vyrenderuješ je př
 Zvuky jsou stejné jako v předchozí verzi. Klip je ve dvou variantách: tmavá (jako videa) a světlá (jako aplikace ve světlém režimu).
 
 **Data:** výběr skrytých údajů není vymyšlený. Je to seznam pneumologa ze schůzky 17. 10. (preset `pneumolog-plice`, `docs/SABLONY_LEKARE.md`) a na produkci je uložený u P04. Stav „před“ je stejné okno bez úpravy. Úprava se odebrala jen v odpovědích API v prohlížeči při snímání (`scripts/capture_pj_v.mjs dark|light`), na server nic nešlo.
+
+### Klip 10 · Průjezd podkladem (5 s, tmavý režim)
+
+Vzor je `out/whatsapp_inspirace.mp4`: záznam obrazovky, jak se detail pacienta P02 projede shora dolů.
+
+- Panel, horní lišta, hlavička pacienta a navigace sekcí **stojí**. Navigace přepíná aktivní sekci jako v aplikaci.
+- Obsah se pod nimi posouvá: Rychlý přehled → Pro vás → Souhrn → Léčba a studie → **krátké zpomalení u Varovných signálů** → Odbornosti → … → Hlas pacienta → dojezd na **Zeptat se na případ**.
+- Rozmazání pohybem, lehké oddálení a náklon obrazu se řídí rychlostí posunu. V klidu je obraz 1 : 1.
+- Snímky jsou ze skutečné stránky se všemi sekcemi rozbalenými, a to jen v prohlížeči (`scripts/capture_scroll.mjs`). Dotaz na případ se nespouští.
+
+### Klip 11 · Chatbot: „Jaká je hodnota FEV1?“ (5 s, tmavý režim)
+
+**Sdělení:** během jednání se lékař zeptá AI vlastními slovy. Dostane hodnotu, datum měření a odkaz na zdroj, ze kterého AI čerpala.
+
+- **0–1,5 s:** kamera přiblíží chatbot v jednání P04 a dotaz se napíše písmeno po písmenu.
+- **1,5–2,2 s:** po Enteru vyskočí bublina s dotazem, kamera vyjede k rozhovoru a točí se „AI odpovídá…“.
+- **2,2–3,6 s:** odpověď „AI návrh“: „FEV1 je **1,9 l (58 % náležité hodnoty)**“ s citací. Pod ní „Naměřeno **25. 8. 2026** · pneumologie“ a „Zdroj: **P04-doc03 · spirometrie**“. Hodnota a datum se postupně zvýrazní.
+- **3,6–5 s:** klik na zdroj otevře skutečný panel zdroje aplikace (P04-spiro01 → dokument P04-doc03, 25. 8. 2026) a ve zprávě se zvýrazní věta „FEV1 1,9 l (58 % náležité hodnoty)“.
+
+**Co je nafejkované:** chatbot na produkci rozhovor nenačte („Rozhovor se nepodařilo načíst“). Dotaz a odpověď jsou proto vložené jen do DOM prohlížeče při snímání (`scripts/capture_bot.mjs`), se stejnými třídami jako komponenty `ChatbotPanel`, `ClaimItem` a `AiTag`. Na server se nic neodeslalo. Skutečné jsou psaní do pole, panel zdroje a všechna data: hodnota, datum a zdroj jsou z datasetu P04.
+
+### Hook 20 s (kompozice `MedTeamHook20`, `out/medteam-hook-20s.mp4`)
+
+Stejné scény i emoční oblouk jako 30s verze, nic nevypadlo. Čas je přemapovaný po úsecích (`REMAP20` v `src/hook/timeline.ts`):
+
+| Scéna | 20 s | Zrychlení |
+|---|---|---|
+| A1 Tep (Pět specialistů. Pět minut. Jeden pacient.) | 0–2,3 s | 1,6× |
+| A2 Lavina + rozpor lékař ≠ pacient | 2,3–5,9 s | 1,8× |
+| A3 Nádech (ticho, bod) | 5,9–6,9 s | 1,1×, ticho musí dýchat |
+| **Drop** | **6,87 s** | na úderu hudby (ověřeno v renderu) |
+| A4 Zážeh, „MedTeam připraví celý případ.“ | 6,9–9,4 s | 1,2× |
+| A5 Důkaz se zdrojem | 9,4–12,7 s | 1,8×, oba titulky naráz ve dvou řádcích |
+| A6 Semafor | 12,7–15,4 s | 1,25× |
+| A7 Lékař (stisk na úderu +257) | 15,4–16,7 s | 1,9×, titulek už s tlačítkem |
+| A8 Logo | 16,7–20 s | 1,27×, celé logo stojí ~1,3 s |
+
+Hudba začíná od 46,07 s, aby drop skladby padl na snímek 206. Zvuky a VO sloty jsou přepočítané na nové časy (`SFX_A20`, `VO_A20`). VO pro 20 s potřebuje kratší věty, viz `VO_A20`.

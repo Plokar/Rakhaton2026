@@ -49,7 +49,7 @@ const Row: React.FC<{ f: number; i: number; top: number; exit: number }> = ({ f,
   );
 };
 
-export const Rules: React.FC<{ f: number }> = ({ f }) => {
+export const Rules: React.FC<{ f: number; short?: boolean }> = ({ f, short = false }) => {
   if (f < S.rules.from - 14 || f > S.brand.from + 6) return null;
   const rowsExit = iv(f, [692, 706], [0, 1], EASE.exit);
   let top = TOP;
@@ -69,7 +69,7 @@ export const Rules: React.FC<{ f: number }> = ({ f }) => {
   return (
     <AbsoluteFill style={{ opacity: 1 - allOut }}>
       {ROWS.map((_, i) => <Row key={i} f={f} i={i} top={tops[i]} exit={rowsExit} />)}
-      <Caption text="Semafor počítají *pravidla.* Ne AI." from={628} to={690} y={812} size={64} />
+      <Caption frame={f} text="Semafor počítají *pravidla.* Ne AI." from={628} to={690} y={812} size={64} />
 
       {f >= 688 && (
         <>
@@ -109,7 +109,8 @@ export const Rules: React.FC<{ f: number }> = ({ f }) => {
           <AbsoluteFill style={{ background: '#ffffff', opacity: flash, mixBlendMode: 'screen' }} />
         </>
       )}
-      <Caption text="Rozhoduje vždy *lékař.*" from={712} to={764} y={744} size={88} />
+      {/* 20s verze: titulek už s tlačítkem, po stisku je na čtení málo času */}
+      <Caption frame={f} text="Rozhoduje vždy *lékař.*" from={short ? 692 : 712} to={764} y={744} size={88} />
     </AbsoluteFill>
   );
 };

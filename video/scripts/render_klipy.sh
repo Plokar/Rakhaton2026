@@ -4,6 +4,8 @@ set -e
 cd "$(dirname "$0")/.."
 npx remotion render src/index.ts KlipProjektor out/klipy/04_okno_projektoru.mp4 --log=error
 npx remotion render src/index.ts KlipProjektorSvetly out/klipy/04_okno_projektoru_svetly.mp4 --log=error
+npx remotion render src/index.ts KlipPodklad out/klipy/10_pruchod_podkladem.mp4 --log=error
+npx remotion render src/index.ts KlipChatbot out/klipy/11_chatbot_fev1.mp4 --log=error
 # ostatní scény vyříznuté z průchodu (snímky podle CHAPTERS v src/walk/timeline.ts)
 while read -r name range; do
   npx remotion render src/index.ts MedTeamWalkthrough "out/klipy/${name}.mp4" --frames="$range" --props=props-nobgm.json --log=error

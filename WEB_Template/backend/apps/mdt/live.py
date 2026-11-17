@@ -10,6 +10,7 @@ Lékař na zasedání sáhne po mobilu, když ho zajímá něco, co na projektor
 Pacient jen jako `Pxx` (D-018). Klinická data se nečtou tady, ale v IRIS přes existující endpointy případu.
 """
 import logging
+import os
 from datetime import timedelta
 
 from asgiref.sync import async_to_sync
@@ -36,6 +37,17 @@ PRESENCE_TTL = timedelta(minutes=5)
 LIVE_STALE_AFTER = timedelta(minutes=15)       # aplikace se ohlašuje každé 2 min; po 5 min bez ohlášení lékař „odešel“
 LABEL_MAX = 200
 CLOSED_LIVE = {'detail': 'Board je uzavřený, projektor už nic neukazuje.'}
+DONE = ('decided', 'confirmed')
+
+
+def minutes_per_case() -> int:
+    """Plánovaný čas na pacienta pro odhad konce zasedání (T-380), `MDT_MINUTES_PER_CASE`, výchozí 8 min."""
+    try:
+        return max(1, int(os.environ.get('MDT_MINUTES_PER_CASE', '8')))
+    except ValueError:
+        return 8
+
+
 NOT_STARTED = {'detail': 'Zasedání ještě nezačalo. Předseda ho zahájí tlačítkem „Zahájit zasedání“.'}
 
 
@@ -48,28 +60,58 @@ def _present(session: MdtSession, now=None) -> list[dict]:
     for p in rows:
         profile = getattr(p.user, 'mdt_profile', None) if hasattr(p.user, 'mdt_profile') else None
         out.append({'user_id': p.user_id, 'name': roles.display_name(p.user),
-                    'specialty': (profile.specialty or None) if profile else None})
+                    'specialty': (profile.specialty or None) if profile else None,
+                    # T-380: lékař v IRIS, aby šel přítomný jedním klikem do závěru (`Decision.attendees`)
+                    'practitioner_id': (profile.practitioner_fhir_id or None) if profile else None})
     return out
 
 
 def live_state(session: MdtSession, now=None) -> dict:
-    """`LiveState` (ARCH §8.6): pacient a slide na projektoru + přítomní lékaři."""
+    """`LiveState` (ARCH §8.6): pacient a slide na projektoru, další na řadě, odhad konce a přítomní lékaři."""
+    now = now or timezone.now()
     case = session.live_case if session.live_case_id else None
-    cases = list(session.cases.values_list('pk', flat=True)) if case else []
+    agenda = list(session.cases.values_list('pk', 'patient_fhir_id', 'status'))   # pořadí agendy (Meta.ordering)
+    ids = [pk for pk, _, _ in agenda]
     slide = None
     if case and session.live_slides:
         slide = {'index': session.live_slide or 0, 'total': session.live_slides, 'label': session.live_label}
     return {
         'session': session.pk, 'status': session.status,
         'case': case and {'id': case.pk, 'patient_id': case.patient_fhir_id, 'status': case.status,
-                          'position': cases.index(case.pk) + 1 if case.pk in cases else None, 'count': len(cases)},
+                          'position': ids.index(case.pk) + 1 if case.pk in ids else None, 'count': len(ids),
+                          'since': session.live_case_since.isoformat() if session.live_case_since else None},
+        'next': _next_case(agenda, case.pk if case else None) if session.status == 'in_progress' else None,
+        'estimate': _estimate(session, agenda, case, now) if session.status == 'in_progress' else None,
         'slide': slide,
         'updated_at': session.live_updated_at.isoformat() if session.live_updated_at else None,
-        'stale': bool(case and session.live_updated_at
-                      and (now or timezone.now()) - session.live_updated_at > LIVE_STALE_AFTER),
+        'stale': bool(case and session.live_updated_at and now - session.live_updated_at > LIVE_STALE_AFTER),
         'by': session.live_by_id and {'user_id': session.live_by_id, 'name': roles.display_name(session.live_by)},
         'present': _present(session, now),
     }
+
+
+def _next_case(agenda: list[tuple], current: int | None) -> dict | None:
+    """Další neprojednaný pacient za tím na projektoru (bez projektoru první neprojednaný), T-380."""
+    start = next((i + 1 for i, (pk, _, _) in enumerate(agenda) if pk == current), 0)
+    for pk, pid, status in agenda[start:]:
+        if status not in DONE:
+            return {'id': pk, 'patient_id': pid}
+    return None
+
+
+def _estimate(session: MdtSession, agenda: list[tuple], case, now) -> dict:
+    """Odhad konce (T-380): neprojednaní pacienti × plánovaný čas; u pacienta na projektoru jen zbytek jeho času."""
+    per_case = minutes_per_case()
+    waiting = [pk for pk, _, status in agenda if status not in DONE and (case is None or pk != case.pk)]
+    current_left = 0.0
+    if case is not None and case.status not in DONE:
+        spent = (now - session.live_case_since).total_seconds() / 60 if session.live_case_since else 0
+        current_left = max(0.0, per_case - spent)
+    minutes = len(waiting) * per_case + current_left
+    return {'remaining': len(waiting) + (1 if current_left or (case is not None and case.status not in DONE) else 0),
+            'minutes_per_case': per_case, 'end': (now + timedelta(minutes=minutes)).isoformat(),
+            'over': bool(case is not None and session.live_case_since
+                         and (now - session.live_case_since).total_seconds() / 60 > per_case)}
 
 
 def _publish(sid: int, payload: dict) -> None:
@@ -138,9 +180,12 @@ def session_live(request, sid):
             session.live_updated_at = now
             session.save(update_fields=['live_updated_at'])
         return Response(live_state(session))
+    if (case and case.pk) != session.live_case_id:
+        session.live_case_since = now if case else None
     session.live_case, session.live_slide, session.live_slides, session.live_label = case, index, total, label
     session.live_by, session.live_updated_at = request.user, now
-    session.save(update_fields=['live_case', 'live_slide', 'live_slides', 'live_label', 'live_by', 'live_updated_at'])
+    session.save(update_fields=['live_case', 'live_slide', 'live_slides', 'live_label', 'live_by', 'live_updated_at',
+                                'live_case_since'])
     return Response(_broadcast(session))
 
 

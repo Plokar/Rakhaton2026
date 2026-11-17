@@ -1269,7 +1269,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | `/dashboard/mdt/[sessionId]/setup` | **konfigurátor** (sekce, pořadí, role, detail, presety) |
 | `/dashboard/cases/[caseId]` | **detail pacienta** ([NAVRH_UI §8](docs/NAVRH_UI.md#8-detail-pacienta)): přilepená hlavička (D-018, PS lékař / pacient, C/P, varování, předchozí / další pacient boardu), navigace po sekcích; rychlý přehled a varovné signály otevřené, souhrn a časová osa (AI / události z IRIS), anamnéza, odbornosti, léčba a studie, hlas pacienta a otázky sbalené |
 | `/brief/[caseId]` | totéž v samostatném úzkém okně bez navigace (FR-U2); v `proxy.ts` chráněno stejně jako `/dashboard` |
-| `/dashboard/live` | **Živě na MDT (T-357)**, mobil i web: zasedání, kde lékař má být nebo je (`?zasedani=` vybere jiné), automatické ohlášení přítomnosti, „Na projektoru Pxx · 2. z 6 · slide 2/3“ živě ze streamu boardu; přehled pacienta na projektoru (`CaseQuickViewWide`) s odkazem na celý detail; klepnutí na jiného pacienta z agendy sledování přeruší („Zpět na projektor“); „Jiný pacient“ = kterýkoli pacient z IRIS (mimo agendu karta + chatbot nad kartou, T-345); „Zeptat se AI na Pxx“ = chatbot u zasedání (T-344). Pruh „Probíhá zasedání … · na projektoru Pxx“ v celé aplikaci (`LiveBanner`) |
+| `/dashboard/live` | **Živě na MDT (T-357)**, mobil i web (T-380: čas u pacienta, další na řadě, odhad konce, „váš pacient je další / na projektoru“ i jako upozornění v celé aplikaci; QR pro příchod v jednání a na projektoru klávesou Q; hlasové ovládání jednání pro předsedu, Web Speech API v prohlížeči; „Doplnit přítomné ze zasedání“ v závěru): zasedání, kde lékař má být nebo je (`?zasedani=` vybere jiné), automatické ohlášení přítomnosti, „Na projektoru Pxx · 2. z 6 · slide 2/3“ živě ze streamu boardu; přehled pacienta na projektoru (`CaseQuickViewWide`) s odkazem na celý detail; klepnutí na jiného pacienta z agendy sledování přeruší („Zpět na projektor“); „Jiný pacient“ = kterýkoli pacient z IRIS (mimo agendu karta + chatbot nad kartou, T-345); „Zeptat se AI na Pxx“ = chatbot u zasedání (T-344). Pruh „Probíhá zasedání … · na projektoru Pxx“ v celé aplikaci (`LiveBanner`) |
 | `/projector` | **okno pro projektor** (T-512, bez navigace, chráněno v `proxy.ts`): přes celou šířku okna (T-343): úzké okno vedle snímku z PACS má karty pod sebou, od 48rem klíčové údaje vlevo (skupiny od 46rem ve dvou sloupcích) a anamnéza s postupy vpravo; hlavička `Pxx · pohlaví · věk` + PS (lékař / pacient) + C/P + počty „varovné signály“ (RF-*) a „upozornění k údajům“ (kontrola úplnosti), anamnéza (AI, citace), klíčové údaje podle diagnózy ze šablony intake + laboratoř (normalita jen z referenčního rozmezí a pravidel, `components/mdt/key-facts.ts`), všechny postupy se semaforem z `/compatibility/`, dole otázka pro MDT + MKN-10; případ přijímá z jednání komise (`/dashboard/mdt/[sessionId]`). Klíčové údaje v kategoriích (D-024); pořadí bloků, kategorií a údajů podle `MdtCase.projector_layout` (T-332, dialog „Pořadí na projektoru“ v jednání, rychlém přehledu a detailu, s volbou „Uložit také jako moji šablonu“), jinak podle šablony zadávajícího lékaře (`requester_layout`, T-338); po uložení se okno obnoví přes BroadcastChannel |
 | `…/cases/demo`, `/brief/demo` | podklad P03 z fixtures (`data/fixtures/brief_P03.json` + zdroje citací `evidence_P03.json`), funguje bez backendu; obě stránky skládá `CaseBriefScreen` |
 | `/dashboard/cases/[caseId]/record` | **zápis závěru**: AI zapisovatel (nahrávka nebo přepis → draft, BON-3), editor (sekce jako záznam MDT), úkoly, potvrzení, export; po potvrzení shrnutí pro pacienta (BON-4) |
@@ -1872,12 +1872,15 @@ interface SessionMessage {                      // GET/POST /api/mdt/sessions/{s
 interface LiveState {                           // GET/PUT /api/mdt/sessions/{sid}/live/, SSE event: live (T-357)
   session: number;
   status: 'planned' | 'in_progress' | 'closed';
-  case: { id: number; patient_id: string; status: MdtCase['status']; position: number | null; count: number } | null;  // na projektoru
+  case: { id: number; patient_id: string; status: MdtCase['status']; position: number | null; count: number;
+          since: string | null } | null;       // na projektoru; `since` = od kdy (T-380)
+  next: { id: number; patient_id: string } | null;   // T-380: další neprojednaný v agendě
+  estimate: { remaining: number; minutes_per_case: number; end: string; over: boolean } | null;  // T-380, MDT_MINUTES_PER_CASE (8)
   slide: { index: number; total: number; label: string } | null;      // od 0; null = projektor slidy nehlásí
   updated_at: string | null;
   stale: boolean;                               // T-379: projektor se > 15 min nezměnil, údaj nemusí platit
   by: { user_id: number; name: string } | null;
-  present: { user_id: number; name: string; specialty: RoleId | null }[];   // ohlášení za 5 min
+  present: { user_id: number; name: string; specialty: RoleId | null; practitioner_id: string | null }[];   // ohlášení za 5 min; practitioner_id → Decision.attendees (T-380)
 }
 
 interface MyLive {                              // GET /api/mdt/live/ (T-357)

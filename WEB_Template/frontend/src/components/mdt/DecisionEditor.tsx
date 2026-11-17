@@ -1,13 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { ListChecks, Plus, Scale, Trash2, UserRoundSearch } from 'lucide-react';
+import { ListChecks, Plus, Scale, Trash2, UserRoundSearch, UsersRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePractitionersQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import type { Decision, EvidenceId, Light, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
+import type { Decision, EvidenceId, Light, LiveState, ProcedureCompatibility, RedFlag, RoleId, Source } from '@/types/mdt';
 import { Citations } from './citations';
 import { CompatibilityLight } from './CompatibilityLight';
 import { suggestTasks } from './decision-tasks';
@@ -444,6 +444,7 @@ export function DecisionEditor({
   requesterUserId = null,
   intentUnset = false,
   onIntentChosen,
+  present = [],
 }: {
   decision: Decision;
   onChange: (d: Decision) => void;
@@ -456,6 +457,8 @@ export function DecisionEditor({
   /** Záměr zatím nikdo nezvolil (podklad ho nemá): pole je prázdné a závěr nejde potvrdit, nic se nepředvybírá. */
   intentUnset?: boolean;
   onIntentChosen?: () => void;
+  /** T-380: lékaři ohlášení na probíhajícím zasedání (`LiveState.present`); s lékařem v IRIS jdou do přítomných. */
+  present?: LiveState['present'];
 }) {
   const s = decision.sections;
   const practitioners = usePractitionersQuery(!readOnly);
@@ -751,6 +754,28 @@ export function DecisionEditor({
             <Plus className="h-3.5 w-3.5" aria-hidden /> Přidat přítomného
           </button>
         )}
+        {!readOnly && (() => {
+          const have = new Set(decision.attendees.map((a) => a.user_id));
+          const missing = present.filter((p) => p.practitioner_id && !have.has(p.practitioner_id));
+          if (!missing.length) return null;
+          return (
+            <button
+              type="button"
+              onClick={() => {
+                setTop({
+                  attendees: [
+                    ...decision.attendees,
+                    ...missing.map((p) => ({ user_id: p.practitioner_id!, name: p.name, role: (p.specialty ?? 'oncologist') as RoleId })),
+                  ],
+                });
+                toast(`Doplněno přítomných: ${missing.length}. Zkontrolujte odbornosti.`);
+              }}
+              className="ml-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <UsersRound className="h-3.5 w-3.5" aria-hidden /> Doplnit přítomné ze zasedání ({missing.length})
+            </button>
+          );
+        })()}
         <label className="flex items-center gap-2 text-sm text-foreground">
           <input
             type="checkbox"

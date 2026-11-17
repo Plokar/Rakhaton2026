@@ -52,7 +52,7 @@ def test_chair_sets_case_on_projector_and_everyone_reads_it(seeded):
                                 format='json')
     assert r.status_code == 200
     state = as_user('radiolog').get(live_url(s.pk)).json()
-    assert state['case'] == {'id': second.pk, 'patient_id': second.patient_fhir_id, 'status': second.status,
+    assert state['case']['since'] and {k: v for k, v in state['case'].items() if k != 'since'} == {'id': second.pk, 'patient_id': second.patient_fhir_id, 'status': second.status,
                              'position': 2, 'count': len(cases)}
     assert state['slide'] == {'index': 1, 'total': 3, 'label': 'Léčebné postupy'}
     assert state['by']['name'] == 'Předseda komise (klinický onkolog)' and state['status'] == 'in_progress'

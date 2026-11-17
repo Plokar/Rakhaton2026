@@ -19,12 +19,15 @@ import {
   GripVertical,
   LayoutList,
   MessagesSquare,
+  Mic,
+  MicOff,
   MonitorUp,
   MoreHorizontal,
   NotebookPen,
   Pencil,
   Play,
   Plus,
+  QrCode,
   RotateCcw,
   SlidersHorizontal,
   Trash2,
@@ -65,7 +68,7 @@ import { dayLabel, pragueDay, timeLabel, todayPrague } from '../dates';
 import { GenerateBrief } from '../GenerateBrief';
 import { can, useMe } from '../me';
 import { isDiscussed, shortPatient, spokenPatient } from '../patient';
-import { openProjectorWindow, publishSelection, publishSlide, useAnswerProjector, useProjectorSlides, type SlideState } from '../projector';
+import { openProjectorWindow, publishQr, publishSelection, publishSlide, useAnswerProjector, useProjectorSlides, type SlideState } from '../projector';
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { ChatbotPanel } from './ChatbotPanel';
@@ -75,6 +78,10 @@ import { formatDuration, useCaseTimer } from './use-case-timer';
 import { DiscussionRecorder } from './DiscussionRecorder';
 import { useChatbot } from './use-chatbot';
 import { useSessionChat } from './use-session-chat';
+import { useVoiceControl, voiceSupported } from './voice';
+
+const noSubscribe = () => () => {};
+import { JoinQr } from '../live/JoinQr';
 import { useLiveSession, usePresence, usePublishLive } from '../live/use-live';
 
 type Case = MdtCase & { id: number };
@@ -179,8 +186,34 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const today = Boolean(session.data && session.data.status !== 'closed' && (started || pragueDay(session.data.date) === todayPrague()));
   usePublishLive(sessionId, started && chair, current?.id ?? null, slides);
   usePresence(sessionId, today);
-  const { live } = useLiveSession(started && !chair ? sessionId : null);
-  const onProjector = live?.case && live.case.id !== current?.id ? live.case : null;
+  const { live } = useLiveSession(started ? sessionId : null);
+  const onProjector = !chair && live?.case && live.case.id !== current?.id ? live.case : null;
+
+  // T-380: hlasové ovládání pro předsedu (Web Speech API v prohlížeči, nic se nenahrává)
+  const [voiceOn, setVoiceOn] = React.useState(false);
+  const canVoice = React.useSyncExternalStore(noSubscribe, voiceSupported, () => false);   // na serveru nepodporováno
+  useVoiceControl(
+    voiceOn,
+    (command, heard) => {
+      if (command.kind === 'case') go(command.delta);
+      else if (command.kind === 'slide') slide({ delta: command.delta });
+      else if (command.kind === 'discussed') toggleDiscussed();
+      else if (command.kind === 'qr') publishQr(sessionId, true);
+      else {
+        const target = cases.find((c) => c.patient_id === command.patientId);
+        if (!target) {
+          toast(`Rozumím „${heard.trim()}“, ale ${command.patientId} v agendě není.`);
+          return;
+        }
+        select(target);
+      }
+      toast(`Hlas: ${heard.trim()}`, { duration: 1500 });
+    },
+    (message) => {
+      setVoiceOn(false);
+      toast.error(message);
+    },
+  );
 
   const hk = { preventDefault: true, ignoreEventWhen: overlayOpen };
   useHotkeys('right', () => slide({ delta: 1 }), hk, [current]);
@@ -311,6 +344,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         discussed={discussed}
         count={cases.length}
         total={total}
+        estimateEnd={live?.status === 'in_progress' && live.estimate?.remaining ? live.estimate.end : null}
+        voice={chair && canVoice ? { on: voiceOn, toggle: () => setVoiceOn((v) => !v) } : null}
         onProjector={projector}
         slides={slides}
         onSlide={slide}
@@ -426,6 +461,8 @@ function MeetingHeader({
   discussed,
   count,
   total,
+  estimateEnd,
+  voice,
   onProjector,
   slides,
   onSlide,
@@ -440,6 +477,10 @@ function MeetingHeader({
   discussed: number;
   count: number;
   total: number;
+  /** T-380: odhad konce zasedání (neprojednaní × plánovaný čas na pacienta). */
+  estimateEnd: string | null;
+  /** T-380: hlasové ovládání (jen předseda a prohlížeč s rozpoznáváním řeči). */
+  voice: { on: boolean; toggle: () => void } | null;
   onProjector: () => void;
   slides: SlideState | null;
   onSlide: (move: { delta: number }) => void;
@@ -459,6 +500,11 @@ function MeetingHeader({
   const [closing, setClosing] = React.useState(false);
   const [outputs, setOutputs] = React.useState<'closed' | 'view' | null>(null);
   const [inviting, setInviting] = React.useState(false);
+  const [qr, setQrState] = React.useState(false);
+  const setQr = (show: boolean) => {
+    setQrState(show);
+    publishQr(board.id, show);                      // T-380: stejný kód i v okně projektoru
+  };
   const chair = can.manageBoards(me);
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
   const start = () =>
@@ -485,6 +531,7 @@ function MeetingHeader({
       {count > 0 && (
         <p className="text-[13px] tabular-nums text-muted-foreground" aria-live="polite">
           <span className="font-medium text-foreground">{discussed} / {count}</span> projednáno · {formatDuration(total)}
+          {estimateEnd && <> · konec ≈ {timeLabel(estimateEnd)}</>}
         </p>
       )}
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
@@ -502,6 +549,19 @@ function MeetingHeader({
         <Button variant={botOpen ? 'secondary' : 'outline'} size="lg" onClick={onBot} aria-pressed={botOpen} aria-label="Chatbot" title="Chatbot: dotazy na AI s odpověďmi se zdroji (A)">
           <Bot aria-hidden /> <span className="hidden sm:inline">Chatbot</span>
         </Button>
+        {voice && (
+          <Button
+            variant={voice.on ? 'secondary' : 'outline'}
+            size="lg"
+            onClick={voice.toggle}
+            aria-pressed={voice.on}
+            aria-label="Hlasové ovládání"
+            title="Hlasové ovládání: „další pacient“, „předchozí pacient“, „další“, „zpět“, „pacient P05“, „projednáno“, „QR“"
+          >
+            {voice.on ? <Mic aria-hidden className="text-destructive" /> : <MicOff aria-hidden />}
+            <span className="hidden xl:inline">{voice.on ? 'Poslouchám' : 'Hlas'}</span>
+          </Button>
+        )}
         <div className="flex items-center">
           <Button variant="outline" size="lg" onClick={onProjector} aria-label="Projektor" title="Okno pro projektor (P)"
             className={cn(slides && slides.total > 1 && 'rounded-r-none')}>
@@ -554,6 +614,11 @@ function MeetingHeader({
             <DropdownMenuItem onClick={() => setInviting(true)}>
               <Users aria-hidden /> Pozvaní lékaři
             </DropdownMenuItem>
+            {board.status !== 'closed' && (
+              <DropdownMenuItem onClick={() => setQr(true)}>
+                <QrCode aria-hidden /> QR pro příchod
+              </DropdownMenuItem>
+            )}
             {chair && (
               <>
                 <DropdownMenuItem onClick={() => setEditing(true)}>
@@ -599,6 +664,25 @@ function MeetingHeader({
         />
       )}
       <DeleteBoardDialog board={deleting ? board : null} onClose={() => setDeleting(false)} />
+      {qr && (
+        <Dialog
+          open
+          onOpenChange={(open) => {
+            setQr(open);
+            if (!open) publishQr(board.id, false);
+          }}
+        >
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>QR pro příchod na zasedání</DialogTitle>
+              <DialogDescription>
+                Lékař načte kód mobilem a otevře se mu „Živě na MDT“. Kód je teď i na projektoru (skryje ho Q nebo Esc).
+              </DialogDescription>
+            </DialogHeader>
+            <JoinQr sessionId={board.id} size={240} className="py-2" caption={false} />
+          </DialogContent>
+        </Dialog>
+      )}
       {inviting && <SessionInvitedDialog sessionId={board.id} canEdit={can.manageInvited(me)} open onOpenChange={setInviting} />}
       {closing && <CloseBoardDialog board={board} open onOpenChange={setClosing} onClosed={() => setOutputs('closed')} />}
       {outputs && (

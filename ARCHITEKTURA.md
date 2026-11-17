@@ -1190,6 +1190,7 @@ Všechny endpointy pod `/api/`, autentizace JWT cookie, schéma v Swaggeru (`/ap
 | GET, POST | `/api/mdt/sessions/{sid}/messages/` | chat lékařů u zasedání (T-334), čte a píše každý přihlášený člen komise: GET → `SessionMessage[]` od nejstarší (`?after=<id>` jen novější, jinak posledních 200); POST `{text, case_id?}` → 201 `SessionMessage`; `case_id` = případ z agendy tohoto boardu (jinak 400), prázdný nebo delší než 2000 znaků 400, text s osobním údajem (rodné číslo, datum narození, e-mail, telefon; `pseudonymize.personal_data_kinds`, T-379) 400 a nic se neuloží (platí i pro oba chatboty), uzavřený board 409 (jen ke čtení) |
 | GET | `/api/mdt/sessions/{sid}/stream/` | **Server-Sent Events** (`text/event-stream`, bez websocketů a bez pollingu): každá nová zpráva boardu jako `id: <ID>` + `data: SessionMessage`, změna živého zasedání (T-357) jako pojmenovaná událost `event: live` + `data: LiveState` bez `id` (Last-Event-ID zůstává u zpráv chatu), komentář `: ping` každých 15 s, `retry: 3000`. Hlavička `Cache-Control: no-cache, no-transform`: proxy s kompresí (rewrite v Next.js při `next start`) by jinak stream zabalila do gzipu a bufferovala. `Last-Event-ID` (reconnect `EventSource`) nebo `?after=<id>` nejdřív doplní zmeškané. JWT z cookie (`EventSource` posílá cookies, ne hlavičky), jinak 401; neexistující board 404. Mezi procesy rozesílá channel layer (Redis) po commitu zprávy |
 | GET | `/api/mdt/live/` | **živé zasedání (T-357)**, každý přihlášený: `MyLive` = dnešní a probíhající neuzavřená zasedání s `LiveState`, `expected` / `reasons` (předseda, pozvaný = člen komise nebo přizvaný na zasedání, zadávající, přizvaný lékař pacienta v agendě; externí lékař jen svá zasedání, T-362), `here` (ohlášený), `my_patients`, `can_present`; `current` = kde lékař je, jinak probíhající, kde má být, jinak jakékoli probíhající, jinak dnešní, kde má být, jinak `null` |
+| GET, PUT, DELETE | `/api/mdt/cases/{cid}/votes/` | **souhlas přítomných s návrhem závěru (T-381)**: GET → `DecisionVotes` (§8.6); PUT `{vote: "agree" \| "disagree", comment?}` můj hlas (každý přihlášený člen komise; nesouhlas bez důvodu 400, osobní údaj v důvodu 400), DELETE stáhne můj hlas; jen u návrhu závěru na neuzavřeném zasedání, jinak 409. Při potvrzení závěru server zapíše hlasy do `sections.votes` (klient je posílat nemůže, PUT závěru je vynuluje) → sekce „Souhlas přítomných“ v Composition a PDF. Hlas nic nerozhoduje, závěr potvrzuje předseda |
 | GET, PUT | `/api/mdt/sessions/{sid}/live/` | GET → `LiveState` (pacient a slide na projektoru, přítomní). PUT `{case_id: int \| null, slide?: {index, total, label?}}` jen předseda (`mdt_admin` nebo předseda boardu, jinak 403): případ z agendy (jinak 400), slide `0 ≤ index < total ≤ 99`; jen na probíhajícím zasedání: naplánované 409 (T-379, zahajuje se výslovně PATCH boardu `{status: "in_progress"}` tlačítkem „Zahájit zasedání“), uzavřené 409. Změna se po commitu rozešle do streamu boardu jako `event: live`; stejný stav znovu nic nerozesílá, jen obnoví `updated_at` (jednání ho opakuje každé 4 min, okno projektoru hlásí slide samo). Zahájení a ukončení boardu (PATCH `status`) se rozešle jako `event: live`; mimo `in_progress` je projektor prázdný, po ukončení se smažou i přítomní |
 | POST, DELETE | `/api/mdt/sessions/{sid}/presence/` | POST: „jsem na zasedání“ (aplikace opakuje každé 2 min) → `LiveState`; ohlášení jinam lékaře z ostatních zasedání odhlásí; uzavřený board 409. DELETE: odchod → 204. Příchod a odchod se rozešlou jako `event: live` |
 | GET, POST | `/api/mdt/sessions/{sid}/chatbot/` | chatbot u zasedání (T-344, §5.12), každý přihlášený lékař, rozhovor je jen jeho: GET → vlastní `ChatbotMessage[]` u boardu od nejstarší (posledních 200); POST `{text, case_id?}` → 201 `[dotaz, odpověď AI]` (synchronně, jeden LLM call, 10–25 s). `case_id` = případ z agendy tohoto boardu (jinak 400), bez něj jen guidelines a studie; prázdný nebo delší než 2000 znaků 400, uzavřený board 409 (jen ke čtení). Selhání AI nevrací chybu: odpověď nese poznámku a případně nejbližší místa v dokumentaci |
@@ -1582,6 +1583,7 @@ interface Decision {
     options_considered?: { id: string; title: string; light?: Light | null; chosen: boolean }[];   // zvažované možnosti (ProcedureCompatibility.id, semafor při zápisu) a zvolený postup (T-326)
     guideline_compliance?: { compliant: boolean; reason: string; citations: EvidenceId[] } | null; // soulad s guidelines: ano / ne + důvod odchylky (zadání B2, C)
     dissent?: { member: string; role: RoleId | "chair"; text: string }[];   // odlišná stanoviska členů komise
+    votes?: { member: string; role: string | null; vote: "agree" | "disagree"; comment: string; at: string }[];  // souhlas přítomných při potvrzení (T-381, zapisuje server)
   };
   tasks: {                                                     // → Task
     id: string;
@@ -1867,6 +1869,12 @@ interface SessionMessage {                      // GET/POST /api/mdt/sessions/{s
   case: { id: number; patient_id: string } | null;  // štítek pacienta na řadě ("P03", D-018); null = k celému zasedání
   text: string;
   created_at: string;                           // místní čas ISO 8601
+}
+
+interface DecisionVotes {                       // GET/PUT/DELETE /api/mdt/cases/{cid}/votes/ (T-381)
+  case_id: number; open: boolean; decision: 'draft' | 'confirmed' | null; agree: number; disagree: number;
+  votes: { user_id: number; name: string; specialty: RoleId | null; vote: 'agree' | 'disagree'; comment: string; updated_at: string }[];
+  mine: DecisionVotes['votes'][number] | null;
 }
 
 interface LiveState {                           // GET/PUT /api/mdt/sessions/{sid}/live/, SSE event: live (T-357)

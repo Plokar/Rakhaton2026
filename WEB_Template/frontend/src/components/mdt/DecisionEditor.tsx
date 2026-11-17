@@ -13,6 +13,7 @@ import { CompatibilityLight } from './CompatibilityLight';
 import { suggestTasks } from './decision-tasks';
 import { NationalRuleNote } from './NationalRuleNote';
 import { PractitionerPicker } from './PractitionerPicker';
+import { VotesSummary } from './DecisionVotes';
 import { ROLE_META } from './roles';
 
 /** Koho vybírá popup lékařů (T-328): nového přítomného, nebo vlastníka úkolu. */
@@ -787,6 +788,10 @@ export function DecisionEditor({
         </label>
       </Field>
 
+      {/* T-381: souhlas přítomných z mobilů; nesouhlas jde převzít do odlišných stanovisek */}
+      {decision.case_id && /^\d+$/.test(decision.case_id) && (
+        <VotesSummary caseId={Number(decision.case_id)} decision={decision} onChange={onChange} readOnly={readOnly} />
+      )}
       <Dissent s={s} set={set} readOnly={readOnly} />
 
       <Field label="Úkoly po zasedání">

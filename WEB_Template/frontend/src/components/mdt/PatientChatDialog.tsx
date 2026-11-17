@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Bot, LoaderCircle, SendHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shadcn/button';
@@ -11,6 +11,7 @@ import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import type { ChatbotMessage, Claim, EvidenceId, ProjectorExtra } from '@/types/mdt';
+import { AnswerFeedback } from './AnswerFeedback';
 import { ChatAnswer, ChatQuestion, type ChatAnswerData } from './ChatbotAnswer';
 import { CitationProvider, collectCitations } from './citations';
 import { SourceDrawer } from './SourceDrawer';
@@ -65,6 +66,13 @@ export function PatientChatPanel({
   Description?: React.ElementType;
 }) {
   const [turns, setTurns] = React.useState<Turn[]>([]);
+  // T-382: navržené otázky podle diagnózy pacienta (bez odpovědi serveru pevné příklady)
+  const suggestions = useQuery({
+    queryKey: ['chatbot-suggestions', patientId],
+    queryFn: () => mdtApi.getChatbotSuggestions(patientId),
+    staleTime: Infinity,
+    retry: false,
+  });
   const [text, setText] = React.useState('');
   const [sourceId, setSourceId] = React.useState<EvidenceId | null>(null);
   const list = React.useRef<HTMLOListElement>(null);
@@ -144,7 +152,7 @@ export function PatientChatPanel({
                 ze zdroje a proklik na zdroj{onAdd ? '. Údaj se zdrojem jde jedním klikem doplnit do okna pro projektor' : ''}.
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {EXAMPLES.map((example) => (
+                {(suggestions.data?.questions.length ? suggestions.data.questions : EXAMPLES).map((example) => (
                   <button
                     key={example}
                     type="button"
@@ -170,6 +178,9 @@ export function PatientChatPanel({
                     patientId={patientId}
                     onAdd={onAdd && !full ? add : undefined}
                     isAdded={(claim) => added.has(extraKey(claim))}
+                    footer={turn.answer.model || turn.answer.claims.length ? (
+                      <AnswerFeedback target={{ patient_id: patientId, question: turn.question, answer: turn.answer }} />
+                    ) : undefined}
                   />
                 ) : (
                   <li className="flex items-center gap-2 text-sm text-muted-foreground">

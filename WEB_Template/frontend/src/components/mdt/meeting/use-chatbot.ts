@@ -29,13 +29,19 @@ export function useChatbot(sessionId: number) {
     refetchOnWindowFocus: false,
   });
 
+  // T-382: průběh odpovědi (hledám v dokumentaci → AI odpovídá → kontroluji citace)
+  const [stage, setStage] = React.useState<string | null>(null);
   const send = useMutation({
-    mutationFn: (input: { text: string; case_id?: number | null }) => mdtApi.postChatbotMessage(sessionId, input),
+    mutationFn: (input: { text: string; case_id?: number | null }) => {
+      setStage(null);
+      return mdtApi.streamChatbotMessage(sessionId, input, (s) => setStage(s.label));
+    },
     onSuccess: (messages) => client.setQueryData<ChatbotMessage[]>(chatbotKey(sessionId), (prev) => merge(prev, messages)),
+    onSettled: () => setStage(null),
   });
 
   const messages = React.useMemo(() => query.data ?? [], [query.data]);
-  return { messages, query, send, open, setOpen };
+  return { messages, query, send, open, setOpen, stage };
 }
 
 export type ChatbotState = ReturnType<typeof useChatbot>;

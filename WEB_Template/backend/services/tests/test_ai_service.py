@@ -226,7 +226,7 @@ class TestGeminiProvider:
         call = provider.client.models.calls[0]
         config = call["config"]
         assert call["model"] == "gemini-test-model"
-        assert config.system_instruction == "Jsi asistent MDT."
+        assert config.system_instruction == ai_service.guard_system_prompt("Jsi asistent MDT.")   # T-379
         assert config.temperature == ai_service.DEFAULT_TEMPERATURE
         assert config.response_mime_type == "application/json"
         assert config.response_json_schema == gemini_json_schema(Claim)

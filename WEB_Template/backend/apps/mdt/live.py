@@ -31,9 +31,12 @@ from .models import MdtCase, MdtSession, SessionPresence
 
 log = logging.getLogger(__name__)
 
-PRESENCE_TTL = timedelta(minutes=5)       # aplikace se ohlašuje každé 2 min; po 5 min bez ohlášení lékař „odešel“
+PRESENCE_TTL = timedelta(minutes=5)
+# T-379: projektor bez změny déle než toto = stav je „starý“ (předseda zavřel okno, výpadek); mobil to ukáže
+LIVE_STALE_AFTER = timedelta(minutes=15)       # aplikace se ohlašuje každé 2 min; po 5 min bez ohlášení lékař „odešel“
 LABEL_MAX = 200
 CLOSED_LIVE = {'detail': 'Board je uzavřený, projektor už nic neukazuje.'}
+NOT_STARTED = {'detail': 'Zasedání ještě nezačalo. Předseda ho zahájí tlačítkem „Zahájit zasedání“.'}
 
 
 # ── serializace ──────────────────────────────────────────────────────────────
@@ -62,6 +65,8 @@ def live_state(session: MdtSession, now=None) -> dict:
                           'position': cases.index(case.pk) + 1 if case.pk in cases else None, 'count': len(cases)},
         'slide': slide,
         'updated_at': session.live_updated_at.isoformat() if session.live_updated_at else None,
+        'stale': bool(case and session.live_updated_at
+                      and (now or timezone.now()) - session.live_updated_at > LIVE_STALE_AFTER),
         'by': session.live_by_id and {'user_id': session.live_by_id, 'name': roles.display_name(session.live_by)},
         'present': _present(session, now),
     }
@@ -104,7 +109,8 @@ def _slide(raw) -> tuple[int | None, int | None, str]:
 @permission_classes([IsAuthenticated])
 def session_live(request, sid):
     """GET: `LiveState` boardu (kdokoli přihlášený). PUT `{case_id: int | null, slide?: {index, total, label?}}`:
-    co je na projektoru (předseda); první PUT na naplánovaný board ho přepne na „probíhá“. Uzavřený board 409.
+    co je na projektoru (předseda), jen na probíhajícím zasedání: naplánované 409 (zahájí se PATCH `status`, T-379),
+    uzavřené 409.
     Změna se rozešle do streamu boardu jako `event: live`."""
     session = get_object_or_404(MdtSession.objects.select_related('live_case', 'live_by'), pk=sid)
     if request.method == 'GET':
@@ -113,6 +119,8 @@ def session_live(request, sid):
         raise PermissionDenied('Projektor řídí předseda komise.')
     if session.status == 'closed':
         return Response(CLOSED_LIVE, status=409)
+    if session.status != 'in_progress':          # T-379: zahajuje se výslovně, ne otevřením jednání
+        return Response(NOT_STARTED, status=409)
     case_id = request.data.get('case_id')
     case = None
     if case_id is not None:
@@ -123,15 +131,22 @@ def session_live(request, sid):
     index, total, label = _slide(request.data.get('slide')) if case else (None, None, '')
     changed = (session.live_case_id, session.live_slide, session.live_slides, session.live_label) != (
         case and case.pk, index, total, label)
-    if not changed and session.status == 'in_progress':
-        return Response(live_state(session))              # stejný stav: nic nerozesílat (jednání ho posílá opakovaně)
+    now = timezone.now()
+    if not changed:
+        # stejný stav: nerozesílat, jen obnovit čas (jednání ho posílá opakovaně, projektor tak „žije“)
+        if session.live_updated_at is None or now - session.live_updated_at > LIVE_STALE_AFTER / 3:
+            session.live_updated_at = now
+            session.save(update_fields=['live_updated_at'])
+        return Response(live_state(session))
     session.live_case, session.live_slide, session.live_slides, session.live_label = case, index, total, label
-    session.live_by, session.live_updated_at = request.user, timezone.now()
-    if session.status == 'planned':
-        session.status = 'in_progress'
-    session.save(update_fields=['live_case', 'live_slide', 'live_slides', 'live_label', 'live_by', 'live_updated_at',
-                                'status'])
+    session.live_by, session.live_updated_at = request.user, now
+    session.save(update_fields=['live_case', 'live_slide', 'live_slides', 'live_label', 'live_by', 'live_updated_at'])
     return Response(_broadcast(session))
+
+
+def broadcast_status(session: MdtSession) -> None:
+    """Zahájení a ukončení zasedání (PATCH boardu) se rozešle do streamu, mobily přepnou bez obnovení (T-379)."""
+    _broadcast(session)
 
 
 @extend_schema(request=None, responses=OpenApiTypes.OBJECT, tags=['mdt'])

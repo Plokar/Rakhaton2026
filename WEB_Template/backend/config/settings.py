@@ -185,7 +185,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
-        'user': '1000/hour',
+        # T-379: předseda při jednání načítá ~6 zdrojů na pacienta a přepíná často; 1000/h nestačilo na celé zasedání
+        'user': os.environ.get('MDT_USER_THROTTLE', '6000/hour'),
     },
     'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

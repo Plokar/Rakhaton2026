@@ -65,3 +65,24 @@ def pseudonymize_text(text: str | None, names: dict[str, str] | None = None) -> 
     for name, replacement in (names or {}).items():
         pseudonymizer.add_name(name, replacement)
     return pseudonymizer(text)
+
+
+# ── Kontrola textu od lékaře (T-379) ──────────────────────────────────────────
+PERSONAL_DATA_LABELS = {'rc': 'rodné číslo', 'birth': 'datum narození', 'email': 'e-mail', 'phone': 'telefon'}
+
+
+def personal_data_kinds(text: str | None) -> list[str]:
+    """Druhy osobních údajů v textu (chat lékařů, dotaz na chatbota): `rc`, `birth`, `email`, `phone`.
+
+    Zpráva v chatu se neupravuje ani nemaže, proto se text s osobním údajem vůbec neuloží. Jména pacientů se tu
+    nepoznají (v textu jsou běžná slova); na ta dál upozorňuje UI.
+    """
+    if not text:
+        return []
+    found = []
+    if _RC_SLASH.search(text) or any(_valid_rc(m.group(0)) for m in _RC_PLAIN.finditer(text)):
+        found.append('rc')
+    for kind, pattern in (('birth', _BIRTH), ('email', _EMAIL), ('phone', _PHONE)):
+        if pattern.search(text):
+            found.append(kind)
+    return found

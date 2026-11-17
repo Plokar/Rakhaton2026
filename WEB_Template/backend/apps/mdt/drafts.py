@@ -15,6 +15,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from core.crypto import digest
 from services import new_patient as np
 from services import rc as rc_module
 from services.ai_service import MockAIProvider, is_synthetic_patient, provider_for_patient
@@ -211,7 +212,7 @@ def draft_list(request):
         existing = candidate and np.patient_with_rc(patients, candidate.value)
         if existing:
             return Response({'detail': 'Pacient s tímto rodným číslem už v IRIS je.', 'patient_id': existing}, status=409)
-        open_draft = candidate and PatientDraft.objects.filter(status='draft', rc=candidate.value).first()
+        open_draft = candidate and PatientDraft.objects.filter(status='draft', rc_digest=digest(candidate.value)).first()
         if open_draft:
             return Response({'detail': 'Pro toto rodné číslo už rozpracovaný návrh je.', 'draft_id': open_draft.pk},
                             status=409)

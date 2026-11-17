@@ -389,8 +389,12 @@ def session_detail(request, sid):
             # ponytail: Task v IRIS po jednom; když jeden zápis selže, předchozí zůstanou (IRIS = zdroj pravdy)
             for c in s.cases.all():
                 writeback.set_mdt_date(c.patient_fhir_id, c.service_request_fhir_id, timezone.localtime(s.date))
+        before = MdtSession.objects.filter(pk=s.pk).values_list('status', flat=True).first()
         s.full_clean(exclude=['chair', 'config', 'committee'])
         s.save()
+        if before != s.status:                       # T-379: zahájení / ukončení vidí mobily hned
+            from .live import broadcast_status
+            broadcast_status(s)
     return _agenda_response(s)
 
 
@@ -1209,7 +1213,16 @@ def task_list(request):
     items = _with_case(tasks.list_tasks(status, patient, owner))
     if request.query_params.get('drafts') in ('1', 'true'):
         items += _draft_tasks(status, patient, owner)
+    if roles.is_external(request.user):
+        # T-379: lékař z jiné nemocnice jen úkoly pacientů ze zasedání, kam je pozvaný (D-027)
+        visible = _external_patients(request.user)
+        items = [i for i in items if i.get('patient_id') in visible]
     return Response(items)
+
+
+def _external_patients(user) -> set[str]:
+    from .scope import visible_sessions
+    return set(MdtCase.objects.filter(session__in=visible_sessions(user)).values_list('patient_fhir_id', flat=True))
 
 
 def _draft_tasks(status: str | None, patient: str | None, owner: str | None) -> list[dict]:
@@ -1235,8 +1248,14 @@ def _draft_tasks(status: str | None, patient: str | None, owner: str | None) -> 
 @permission_classes([IsAuthenticated])
 def task_detail(request, tid):
     """Změna stavu úkolu `{status}` → `Task.status` v IRIS. Smí předseda, lékař a ten, komu je úkol přiřazený
-    (T-328: i prohlížející člen komise si svůj úkol odškrtne)."""
-    if roles.role(request.user) not in (roles.ADMIN, roles.DOCTOR):
+    (T-328: i prohlížející člen komise si svůj úkol odškrtne). Lékař z jiné nemocnice jen svůj úkol u pacienta
+    ze svých zasedání (T-379)."""
+    if roles.is_external(request.user):
+        mine = roles.practitioner_id(request.user)
+        visible = _external_patients(request.user)
+        if not mine or not any(t['id'] == tid and t.get('patient_id') in visible for t in tasks.list_tasks(owner=mine)):
+            raise PermissionDenied('Lékař z jiné nemocnice mění jen své úkoly u pacientů ze svých zasedání.')
+    elif roles.role(request.user) not in (roles.ADMIN, roles.DOCTOR):
         mine = roles.practitioner_id(request.user)
         if not mine or not any(t['id'] == tid for t in tasks.list_tasks(owner=mine)):
             raise PermissionDenied('Stav úkolu mění předseda, lékař, nebo ten, komu je úkol přiřazený.')

@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { refreshSession } from '@/lib/api';
 import { mdtApi } from '@/lib/mdt-api';
+import { subscribeSessionStream, type StreamStatus } from '@/lib/session-stream';
 import type { Me, SessionMessage } from '@/types/mdt';
 
 /** Stav živého spojení: `live` = zprávy chodí hned, `offline` = čeká se na nový pokus. */
-export type ChatConnection = 'connecting' | 'live' | 'offline';
+export type ChatConnection = StreamStatus;
 
 const messagesKey = (sessionId: number) => ['session', String(sessionId), 'messages'] as const;
 const SEEN_KEY = (sessionId: number) => `mdt-chat-seen-${sessionId}`;
@@ -55,44 +55,18 @@ export function useSessionChat(sessionId: number, me: Me | null) {
   React.useEffect(() => {
     if (!loaded) return;
     const k = messagesKey(sessionId);
-    let source: EventSource | null = null;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let attempt = 0;
-    let stopped = false;
-    const connect = () => {
-      const after = client.getQueryData<SessionMessage[]>(k)?.at(-1)?.id ?? 0;
-      source = new EventSource(mdtApi.sessionStreamUrl(sessionId, after), { withCredentials: true });
-      source.onopen = () => {
-        attempt = 0;
-        setConnection('live');
-      };
-      source.onmessage = (event: MessageEvent<string>) => {
-        const message = JSON.parse(event.data) as SessionMessage;
-        client.setQueryData<SessionMessage[]>(k, (prev) => merge(prev, [message]));
-      };
-      source.onerror = () => {
-        if (source?.readyState !== EventSource.CLOSED) {
-          setConnection('connecting');            // výpadek sítě: EventSource se připojí sám
-          return;
-        }
-        // Server spojení odmítl, nejčastěji vypršelé přihlášení (401): obnovit a připojit se znovu (T-336)
-        source.close();
-        setConnection('offline');
-        const delay = attempt === 0 ? 0 : Math.min(30_000, 3_000 * 2 ** (attempt - 1));
-        attempt += 1;
-        timer = setTimeout(() => {
-          void refreshSession().then(() => {
-            if (!stopped) connect();
-          });
-        }, delay);
-      };
-    };
-    connect();
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      source?.close();
-    };
+    const add = (incoming: SessionMessage[]) => client.setQueryData<SessionMessage[]>(k, (prev) => merge(prev, incoming));
+    const lastId = () => client.getQueryData<SessionMessage[]>(k)?.at(-1)?.id ?? 0;
+    // T-379: sdílený stream zasedání (jedno spojení i se živým zasedáním)
+    return subscribeSessionStream(sessionId, {
+      after: lastId,
+      onMessage: (message) => add([message]),
+      onStatus: setConnection,
+      // připojení k už otevřenému streamu nebo obnovení po výpadku: doplnit, co mezitím přišlo
+      onOpen: () => {
+        void mdtApi.getSessionMessages(sessionId, lastId() || undefined).then(add).catch(() => undefined);
+      },
+    });
   }, [client, sessionId, loaded]);
 
   const send = useMutation({

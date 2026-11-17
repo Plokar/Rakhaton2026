@@ -52,7 +52,7 @@ export const queryKeys = {
   timeline: (patientId: string) => ['patient', patientId, 'timeline'] as const,
 };
 
-/** 404 u podkladu znamená „ještě nevznikl“, ne chybu. */
+/** Podklad „ještě nevznikl“ = `null` (204, T-375); 404 zůstává kvůli staršímu backendu během nasazení. */
 const briefOrNull = (caseId: number | string) =>
   mdtApi.getBrief(String(caseId)).catch((err: unknown) => {
     if (err instanceof ApiError && err.status === 404) return null;

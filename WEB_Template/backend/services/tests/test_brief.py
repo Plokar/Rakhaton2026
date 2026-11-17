@@ -8,7 +8,7 @@ from services.ai import brief as brief_module
 from services.ai.brief import build_brief, generate_brief
 from services.ai.context_builder import context_from_resources
 from services.ai.grounding import check_claim, verify_claims
-from services.ai_service import MockAIProvider
+from services.ai_service import MockAIProvider, guard_system_prompt
 from services.tests.dataset import load_patient, load_studies
 
 PATIENTS = ["P01", "P02", "P03", "P04", "P05", "P06"]
@@ -55,7 +55,7 @@ def test_doctor_feedback_goes_only_to_chosen_part_and_is_kept_with_brief():
     provider = PromptCaptureProvider(responses={"SummaryOutput": P03_SUMMARY})
     brief = brief_for("P03", provider, config={"_feedback": feedback})
     with_note = [p for p in provider.system_prompts if "Zpětná vazba lékaře" in p]
-    assert len(with_note) == 1 and with_note[0].startswith(brief_module.SUMMARY_PROMPT) and feedback["text"] in with_note[0]
+    assert len(with_note) == 1 and with_note[0].startswith(guard_system_prompt(brief_module.SUMMARY_PROMPT)) and feedback["text"] in with_note[0]
     assert brief["feedback"] == feedback and "_feedback" not in brief["config"]
     schemas.Brief.model_validate(brief)
     everywhere = PromptCaptureProvider(responses={"SummaryOutput": P03_SUMMARY})

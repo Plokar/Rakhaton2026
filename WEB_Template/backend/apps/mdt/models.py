@@ -3,6 +3,8 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator
 from django.db import models
 
+from core.crypto import EncryptedCharField, digest
+
 DETAIL_LEVELS = [('brief', 'stručně'), ('standard', 'standardně'), ('detailed', 'podrobně')]
 
 
@@ -70,6 +72,17 @@ class MdtSession(models.Model):
 
     def __str__(self):
         return f'{self.date:%Y-%m-%d %H:%M} {self.title}'
+
+    def save(self, *args, **kwargs):
+        # T-379: nezahájené ani ukončené zasedání nic nepromítá (mobily nesmí ukazovat starý stav);
+        # z ukončeného navíc všichni odešli
+        if self.status != 'in_progress':
+            self.live_case = None
+            self.live_slide = self.live_slides = None
+            self.live_label = ''
+        if self.status == 'closed' and self.pk:
+            SessionPresence.objects.filter(session_id=self.pk).delete()
+        super().save(*args, **kwargs)
 
 
 class MdtCase(models.Model):
@@ -227,7 +240,9 @@ class PatientDraft(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL,
                                    related_name='patient_drafts')
     patient_fhir_id = models.CharField(max_length=16)            # přidělené „P07“
-    rc = models.CharField(max_length=11, blank=True)             # „RRMMDD/XXXX“; po potvrzení prázdné
+    # „RRMMDD/XXXX“, v databázi zašifrované (T-379); po potvrzení prázdné. Hledá se přes `rc_digest`.
+    rc = EncryptedCharField(blank=True)
+    rc_digest = models.CharField(max_length=64, blank=True, db_index=True)
     synthetic = models.BooleanField(default=False)               # testovací pacient (D-021: smí do free tieru)
     session = models.ForeignKey(MdtSession, null=True, blank=True, on_delete=models.SET_NULL)
     content = models.JSONField(default=dict, blank=True)         # documents, fields, edited, values, rejected, ai
@@ -238,6 +253,12 @@ class PatientDraft(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        self.rc_digest = digest(self.rc)
+        if kwargs.get('update_fields') is not None and 'rc' in kwargs['update_fields']:
+            kwargs['update_fields'] = list({*kwargs['update_fields'], 'rc_digest'})
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.patient_fhir_id} ({self.get_status_display()})'
@@ -305,3 +326,30 @@ class DoctorNorm(models.Model):
 
     class Meta:
         ordering = ['user', 'area', 'id']
+
+
+class AccessLog(models.Model):
+    """Kdo kdy otevřel kterého pacienta, stáhl export nebo zapsal (T-370). Jen ID, nikdy jméno, RČ ani tělo požadavku.
+
+    Zapisuje `apps.mdt.access_log.AccessLogMiddleware`; záznamy se z aplikace neupravují ani nemažou.
+    """
+    ACTIONS = [('view', 'zobrazení'), ('export', 'export'), ('write', 'zápis'), ('ai', 'dotaz na AI')]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name='access_logs')
+    username = models.CharField(max_length=150, blank=True)       # zůstane i po smazání účtu
+    patient_fhir_id = models.CharField(max_length=64, blank=True, db_index=True)
+    case = models.ForeignKey(MdtCase, null=True, blank=True, on_delete=models.SET_NULL, related_name='access_logs')
+    session_id_ref = models.PositiveIntegerField(null=True, blank=True)  # export celého zasedání (ZIP)
+    action = models.CharField(max_length=8, choices=ACTIONS)
+    path = models.CharField(max_length=300)
+    method = models.CharField(max_length=8)
+    status_code = models.PositiveSmallIntegerField()
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        indexes = [models.Index(fields=['user', 'patient_fhir_id', 'created_at'], name='access_user_patient_time')]
+
+    def __str__(self):
+        return f'{self.created_at:%Y-%m-%d %H:%M} {self.username} {self.action} {self.patient_fhir_id or self.path}'

@@ -55,6 +55,7 @@ orientaci a kontrolu dopadu změn.
 ```powershell
 cd WEB_Template; .\dev.ps1 up          # celý dev stack (Linux/macOS: ./dev.sh up nebo make dev)
 .\dev.ps1 test                         # backend testy (pytest)
+./dev.sh local                         # bez Dockeru: FHIR a vektory v paměti, mock AI (T-367, README)
 cd WEB_Template/frontend; npm run lint; npm run build
 curl -u SuperUser:SYS http://localhost:52773/fhir/r4/metadata   # IRIS FHIR běží?
 docker compose -f docker-compose.dev.yml exec backend python manage.py ingest_dataset --patients P03 --skip-vectors

@@ -44,6 +44,11 @@ export function InvitationLink({ created }: { created: InvitationCreated }) {
           <span className="flex items-center gap-1 text-xs text-muted-foreground"><Mail className="size-3.5" aria-hidden /> Odesláno na {created.email}</span>
         )}
       </div>
+      {created.email && !created.email_sent && (
+        <p role="alert" className="text-sm text-amber-800 dark:text-amber-300">
+          E-mail na {created.email} se neodeslal (server nemá nastavené odesílání pošty). Zkopírujte odkaz a předejte ho lékaři sami.
+        </p>
+      )}
       <p role="status" className="sr-only">{copy === 'done' ? 'Odkaz je ve schránce.' : ''}</p>
       {copy === 'failed' && <p role="alert" className="text-sm">Odkaz se nepodařilo zkopírovat, označte ho ručně.</p>}
       <p className="text-xs text-muted-foreground">

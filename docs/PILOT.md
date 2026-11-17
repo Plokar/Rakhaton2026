@@ -35,7 +35,11 @@ Pilot se spustí, až je všechno zaškrtnuté. Ověřuje koordinátor pilotu.
 **Provoz**
 - [ ] `https://<API_DOMAIN>/api/health/` → 200, přihlášení na produkční doméně projde.
 - [ ] Denní záloha běží (`scripts/backup.sh` v cronu) a jedna obnova je vyzkoušená (§6).
-- [ ] Monitoring dostupnosti hlídá `/api/health/` a frontend (např. UptimeRobot, každých 5 min, e-mail koordinátorovi).
+- [ ] `MDT_FIELD_KEY` nastavený (Fernet klíč pro šifrované RČ v návrzích pacienta, T-379; bez něj se klíč odvodí z `DJANGO_SECRET_KEY` a jeho výměna staré návrhy nepřečte).
+- [ ] Mazání záznamu přístupů v cronu: `manage.py prune_access_log --days 365` (doba uchování podle provozovatele, `MDT_ACCESS_LOG_DAYS`).
+- [ ] Volitelně `SENTRY_DSN` (hlášení chyb backendu; bez těla požadavků, cookies a query, `core/monitoring.py`).
+- [ ] Monitoring dostupnosti hlídá `/api/health/?strict=1` (503 i při výpadku IRIS) a frontend (např. UptimeRobot,
+      každých 5 min, e-mail koordinátorovi).
 
 **Lidé a data**
 - [ ] Každý lékař pilotu má **vlastní účet** (Tým → Přidat lékaře): jméno, odbornost, role. Sdílené demo účty
@@ -97,6 +101,9 @@ docker compose up -d iris backend
 
 **Aktualizace během pilotu:** jen po domluvě s koordinátorem, mimo termíny zasedání. Před aktualizací záloha,
 po ní `/api/health/` a přihlášení.
+
+**Záznam přístupů:** kdo kdy otevřel kterého pacienta, stáhl export nebo zapsal, vidí správce MDT v aplikaci (Tým a
+účty → Přístupy) a v Django adminu (MDT → Access logs, jen pro čtení). Ukládají se jen ID pacientů (Pxx), ne jména.
 
 **Hlášení chyb:** odkaz v aplikaci → koordinátor → záznam do Blokerů v [PROGRESS.md](../PROGRESS.md) nebo úkol na
 task boardu.

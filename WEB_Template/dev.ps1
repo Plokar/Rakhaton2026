@@ -12,7 +12,7 @@
 
 param (
     [Parameter(Position = 0)]
-    [ValidateSet("up", "down", "seed", "reset", "build", "logs", "status", "test")]
+    [ValidateSet("up", "down", "seed", "reset", "build", "logs", "status", "test", "local")]
     [string]$Command = "up"
 )
 
@@ -74,5 +74,12 @@ switch ($Command) {
     "test" {
         Write-Host "[*] Spoustim testy..." -ForegroundColor Cyan
         docker compose -f $ComposeFile exec backend pytest
+    }
+
+    "local" {
+        # T-367: bez Dockeru a bez IRIS (FHIR a vektory v pameti, mock AI); potrebuje lokalni Postgres a Redis
+        Write-Host "[*] Backend bez Dockeru na http://localhost:8000 (frontend: cd frontend; npm run dev)" -ForegroundColor Cyan
+        Push-Location backend
+        try { python scripts/run_local.py } finally { Pop-Location }
     }
 }

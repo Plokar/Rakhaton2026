@@ -75,6 +75,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.mdt.access_log.AccessLogMiddleware',     # T-370
+    'apps.mdt.scope.ExternalScopeMiddleware',      # T-362: bez něj by externí lékař v produkci viděl všechny pacienty
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.RateLimitMiddleware',
@@ -129,20 +131,23 @@ LOGGING = {
 }
 
 # ── Email (SMTP v produkci) ───────────────────────────────────────────────────
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')  # noqa
+# Bez EMAIL_HOST se e-maily neodesílají (konzole); pozvánky se pak předávají odkazem (T-371). Žádný výchozí Gmail.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')  # noqa
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))  # noqa
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'  # noqa
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')  # noqa
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # noqa
+if EMAIL_HOST:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    import logging as _logging
 
-# ── Sentry (zakomentováno – pro error monitoring) ────────────────────────────
-# import sentry_sdk
-# from sentry_sdk.integrations.django import DjangoIntegration
-# sentry_sdk.init(
-#     dsn=os.environ.get('SENTRY_DSN', ''),
-#     integrations=[DjangoIntegration()],
-#     traces_sample_rate=0.1,
-#     send_default_pii=False,
-#     environment='production',
-# )
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    _logging.getLogger('config').warning(
+        'E-maily se neodesílají (EMAIL_HOST není nastaven), pozvánky předávejte odkazem.')
+
+# ── Hlášení chyb (T-377) ─────────────────────────────────────────────────────
+# Jen s SENTRY_DSN; bez něj se nic neimportuje a nic neodchází ven. Bez těla, cookies, hlaviček a query.
+from core.monitoring import init_sentry  # noqa: E402
+
+init_sentry()

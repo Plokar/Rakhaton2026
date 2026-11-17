@@ -6,18 +6,15 @@ import * as React from 'react';
 import { Page } from '@/components/layout/Page';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { storageApi, type UploadedFileItem } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import {
   Upload,
-  HardDrive,
   FileText,
-  Image,
+  Image as ImageIcon,
   FileCode,
   File,
-  Download,
   Trash2,
   CheckCircle2,
   AlertCircle,
@@ -26,7 +23,7 @@ import {
 
 export default function StoragePage() {
   const [files, setFiles] = React.useState<UploadedFileItem[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
   const [error, setError] = React.useState('');
   const [success, setSuccess] = React.useState('');
@@ -82,7 +79,7 @@ export default function StoragePage() {
   };
 
   const getFileIcon = (mime: string) => {
-    if (mime.startsWith('image/')) return <Image className="h-4 w-4 text-emerald-500" />;
+    if (mime.startsWith('image/')) return <ImageIcon className="h-4 w-4 text-emerald-500" />;
     if (mime.includes('json') || mime.includes('javascript') || mime.includes('python'))
       return <FileCode className="h-4 w-4 text-cyan-500" />;
     if (mime.includes('pdf') || mime.includes('text'))

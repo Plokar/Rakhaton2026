@@ -1,0 +1,96 @@
+{
+  "q": "Jaká je hodnota FEV1?",
+  "panel": {
+    "x": 1560,
+    "y": 128.5,
+    "w": 360,
+    "h": 951.5
+  },
+  "list": {
+    "x": 1560,
+    "y": 181.5,
+    "w": 360,
+    "h": 747.5
+  },
+  "form": {
+    "x": 1560,
+    "y": 929,
+    "w": 360,
+    "h": 151
+  },
+  "input": {
+    "x": 1576,
+    "y": 974,
+    "w": 288,
+    "h": 38
+  },
+  "send": {
+    "x": 1872,
+    "y": 980,
+    "w": 32,
+    "h": 32
+  },
+  "loader": {
+    "x": 1576,
+    "y": 267.5,
+    "w": 328,
+    "h": 20
+  },
+  "answer": {
+    "x": 1576,
+    "y": 267.5,
+    "w": 328,
+    "h": 129.5
+  },
+  "value": {
+    "x": 1590,
+    "y": 291.5,
+    "w": 298,
+    "h": 45.5
+  },
+  "meta": {
+    "x": 1590,
+    "y": 345,
+    "w": 298,
+    "h": 52
+  },
+  "date": {
+    "x": 1600,
+    "y": 353,
+    "w": 278,
+    "h": 16
+  },
+  "source": {
+    "x": 1600,
+    "y": 373,
+    "w": 278,
+    "h": 16
+  },
+  "link": {
+    "x": 1656.2,
+    "y": 373,
+    "w": 140.9,
+    "h": 15
+  },
+  "question": {
+    "x": 1576,
+    "y": 193.5,
+    "w": 328,
+    "h": 58
+  },
+  "drawer": {
+    "x": 1536,
+    "y": 0,
+    "w": 384,
+    "h": 1080
+  },
+  "drawerText": "P04-spiro01\nZáznam pacienta\n25. 8. 2026\n\nFEV1\nFunkční vyšetření plic\n\n1,9 l (58 % náležité hodnoty)\n\nZdrojový dokument\n\nSpirometrie, bronchodilatační test a difuzní kapacita P04-doc03\n\n25. 8. 2026\n\nVýška 176 cm, hmotnost 76 kg. Vyšetření při stávající inhalační léčbě.\n\nSpirometrie: FEV1 1,9 l (58 % náležité hodnoty), FVC 3,3 l (82 % NH), FEV1/FVC 0,58.\nBronchodilatační test (salbutamol 400 µg): FEV1 +4 % – nesignifikantní.\nDifuzní kapacita: DLCO 45 % NH.\n\nZávěr: Středně těžká obstrukční ventilační porucha (odpovídá GOLD 2), středně těžce snížená difuzní kapacita plic.\nZátěžový test (spiroergom",
+  "sentence": [
+    {
+      "x": 1635.3,
+      "y": 401.1,
+      "w": 208.3,
+      "h": 16
+    }
+  ]
+}

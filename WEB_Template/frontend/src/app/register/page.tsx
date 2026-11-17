@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { ApiError, type RegisterData } from '@/lib/api';
-import { PILOT_MODE } from '@/lib/pilot';
+import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled';
 import { cn } from '@/lib/utils';
 import type { ProjectorLayout, TemplateArea } from '@/types/mdt';
 
@@ -40,16 +40,18 @@ function registerError(err: unknown): string {
  */
 /** Pilot (T-355): samoregistrace je vypnutá i na backendu (MDT_ALLOW_REGISTRATION), účty zakládá koordinátor. */
 export default function RegisterPage() {
-  return PILOT_MODE ? <RegistrationClosed /> : <RegisterForm />;
+  const enabled = useRegistrationEnabled();          // T-372: rozhoduje backend, v pilotu nikdy
+  if (enabled === null) return null;
+  return enabled ? <RegisterForm /> : <RegistrationClosed />;
 }
 
 function RegistrationClosed() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-sm text-center">
-        <h1 className="text-xl font-semibold text-foreground">Registrace je v pilotu vypnutá</h1>
+        <h1 className="text-xl font-semibold text-foreground">Registrace je vypnutá</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Účty lékařů pilotu zakládá koordinátor. Pokud účet ještě nemáte, ozvěte se mu.
+          Účty lékařů zakládá správce MDT pozvánkou. Pokud účet ještě nemáte, ozvěte se mu.
         </p>
         <Link href="/login" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
           Zpět na přihlášení

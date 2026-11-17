@@ -55,7 +55,7 @@ const dust = (() => {
   return Array.from({ length: 46 }, () => ({ x: 900 + r() * 700, y: r() * 1080, s: 1 + r() * 2.2, ph: r() * 6.28, sp: 0.2 + r() * 0.5 }));
 })();
 
-export const PanelStage: React.FC<{ f: number }> = ({ f }) => {
+export const PanelStage: React.FC<{ f: number; short?: boolean }> = ({ f, short = false }) => {
   if (f < S.ignite.from || f > S.rules.from + 16) return null;
   const c = camAt(f);
   const reveal = iv(f, [338, 374], [0, 1], EASE.swift);

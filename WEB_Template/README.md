@@ -116,3 +116,18 @@ Jednotné rozhraní pro práci s umělou inteligencí. Podporuje:
 | `make reset` | `.\dev.ps1 reset` | Reset DB volume + nové migrace + seed |
 | `make logs` | `.\dev.ps1 logs` | Živý výpis logů |
 | `make test` | `.\dev.ps1 test` | Spustí testy v backendu |
+| `./dev.sh local` | `.\dev.ps1 local` | Backend bez Dockeru a bez IRIS (viz níže) |
+
+### Bez Dockeru (T-367)
+
+Pro rychlé proklikání a E2E testy stačí lokální Postgres a Redis. FHIR a vektory běží v paměti
+(`services/fhir/testing.py`, `services/iris/testing.py`), AI je vždy `mock`, nic neodchází ven.
+
+```bash
+createdb -h 127.0.0.1 -U appuser appdb_dev                # jednou; Redis s heslem devredispass na :6379
+./dev.sh local                                            # migrate, ingest, seed_mdt, runserver :8000
+cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+```
+
+Přihlášení `predseda` / `demo123456`. Připojení měníte proměnnými `POSTGRES_*` a `REDIS_URL`, rychlejší start
+`LOCAL_PATIENTS=P01,P03`. Data se při ukončení procesu ztratí; ověření nad skutečným IRIS dělejte přes `dev.sh up`.

@@ -51,7 +51,7 @@ class FakeFhirServer:
         return self
 
     # ── náhrada client.request ──
-    def request(self, method, path='', body=None, params=None):
+    def request(self, method, path='', body=None, params=None, timeout=None):
         self.requests.append((method, path, params))
         if path.startswith('http'):
             path = path[len(client.base_url()):]

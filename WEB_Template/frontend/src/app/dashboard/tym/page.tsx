@@ -7,20 +7,23 @@ import { Button } from '@/components/shadcn/button';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { NewDoctorDialog } from '@/components/mdt/NewDoctorDialog';
 import { can, useMe } from '@/components/mdt/me';
+import { AccessLogPanel } from '@/components/mdt/team/AccessLogPanel';
 import { InviteDoctorDialog } from '@/components/mdt/team/InviteDoctorDialog';
 import { CommitteesPanel, DoctorsPanel, InvitationsPanel } from '@/components/mdt/team/TeamPanels';
 import { cn } from '@/lib/utils';
 
-type Tab = 'lekari' | 'pozvanky' | 'komise';
+type Tab = 'lekari' | 'pozvanky' | 'komise' | 'pristupy';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'lekari', label: 'Lékaři' },
   { id: 'pozvanky', label: 'Pozvánky' },
   { id: 'komise', label: 'Komise' },
+  { id: 'pristupy', label: 'Přístupy' },
 ];
 
 /**
  * Tým a účty (T-319, T-361, T-362, D-027): jeden správce MDT spravuje všechny účty a komise. Lékaře zve
  * jednorázovým odkazem (i z jiných nemocnic), přiřazuje je do komisí, mění roli a odbornost a blokuje přístup.
+ * Záložka Přístupy: kdo kdy otevřel kterého pacienta (T-370).
  */
 export default function TeamPage() {
   const me = useMe();
@@ -68,6 +71,7 @@ export default function TeamPage() {
             {tab === 'lekari' && <DoctorsPanel me={me} />}
             {tab === 'pozvanky' && <InvitationsPanel />}
             {tab === 'komise' && <CommitteesPanel />}
+            {tab === 'pristupy' && <AccessLogPanel />}
           </div>
         </>
       )}

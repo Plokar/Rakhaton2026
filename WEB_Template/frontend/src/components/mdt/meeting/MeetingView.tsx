@@ -69,6 +69,7 @@ import { openProjectorWindow, publishSelection, publishSlide, useAnswerProjector
 import { CaseQuickViewWide, useQuickViewSources } from '../quick-view';
 import { ReadinessMark } from '../ReadinessBadge';
 import { ChatbotPanel } from './ChatbotPanel';
+import { OverdueBanner } from './OverdueBanner';
 import { SessionChat } from './SessionChat';
 import { formatDuration, useCaseTimer } from './use-case-timer';
 import { DiscussionRecorder } from './DiscussionRecorder';
@@ -107,6 +108,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const [completing, setCompleting] = React.useState<string | null>(null);
   const [collaborating, setCollaborating] = React.useState(false);
   const [editingProjector, setEditingProjector] = React.useState(false);
+  const [closingOverdue, setClosingOverdue] = React.useState(false);
   const chat = useSessionChat(sessionId, me);
   const reorder = useAgendaOrder(sessionId);
   const [moved, setMoved] = React.useState('');
@@ -171,14 +173,13 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   const slides = useProjectorSlides(sessionId, current?.id ?? null);
   const slide = (move: { delta: number } | { to: number }) => current && publishSlide(sessionId, current.id, move);
 
-  // T-357: dnešní nebo probíhající zasedání je „živé“: předseda vysílá pacienta a slide do mobilů ostatních,
-  // ostatní lékaři se ohlásí jako přítomní a vidí, koho ukazuje projektor
-  const isLive = Boolean(
-    session.data && session.data.status !== 'closed' && (session.data.status === 'in_progress' || pragueDay(session.data.date) === todayPrague()),
-  );
-  usePublishLive(sessionId, isLive && chair, current?.id ?? null, slides);
-  usePresence(sessionId, isLive);
-  const { live } = useLiveSession(isLive && !chair ? sessionId : null);
+  // T-357 / T-379: živé je jen zahájené zasedání (předseda ho zahájí tlačítkem, otevření jednání nic nezahájí).
+  // Předseda vysílá pacienta a slide do mobilů ostatních; na dnešním nebo probíhajícím se lékaři ohlásí jako přítomní.
+  const started = session.data?.status === 'in_progress';
+  const today = Boolean(session.data && session.data.status !== 'closed' && (started || pragueDay(session.data.date) === todayPrague()));
+  usePublishLive(sessionId, started && chair, current?.id ?? null, slides);
+  usePresence(sessionId, today);
+  const { live } = useLiveSession(started && !chair ? sessionId : null);
   const onProjector = live?.case && live.case.id !== current?.id ? live.case : null;
 
   const hk = { preventDefault: true, ignoreEventWhen: overlayOpen };
@@ -320,6 +321,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
         botOpen={bot.open}
         onBot={toggleBot}
       />
+      {chair && <OverdueBanner board={board} onClose={() => setClosingOverdue(true)} />}
+      {closingOverdue && <CloseBoardDialog board={board} open onOpenChange={setClosingOverdue} onClosed={() => toast.success('Board je ukončený', { description: 'Výstupy najdete v Záznamu boardů.' })} />}
       {inlineChat ? (
         <ResizablePanelGroup className="min-h-0 flex-1">
           <ResizablePanel id="agenda" defaultSize={288} minSize={240} maxSize={360} groupResizeBehavior="preserve-pixel-size" className="min-h-0">
@@ -458,6 +461,14 @@ function MeetingHeader({
   const [inviting, setInviting] = React.useState(false);
   const chair = can.manageBoards(me);
   const status = board.status === 'in_progress' ? 'probíhá' : board.status === 'closed' ? 'uzavřeno' : null;
+  const start = () =>
+    sessionStatus.mutate(
+      { id: board.id, status: 'in_progress' },
+      {
+        onSuccess: () => toast.success('Zasedání zahájeno', { description: 'Mobily lékařů teď ukazují pacienta na projektoru.' }),
+        onError: (err) => toast.error(apiErrorMessage(err, 'Zasedání se nepodařilo zahájit.')),
+      },
+    );
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-border bg-card px-4 py-3 sm:px-6">
@@ -512,6 +523,11 @@ function MeetingHeader({
             </div>
           )}
         </div>
+        {chair && board.status === 'planned' && count > 0 && (
+          <Button size="lg" onClick={start} disabled={sessionStatus.isPending} title="Zahájit zasedání: lékaři na mobilu uvidí pacienta na projektoru">
+            <Play aria-hidden /> <span className="hidden sm:inline">Zahájit zasedání</span>
+          </Button>
+        )}
         {chair && board.status !== 'closed' && count > 0 && (
           <Button variant="outline" size="lg" onClick={() => setClosing(true)} aria-label="Ukončit board" title="Ukončit board a stáhnout výstupy">
             <CheckCheck aria-hidden /> <span className="hidden sm:inline">Ukončit board</span>

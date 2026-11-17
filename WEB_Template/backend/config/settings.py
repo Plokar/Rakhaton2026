@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.mdt.access_log.AccessLogMiddleware',    # T-370: kdo otevřel kterého pacienta (i odmítnuté 403)
     'apps.mdt.scope.ExternalScopeMiddleware',     # T-362: lékař z jiné nemocnice jen své komise
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -184,7 +185,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
-        'user': '1000/hour',
+        # T-379: předseda při jednání načítá ~6 zdrojů na pacienta a přepíná často; 1000/h nestačilo na celé zasedání
+        'user': os.environ.get('MDT_USER_THROTTLE', '6000/hour'),
     },
     'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -274,7 +276,7 @@ EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 1025))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@hackathon.local')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MDTcore <noreply@mdtcore.local>')
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 LOGGING = {
@@ -327,6 +329,8 @@ LOGGING = {
 # ── MDTcore ───────────────────────────────────────────────────────────────
 # Joby generování synchronně (testy); jinak in-process ThreadPool (D-004)
 MDT_JOBS_SYNC = os.environ.get('MDT_JOBS_SYNC', 'False') == 'True'
+# Job bez změny déle než N minut (přerušený restartem) se ukáže jako chyba s možností opakovat (T-368)
+MDT_JOB_TIMEOUT_MINUTES = int(os.environ.get('MDT_JOB_TIMEOUT_MINUTES', '15'))
 # Offline demo (T-311): podklad z data/demo_cache místo LLM
 MDT_DEMO_OFFLINE = os.environ.get('MDT_DEMO_OFFLINE', 'False') == 'True'
 MDT_DEMO_CACHE_DIR = os.environ.get('MDT_DEMO_CACHE_DIR', str(BASE_DIR.parent.parent / 'data' / 'demo_cache'))

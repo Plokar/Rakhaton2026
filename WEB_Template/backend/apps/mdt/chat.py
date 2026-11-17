@@ -73,6 +73,12 @@ def message_text(data) -> str:
         raise ValidationError({'text': 'Zpráva je prázdná.'})
     if len(text) > SessionMessage.MAX_LENGTH:
         raise ValidationError({'text': f'Zpráva má nejvýš {SessionMessage.MAX_LENGTH} znaků.'})
+    # T-379: zprávu nejde upravit ani smazat, takže osobní údaj pacienta se do ní vůbec nesmí dostat
+    from services.ai.pseudonymize import PERSONAL_DATA_LABELS, personal_data_kinds
+    kinds = personal_data_kinds(text)
+    if kinds:
+        found = ', '.join(PERSONAL_DATA_LABELS[k] for k in kinds)
+        raise ValidationError({'text': f'Zpráva obsahuje osobní údaj ({found}). Pacienta označte jen jako Pxx.'})
     return text
 
 

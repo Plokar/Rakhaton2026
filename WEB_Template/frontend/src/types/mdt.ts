@@ -921,6 +921,8 @@ export interface LiveState {
   /** Slide projektoru (od 0); `null` = projektor neběží nebo slidy nehlásí. */
   slide: { index: number; total: number; label: string } | null;
   updated_at: string | null;
+  /** T-379: projektor se déle než 15 min nezměnil (zavřené jednání, výpadek): údaj nemusí platit. */
+  stale: boolean;
   by: { user_id: number; name: string } | null;
   /** Lékaři ohlášení za posledních 5 min. */
   present: { user_id: number; name: string; specialty: RoleId | null }[];
@@ -1022,7 +1024,11 @@ export interface ChatbotMessage {
 export type PatientChatbotAnswer = Pick<ChatbotMessage, 'text' | 'claims' | 'uncertain' | 'model'>;
 
 /** GET /api/mdt/sessions/ */
-export type MdtSessionListItem = MdtSession & { patients: string[] };
+export type MdtSessionListItem = MdtSession & {
+  patients: string[];
+  /** Pacienti bez rozhodnutí komise (T-376). */
+  undiscussed?: number;
+};
 
 /** GET /api/mdt/sessions/{sid}/ (agenda) */
 export type MdtSessionDetail = MdtSession & { cases: MdtCase[] };
@@ -1127,3 +1133,26 @@ export interface ProjectorExtra {
   /** true = text napsala AI, false = doslovně z dokumentace (odpověď bez jazykového modelu). */
   ai?: boolean;
 }
+
+// ── T-370: záznam přístupů k pacientům (ARCH §6.3, jen správce MDT) ──
+export type AccessAction = 'view' | 'export' | 'write' | 'ai';
+
+export type AccessLogEntry = {
+  id: number;
+  created_at: string;
+  user_id: number | null;
+  username: string;
+  user_name: string;
+  patient_id: string;
+  case_id: number | null;
+  session_id: number | null;
+  action: AccessAction;
+  method: string;
+  path: string;
+  status: number;
+  ip: string | null;
+};
+
+export type AccessLogPage = { count: number; page: number; page_size: number; results: AccessLogEntry[] };
+
+export type AccessLogFilters = { patient?: string; user?: number | ''; action?: AccessAction | ''; from?: string; to?: string; page?: number };

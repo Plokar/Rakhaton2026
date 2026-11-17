@@ -26,8 +26,13 @@ def as_user(username):
     return client
 
 
-def board():
-    return MdtSession.objects.get(title='Hrudní – karcinom plic')
+def board(start=True):
+    """Zasedání pro testy; `start` = předseda ho zahájil (T-379: projektor se vysílá jen na probíhajícím)."""
+    s = MdtSession.objects.get(title='Hrudní – karcinom plic')
+    if start and s.status == 'planned':
+        MdtSession.objects.filter(pk=s.pk).update(status='in_progress')
+        s.refresh_from_db()
+    return s
 
 
 def live_url(sid):
@@ -93,6 +98,8 @@ def test_presence_one_board_at_a_time_and_expires(seeded):
 def test_my_live_knows_where_doctor_should_be_and_is(seeded):
     s = board()
     today = MdtSession.objects.exclude(pk=s.pk).first()
+    # demo zasedání mají termíny kolem dneška: ostatní posunout, ať test nezávisí na datu běhu
+    MdtSession.objects.exclude(pk__in=[s.pk, today.pk]).update(date=timezone.now() + timedelta(days=60), status='planned')
     MdtSession.objects.filter(pk=today.pk).update(date=timezone.now() + timedelta(minutes=30), status='planned')
     MdtSession.objects.filter(pk=s.pk).update(date=timezone.now() - timedelta(days=3), status='planned')
     requester = s.cases.first().created_by
@@ -100,7 +107,11 @@ def test_my_live_knows_where_doctor_should_be_and_is(seeded):
     data = as_user(requester.username).get('/api/mdt/live/').json()
     assert [x['id'] for x in data['sessions']] == [today.pk]          # jen dnešní a probíhající, ne minulé plánované
 
-    as_user('predseda').put(live_url(s.pk), {'case_id': s.cases.first().pk}, format='json')   # board začal
+    assert as_user('predseda').put(live_url(s.pk), {'case_id': s.cases.first().pk},
+                                   format='json').status_code == 409          # T-379: nejdřív zahájit
+    as_user('predseda').patch(f'/api/mdt/sessions/{s.pk}/', {'status': 'in_progress'}, format='json')
+
+    as_user('predseda').put(live_url(s.pk), {'case_id': s.cases.first().pk}, format='json')   # na projektoru
     data = as_user(requester.username).get('/api/mdt/live/').json()
     item = next(x for x in data['sessions'] if x['id'] == s.pk)
     assert item['expected'] and 'requester' in item['reasons'] and s.cases.first().patient_fhir_id in item['my_patients']

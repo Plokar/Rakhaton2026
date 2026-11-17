@@ -2,9 +2,9 @@
 
 import * as React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { refreshSession } from '@/lib/api';
 import { mdtApi } from '@/lib/mdt-api';
-import type { LiveState, MyLive } from '@/types/mdt';
+import { subscribeSessionStream, type StreamStatus } from '@/lib/session-stream';
+import type { MyLive } from '@/types/mdt';
 
 /**
  * Živé zasedání (T-357): kde lékař má být, kde je a který pacient je právě na projektoru.
@@ -18,6 +18,7 @@ export const liveKeys = {
 
 const PRESENCE_EVERY = 120_000;
 const PUBLISH_DELAY = 400;
+const HEARTBEAT_EVERY = 4 * 60_000;     // server považuje stav za starý po 15 min (live.LIVE_STALE_AFTER)
 
 export function useMyLive(enabled = true) {
   return useQuery({
@@ -38,45 +39,25 @@ export function useLiveSession(sessionId: number | null) {
     enabled: sessionId != null,
     staleTime: Infinity,
   });
-  const [connected, setConnected] = React.useState(false);
+  const [status, setStatus] = React.useState<StreamStatus>('connecting');
 
   React.useEffect(() => {
     if (sessionId == null) return;
-    let source: EventSource | null = null;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let attempt = 0;
-    let stopped = false;
-    const apply = (state: LiveState) => {
-      client.setQueryData(liveKeys.session(sessionId), state);
-      client.setQueryData<MyLive>(liveKeys.mine, (prev) =>
-        prev && { ...prev, sessions: prev.sessions.map((s) => (s.id === state.session ? { ...s, status: state.status, live: state } : s)) },
-      );
-    };
-    const connect = () => {
-      source = new EventSource(mdtApi.liveStreamUrl(sessionId), { withCredentials: true });
-      source.onopen = () => {
-        attempt = 0;
-        setConnected(true);
-        // co se změnilo, než se spojení otevřelo (nebo během výpadku)
-        void client.invalidateQueries({ queryKey: liveKeys.session(sessionId) });
-      };
-      source.addEventListener('live', (event) => apply(JSON.parse((event as MessageEvent<string>).data) as LiveState));
-      source.onerror = () => {
-        setConnected(false);
-        if (source?.readyState !== EventSource.CLOSED) return;    // výpadek sítě: EventSource se připojí sám
-        source.close();                                            // odmítnuto (vypršelé přihlášení): obnovit (T-336)
-        const delay = attempt === 0 ? 0 : Math.min(30_000, 3_000 * 2 ** (attempt - 1));
-        attempt += 1;
-        timer = setTimeout(() => void refreshSession().then(() => !stopped && connect()), delay);
-      };
-    };
-    connect();
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      source?.close();
-    };
+    // T-379: sdílený stream zasedání (stejné spojení jako chat lékařů)
+    return subscribeSessionStream(sessionId, {
+      onLive: (state) => {
+        client.setQueryData(liveKeys.session(sessionId), state);
+        client.setQueryData<MyLive>(liveKeys.mine, (prev) =>
+          prev && { ...prev, sessions: prev.sessions.map((s) => (s.id === state.session ? { ...s, status: state.status, live: state } : s)) },
+        );
+        if (state.status === 'closed') void client.invalidateQueries({ queryKey: ['session', String(sessionId)], exact: true });
+      },
+      onStatus: setStatus,
+      // co se změnilo, než se spojení otevřelo (nebo během výpadku)
+      onOpen: () => void client.invalidateQueries({ queryKey: liveKeys.session(sessionId) }),
+    });
   }, [client, sessionId]);
+  const connected = status === 'live';
 
   return { live: query.data ?? null, query, connected };
 }
@@ -108,7 +89,8 @@ export function usePresence(sessionId: number | null, enabled: boolean) {
 
 /**
  * Jednání komise u předsedy: pacient na řadě a slide projektoru se zapíšou na server, aby je viděly mobily
- * ostatních lékařů. Krátké zpoždění sloučí rychlé přepínání (↑↓, ←→) do jednoho zápisu.
+ * ostatních lékařů. Krátké zpoždění sloučí rychlé přepínání (↑↓, ←→) do jednoho zápisu. Jen na zahájeném
+ * zasedání (T-379); stejný stav se zopakuje každé 4 min, jinak by ho mobily ukázaly jako starý.
  */
 export function usePublishLive(
   sessionId: number,
@@ -122,13 +104,18 @@ export function usePublishLive(
   const label = slide?.label;
   React.useEffect(() => {
     if (!enabled || caseId == null) return;
-    const timer = setTimeout(() => {
+    const publish = () => {
       const next = total ? { index: index ?? 0, total, label: label ?? '' } : null;
       mdtApi
         .putLive(sessionId, { case_id: caseId, slide: next })
         .then((state) => client.setQueryData(liveKeys.session(sessionId), state))
         .catch(() => undefined);           // bez práva nebo uzavřený board: jednání funguje dál
-    }, PUBLISH_DELAY);
-    return () => clearTimeout(timer);
+    };
+    const timer = setTimeout(publish, PUBLISH_DELAY);
+    const heartbeat = setInterval(publish, HEARTBEAT_EVERY);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(heartbeat);
+    };
   }, [client, sessionId, enabled, caseId, index, total, label]);
 }

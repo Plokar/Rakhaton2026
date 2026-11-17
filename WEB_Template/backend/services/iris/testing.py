@@ -76,6 +76,8 @@ class FakeIris:
         sql = ' '.join(sql.split())
         params = list(params or [])
         self.statements.append(sql)
+        if sql == 'SELECT 1':                       # health check (T-369)
+            return [(1,)]
         if sql == _EXISTS:
             return [(1 if f'{params[0]}.{params[1]}' in self.tables else 0,)]
         if sql == _COLUMNS:

@@ -3,6 +3,8 @@
  */
 import { apiFetch, apiUrl } from '@/lib/api';
 import type {
+  AccessLogFilters,
+  AccessLogPage,
   Committee,
   DoctorNorm,
   DoctorNormInput,
@@ -211,6 +213,9 @@ const fileBody = (name: string, file: Blob) => {
   return data;
 };
 
+/** 204 „ještě není“ vrací `apiFetch` jako prázdný objekt; pro volající je to `null` (T-375). */
+const nullIfEmpty = <T extends object>(value: T): T | null => (value && Object.keys(value).length > 0 ? value : null);
+
 export const mdtApi = {
   getMe: () => apiFetch<Me>('/api/mdt/me/'),
   /** Tituly si lékař upraví sám (T-338); roli a odbornost mění předseda. */
@@ -284,17 +289,16 @@ export const mdtApi = {
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
 
   /** Chat lékařů u zasedání (T-334): posledních 200 zpráv od nejstarší. */
-  getSessionMessages: (sessionId: number) => apiFetch<SessionMessage[]>(`/api/mdt/sessions/${sessionId}/messages/`),
+  getSessionMessages: (sessionId: number, after?: number) =>
+    apiFetch<SessionMessage[]>(`/api/mdt/sessions/${sessionId}/messages/${after ? `?after=${after}` : ''}`),
 
   /** Píše každý člen komise; `case_id` = štítek pacienta z agendy boardu. Uzavřený board 409. */
   postSessionMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
     apiFetch<SessionMessage>(`/api/mdt/sessions/${sessionId}/messages/`, { method: 'POST', body: JSON.stringify(input) }),
 
   /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
-  sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
-
-  /** SSE stream boardu bez doplnění zpráv chatu: živé zasedání čte jen `event: live` (T-357). */
-  liveStreamUrl: (sessionId: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/`),
+  sessionStreamUrl: (sessionId: number, after?: number | null) =>
+    apiUrl(`/api/mdt/sessions/${sessionId}/stream/${after != null ? `?after=${after}` : ''}`),
 
   /** Živé zasedání (T-357): dnešní a probíhající zasedání, kde lékař má být, kde je a co je na projektoru. */
   getMyLive: () => apiFetch<MyLive>('/api/mdt/live/'),
@@ -326,7 +330,8 @@ export const mdtApi = {
   updateCase: (caseId: number, input: Partial<Pick<MdtCase, 'session' | 'ecog' | 'intent' | 'imaging_recent_checked' | 'skipped_fields' | 'status' | 'projector_layout'>> & { acknowledge?: string[]; collaborators?: number[] }) =>
     apiFetch<MdtCase>(`/api/mdt/cases/${caseId}/`, { method: 'PATCH', body: JSON.stringify(input) }),
 
-  getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`),
+  /** Poslední podklad; `null`, dokud nevznikl (204, T-375). */
+  getBrief: (caseId: string) => apiFetch<StoredBrief>(`/api/mdt/cases/${encodeURIComponent(caseId)}/brief/`).then(nullIfEmpty),
 
   /** Nový podklad; `feedback` = co bylo v předchozí verzi špatně (jde do promptů vybraných částí, T-323). */
   generateBrief: (caseId: string, body: { config_id?: string; config?: BriefConfig; feedback?: { text: string; sections?: SectionId[] } } = {}) =>
@@ -337,8 +342,8 @@ export const mdtApi = {
 
   getJob: (jobId: number) => apiFetch<GenerationJob>(`/api/jobs/${jobId}/`),
 
-  /** Draft nebo potvrzený závěr komise (404, dokud není). */
-  getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`),
+  /** Draft nebo potvrzený závěr komise; `null`, dokud není (204, T-375). */
+  getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`).then(nullIfEmpty),
 
   /** Uložení draftu (předseda, lékař); server ho validuje podle §8.4, potvrzený závěr nejde měnit (409). */
   saveDecision: (caseId: string, decision: Decision) =>
@@ -461,6 +466,13 @@ export const mdtApi = {
   acceptInvitation: (token: string, input: { username: string; password: string; password2: string }) =>
     apiFetch<Me>(`/api/mdt/invitations/public/${encodeURIComponent(token)}/accept/`, { method: 'POST', body: JSON.stringify(input) }),
   getAllUsers: () => apiFetch<Me[]>('/api/mdt/users/?all=1'),
+  /** T-370: záznam přístupů k pacientům (jen správce MDT), po 50 na stránku. */
+  getAccessLog: (filters: AccessLogFilters) => {
+    const params = new URLSearchParams(
+      Object.entries(filters).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)]),
+    );
+    return apiFetch<AccessLogPage>(`/api/mdt/access-log/${params.size ? `?${params}` : ''}`);
+  },
   getCommittees: () => apiFetch<Committee[]>('/api/mdt/committees/'),
   createCommittee: (input: { name: string; members?: number[] }) =>
     apiFetch<Committee>('/api/mdt/committees/', { method: 'POST', body: JSON.stringify(input) }),

@@ -81,11 +81,11 @@ def _new_token(inv: Invitation, days: int) -> str:
 def _send(request, inv: Invitation, link: str) -> bool:
     if not inv.email:
         return False
-    from services.email_service import send_hackathon_email
+    from services.email_service import send_email
     name = ' '.join(x for x in (inv.title_before, inv.first_name, inv.last_name) if x)
     body = (f'Dobrý den, {name},\n\nsprávce MDT vás zve do aplikace MDTcore. Účet si založíte přes odkaz:\n{link}\n\n'
             f'Odkaz platí do {timezone.localtime(inv.expires_at):%d. %m. %Y %H:%M} a jen jednou.')
-    return send_hackathon_email(to=inv.email, subject='Pozvánka do MDTcore', body=body)
+    return send_email(to=inv.email, subject='Pozvánka do MDTcore', body=body)
 
 
 def _response(request, inv: Invitation, token: str, send: bool, status: int = 200) -> Response:

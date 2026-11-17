@@ -45,8 +45,11 @@ export function ChatAnswer({
   patientId,
   onAdd,
   isAdded,
+  footer,
 }: {
   message: ChatAnswerData;
+  /** T-382: pod odpovědí (hodnocení 👍/👎). */
+  footer?: React.ReactNode;
   patientId?: string | null;
   /** Doplnit tvrzení do okna pro projektor (T-345); bez něj tlačítko není. `ai` = text napsala AI. */
   onAdd?: (claim: Claim, ai: boolean) => void;
@@ -89,6 +92,7 @@ export function ChatAnswer({
           </p>
         ))}
       </div>
+      {footer}
     </li>
   );
 }

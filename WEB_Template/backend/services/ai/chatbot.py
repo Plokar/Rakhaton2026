@@ -80,11 +80,14 @@ class ChatbotOutput(BaseModel):
 
 # ── Veřejné API ───────────────────────────────────────────────────────────────
 def answer(question: str, patient_id: str | None, history: Iterable[dict] = (), *,
-           provider: BaseAIProvider | None = None, log_call: Callable[[str, dict], Any] | None = None) -> dict:
+           provider: BaseAIProvider | None = None, log_call: Callable[[str, dict], Any] | None = None,
+           on_stage: Callable[[str], None] | None = None) -> dict:
     """Odpověď AI na dotaz lékaře: `{text, claims, uncertain, model}` (`ChatbotMessage` §8.6 bez metadat).
 
     `history` = předchozí `ChatbotMessage` rozhovoru od nejstarší. Výjimku nevyhodí: když nejdou načíst podklady,
-    vrátí jen poznámku."""
+    vrátí jen poznámku. `on_stage` (T-382) dostane fáze `context` → `llm` → `grounding` pro průběh v UI."""
+    stage = on_stage or (lambda _name: None)
+    stage("context")
     if log_call is None:
         from services.ai.brief import _llm_call_log
         log_call = _llm_call_log
@@ -97,7 +100,7 @@ def answer(question: str, patient_id: str | None, history: Iterable[dict] = (), 
     model = None
     if provider is None:
         provider, model = chatbot_provider(resources if patient_id else None)
-    return answer_from_context(question, context, history, provider, log_call, pseudo, model=model)
+    return answer_from_context(question, context, history, provider, log_call, pseudo, model=model, on_stage=stage)
 
 
 def chatbot_provider(resources: list[dict] | None) -> tuple[BaseAIProvider, str | None]:
@@ -154,9 +157,11 @@ def load_context(patient_id: str | None) -> tuple[PatientContext, Pseudonymizer,
 
 def answer_from_context(question: str, context: PatientContext, history: Iterable[dict], provider: BaseAIProvider,
                         log_call: Callable[[str, dict], Any], pseudo: Pseudonymizer | None = None, *,
-                        model: str | None = None) -> dict:
+                        model: str | None = None, on_stage: Callable[[str], None] | None = None) -> dict:
     """Čisté jádro (testy bez IRIS): prompt → LLM → grounding; bez použitelné odpovědi nejbližší místa v dokumentaci."""
+    stage = on_stage or (lambda _name: None)
     pseudo = pseudo or Pseudonymizer()
+    stage("llm")
     result = provider.generate(_prompt(question, context, list(history), pseudo),
                                system_prompt=f"{CHATBOT_PROMPT}\n\n{prompt_rules()}",
                                response_schema=ChatbotOutput, temperature=0.1, model=model)
@@ -171,6 +176,7 @@ def answer_from_context(question: str, context: PatientContext, history: Iterabl
     allowed = context.allowed_ids
     uncertain = [{"text": u["text"].strip(), "citations": [c for c in dict.fromkeys(u.get("citations") or []) if c in allowed]}
                  for u in data.get("uncertain") or [] if u.get("text", "").strip()]
+    stage("grounding")
     if claims or missing or uncertain:
         return {"text": "", "claims": _verified(claims + missing, context), "uncertain": uncertain,
                 "model": result.get("model")}

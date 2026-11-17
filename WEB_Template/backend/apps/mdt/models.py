@@ -185,6 +185,31 @@ class ChatbotMessage(models.Model):
         return f'{self.role} {self.user} @ {self.session}: {self.text[:40]}'
 
 
+class AiFeedback(models.Model):
+    """Hodnocení odpovědi AI lékařem (T-382): podklad pro vyhodnocení a ladění promptů (docs/EVAL.md).
+    Ukládá se dotaz, odpověď (tvrzení s citacemi) a hodnocení; pacient jen jako `Pxx`."""
+    KINDS = [('session_chatbot', 'chatbot u zasedání'), ('patient_chatbot', 'chatbot nad kartou')]
+    RATINGS = [('up', 'dobrá odpověď'), ('down', 'špatná odpověď')]
+    MAX_COMMENT = 1000
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='ai_feedback')
+    kind = models.CharField(max_length=16, choices=KINDS)
+    message = models.ForeignKey('ChatbotMessage', null=True, blank=True, on_delete=models.SET_NULL, related_name='feedback')
+    patient_fhir_id = models.CharField(max_length=16, blank=True)
+    question = models.TextField(blank=True)
+    answer = models.JSONField(default=dict, blank=True)       # {text, claims, uncertain, model}
+    rating = models.CharField(max_length=4, choices=RATINGS)
+    comment = models.TextField(blank=True, max_length=MAX_COMMENT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+        constraints = [models.UniqueConstraint(fields=['user', 'message'], condition=models.Q(message__isnull=False),
+                                               name='ai_feedback_user_message')]
+
+    def __str__(self):
+        return f'{self.kind} {self.rating} {self.patient_fhir_id}'
+
+
 class UserProfile(models.Model):
     """Odbornost uživatele (hodnoty `RoleId`, ARCH §8.1). Role = Django `Group` (D-014)."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')

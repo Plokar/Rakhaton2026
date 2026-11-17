@@ -461,4 +461,53 @@ export const aiApi = {
 /** Absolutní URL endpointu (odkazy ke stažení: export PDF / FHIR). */
 const apiUrl = (endpoint: string) => `${API_BASE}${endpoint}`;
 
-export { apiFetch, apiUrl, ApiError, refreshSession };
+/**
+ * POST s odpovědí `text/event-stream` (T-382: průběh odpovědi chatbota). Každá událost `event: x` / `data: {...}`
+ * jde do `onEvent`; vrátí se po konci streamu. CSRF a jedna obnova přihlášení jako u `apiFetch`.
+ */
+async function apiStream(
+  endpoint: string,
+  body: unknown,
+  onEvent: (event: string, data: unknown) => void,
+  retried = false,
+): Promise<void> {
+  // bez Accept: text/event-stream, DRF by ho odmítl (406); stream vrací server podle ?stream=1
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const csrfToken = typeof document !== 'undefined' ? await fetchCsrfToken() : '';
+  if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+  const response = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', headers, body: JSON.stringify(body), credentials: 'include' });
+  if (response.status === 401 && !retried) {
+    if (await refreshSession()) return apiStream(endpoint, body, onEvent, true);
+    redirectToLogin();
+  }
+  if (!response.ok || !response.body) {
+    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+    const message = (errorData as Record<string, string>)?.detail || (errorData as Record<string, string>)?.message || `HTTP Error ${response.status}`;
+    throw new ApiError(message, response.status, errorData);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const flush = (chunk: string) => {
+    let event = 'message';
+    const data: string[] = [];
+    for (const line of chunk.split('\n')) {
+      if (line.startsWith('event:')) event = line.slice(6).trim();
+      else if (line.startsWith('data:')) data.push(line.slice(5).trimStart());
+    }
+    if (data.length) onEvent(event, JSON.parse(data.join('\n')));
+  };
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let end: number;
+    while ((end = buffer.indexOf('\n\n')) >= 0) {
+      flush(buffer.slice(0, end));
+      buffer = buffer.slice(end + 2);
+    }
+  }
+  if (buffer.trim()) flush(buffer);
+}
+
+export { apiFetch, apiStream, apiUrl, ApiError, refreshSession };

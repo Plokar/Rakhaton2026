@@ -1,7 +1,7 @@
 /**
  * API podkladu pro komisi (ARCHITEKTURA §6.3): podklad, generování přes job a zdroje citací.
  */
-import { apiFetch, apiUrl } from '@/lib/api';
+import { apiFetch, apiStream, apiUrl } from '@/lib/api';
 import type {
   AccessLogFilters,
   AccessLogPage,
@@ -317,6 +317,33 @@ export const mdtApi = {
   /** Dotaz na AI; `case_id` = pacient z agendy boardu, bez něj jen guidelines a studie. Vrátí `[dotaz, odpověď]`, uzavřený board 409. */
   postChatbotMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
     apiFetch<ChatbotMessage[]>(`/api/mdt/sessions/${sessionId}/chatbot/`, { method: 'POST', body: JSON.stringify(input) }),
+  /** T-382: stejný dotaz s průběhem (SSE `stage`, nakonec `answer` = `[dotaz, odpověď]`). */
+  streamChatbotMessage: (
+    sessionId: number,
+    input: { text: string; case_id?: number | null },
+    onStage: (stage: { stage: string; label: string }) => void,
+  ) =>
+    new Promise<ChatbotMessage[]>((resolve, reject) => {
+      let answer: ChatbotMessage[] | null = null;
+      apiStream(`/api/mdt/sessions/${sessionId}/chatbot/?stream=1`, input, (event, data) => {
+        if (event === 'stage') onStage(data as { stage: string; label: string });
+        else if (event === 'answer') answer = data as ChatbotMessage[];
+        else if (event === 'error') reject(new Error((data as { detail?: string }).detail ?? 'AI neodpověděla.'));
+      })
+        .then(() => (answer ? resolve(answer) : reject(new Error('AI neodpověděla.'))))
+        .catch(reject);
+    }),
+  /** T-382: navržené otázky podle diagnózy pacienta (bez pacienta obecné). */
+  getChatbotSuggestions: (patientId?: string | null) =>
+    apiFetch<{ area: string | null; questions: string[] }>(
+      `/api/mdt/chatbot/suggestions/${patientId ? `?patient=${encodeURIComponent(patientId)}` : ''}`,
+    ),
+  /** T-382: hodnocení odpovědi AI (eval). */
+  postAiFeedback: (
+    input:
+      | { message_id: number; rating: 'up' | 'down'; comment?: string }
+      | { patient_id: string; question: string; answer: unknown; rating: 'up' | 'down'; comment?: string },
+  ) => apiFetch<{ id: number; rating: 'up' | 'down' }>('/api/mdt/ai-feedback/', { method: 'POST', body: JSON.stringify(input) }),
   /** Chatbot nad kartou pacienta (T-345): bez boardu (zařazení, okno pro projektor), historii drží prohlížeč. */
   askPatientChatbot: (
     patientId: string,

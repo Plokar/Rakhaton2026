@@ -5,9 +5,11 @@ import { Bot, LoaderCircle, SendHorizontal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/shadcn/button';
 import { Textarea } from '@/components/shadcn/textarea';
+import { useQuery } from '@tanstack/react-query';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage } from '@/lib/queries';
 import type { EvidenceId, MdtCase } from '@/types/mdt';
+import { AnswerFeedback } from '../AnswerFeedback';
 import { ChatAnswer, ChatQuestion } from '../ChatbotAnswer';
 import { CitationProvider, collectCitations } from '../citations';
 import { SourceDrawer } from '../SourceDrawer';
@@ -52,8 +54,16 @@ export function ChatbotPanel({
   }, [messages.length, send.isPending]);
 
   const tag = tagged && current ? current : null;
-  const submit = () => {
-    const body = text.trim();
+  // T-382: navržené otázky podle diagnózy pacienta, na kterého se ptám (bez štítku obecné)
+  const suggestions = useQuery({
+    queryKey: ['chatbot-suggestions', tag?.patient_id ?? null],
+    queryFn: () => mdtApi.getChatbotSuggestions(tag?.patient_id),
+    staleTime: Infinity,
+    retry: false,
+  });
+  const ask = (question: string) => submit(question);
+  const submit = (preset?: string) => {
+    const body = (preset ?? text).trim();
     if (!body || send.isPending || closed) return;
     setText('');
     send.mutate(
@@ -95,15 +105,15 @@ export function ChatbotPanel({
             <li role="alert" className="text-sm text-destructive">{apiErrorMessage(query.error, 'Rozhovor se nepodařilo načíst.')}</li>
           ) : messages.length === 0 && !pending ? (
             <li className="space-y-2 text-sm text-muted-foreground">
-              <p>Zeptejte se AI na pacienta na řadě, třeba „Jak se vyvíjí CEA?“ nebo „Splňuje kritéria studie RKT-03?“.</p>
-              <p>AI odpovídá jen z dokumentace v IRIS. Každé tvrzení má zdroj, kliknutím na číslo ho otevřete. Rozhovor vidíte jen vy.</p>
+              <p>Zeptejte se AI na pacienta na řadě. AI odpovídá jen z dokumentace v IRIS, každé tvrzení má zdroj (kliknutím na číslo ho otevřete). Rozhovor vidíte jen vy.</p>
             </li>
           ) : (
             messages.map((m) =>
               m.role === 'user' ? (
                 <Question key={m.id} text={m.text} label={m.case} createdAt={m.created_at} onSelectCase={onSelectCase} />
               ) : (
-                <ChatAnswer key={m.id} message={m} patientId={m.case?.patient_id} />
+                <ChatAnswer key={m.id} message={m} patientId={m.case?.patient_id}
+                  footer={m.model || m.claims.length ? <AnswerFeedback target={{ message_id: m.id }} /> : undefined} />
               ),
             )
           )}
@@ -115,7 +125,7 @@ export function ChatbotPanel({
               />
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
-                AI odpovídá…
+                {bot.stage ?? 'AI odpovídá…'}
               </li>
             </>
           )}
@@ -165,6 +175,16 @@ export function ChatbotPanel({
                 </>
               )}
             </div>
+            {suggestions.data && suggestions.data.questions.length > 0 && !send.isPending && (
+              <div role="group" aria-label="Navržené otázky" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+                {suggestions.data.questions.map((q) => (
+                  <button key={q} type="button" onClick={() => ask(q)}
+                    className="shrink-0 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex items-end gap-2">
               <label htmlFor="chatbot-input" className="sr-only">Dotaz pro AI</label>
               <Textarea

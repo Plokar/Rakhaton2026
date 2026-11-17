@@ -497,6 +497,15 @@ class DissentingOpinion(BaseModel):
     text: str
 
 
+class DecisionVoteRecord(BaseModel):
+    """Souhlas / nesouhlas člena komise s návrhem závěru (T-381); do záznamu se zapíše při potvrzení."""
+    member: str = Field(description="Jméno lékaře (s tituly)")
+    role: str | None = Field(default=None, description="RoleId odbornosti")
+    vote: Literal["agree", "disagree"]
+    comment: str = ""
+    at: str
+
+
 class DecisionSections(BaseModel):
     """Sekce Composition „Záznam MDT“ v pořadí datasetu."""
     question: SourcedText = Field(description="Projednaná otázka")
@@ -518,6 +527,8 @@ class DecisionSections(BaseModel):
         default=None, description="Soulad s doporučenými postupy (ano / ne + důvod odchylky)",
     )
     dissent: list[DissentingOpinion] = Field(default_factory=list, description="Odlišná stanoviska členů komise")
+    votes: list[DecisionVoteRecord] = Field(default_factory=list,
+                                            description="Souhlas přítomných s návrhem při potvrzení (T-381, server)")
 
 
 class DecisionTask(BaseModel):

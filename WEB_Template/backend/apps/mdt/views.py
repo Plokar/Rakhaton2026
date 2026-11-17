@@ -921,9 +921,12 @@ def case_decision(request, cid):
         return Response({'detail': 'Závěr je potvrzený a zamčený. Změna jde jen jako nová verze (předseda).'}, status=409)
     # verzi a auditní stopu drží server, klient je nepřepíše (T-332)
     kept = {k: decision.content.get(k) for k in ('version', 'revision_of', 'history')} if decision else {}
+    data = dict(request.data)
+    if isinstance(data.get('sections'), dict):          # T-381: hlasy zapisuje jen server při potvrzení
+        data['sections'] = {**data['sections'], 'votes': []}
     try:
         content = DecisionSchema.model_validate(
-            {**request.data, 'case_id': str(case.pk), 'status': 'draft', 'confirmed_by': None,
+            {**data, 'case_id': str(case.pk), 'status': 'draft', 'confirmed_by': None,
              'confirmed_at': None, 'fhir_ids': None, 'version': kept.get('version') or 1,
              'revision_of': kept.get('revision_of'), 'history': kept.get('history') or []}).model_dump(mode='json')
     except SchemaError as e:
@@ -953,6 +956,9 @@ def case_decision_confirm(request, cid):
                             status=400)
         now = timezone.localtime()
         confirmed_by = {'user_id': str(request.user.pk), 'name': roles.display_name(request.user)}
+        from .votes import snapshot                     # T-381: souhlas přítomných do záznamu MDT
+        decision.content = {**decision.content,
+                            'sections': {**decision.content['sections'], 'votes': snapshot(case)}}
         try:
             ids = writeback.confirm_decision(
                 decision.content, patient_id=case.patient_fhir_id, service_request_id=case.service_request_fhir_id,

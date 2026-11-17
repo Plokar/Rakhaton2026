@@ -13,6 +13,7 @@ import { agendaOrder, apiErrorMessage, usePatientsQuery, useSessionQuery } from 
 import { cn } from '@/lib/utils';
 import type { LiveState, MdtCase, MyLive } from '@/types/mdt';
 import { dayLabel, timeLabel } from '../dates';
+import { VoteCard } from '../DecisionVotes';
 import { ChatbotPanel } from '../meeting/ChatbotPanel';
 import { useChatbot } from '../meeting/use-chatbot';
 import { PatientChatPanel } from '../PatientChatDialog';
@@ -239,6 +240,8 @@ function LiveSession({
           <LiveSkeleton />
         ) : shownCase ? (
           <div className="mx-auto w-full max-w-[1200px] px-4 py-4 sm:px-6">
+            {/* T-381: návrh závěru a souhlas / nesouhlas přímo z mobilu */}
+            <VoteCard key={`vote-${shownCase.id}`} caseId={shownCase.id} patientId={shownCase.patient_id} className="mb-4" />
             <CaseQuickViewWide
               key={shownCase.id}
               sources={sources}

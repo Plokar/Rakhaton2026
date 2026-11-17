@@ -26,6 +26,7 @@ import type {
   RuleInfo,
   SimilarCases,
   ChatbotMessage,
+  DecisionVotes,
   LiveState,
   MyLive,
   PatientChatbotAnswer,
@@ -343,6 +344,11 @@ export const mdtApi = {
   getJob: (jobId: number) => apiFetch<GenerationJob>(`/api/jobs/${jobId}/`),
 
   /** Draft nebo potvrzený závěr komise; `null`, dokud není (204, T-375). */
+  /** T-381: souhlas přítomných s návrhem závěru. */
+  getVotes: (caseId: number) => apiFetch<DecisionVotes>(`/api/mdt/cases/${caseId}/votes/`),
+  putVote: (caseId: number, input: { vote: 'agree' | 'disagree'; comment?: string }) =>
+    apiFetch<DecisionVotes>(`/api/mdt/cases/${caseId}/votes/`, { method: 'PUT', body: JSON.stringify(input) }),
+  deleteVote: (caseId: number) => apiFetch<DecisionVotes>(`/api/mdt/cases/${caseId}/votes/`, { method: 'DELETE' }),
   getDecision: (caseId: string) => apiFetch<Decision>(`/api/mdt/cases/${encodeURIComponent(caseId)}/decision/`).then(nullIfEmpty),
 
   /** Uložení draftu (předseda, lékař); server ho validuje podle §8.4, potvrzený závěr nejde měnit (409). */

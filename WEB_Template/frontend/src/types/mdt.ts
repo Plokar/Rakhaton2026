@@ -422,6 +422,8 @@ export interface Decision {
     guideline_compliance?: { compliant: boolean; reason: string; citations: EvidenceId[] } | null;
     /** Odlišná stanoviska členů komise. */
     dissent?: { member: string; role: RoleId | 'chair'; text: string }[];
+    /** T-381: souhlas přítomných s návrhem; zapisuje server při potvrzení (klient posílá prázdné). */
+    votes?: { member: string; role: string | null; vote: 'agree' | 'disagree'; comment: string; at: string }[];
   };
   /** → Task */
   tasks: {
@@ -1168,3 +1170,25 @@ export type AccessLogEntry = {
 export type AccessLogPage = { count: number; page: number; page_size: number; results: AccessLogEntry[] };
 
 export type AccessLogFilters = { patient?: string; user?: number | ''; action?: AccessAction | ''; from?: string; to?: string; page?: number };
+
+/** GET/PUT/DELETE /api/mdt/cases/{cid}/votes/ (T-381): souhlas členů komise s návrhem závěru. */
+export interface DecisionVote {
+  user_id: number;
+  name: string;
+  specialty: RoleId | null;
+  vote: 'agree' | 'disagree';
+  /** Důvod; u nesouhlasu povinný. */
+  comment: string;
+  updated_at: string;
+}
+
+export interface DecisionVotes {
+  case_id: number;
+  /** Hlasovat jde jen u návrhu závěru na neuzavřeném zasedání. */
+  open: boolean;
+  decision: 'draft' | 'confirmed' | null;
+  agree: number;
+  disagree: number;
+  votes: DecisionVote[];
+  mine: DecisionVote | null;
+}

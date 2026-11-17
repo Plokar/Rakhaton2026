@@ -115,6 +115,15 @@ def record_extras(s: dict) -> list[tuple[str, str]]:
     if dissent:
         out.append(('Odlišná stanoviska', '\n'.join(
             f"{d['member']} ({ROLES_CS.get(d['role'], d['role'])}): {d['text']}" for d in dissent)))
+    votes = s.get('votes') or []
+    if votes:                                           # T-381: kdo z komise s návrhem souhlasil / nesouhlasil
+        agree = sum(v['vote'] == 'agree' for v in votes)
+        lines = [f'Souhlasí {agree}, nesouhlasí {len(votes) - agree}.']
+        for v in votes:
+            role = f" ({ROLES_CS.get(v.get('role'), v.get('role'))})" if v.get('role') else ''
+            verdict = 'souhlasí' if v['vote'] == 'agree' else 'nesouhlasí'
+            lines.append(f"{v['member']}{role}: {verdict}{': ' + v['comment'] if v.get('comment') else ''}")
+        out.append(('Souhlas přítomných', '\n'.join(lines)))
     return out
 
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import access_log, accounts, chat, chatbot, doctor_rules, drafts, live, templates, views
+from . import access_log, accounts, chat, chatbot, doctor_rules, drafts, live, templates, views, votes
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
@@ -55,6 +55,7 @@ urlpatterns = [
     path('cases/', views.case_create, name='case-create'),
     path('cases/<int:cid>/', views.case_detail, name='case-detail'),
     path('cases/<int:cid>/decision/', views.case_decision, name='case-decision'),
+    path('cases/<int:cid>/votes/', votes.case_votes, name='case-votes'),
     path('cases/<int:cid>/decision/confirm/', views.case_decision_confirm, name='case-decision-confirm'),
     path('cases/<int:cid>/decision/revise/', views.case_decision_revise, name='case-decision-revise'),
     path('cases/<int:cid>/gp-report/', views.case_gp_report, name='case-gp-report'),

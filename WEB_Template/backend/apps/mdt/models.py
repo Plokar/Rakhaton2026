@@ -233,6 +233,25 @@ class Decision(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class DecisionVote(models.Model):
+    """Souhlas / nesouhlas člena komise s návrhem závěru (T-381). Hlasuje se jen u návrhu; při potvrzení se stav
+    zapíše do závěru (`sections.votes`) a do IRIS. Hlas jde změnit nebo stáhnout, dokud závěr není potvrzený."""
+    VOTES = [('agree', 'souhlasím'), ('disagree', 'nesouhlasím')]
+    MAX_COMMENT = 1000
+    case = models.ForeignKey(MdtCase, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_votes')
+    vote = models.CharField(max_length=8, choices=VOTES)
+    comment = models.TextField(blank=True, max_length=MAX_COMMENT)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['case', 'user'], name='decision_vote_user')]
+        ordering = ['updated_at', 'id']
+
+    def __str__(self):
+        return f'{self.user} {self.vote} @ {self.case_id}'
+
+
 class PatientDraft(models.Model):
     """Návrh nového pacienta (T-323): RČ, podklady a nominace před potvrzením do IRIS.
 

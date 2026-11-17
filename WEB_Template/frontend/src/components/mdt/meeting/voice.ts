@@ -19,22 +19,34 @@ const NUMBERS: Record<string, string> = {
   sedm: '7', osm: '8', devět: '9',
 };
 
+/** Celé slovo i s diakritikou: `\b` v JS bere jako písmena jen ASCII („předchozí“ by nenašel). */
+const word = (pattern: string) => new RegExp(`(?<![\\p{L}\\d])(?:${pattern})(?![\\p{L}\\d])`, 'u');
+
+const PATIENT_CODE = /(?<![\p{L}\d])(?:pacient(?:a|ka|ku)?\s+)?(?:p|pé|pe)\s*((?:\d\s*){1,3})(?![\p{L}\d])/u;
+const PATIENT_NUMBER = /(?<![\p{L}\d])pacient(?:a|ka|ku)?\s+((?:\d\s*){1,3})(?![\p{L}\d])/u;
+const SPOKEN_DIGIT = /(?<![\p{L}\d])(nula|jedna|jedno|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)(?![\p{L}\d])/gu;
+const QR = word('qr|kód pro příchod|kod pro prichod');
+const DISCUSSED = word('projednán[oa]?|projednan[oa]?|hotovo');
+const BACK = word('předchozí|predchozi|zpět|zpet|minulý|minuly');
+const FORWARD = word('další|dalsi|dál|dal|následující|nasledujici');
+const PATIENT_WORD = word('pacient(?:a|ka|ku|ovi)?');
+
 /** Text z rozpoznání řeči → příkaz (nebo `null`, když nic nesedí). Bez diakritiky i s ní, malými i velkými. */
 export function parseVoiceCommand(raw: string): VoiceCommand | null {
   const text = raw.toLowerCase().replace(/[.,!?]/g, ' ').replace(/\s+/g, ' ').trim();
   if (!text) return null;
   // „pacient P05“, „pé nula pět“, „p 5“, „pacient 13“
-  const spoken = text.replace(/\b(nula|jedn[ao]|jeden|dvě|dva|tři|čtyři|pět|šest|sedm|osm|devět)\b/g, (w) => NUMBERS[w]);
-  const patient = spoken.match(/(?:\bpacient(?:a|ka|ku)?\s+)?\b(?:p|pé|pe)\s*((?:\d\s*){1,3})\b/) ?? spoken.match(/\bpacient(?:a|ka|ku)?\s+((?:\d\s*){1,3})\b/);
+  const spoken = text.replace(SPOKEN_DIGIT, (w) => NUMBERS[w]);
+  const patient = spoken.match(PATIENT_CODE) ?? spoken.match(PATIENT_NUMBER);
   if (patient) {
     const digits = patient[1].replace(/\s/g, '');
     if (digits.length >= 1 && digits.length <= 3) return { kind: 'patient', patientId: `P${digits.padStart(2, '0')}` };
   }
-  if (/\bqr\b|kód pro příchod|kod pro prichod/.test(text)) return { kind: 'qr' };
-  if (/\bprojednán[oa]?\b|\bprojednan[oa]?\b|hotovo/.test(text)) return { kind: 'discussed' };
-  const back = /\b(předchozí|predchozi|zpět|zpet|minul[ýy])\b/.test(text);
-  const forward = /\b(další|dalsi|dál|dal|následující|nasledujici)\b/.test(text);
-  if (/\bpacient/.test(text) && (back || forward)) return { kind: 'case', delta: back ? -1 : 1 };
+  if (QR.test(text)) return { kind: 'qr' };
+  if (DISCUSSED.test(text)) return { kind: 'discussed' };
+  const back = BACK.test(text);
+  const forward = FORWARD.test(text);
+  if (PATIENT_WORD.test(text) && (back || forward)) return { kind: 'case', delta: back ? -1 : 1 };
   if (back) return { kind: 'slide', delta: -1 };
   if (forward) return { kind: 'slide', delta: 1 };
   return null;

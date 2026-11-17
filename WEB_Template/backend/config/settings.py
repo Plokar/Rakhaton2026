@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'apps.mdt.access_log.AccessLogMiddleware',    # T-370: kdo otevřel kterého pacienta (i odmítnuté 403)
     'apps.mdt.scope.ExternalScopeMiddleware',     # T-362: lékař z jiné nemocnice jen své komise
+    'apps.authentication.twofa.RequireManager2FAMiddleware',   # T-383: správce MDT bez 2FA jen do nastavení
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.SecurityHeadersMiddleware',
@@ -334,3 +335,6 @@ MDT_JOB_TIMEOUT_MINUTES = int(os.environ.get('MDT_JOB_TIMEOUT_MINUTES', '15'))
 # Offline demo (T-311): podklad z data/demo_cache místo LLM
 MDT_DEMO_OFFLINE = os.environ.get('MDT_DEMO_OFFLINE', 'False') == 'True'
 MDT_DEMO_CACHE_DIR = os.environ.get('MDT_DEMO_CACHE_DIR', str(BASE_DIR.parent.parent / 'data' / 'demo_cache'))
+
+# T-383: dvoufázové přihlášení povinné pro správce MDT (v produkci výchozí True, settings_prod)
+MDT_REQUIRE_2FA_MANAGER = os.environ.get('MDT_REQUIRE_2FA_MANAGER', 'False') == 'True'

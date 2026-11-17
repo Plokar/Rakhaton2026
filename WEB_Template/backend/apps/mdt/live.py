@@ -125,6 +125,9 @@ def _publish(sid: int, payload: dict) -> None:
 def _broadcast(session: MdtSession) -> dict:
     payload = live_state(session)
     transaction.on_commit(lambda: _publish(session.pk, payload))
+    # T-383: push na mobil zadávajícímu lékaři („váš pacient je další / na projektoru“), když jsou klíče VAPID
+    from services import push
+    transaction.on_commit(lambda: push.notify_live(session, payload))
     return payload
 
 

@@ -77,6 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'apps.mdt.access_log.AccessLogMiddleware',     # T-370
     'apps.mdt.scope.ExternalScopeMiddleware',      # T-362: bez něj by externí lékař v produkci viděl všechny pacienty
+    'apps.authentication.twofa.RequireManager2FAMiddleware',   # T-383
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.RateLimitMiddleware',
@@ -151,3 +152,6 @@ else:
 from core.monitoring import init_sentry  # noqa: E402
 
 init_sentry()
+
+# T-383: správce MDT musí mít dvoufázové přihlášení (vypnout jen výslovně, např. pro první nastavení)
+MDT_REQUIRE_2FA_MANAGER = os.environ.get('MDT_REQUIRE_2FA_MANAGER', 'True') == 'True'  # noqa: F405

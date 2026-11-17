@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { clearDeviceData } from '@/lib/pwa';
 import { authApi, refreshSession, type RegisterData, type User } from '@/lib/api';
 
 /** Access cookie platí 15 min: obnovit dřív, ať nevyprší, dokud je aplikace otevřená (T-336). */
@@ -24,7 +25,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, otp?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -81,8 +82,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [state.isAuthenticated]);
 
   const login = useCallback(
-    async (username: string, password: string) => {
-      const response = await authApi.login({ username, password });
+    async (username: string, password: string, otp?: string) => {
+      const response = await authApi.login({ username, password, ...(otp ? { otp } : {}) });
       setState({
         user: response.user,
         isAuthenticated: true,
@@ -106,6 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      // T-383: uložená data pacientů (čtení bez signálu) a push oznámení na tomto zařízení pryč
+      await clearDeviceData().catch(() => undefined);
       await authApi.logout();
     } finally {
       setState({ user: null, isAuthenticated: false, isLoading: false });

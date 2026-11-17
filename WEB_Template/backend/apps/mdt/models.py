@@ -210,6 +210,19 @@ class AiFeedback(models.Model):
         return f'{self.kind} {self.rating} {self.patient_fhir_id}'
 
 
+class PushSubscription(models.Model):
+    """Odběr push oznámení zařízení lékaře (T-383, Web Push). Smaže se při odhlášení na zařízení nebo když push
+    služba hlásí, že odběr zanikl (404/410)."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='push_subscriptions')
+    endpoint = models.URLField(max_length=1000, unique=True)
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user} {self.endpoint[:40]}'
+
+
 class UserProfile(models.Model):
     """Odbornost uživatele (hodnoty `RoleId`, ARCH §8.1). Role = Django `Group` (D-014)."""
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mdt_profile')
@@ -220,6 +233,11 @@ class UserProfile(models.Model):
     organization = models.CharField(max_length=200, blank=True)  # nemocnice (T-362), prázdné = naše
     is_external = models.BooleanField(default=False)             # lékař z jiné nemocnice: vidí jen své komise
     onboarding_done = models.BooleanField(default=True)          # průvodce nastavením po prvním přihlášení (T-363)
+
+    # Dvoufázové přihlášení (T-383): TOTP tajemství šifrované; `totp_pending` = nastavuje se, ještě nepotvrzené
+    totp_secret = EncryptedCharField(blank=True)
+    totp_enabled = models.BooleanField(default=False)
+    totp_last_step = models.BigIntegerField(null=True, blank=True)     # poslední použitý krok (kód nejde zopakovat)
 
     def __str__(self):
         return f'{self.user} ({self.specialty})'

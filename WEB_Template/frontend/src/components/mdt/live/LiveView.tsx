@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import type { LiveState, MdtCase, MyLive } from '@/types/mdt';
 import { dayLabel, timeLabel } from '../dates';
 import { VoteCard } from '../DecisionVotes';
+import { DeviceBar } from './DeviceBar';
 import { ChatbotPanel } from '../meeting/ChatbotPanel';
 import { useChatbot } from '../meeting/use-chatbot';
 import { PatientChatPanel } from '../PatientChatDialog';
@@ -147,6 +148,8 @@ function LiveSession({
           {item?.reasons.length ? <span>· Máte tu být: {item.reasons.map((r) => REASON[r]).join(', ')}</span> : null}
           {!connected && <span className="text-amber-700 dark:text-amber-400">· připojuji živé změny…</span>}
         </p>
+        {/* T-383: čtení bez signálu a upozornění na tomto zařízení */}
+        <DeviceBar sessionId={sessionId} cases={cases} className="mt-2" />
         {others.length > 0 && (
           <p className="mt-1 text-[13px] text-muted-foreground">
             Dnes také:{' '}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bez signálu · MDTcore</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #f4f6f8; --fg: #0f172a; --muted: #475569; --accent: #0f766e; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0b1220; --fg: #e2e8f0; --muted: #94a3b8; --accent: #2dd4bf; } }
+    body { margin: 0; min-height: 100dvh; display: grid; place-items: center; background: var(--bg); color: var(--fg);
+           font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 16px; box-sizing: border-box; }
+    main { max-width: 28rem; text-align: center; }
+    h1 { font-size: 1.25rem; margin: 0 0 .5rem; }
+    p { color: var(--muted); margin: 0 0 1rem; }
+    button { background: var(--accent); color: #fff; border: 0; border-radius: .5rem; padding: .6rem 1rem; font: inherit; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Jste bez signálu</h1>
+    <p>Tuto stránku MDTcore teď nejde načíst. Pokud jste si na stránce „Živě na MDT“ uložili dnešní zasedání pro čtení
+       bez signálu, otevřete ji znovu.</p>
+    <button type="button" onclick="location.reload()">Zkusit znovu</button>
+  </main>
+</body>
+</html>

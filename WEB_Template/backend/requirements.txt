@@ -104,3 +104,6 @@ PyYAML>=6.0
 # --- Social Auth -------------------------------------------------------------
 # social-auth-app-django>=5.4.0
 # django-allauth>=0.61.0
+
+# T-383: push oznámení na mobil (Web Push, VAPID)
+pywebpush==2.0.3

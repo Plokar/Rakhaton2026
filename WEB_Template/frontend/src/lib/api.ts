@@ -107,6 +107,11 @@ async function apiFetch<T>(
     } catch {
       errorData = { message: response.statusText };
     }
+    // T-383: správce MDT bez dvoufázového přihlášení musí nejdřív do nastavení
+    if (response.status === 403 && (errorData as { twofa_setup_required?: boolean })?.twofa_setup_required
+        && typeof window !== 'undefined' && !window.location.pathname.startsWith('/dashboard/settings')) {
+      window.location.replace(new URL('/dashboard/settings#zabezpeceni', window.location.origin).href);   // plné přenačtení jako u přihlášení
+    }
     const message =
       (errorData as Record<string, string>)?.detail ||
       (errorData as Record<string, string>)?.error ||
@@ -137,6 +142,8 @@ export interface User {
 export interface LoginCredentials {
   username: string;
   password: string;
+  /** T-383: kód z aplikace v telefonu, když má účet dvoufázové přihlášení. */
+  otp?: string;
 }
 
 export interface RegisterData {

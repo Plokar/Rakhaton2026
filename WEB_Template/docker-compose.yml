@@ -82,7 +82,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
+    environment: &backend-environment
       DJANGO_SETTINGS_MODULE: config.settings_prod
       DJANGO_DEBUG: "False"
       # MDTcore (ARCH §3.4, §9): IRIS lokálně nebo v ACI podle env, dataset a báze read-only
@@ -103,6 +103,7 @@ services:
       MDT_DEMO_CACHE_DIR: /data/demo_cache
       MDT_DEMO_OFFLINE: ${MDT_DEMO_OFFLINE:-False}
       MDT_SEED: ${MDT_SEED:-True}
+      MDT_JOB_BACKEND: ${MDT_JOB_BACKEND:-thread}      # T-383: `redis` = generování běží ve službě worker
     expose:
       - "8000"
     depends_on:
@@ -114,7 +115,7 @@ services:
         condition: service_started
     networks:
       - app-network
-    volumes:
+    volumes: &backend-volumes
       - backend_static:/code/staticfiles
       - backend_media:/code/media
       - ../Dataset_MDT_Copilot_v1.1_pre_timy/Dataset_MDT_Copilot_v1.1:/data/dataset:ro
@@ -143,6 +144,34 @@ services:
   # Management Portal jen přes SSH tunel: ssh -L 52773:127.0.0.1:52773 <vps>
   # Výchozí heslo SYS změní `iris_init` při startu backendu na IRIS_PASSWORD.
   # ===========================================================================
+  # ===========================================================================
+  # T-383: worker generování (podklad, zapisovatel, shrnutí) mimo proces backendu.
+  # Zapnout: v .env MDT_JOB_BACKEND=redis a `docker compose --profile worker up -d`.
+  # Restart backendu pak rozběhnuté generování nepřeruší; víc workerů = víc souběžných podkladů.
+  # ===========================================================================
+  worker:
+    profiles: ["worker"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    command: ["python", "manage.py", "run_job_worker"]
+    env_file:
+      - .env
+    environment:
+      <<: *backend-environment
+      MDT_SEED: "False"
+      MDT_PROCESS: worker               # entrypoint přeskočí migrace, IRIS init a collectstatic (dělá je backend)
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes: *backend-volumes
+
   iris:
     build: ./iris
     restart: unless-stopped

@@ -115,9 +115,16 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        data = serializer.validated_data
         user = User.objects.get(username=request.data.get('username'))
-        refresh = RefreshToken.for_user(user)
+        # T-383: s dvoufázovým přihlášením tokeny až po kódu z aplikace v telefonu
+        from .twofa import check_login_code
+        ok = check_login_code(user, request.data.get('otp'))
+        if ok is False:
+            missing = not str(request.data.get('otp') or '').strip()
+            return Response({'detail': 'Zadejte kód z aplikace v telefonu.' if missing else 'Kód nesedí, zkuste aktuální.',
+                             'otp_required': True}, status=status.HTTP_401_UNAUTHORIZED)
+        refresh = CustomTokenObtainPairSerializer.get_token(user)      # stejné claims jako dřív (username, email)
+        data = {'access': str(refresh.access_token), 'refresh': str(refresh)}
 
         response_data = {
             'user': UserSerializer(user).data,

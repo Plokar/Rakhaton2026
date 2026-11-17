@@ -2,6 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
+import { TwoFactorCard } from '@/components/auth/TwoFactorCard';
 import { MyTemplateCard } from '@/components/mdt/MyTemplateCard';
 import { NormsEditor, RequirementsEditor } from '@/components/mdt/MyRulesEditor';
 import * as React from 'react';
@@ -153,6 +154,9 @@ export default function SettingsPage() {
         </Card>
 
         <MyTemplateCard />
+
+        {/* T-383: dvoufázové přihlášení (správce MDT povinně) */}
+        <TwoFactorCard />
 
         {/* T-364, T-365: co vyžaduji, když jsem pozvaný, a moje normy na PVW (mění jen lékař sám) */}
         <section id="pozadavky" aria-labelledby="pozadavky-nadpis" className="scroll-mt-20 rounded-xl border border-border bg-card p-5">

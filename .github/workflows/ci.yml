@@ -56,6 +56,7 @@ jobs:
           cache-dependency-path: WEB_Template/frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm test            # T-383: jednotkové testy čisté logiky (vitest)
       - run: npm run build
 
   # T-378: smoke test v prohlížeči proti backendu bez IRIS (FHIR a vektory v paměti, mock AI) a next start

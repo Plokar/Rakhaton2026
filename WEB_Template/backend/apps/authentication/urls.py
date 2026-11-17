@@ -1,4 +1,6 @@
 from django.urls import path
+
+from . import twofa
 from rest_framework_simplejwt.views import TokenVerifyView
 
 from .views import (
@@ -35,5 +37,10 @@ urlpatterns = [
 
     # Status check (zpětná kompatibilita)
     path('status/', check_auth_status, name='auth-status'),
+    # T-383: dvoufázové přihlášení (TOTP)
+    path('2fa/', twofa.twofa_status, name='auth-2fa'),
+    path('2fa/setup/', twofa.twofa_setup, name='auth-2fa-setup'),
+    path('2fa/confirm/', twofa.twofa_confirm, name='auth-2fa-confirm'),
+    path('2fa/disable/', twofa.twofa_disable, name='auth-2fa-disable'),
 ]
 

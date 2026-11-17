@@ -6,6 +6,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from '@/components/shadcn/sonner';
 import { TooltipProvider } from '@/components/shadcn/tooltip';
 import { createQueryClient } from '@/lib/queries';
+import { PwaRegister } from '@/lib/pwa';
 
 /**
  * Klientské providery celé aplikace (NAVRH_UI §10.3): jedna cache dat pro dashboard, okno projektoru
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <TooltipProvider delay={300}>
           {children}
           <Toaster position="bottom-right" />
+          <PwaRegister />
         </TooltipProvider>
       </NuqsAdapter>
     </QueryClientProvider>

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import access_log, accounts, chat, chatbot, doctor_rules, drafts, live, templates, views, votes
+from . import access_log, accounts, chat, chatbot, doctor_rules, drafts, live, push, templates, views, votes
 
 urlpatterns = [
     path('me/', views.me, name='mdt-me'),
@@ -37,6 +37,8 @@ urlpatterns = [
     path('sessions/<int:sid>/messages/', chat.session_messages, name='session-messages'),
     path('sessions/<int:sid>/stream/', chat.session_stream, name='session-stream'),
     path('live/', live.my_live, name='my-live'),
+    path('push/key/', push.push_key, name='push-key'),
+    path('push/subscriptions/', push.push_subscriptions, name='push-subscriptions'),
     path('sessions/<int:sid>/live/', live.session_live, name='session-live'),
     path('sessions/<int:sid>/presence/', live.session_presence, name='session-presence'),
     path('sessions/<int:sid>/chatbot/', chatbot.session_chatbot, name='session-chatbot'),

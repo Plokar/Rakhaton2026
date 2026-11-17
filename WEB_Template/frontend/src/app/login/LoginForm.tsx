@@ -52,6 +52,10 @@ function safeRedirect(value: string | null): string {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : '/dashboard';
 }
 
+/** T-383: účet s dvoufázovým přihlášením chce kód z aplikace (401 `otp_required`). */
+const needsOtp = (err: unknown) =>
+  err instanceof ApiError && err.status === 401 && Boolean((err.data as { otp_required?: boolean } | undefined)?.otp_required);
+
 function loginErrorMessage(err: unknown, demo: boolean): string {
   if (err instanceof ApiError) {
     if (err.status === 400 || err.status === 401) {
@@ -75,6 +79,8 @@ export default function LoginForm() {
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [otpStep, setOtpStep] = React.useState(false);
+  const [otp, setOtp] = React.useState('');
   /** Co se právě přihlašuje: 'form', nebo uživatelské jméno demo účtu. */
   const [pending, setPending] = React.useState<string | null>(null);
   const usernameRef = React.useRef<HTMLInputElement>(null);
@@ -86,14 +92,21 @@ export default function LoginForm() {
     if (user) router.push(redirectUrl);
   }, [user, router, redirectUrl]);
 
-  const signIn = async (name: string, secret: string, source: string) => {
+  const signIn = async (name: string, secret: string, source: string, code?: string) => {
     setError('');
     setPending(source);
     try {
-      await login(name, secret);
+      await login(name, secret, code);
       router.push(redirectUrl);
     } catch (err: unknown) {
-      setError(loginErrorMessage(err, source !== 'form'));
+      if (needsOtp(err)) {
+        // heslo sedí, chybí nebo nesedí kód z aplikace v telefonu
+        if (otpStep) setError('Kód nesedí. Zadejte aktuální kód z aplikace.');
+        setOtpStep(true);
+        setOtp('');
+      } else {
+        setError(loginErrorMessage(err, source !== 'form'));
+      }
       setPending(null);
     }
   };
@@ -105,7 +118,11 @@ export default function LoginForm() {
       (username.trim() ? passwordRef : usernameRef).current?.focus();
       return;
     }
-    void signIn(username.trim(), password, 'form');
+    if (otpStep && !/^\d{6}$/.test(otp.replace(/\s/g, ''))) {
+      setError('Zadejte šestimístný kód z aplikace v telefonu.');
+      return;
+    }
+    void signIn(username.trim(), password, 'form', otpStep ? otp.replace(/\s/g, '') : undefined);
   };
 
   return (
@@ -255,6 +272,26 @@ export default function LoginForm() {
               />
             </div>
 
+            {otpStep && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="login-otp" className="text-sm font-medium text-foreground">Kód z aplikace v telefonu</label>
+                <Input
+                  id="login-otp"
+                  name="otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  maxLength={7}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="123 456"
+                  aria-describedby="login-otp-hint"
+                />
+                <p id="login-otp-hint" className="text-[13px] text-muted-foreground">
+                  Účet má dvoufázové přihlášení. Kód najdete v aplikaci Authenticator.
+                </p>
+              </div>
+            )}
             <Button type="submit" size="lg" className="mt-1 w-full" disabled={pending !== null}>
               {pending === 'form' ? (
                 <>

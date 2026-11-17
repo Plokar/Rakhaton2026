@@ -9,6 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#f4f6f8',
     theme_color: '#0f766e',
+    // T-383: z ikony na ploše rovnou na živé zasedání
+    shortcuts: [{ name: 'Živě na MDT', short_name: 'Živě', url: '/dashboard/live', icons: [{ src: '/icon-192.png', sizes: '192x192' }] }],
     icons: [
       {
         src: '/icon-192.png',

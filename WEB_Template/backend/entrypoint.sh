@@ -40,6 +40,12 @@ until nc -z "${REDIS_HOST:-redis}" 6379; do
 done
 echo "✅ Redis ready (or skipped)"
 
+# ── T-383: worker generování jen čeká na Postgres a Redis; migrace, IRIS a static dělá backend ──────
+if [ "${MDT_PROCESS}" = "worker" ] && [ $# -gt 0 ]; then
+  echo "🧵 Worker generování: $@"
+  exec "$@"
+fi
+
 # ── Database migrations ───────────────────────────────────────────────────────
 echo "🔄 Running database migrations..."
 python manage.py migrate --noinput

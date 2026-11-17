@@ -5,6 +5,7 @@ Rozhraní generátoru (T-107 ↔ T-106, ARCH §5.1):
 vrací validní Brief (ARCH §8.2); každé LLM volání loguje `LlmCallLog.record(purpose, result)`.
 """
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 
 from datetime import timedelta
@@ -37,12 +38,50 @@ def fail_stale(**filters) -> int:
         status='error', error=STALE_ERROR, updated_at=timezone.now())
 
 
+QUEUE = 'mdt:jobs'                            # T-383: Redis seznam ID jobů pro `run_job_worker`
+
+
+def job_backend() -> str:
+    """`thread` (výchozí, pool v procesu backendu) | `redis` (fronta, běží ve službě worker, přežije restart backendu)."""
+    return os.environ.get('MDT_JOB_BACKEND', 'thread').strip().lower()
+
+
+def _redis():
+    import redis
+    return redis.Redis.from_url(f"{settings.REDIS_URL}/3")
+
+
 def start(job: GenerationJob) -> None:
     fail_stale(case_id=job.case_id)              # starý zaseknutý job stejného případu neblokuje nový
     if getattr(settings, 'MDT_JOBS_SYNC', False):
         run(job.pk)
+    elif job_backend() == 'redis':
+        try:
+            _redis().lpush(QUEUE, job.pk)
+            return
+        except Exception:                        # noqa: BLE001  Redis nejde: radši v procesu než vůbec
+            log.warning('T-383: fronta jobů v Redisu nedostupná, job %s běží v procesu backendu', job.pk, exc_info=True)
+        _pool.submit(_in_thread, job.pk)
     else:
         _pool.submit(_in_thread, job.pk)
+
+
+def work_forever(stop=lambda: False, timeout: int = 5) -> int:
+    """Worker (T-383): bere ID jobů z fronty a spouští je; `stop()` ukončí smyčku (testy, SIGTERM). Vrací počet jobů."""
+    client = _redis()
+    done = 0
+    while not stop():
+        item = client.brpop(QUEUE, timeout=timeout)
+        if item is None:
+            continue
+        job_id = int(item[1])
+        close_old_connections()
+        try:
+            run(job_id)
+        finally:
+            connection.close()
+        done += 1
+    return done
 
 
 def _in_thread(job_id: int) -> None:

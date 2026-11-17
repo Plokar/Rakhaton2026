@@ -36,6 +36,9 @@ Pilot se spustí, až je všechno zaškrtnuté. Ověřuje koordinátor pilotu.
 - [ ] `https://<API_DOMAIN>/api/health/` → 200, přihlášení na produkční doméně projde.
 - [ ] Denní záloha běží (`scripts/backup.sh` v cronu) a jedna obnova je vyzkoušená (§6).
 - [ ] `MDT_FIELD_KEY` nastavený (Fernet klíč pro šifrované RČ v návrzích pacienta, T-379; bez něj se klíč odvodí z `DJANGO_SECRET_KEY` a jeho výměna staré návrhy nepřečte).
+- [ ] Dvoufázové přihlášení: `MDT_REQUIRE_2FA_MANAGER` je v produkci zapnuté (výchozí); správce si ho nastaví v Nastavení → Dvoufázové přihlášení hned po prvním přihlášení (T-383).
+- [ ] Volitelně push oznámení na mobil: `manage.py vapid_keys` → `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` do `.env` backendu (soukromý klíč nikdy do gitu).
+- [ ] Volitelně generování mimo proces backendu: `MDT_JOB_BACKEND=redis` a `docker compose --profile worker up -d` (restart backendu pak rozběhnutý podklad nepřeruší).
 - [ ] Mazání záznamu přístupů v cronu: `manage.py prune_access_log --days 365` (doba uchování podle provozovatele, `MDT_ACCESS_LOG_DAYS`).
 - [ ] Volitelně `SENTRY_DSN` (hlášení chyb backendu; bez těla požadavků, cookies a query, `core/monitoring.py`).
 - [ ] Monitoring dostupnosti hlídá `/api/health/?strict=1` (503 i při výpadku IRIS) a frontend (např. UptimeRobot,

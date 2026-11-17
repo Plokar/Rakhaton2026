@@ -917,7 +917,19 @@ export interface LiveState {
   session: number;
   status: MdtSession['status'];
   /** Pacient na projektoru; `position` = pořadí v agendě (od 1). `null` = projektor zatím nic neukazuje. */
-  case: { id: number; patient_id: string; status: MdtCase['status']; position: number | null; count: number } | null;
+  case: {
+    id: number;
+    patient_id: string;
+    status: MdtCase['status'];
+    position: number | null;
+    count: number;
+    /** Od kdy je pacient na projektoru (T-380). */
+    since: string | null;
+  } | null;
+  /** Další neprojednaný pacient v agendě (T-380); `null` = žádný nebo zasedání neprobíhá. */
+  next: { id: number; patient_id: string } | null;
+  /** Odhad konce (T-380): neprojednaní × plánovaný čas na pacienta; `over` = pacient na projektoru je přes čas. */
+  estimate: { remaining: number; minutes_per_case: number; end: string; over: boolean } | null;
   /** Slide projektoru (od 0); `null` = projektor neběží nebo slidy nehlásí. */
   slide: { index: number; total: number; label: string } | null;
   updated_at: string | null;
@@ -925,7 +937,7 @@ export interface LiveState {
   stale: boolean;
   by: { user_id: number; name: string } | null;
   /** Lékaři ohlášení za posledních 5 min. */
-  present: { user_id: number; name: string; specialty: RoleId | null }[];
+  present: { user_id: number; name: string; specialty: RoleId | null; practitioner_id: string | null }[];
 }
 
 /** GET /api/mdt/live/ (T-357): dnešní a probíhající zasedání; `current` = kde lékař je, jinak kde má být. */

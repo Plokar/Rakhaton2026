@@ -81,13 +81,48 @@ export interface SlideState {
 }
 
 type SlideCommand = { type: 'slide'; board: number; caseId: number; delta?: number; to?: number };
-type Message = ProjectorSelection | { type: 'refresh'; board: number } | { type: 'hello' } | SlideCommand | ({ type: 'slides' } & SlideState);
+type QrCommand = { type: 'qr'; board: number; show: boolean };
+type Message =
+  | ProjectorSelection
+  | { type: 'refresh'; board: number }
+  | { type: 'hello' }
+  | SlideCommand
+  | ({ type: 'slides' } & SlideState)
+  | QrCommand;
 
 function post(message: Message) {
   if (typeof BroadcastChannel === 'undefined') return;
   const channel = new BroadcastChannel(CHANNEL);
   channel.postMessage(message);
   channel.close();
+}
+
+/** Jednání komise (T-380): ukázat / skrýt QR kód pro příchod na zasedání v okně projektoru. */
+export function publishQr(board: number, show: boolean) {
+  post({ type: 'qr', board, show });
+}
+
+/** Okno projektoru: QR kód pro příchod (klávesa Q nebo příkaz z jednání), Esc skryje. */
+export function useProjectorQr(board: number | null): [boolean, (show: boolean) => void] {
+  const [show, setShow] = React.useState(false);
+  React.useEffect(() => {
+    if (board == null || typeof BroadcastChannel === 'undefined') return;
+    const channel = new BroadcastChannel(CHANNEL);
+    channel.onmessage = (event: MessageEvent<Message>) => {
+      const data = event.data;
+      if (data && 'type' in data && data.type === 'qr' && data.board === board) setShow(data.show);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'q' && !e.ctrlKey && !e.metaKey && !e.altKey) setShow((v) => !v);
+      if (e.key === 'Escape') setShow(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      channel.close();
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [board]);
+  return [show, setShow];
 }
 
 /** Okno jednání: další / předchozí slide (`delta`) nebo konkrétní (`to`) u pacienta na projektoru. */

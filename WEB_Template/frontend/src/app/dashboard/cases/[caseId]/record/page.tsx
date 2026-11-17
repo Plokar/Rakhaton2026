@@ -24,6 +24,7 @@ import { ApiError, apiUrl } from '@/lib/api';
 import { briefP03, decisionP03 } from '@/lib/fixtures';
 import { mdtApi } from '@/lib/mdt-api';
 import { useCaseLocation } from '@/lib/queries';
+import { useLiveSession } from '@/components/mdt/live/use-live';
 import { useApiData } from '@/lib/use-api-data';
 import { setUnsaved } from '@/lib/unsaved';
 import type { Brief, Decision, EvidenceId, Me, ProcedureCompatibility } from '@/types/mdt';
@@ -95,6 +96,8 @@ function DecisionContent({ caseId }: { caseId: string }) {
   const [intentChosen, setIntentChosen] = React.useState(false);
   const close = React.useCallback(() => setOpenId(null), []);
   const location = useCaseLocation(isDemo ? null : Number(caseId));
+  // T-380: lékaři ohlášení na zasedání jdou jedním klikem do přítomných v závěru
+  const live = useLiveSession(location.session?.status === 'in_progress' ? location.session.id : null);
 
   const loading = decisionData.loading || briefData.loading;
   const brief = briefData.data ?? null;
@@ -348,6 +351,7 @@ function DecisionContent({ caseId }: { caseId: string }) {
               requesterUserId={location.item?.created_by?.user_id ?? null}
               intentUnset={intentUnset}
               onIntentChosen={() => setIntentChosen(true)}
+              present={live.live?.present ?? []}
             />
           </section>
           <SourceDrawer

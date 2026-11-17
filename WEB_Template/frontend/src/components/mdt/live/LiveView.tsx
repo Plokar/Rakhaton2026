@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { agendaOrder, apiErrorMessage, usePatientsQuery, useSessionQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
-import type { MdtCase, MyLive } from '@/types/mdt';
+import type { LiveState, MdtCase, MyLive } from '@/types/mdt';
 import { dayLabel, timeLabel } from '../dates';
 import { ChatbotPanel } from '../meeting/ChatbotPanel';
 import { useChatbot } from '../meeting/use-chatbot';
@@ -192,6 +192,9 @@ function LiveSession({
             </Button>
           )}
         </div>
+        {live?.status === 'in_progress' && (live.case || live.next) && (
+          <LiveProgress live={live} mine={item?.my_patients ?? []} onPick={(caseId) => setPicked(live.case?.id === caseId ? null : { kind: 'case', caseId })} />
+        )}
         {live?.stale && live.case && (
           <p role="status" className="mt-1 text-[13px] text-amber-800 dark:text-amber-300">
             Projektor se přes 15 minut nezměnil{live.updated_at ? ` (naposledy ${timeLabel(live.updated_at)})` : ''}. Údaj nemusí platit.
@@ -355,6 +358,54 @@ function LiveSkeleton() {
       <Skeleton className="h-6 w-2/3" />
       <Skeleton className="h-8 w-full" />
       <Skeleton className="h-64 w-full" />
+    </div>
+  );
+}
+
+/** Kolik minut od `iso` (přepočet každých 30 s). */
+function useMinutesSince(iso: string | null | undefined): number | null {
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
+  return iso ? Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60_000)) : null;
+}
+
+/**
+ * Průběh zasedání (T-380): jak dlouho je pacient na projektoru, kdo je další a odhad konce. Zadávající lékař
+ * vidí zvýrazněné, když je jeho pacient na projektoru nebo další na řadě.
+ */
+function LiveProgress({ live, mine, onPick }: { live: LiveState; mine: string[]; onPick: (caseId: number) => void }) {
+  const minutes = useMinutesSince(live.case?.since);
+  const mineNow = live.case && mine.includes(live.case.patient_id);
+  const mineNext = live.next && mine.includes(live.next.patient_id);
+  return (
+    <div className="mt-1 space-y-1 text-[13px]">
+      <p className="flex flex-wrap items-center gap-x-2 text-muted-foreground">
+        {minutes != null && live.case && (
+          <span className={cn('tabular-nums', live.estimate?.over && 'font-medium text-amber-800 dark:text-amber-300')}>
+            u pacienta {minutes} min{live.estimate ? ` z ${live.estimate.minutes_per_case}` : ''}
+          </span>
+        )}
+        {live.next && (
+          <button type="button" onClick={() => onPick(live.next!.id)} className="underline-offset-4 hover:underline">
+            · další <span translate="no" className="font-medium text-foreground">{live.next.patient_id}</span>
+          </button>
+        )}
+        {live.estimate && live.estimate.remaining > 0 && (
+          <span className="tabular-nums">· konec ≈ {timeLabel(live.estimate.end)}</span>
+        )}
+      </p>
+      {(mineNow || mineNext) && (
+        <p role="status" className="rounded-md bg-primary/10 px-2 py-1 font-medium text-foreground">
+          {mineNow ? (
+            <>Váš pacient <span translate="no">{live.case!.patient_id}</span> je právě na projektoru.</>
+          ) : (
+            <>Váš pacient <span translate="no">{live.next!.patient_id}</span> jde na řadu jako další.</>
+          )}
+        </p>
+      )}
     </div>
   );
 }

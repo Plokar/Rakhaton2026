@@ -66,6 +66,7 @@ class MdtSession(models.Model):
     live_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
                                 related_name='+')
     live_updated_at = models.DateTimeField(null=True, blank=True)
+    live_case_since = models.DateTimeField(null=True, blank=True)            # od kdy je pacient na projektoru (T-380)
 
     class Meta:
         ordering = ['date', 'title']
@@ -78,6 +79,7 @@ class MdtSession(models.Model):
         # z ukončeného navíc všichni odešli
         if self.status != 'in_progress':
             self.live_case = None
+            self.live_case_since = None
             self.live_slide = self.live_slides = None
             self.live_label = ''
         if self.status == 'closed' and self.pk:

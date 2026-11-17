@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { ApiError } from '@/lib/api';
+import { mdtApi } from '@/lib/mdt-api';
 import { queryKeys } from '@/lib/queries';
 
 /**
@@ -123,6 +125,24 @@ export function useSlideRemote(
   React.useEffect(() => {
     if (board != null && caseId != null) post({ type: 'slides', board, caseId, index, total, label });
   }, [board, caseId, index, total, label]);
+  // T-379: okno projektoru hlásí slide i serveru (mobily lékařů), i když jednání komise není otevřené
+  React.useEffect(() => {
+    if (board == null || caseId == null || !total) return;
+    const timer = setTimeout(() => reportSlide(board, caseId, { index, total, label }), 400);
+    return () => clearTimeout(timer);
+  }, [board, caseId, index, total, label]);
+}
+
+/** Kdy znovu zkusit zápis na server: 403 = tento uživatel projektor neřídí (nikdy), 409 = zasedání nezačalo (za minutu). */
+const reportBlockedUntil = new Map<number, number>();
+
+function reportSlide(board: number, caseId: number, slide: { index: number; total: number; label: string }) {
+  if ((reportBlockedUntil.get(board) ?? 0) > Date.now()) return;
+  mdtApi.putLive(board, { case_id: caseId, slide }).catch((err: unknown) => {
+    const status = err instanceof ApiError ? err.status : 0;
+    if (status === 403) reportBlockedUntil.set(board, Number.POSITIVE_INFINITY);
+    else if (status === 409) reportBlockedUntil.set(board, Date.now() + 60_000);
+  });
 }
 
 /** Okno jednání: na kterém slidu je projektor u tohoto pacienta (null = projektor neběží nebo ukazuje jiného). */

@@ -142,7 +142,7 @@ def test_every_provider_gets_untrusted_data_rule(monkeypatch):
 
     Spy().generate('otázka', 'Jsi asistent MDT.')
     Spy().generate('otázka')
-    assert ai_service.UNTRUSTED_DATA_RULE in seen[0] and seen[0].startswith('Jsi asistent MDT.')
+    assert seen[0].startswith(ai_service.UNTRUSTED_DATA_RULE) and seen[0].endswith('Jsi asistent MDT.')
     assert seen[1] == ai_service.UNTRUSTED_DATA_RULE
     assert ai_service.guard_system_prompt(seen[0]) == seen[0]          # nepřidá se dvakrát
     for cls in (ai_service.MockAIProvider, *[c for _, c in ai_service.PROVIDERS.values()]):

@@ -74,11 +74,13 @@ class MdtSession(models.Model):
         return f'{self.date:%Y-%m-%d %H:%M} {self.title}'
 
     def save(self, *args, **kwargs):
-        # T-379: ukončené zasedání nic nepromítá a nikdo na něm není (mobily nesmí ukazovat starý stav)
-        if self.status == 'closed' and self.pk:
+        # T-379: nezahájené ani ukončené zasedání nic nepromítá (mobily nesmí ukazovat starý stav);
+        # z ukončeného navíc všichni odešli
+        if self.status != 'in_progress':
             self.live_case = None
             self.live_slide = self.live_slides = None
             self.live_label = ''
+        if self.status == 'closed' and self.pk:
             SessionPresence.objects.filter(session_id=self.pk).delete()
         super().save(*args, **kwargs)
 

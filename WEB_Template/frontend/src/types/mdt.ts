@@ -921,6 +921,8 @@ export interface LiveState {
   /** Slide projektoru (od 0); `null` = projektor neběží nebo slidy nehlásí. */
   slide: { index: number; total: number; label: string } | null;
   updated_at: string | null;
+  /** T-379: projektor se déle než 15 min nezměnil (zavřené jednání, výpadek): údaj nemusí platit. */
+  stale: boolean;
   by: { user_id: number; name: string } | null;
   /** Lékaři ohlášení za posledních 5 min. */
   present: { user_id: number; name: string; specialty: RoleId | null }[];

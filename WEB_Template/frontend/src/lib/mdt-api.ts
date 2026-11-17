@@ -289,17 +289,16 @@ export const mdtApi = {
   deleteSession: (sessionId: number) => apiFetch<void>(`/api/mdt/sessions/${sessionId}/`, { method: 'DELETE' }),
 
   /** Chat lékařů u zasedání (T-334): posledních 200 zpráv od nejstarší. */
-  getSessionMessages: (sessionId: number) => apiFetch<SessionMessage[]>(`/api/mdt/sessions/${sessionId}/messages/`),
+  getSessionMessages: (sessionId: number, after?: number) =>
+    apiFetch<SessionMessage[]>(`/api/mdt/sessions/${sessionId}/messages/${after ? `?after=${after}` : ''}`),
 
   /** Píše každý člen komise; `case_id` = štítek pacienta z agendy boardu. Uzavřený board 409. */
   postSessionMessage: (sessionId: number, input: { text: string; case_id?: number | null }) =>
     apiFetch<SessionMessage>(`/api/mdt/sessions/${sessionId}/messages/`, { method: 'POST', body: JSON.stringify(input) }),
 
   /** SSE stream nových zpráv pro `EventSource` (JWT jde v cookie); `after` doplní zprávy novější než toto ID. */
-  sessionStreamUrl: (sessionId: number, after: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/?after=${after}`),
-
-  /** SSE stream boardu bez doplnění zpráv chatu: živé zasedání čte jen `event: live` (T-357). */
-  liveStreamUrl: (sessionId: number) => apiUrl(`/api/mdt/sessions/${sessionId}/stream/`),
+  sessionStreamUrl: (sessionId: number, after?: number | null) =>
+    apiUrl(`/api/mdt/sessions/${sessionId}/stream/${after != null ? `?after=${after}` : ''}`),
 
   /** Živé zasedání (T-357): dnešní a probíhající zasedání, kde lékař má být, kde je a co je na projektoru. */
   getMyLive: () => apiFetch<MyLive>('/api/mdt/live/'),

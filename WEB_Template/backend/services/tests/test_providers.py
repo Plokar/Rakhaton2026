@@ -36,7 +36,7 @@ def test_nvidia_structured_output(monkeypatch):
     assert result['tokens_used'] == 15 and result['provider'] == 'nvidia'
     body = sent['json']
     assert sent['url'].endswith('/chat/completions') and body['response_format']['json_schema']['name'] == 'Answer'
-    assert body['messages'][0] == {'role': 'system', 'content': 'česky'}
+    assert body['messages'][0] == {'role': 'system', 'content': ai.guard_system_prompt('česky')}   # T-379
     assert body['chat_template_kwargs'] == {'enable_thinking': False}       # výchozí rychlý režim
 
 

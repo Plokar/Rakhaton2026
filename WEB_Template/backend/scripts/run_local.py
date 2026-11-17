@@ -67,7 +67,12 @@ def main() -> None:
         print(f'POZOR: {len(orphans)} pacientů má případ v Postgresu, ale není ve FHIR (např. {orphans[0]}); '
               'jejich obrazovky vrátí 404. Spusťte bez LOCAL_PATIENTS, nebo s čistou databází.', flush=True)
     print(f'FHIR v paměti: {len(fhir.store)} záznamů. Přihlášení: predseda / demo123456', flush=True)
-    call_command('runserver', f"0.0.0.0:{os.environ.get('LOCAL_PORT', '8000')}", '--noreload')
+    # T-379: ASGI (uvicorn) místo `runserver`: WSGI runserver async SSE stream (chat lékařů, živé zasedání) jen
+    # nasbírá a nepošle, takže lokálně nechodily zprávy ani pacient na projektoru. Jeden proces (data v paměti).
+    import uvicorn
+
+    from config.asgi import application
+    uvicorn.run(application, host='0.0.0.0', port=int(os.environ.get('LOCAL_PORT', '8000')), log_level='info')
 
 
 if __name__ == '__main__':

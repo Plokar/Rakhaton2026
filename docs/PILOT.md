@@ -35,6 +35,8 @@ Pilot se spustí, až je všechno zaškrtnuté. Ověřuje koordinátor pilotu.
 **Provoz**
 - [ ] `https://<API_DOMAIN>/api/health/` → 200, přihlášení na produkční doméně projde.
 - [ ] Denní záloha běží (`scripts/backup.sh` v cronu) a jedna obnova je vyzkoušená (§6).
+- [ ] `MDT_FIELD_KEY` nastavený (Fernet klíč pro šifrované RČ v návrzích pacienta, T-379; bez něj se klíč odvodí z `DJANGO_SECRET_KEY` a jeho výměna staré návrhy nepřečte).
+- [ ] Mazání záznamu přístupů v cronu: `manage.py prune_access_log --days 365` (doba uchování podle provozovatele, `MDT_ACCESS_LOG_DAYS`).
 - [ ] Volitelně `SENTRY_DSN` (hlášení chyb backendu; bez těla požadavků, cookies a query, `core/monitoring.py`).
 - [ ] Monitoring dostupnosti hlídá `/api/health/?strict=1` (503 i při výpadku IRIS) a frontend (např. UptimeRobot,
       každých 5 min, e-mail koordinátorovi).

@@ -118,7 +118,7 @@ function LiveSession({
   const present = live?.present ?? [];
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col">
+    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col overflow-hidden">
       <PageCrumb>Živě na MDT</PageCrumb>
       {/* Kde jsem: zasedání, stav, přítomní */}
       <header className="shrink-0 border-b border-border bg-card px-4 py-3 sm:px-6">
@@ -178,7 +178,13 @@ function LiveSession({
               )}
             </span>
           ) : (
-            <span className="min-w-0 flex-1 text-muted-foreground">Projektor zatím neukazuje pacienta</span>
+            <span className="min-w-0 flex-1 text-muted-foreground">
+              {closed
+                ? 'Zasedání je ukončené'
+                : live?.status === 'in_progress'
+                  ? 'Projektor zatím neukazuje pacienta'
+                  : 'Zasedání ještě nezačalo, předseda ho zahájí'}
+            </span>
           )}
           {!following && live?.case && (
             <Button size="sm" onClick={() => setPicked(null)}>
@@ -186,6 +192,11 @@ function LiveSession({
             </Button>
           )}
         </div>
+        {live?.stale && live.case && (
+          <p role="status" className="mt-1 text-[13px] text-amber-800 dark:text-amber-300">
+            Projektor se přes 15 minut nezměnil{live.updated_at ? ` (naposledy ${timeLabel(live.updated_at)})` : ''}. Údaj nemusí platit.
+          </p>
+        )}
         <div role="group" aria-label="Pacienti v agendě" className="-mx-1 mt-2 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {cases.map((c) => {
             const selected = shownCase?.id === c.id;

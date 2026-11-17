@@ -281,7 +281,8 @@ def guard_system_prompt(system_prompt: str) -> str:
     """Systémový prompt s pravidlem o nedůvěryhodných datech (jednou, i když ho volající už přidal)."""
     if UNTRUSTED_DATA_RULE in (system_prompt or ""):
         return system_prompt
-    return f"{system_prompt}\n\n{UNTRUSTED_DATA_RULE}" if system_prompt else UNTRUSTED_DATA_RULE
+    # na začátek: poslední řádek promptu (jazyk výstupu, T-207) zůstává poslední
+    return f"{UNTRUSTED_DATA_RULE}\n\n{system_prompt}" if system_prompt else UNTRUSTED_DATA_RULE
 
 
 class BaseAIProvider(ABC):
@@ -296,8 +297,10 @@ class BaseAIProvider(ABC):
         if impl is None or getattr(impl, "_guarded", False):
             return
 
-        def generate(self, prompt, system_prompt="", *args, **kwargs):
-            return impl(self, prompt, guard_system_prompt(system_prompt), *args, **kwargs)
+        def generate(self, prompt, *args, system_prompt="", **kwargs):
+            if args:                                  # system_prompt předaný pozičně
+                system_prompt, args = args[0], args[1:]
+            return impl(self, prompt, *args, system_prompt=guard_system_prompt(system_prompt), **kwargs)
 
         generate._guarded = True
         generate.__doc__ = impl.__doc__

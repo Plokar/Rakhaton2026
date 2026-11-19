@@ -1192,3 +1192,45 @@ export interface DecisionVotes {
   votes: DecisionVote[];
   mine: DecisionVote | null;
 }
+
+/** GET /api/mdt/stats/ (T-384): statistiky komise pro předsedu a správce, jen počty. */
+export interface CommitteeStatsBlock {
+  cases: number;
+  sessions: number;
+  by_status: Partial<Record<MdtCase['status'], number>>;
+  confirmed: number;
+  returned: number;
+  /** Medián dní od zařazení po potvrzení závěru; `null` = zatím žádný potvrzený. */
+  median_days_to_confirm: number | null;
+  guideline_compliance: { compliant: number; deviation: number; unknown: number };
+}
+
+export interface CommitteeStats {
+  from: string | null;
+  to: string | null;
+  total: CommitteeStatsBlock;
+  votes: { agree: number; disagree: number };
+  by_committee: (CommitteeStatsBlock & { name: string })[];
+  by_month: { month: string; cases: number }[];
+}
+
+/** GET /api/mdt/re-mdt/ (T-384): plánované re-MDT bez zařazení na budoucí zasedání. */
+export interface ReMdtDue {
+  case_id: number;
+  patient_id: string;
+  date: string;
+  overdue: boolean;
+  reason: string;
+  session: { id: number; title: string };
+  committee_id: number | null;
+  requester: { user_id: number; name: string } | null;
+}
+
+/** GET /api/public/patient-summary/{token}/ (T-384): veřejné shrnutí pro pacienta, bez jména a ID. */
+export interface PublicPatientSummary {
+  title: string;
+  mdt_date: string;
+  items: { text: string }[];
+  generated_at: string | null;
+  expires_at: string;
+}

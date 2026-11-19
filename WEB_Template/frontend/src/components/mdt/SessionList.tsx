@@ -2,10 +2,11 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ChevronRight, Lock, Plus, UserPlus } from 'lucide-react';
+import { CalendarPlus, ChevronRight, Lock, Plus, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Page, PageHeader } from '@/components/layout/Page';
-import { Button } from '@/components/shadcn/button';
+import { Button, buttonVariants } from '@/components/shadcn/button';
+import { mdtApi } from '@/lib/mdt-api';
 import { Skeleton } from '@/components/shadcn/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useSaveSession, useSessionsQuery } from '@/lib/queries';
@@ -42,7 +43,13 @@ export function SessionList() {
         title="Zasedání"
         meta="Boardy komisí s termínem a agendou pacientů"
         actions={
-          manage && (
+          <>
+            {/* T-384: moje nadcházející zasedání do Outlooku, Google či Apple kalendáře */}
+            <a href={mdtApi.myCalendarUrl()} download className={buttonVariants({ variant: 'outline', size: 'lg' })}
+              title="Stáhne .ics s nadcházejícími zasedáními, kde máte pacienta, předsedáte nebo jste pozvaný">
+              <CalendarPlus aria-hidden /> Do kalendáře
+            </a>
+            {manage && (
             <>
               {can.manageAccounts(me) && (
                 <Button variant="outline" size="lg" onClick={() => setInviting(true)}>
@@ -53,7 +60,8 @@ export function SessionList() {
                 <Plus aria-hidden /> Nový board
               </Button>
             </>
-          )
+            )}
+          </>
         }
       />
 

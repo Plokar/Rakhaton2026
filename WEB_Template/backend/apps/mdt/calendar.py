@@ -4,7 +4,6 @@ Události nesou jen název komise, čas, předsedu a pacienty jako `Pxx` (D-018)
 """
 from datetime import UTC, timedelta
 
-from django.conf import settings
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -57,7 +56,8 @@ def _event(s: MdtSession, base: str, now) -> list[str]:
 
 
 def _calendar(sessions, request, filename: str) -> HttpResponse:
-    base = (getattr(settings, 'MDT_FRONTEND_URL', '') or request.build_absolute_uri('/')).rstrip('/')
+    from apps.authentication.views import _frontend_url
+    base = _frontend_url(request)          # MDT_FRONTEND_URL, jinak důvěryhodný Origin (jako odkaz v e-mailu, T-371)
     now = timezone.now()
     lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MDTcore//MDT zasedání//CS', 'CALSCALE:GREGORIAN',
              'METHOD:PUBLISH', 'X-WR-CALNAME:MDT zasedání']

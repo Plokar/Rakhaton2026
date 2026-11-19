@@ -10,6 +10,7 @@ import { ApiError } from '@/lib/api';
 import { mdtApi } from '@/lib/mdt-api';
 import { apiErrorMessage } from '@/lib/queries';
 import { AiBlock } from './AiBlock';
+import { SummaryShare } from './SummaryShare';
 import { ClaimList } from './ClaimList';
 import { JobProgress } from './JobProgress';
 
@@ -135,6 +136,7 @@ export function PatientSummaryPanel({ caseId, canGenerate }: { caseId: string; c
           Laický text ze schváleného závěru ({summary.data.document_reference}). Před předáním pacientovi ho zkontroluje
           lékař. Je v exportu PDF i FHIR.
         </p>
+        <SummaryShare caseId={caseId} canShare={canGenerate} />
       </AiBlock>
     );
   }

@@ -39,6 +39,7 @@ Pilot se spustí, až je všechno zaškrtnuté. Ověřuje koordinátor pilotu.
 - [ ] Dvoufázové přihlášení: `MDT_REQUIRE_2FA_MANAGER` je v produkci zapnuté (výchozí); správce si ho nastaví v Nastavení → Dvoufázové přihlášení hned po prvním přihlášení (T-383).
 - [ ] Volitelně push oznámení na mobil: `manage.py vapid_keys` → `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` do `.env` backendu (soukromý klíč nikdy do gitu).
 - [ ] Volitelně generování mimo proces backendu: `MDT_JOB_BACKEND=redis` a `docker compose --profile worker up -d` (restart backendu pak rozběhnutý podklad nepřeruší).
+- [ ] Připomínky lékařům v cronu (T-384): `manage.py mdt_reminders` denně ráno (zítřejší MDT, úkoly po termínu, re-MDT) a `manage.py mdt_reminders --only new-results` každou hodinu; `MDT_FRONTEND_URL` nastavené (odkazy v e-mailech, kalendáři a v odkazu pro pacienta).
 - [ ] Mazání záznamu přístupů v cronu: `manage.py prune_access_log --days 365` (doba uchování podle provozovatele, `MDT_ACCESS_LOG_DAYS`).
 - [ ] Volitelně `SENTRY_DSN` (hlášení chyb backendu; bez těla požadavků, cookies a query, `core/monitoring.py`).
 - [ ] Monitoring dostupnosti hlídá `/api/health/?strict=1` (503 i při výpadku IRIS) a frontend (např. UptimeRobot,

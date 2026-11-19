@@ -7,7 +7,6 @@ import hashlib
 import secrets
 from datetime import timedelta
 
-from django.conf import settings
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -54,7 +53,8 @@ def summary_links(request, cid):
     token = secrets.token_urlsafe(24)
     link = PatientShareLink.objects.create(token_hash=_hash(token), case=case, created_by=request.user,
                                            expires_at=now + timedelta(days=LINK_DAYS))
-    base = (getattr(settings, 'MDT_FRONTEND_URL', '') or request.build_absolute_uri('/')).rstrip('/')
+    from apps.authentication.views import _frontend_url
+    base = _frontend_url(request)          # MDT_FRONTEND_URL, jinak důvěryhodný Origin (jako odkaz v e-mailu, T-371)
     return Response({'url': f'{base}/pacient/{token}', 'expires_at': link.expires_at.isoformat()}, status=201)
 
 

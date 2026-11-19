@@ -26,6 +26,9 @@ import type {
   RuleInfo,
   SimilarCases,
   ChatbotMessage,
+  CommitteeStats,
+  PublicPatientSummary,
+  ReMdtDue,
   DecisionVotes,
   LiveState,
   MyLive,
@@ -371,6 +374,22 @@ export const mdtApi = {
   getJob: (jobId: number) => apiFetch<GenerationJob>(`/api/jobs/${jobId}/`),
 
   /** Draft nebo potvrzený závěr komise; `null`, dokud není (204, T-375). */
+  /** T-384: kalendář (.ics) zasedání a mých nadcházejících zasedání; odkaz ke stažení. */
+  sessionCalendarUrl: (sessionId: number) => apiUrl(`/api/mdt/sessions/${sessionId}/calendar.ics`),
+  myCalendarUrl: () => apiUrl('/api/mdt/calendar.ics?mine=1'),
+  getStats: (range: { from?: string; to?: string } = {}) => {
+    const query = new URLSearchParams(Object.entries(range).filter((entry): entry is [string, string] => Boolean(entry[1]))).toString();
+    return apiFetch<CommitteeStats>(`/api/mdt/stats/${query ? `?${query}` : ''}`);
+  },
+  getReMdt: () => apiFetch<ReMdtDue[]>('/api/mdt/re-mdt/'),
+  /** T-384: odkaz na shrnutí pro pacienta (14 dní, jde zrušit). */
+  getSummaryLinks: (caseId: string) =>
+    apiFetch<{ id: number; created_at: string; expires_at: string; views: number }[]>(`/api/mdt/cases/${caseId}/patient-summary/links/`),
+  createSummaryLink: (caseId: string) =>
+    apiFetch<{ url: string; expires_at: string }>(`/api/mdt/cases/${caseId}/patient-summary/links/`, { method: 'POST' }),
+  revokeSummaryLinks: (caseId: string) =>
+    apiFetch<void>(`/api/mdt/cases/${caseId}/patient-summary/links/`, { method: 'DELETE' }),
+  getPublicSummary: (token: string) => apiFetch<PublicPatientSummary>(`/api/public/patient-summary/${encodeURIComponent(token)}/`),
   /** T-381: souhlas přítomných s návrhem závěru. */
   getVotes: (caseId: number) => apiFetch<DecisionVotes>(`/api/mdt/cases/${caseId}/votes/`),
   putVote: (caseId: number, input: { vote: 'agree' | 'disagree'; comment?: string }) =>

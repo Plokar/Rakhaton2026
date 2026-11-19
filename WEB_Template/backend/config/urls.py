@@ -122,6 +122,7 @@ from django.conf.urls.static import static
 from apps.projects.ai_views import ai_generate, ai_providers_list
 from apps.patients import views as patient_views
 from apps.copilot import views as copilot_views
+from apps.mdt import share as mdt_share
 
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -136,6 +137,7 @@ urlpatterns = [
     path('api/auth/', include('apps.authentication.urls')),
     path('api/patients/', include('apps.patients.urls')),
     path('api/evidence/', patient_views.evidence_source, name='evidence-source'),
+    path('api/public/patient-summary/<str:token>/', mdt_share.public_summary, name='public-patient-summary'),   # T-384
     path('api/mdt/', include('apps.mdt.urls')),
     path('api/jobs/<int:jid>/', copilot_views.job_status, name='job-status'),
     path('api/items/', include('apps.items.urls')),

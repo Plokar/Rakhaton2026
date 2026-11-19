@@ -56,9 +56,9 @@ ALWAYS = {
     'rule-catalog', 'review-list', 'session-list', 'my-rules', 'my-requirement', 'my-norms', 'my-norm-detail',
     'norm-fields', 'health-check', 'api-root', 'invitation-public', 'invitation-accept', 'committee-list',
     'my-live',                                        # filtruje viditelná zasedání sám
-    'chatbot-suggestions', 'ai-feedback', 'push-key', 'push-subscriptions',             # T-382: pacienta kontrolují samy (patient_visible)
+    'chatbot-suggestions', 'ai-feedback', 'push-key', 'push-subscriptions', 'my-calendar',             # T-382: pacienta kontrolují samy (patient_visible)
 }
-BY_SESSION = {'session-detail', 'session-invited', 'session-live', 'session-presence', 'session-messages', 'session-stream', 'session-chatbot', 'session-doctor-rules'}
+BY_SESSION = {'session-calendar', 'session-detail', 'session-invited', 'session-live', 'session-presence', 'session-messages', 'session-stream', 'session-chatbot', 'session-doctor-rules'}
 BY_PATIENT = {'patient-intake', 'patient-chatbot', 'patient-detail', 'patient-timeline', 'patient-observations'}
 CASE_DENIED = {'case-create', 'case-similar'}        # podobní pacienti = cizí pacienti
 PATIENT_PREFIX = re.compile(r'^(P\d{2,3})-')

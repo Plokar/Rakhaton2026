@@ -75,7 +75,7 @@ export function AccessLogPanel() {
         </p>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+          <div className="relative overflow-x-auto rounded-xl border border-border bg-card">
             <table className="w-full min-w-[44rem] text-sm">
               <caption className="sr-only">Záznam přístupů k pacientům</caption>
               <thead>

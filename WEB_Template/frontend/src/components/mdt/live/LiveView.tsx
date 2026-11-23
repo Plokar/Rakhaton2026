@@ -118,7 +118,8 @@ function LiveSession({
   const present = live?.present ?? [];
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col">
+    // Mobil (T-379): stránka roluje celá, pruh „Na projektoru“ zůstane nahoře; od md pevná výška a rolování obsahu
+    <div className="flex min-h-0 flex-col md:h-[calc(100dvh-3.5rem)]">
       <PageCrumb>Živě na MDT</PageCrumb>
       {/* Kde jsem: zasedání, stav, přítomní */}
       <header className="shrink-0 border-b border-border bg-card px-4 py-3 sm:px-6">
@@ -163,7 +164,7 @@ function LiveSession({
       </header>
 
       {/* Co je na projektoru + výběr pacienta */}
-      <div className="shrink-0 border-b border-border bg-background px-4 py-2 sm:px-6">
+      <div className="sticky top-14 z-10 shrink-0 border-b border-border bg-background px-4 py-2 sm:px-6 md:static">
         <div className="flex items-center gap-2 text-sm">
           <MonitorUp className="size-4 shrink-0 text-primary" aria-hidden />
           {live?.case ? (
@@ -220,7 +221,7 @@ function LiveSession({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-20">
+      <div className="relative pb-20 md:min-h-0 md:flex-1 md:overflow-y-auto">
         {board.isLoading ? (
           <LiveSkeleton />
         ) : shownCase ? (

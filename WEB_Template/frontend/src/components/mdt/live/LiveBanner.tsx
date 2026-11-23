@@ -18,16 +18,20 @@ export function LiveBanner() {
   return (
     <Link
       href={`/dashboard/live?zasedani=${item.id}`}
-      className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-emerald-300/60 bg-emerald-50 px-4 py-2 text-sm text-emerald-950 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-6 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100"
+      className="flex items-center gap-2 border-b border-emerald-300/60 bg-emerald-50 px-4 py-2 text-sm text-emerald-950 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-6 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100"
     >
       <Radio className="size-4 shrink-0" aria-hidden />
-      <span className="font-medium">{item.here ? 'Jste na zasedání' : 'Probíhá zasedání'}: {item.title}</span>
+      {/* jeden řádek i na telefonu (T-379): název zasedání se zkrátí */}
+      <span className="min-w-0 truncate font-medium">
+        <span className="hidden sm:inline">{item.here ? 'Jste na zasedání' : 'Probíhá zasedání'}: </span>
+        {item.title}
+      </span>
       {onProjector && (
-        <span>
-          · na projektoru <span translate="no" className="font-semibold">{onProjector}</span>
+        <span className="shrink-0 whitespace-nowrap">
+          · <span className="hidden sm:inline">na projektoru</span> <span translate="no" className="font-semibold">{onProjector}</span>
         </span>
       )}
-      <span className="ml-auto font-medium underline underline-offset-4">Otevřít</span>
+      <span className="ml-auto shrink-0 font-medium underline underline-offset-4">Otevřít</span>
     </Link>
   );
 }

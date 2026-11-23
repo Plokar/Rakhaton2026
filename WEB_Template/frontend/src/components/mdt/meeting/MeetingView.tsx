@@ -305,7 +305,8 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
   );
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] min-h-0 flex-col">
+    // Mobil (T-379): pod lg roluje celá stránka (agenda, nahrávání i přehled), od lg pevná výška s panely
+    <div className="flex min-h-0 flex-col lg:h-[calc(100dvh-3.5rem)]">
       <PageCrumb>{board.title}</PageCrumb>
       <MeetingHeader
         board={board}
@@ -378,7 +379,7 @@ export function MeetingView({ sessionId }: { sessionId: number }) {
           )}
         </ResizablePanelGroup>
       ) : (
-        <div className="relative min-h-0 flex-1 overflow-y-auto">
+        <div className="relative lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           {cases.length > 0 && <AgendaPicker cases={cases} current={current} onSelect={select} />}
           {cases.length > 0 && <DiscussionRecorder cases={cases} current={current} className="border-b bg-card" />}
           {main}

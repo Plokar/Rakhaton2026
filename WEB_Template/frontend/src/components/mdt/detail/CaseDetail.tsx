@@ -532,7 +532,8 @@ function StickyCaseHeader({
   const flags = brief?.red_flags.length ?? 0;
 
   return (
-    <div className="sticky top-14 z-20 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85">
+    // Mobil (T-379): hlavička se přilepí až od md, na telefonu by zabrala třetinu obrazovky
+    <div className="relative z-20 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85 md:sticky md:top-14">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-2 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           {session && (

@@ -52,7 +52,7 @@ export function DoctorsPanel({ me }: { me: Me }) {
   if (users.isLoading) return <Loading />;
   if (users.isError) return <p role="alert" className="text-sm text-destructive">{apiErrorMessage(users.error, 'Tým se nepodařilo načíst.')}</p>;
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-card">
+    <div className="relative overflow-x-auto rounded-xl border border-border bg-card">
       <table className="w-full min-w-[56rem] text-sm">
         <caption className="sr-only">Lékaři, jejich role, odbornost, nemocnice a komise</caption>
         <thead>

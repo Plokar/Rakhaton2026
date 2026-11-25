@@ -115,6 +115,8 @@ class MdtCase(models.Model):
     checked_at = models.DateTimeField(null=True, blank=True)
     checked_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
                                    related_name='checked_cases')
+    # T-384: kolik nových výsledků od zařazení už zadávající lékař dostal v upozornění (`mdt_reminders`)
+    results_notified = models.PositiveSmallIntegerField(default=0)
     # Rozhodnutí zadávajícího lékaře k požadavkům pozvaných lékařů (T-364): [{user_id, decision, note, by, at}].
     # Jen se přidává (D-019), platí poslední záznam pro lékaře.
     requirement_decisions = models.JSONField(default=list, blank=True)
@@ -208,6 +210,21 @@ class AiFeedback(models.Model):
 
     def __str__(self):
         return f'{self.kind} {self.rating} {self.patient_fhir_id}'
+
+
+class PatientShareLink(models.Model):
+    """Bezpečný odkaz na shrnutí pro pacienta (T-384): jen text shrnutí z potvrzeného závěru, bez jména, RČ a ID
+    zdrojů. Ukládá se jen hash tokenu; platí do `expires_at` a jde zrušit."""
+    token_hash = models.CharField(max_length=64, unique=True)
+    case = models.ForeignKey(MdtCase, on_delete=models.CASCADE, related_name='share_links')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    views = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-created_at']
 
 
 class PushSubscription(models.Model):

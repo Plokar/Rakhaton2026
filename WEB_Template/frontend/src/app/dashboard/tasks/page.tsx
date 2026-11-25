@@ -12,6 +12,7 @@ import { formatDate } from '@/components/mdt/format';
 import { useMe } from '@/components/mdt/me';
 import { todayPrague } from '@/components/mdt/dates';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ReMdtCard } from '@/components/mdt/ReMdtCard';
 import { isOverdue, TASK_STATUS_LABEL as STATUS_LABEL, useCanChangeTask, useChangeTaskStatus } from '@/components/mdt/MyTasks';
 import { apiErrorMessage, useMyTasksQuery, useTasksQuery } from '@/lib/queries';
 import { cn } from '@/lib/utils';
@@ -55,6 +56,9 @@ export default function MdtTasksPage() {
           </>
         }
       />
+
+      {/* T-384: plánovaná re-MDT, která ještě nikdo nezařadil */}
+      <ReMdtCard />
 
       <div className="flex flex-wrap items-center gap-3">
         {me?.practitioner_id && (

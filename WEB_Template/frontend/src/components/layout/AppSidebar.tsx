@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { Archive, CalendarDays, LayoutGrid, ListChecks, MonitorUp, Radio, UsersRound } from 'lucide-react';
+import { Archive, CalendarDays, ChartColumn, LayoutGrid, ListChecks, MonitorUp, Radio, UsersRound } from 'lucide-react';
 import { dayLabel, pragueDay, timeLabel, todayPrague } from '@/components/mdt/dates';
 import { openProjectorWindow } from '@/components/mdt/projector';
 import {
@@ -31,6 +31,7 @@ const NAV = [
   { href: '/dashboard/mdt', label: 'Zasedání', icon: CalendarDays },
   { href: '/dashboard/tasks', label: 'Úkoly', icon: ListChecks },
   { href: '/dashboard/zaznamy', label: 'Záznam boardů', icon: Archive, chair: true },
+  { href: '/dashboard/statistiky', label: 'Statistiky', icon: ChartColumn, chair: true },   // T-384
   { href: '/dashboard/tym', label: 'Tým a účty', icon: UsersRound, manager: true },   // správce MDT (T-361)
 ] as const;
 

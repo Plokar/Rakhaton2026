@@ -7,6 +7,7 @@ import { parseAsInteger, useQueryState } from 'nuqs';
 import { useHotkeys } from 'react-hotkeys-hook';
 import {
   Bot,
+  CalendarPlus,
   CheckCheck,
   ChevronDown,
   ChevronLeft,
@@ -613,6 +614,9 @@ function MeetingHeader({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setInviting(true)}>
               <Users aria-hidden /> Pozvaní lékaři
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<a href={mdtApi.sessionCalendarUrl(board.id)} download />}>
+              <CalendarPlus aria-hidden /> Přidat do kalendáře (.ics)
             </DropdownMenuItem>
             {board.status !== 'closed' && (
               <DropdownMenuItem onClick={() => setQr(true)}>
